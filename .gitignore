@@ -1,0 +1,7 @@
+www/files
+www/resources/files
+www/.htaccess
+www/robots.txt
+www/install.php
+data/distributions
+conf

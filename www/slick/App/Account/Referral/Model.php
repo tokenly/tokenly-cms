@@ -1,0 +1,21 @@
+<?php
+class Slick_App_Account_Referral_Model extends Slick_Core_Model
+{
+
+	public function getUserRefs($userId)
+	{
+		$getRefs = $this->fetchAll('SELECT r.*, u.username, u.slug
+									FROM user_referrals r 
+									LEFT JOIN users u ON u.userId = r.userId
+									WHERE r.affiliateId = :id
+									ORDER BY r.referralId DESC', array(':id' => $userId));
+		
+
+		
+		
+		return $getRefs;
+		
+	}
+
+
+}

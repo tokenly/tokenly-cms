@@ -1,0 +1,11 @@
+Options -MultiViews
+RewriteEngine on
+#RewriteBase /
+
+RewriteRule ^api/v1/(.*)$ api.php?v=1&params=$1&%{QUERY_STRING} [L]
+RewriteCond %{SCRIPT_FILENAME} !api\.php$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?params=$1&%{QUERY_STRING} [L]
+
+

@@ -1,0 +1,150 @@
+<span class="rss-link"><a href="<?= SITE_URL ?>/rss"><img src="<?= THEME_URL ?>/images/rss.png" alt="RSS Feed" /></a></span>
+<h1><?= $title ?></h1>
+<?php
+if(isset($category)){
+	if(trim($category['description']) != ''){
+		echo '<div class="blog-description">'.$category['description'].'</div>';
+	}
+}
+?>
+<ul class="blog-list">
+<?php
+$extraUrl = '';
+if($module){
+	$extraUrl = '/'.$module['url'];
+}
+
+$settings = new Slick_App_Dashboard_Settings_Model;
+$maxChars = $settings->getSetting('blog-excerptChars');
+if(!$maxChars){
+	$maxChars = 250;
+}
+
+if(count($posts) == 0){
+	echo '<p>Sorry, no posts found</p>';
+}
+$imagePath = SITE_PATH.'/files/blogs';
+foreach($posts as $post){
+	
+	$getIndex = $settings->getAll('page_index', array('itemId' => $post['postId'], 'moduleId' => 28, 'siteId' => $site['siteId']));
+
+	if($getIndex AND count($getIndex) > 0){
+		$post['url'] = SITE_URL.'/'.$getIndex[count($getIndex) - 1]['url'];
+
+	}
+	else{
+		$post['url'] = SITE_URL.'/'.$app['url'].'/post/'.$post['url'];
+	}
+	
+	$displayName = $post['author']['username'];
+	if(trim($post['author']['profile']['real-name']['value']) != ''){
+		$displayName =  $post['author']['profile']['real-name']['value'];
+	}
+	
+	if($post['formatType'] == 'markdown'){
+		$post['excerpt'] = markdown($post['excerpt']);
+		$post['content'] = markdown($post['content']);
+	}
+?>
+	<li>
+		<?php
+		if(trim($post['image']) != '' AND file_exists($imagePath.'/'.$post['image'])){
+			echo '<div class="blog-image"><img src="'.SITE_URL.'/files/blogs/'.$post['image'].'" alt="" /></div>';
+		}
+        elseif(trim($post['coverImage']) != '' AND file_exists($imagePath.'/'.$post['coverImage'])){
+            echo '<div class="blog-image"><img src="'.SITE_URL.'/files/blogs/'.$post['coverImage'].'" alt="" /></div>';
+        }
+		?>
+		<h2><a href="<?= $post['url'] ?>"><?= $post['title'] ?></a></h2>
+		<div class="blog-date">
+			Published on <?= date('F jS, Y', strtotime($post['publishDate'])) ?> by 
+			<a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>"><?= $displayName ?></a>
+		</div>
+		<div class="blog-excerpt">
+			<?php
+			if(isset($post['soundcloud-id'])){
+				echo '<iframe src="https://w.soundcloud.com/player/?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F'.$post['soundcloud-id'].'&auto_play=false&show_artwork=true&color=ff7700" width="400" height="100"></iframe>
+				<br><br>';
+			}
+			?>
+			<?= $post['excerpt'] ?>
+			<a href="<?= $post['url'] ?>" class="blog-more">Read More</a>
+		</div>
+		<div class="blog-extra">
+			<div class="blog-social">
+				<?php
+				$shareURL = SITE_URL.'/'.$app['url'].'/post/'.$post['url'];
+				?>
+				<a href="http://www.reddit.com/submit?url=<?= $shareURL ?>" target="_blank"><img src="<?= THEME_URL ?>/images/reddit.png" alt="Post on Reddit" /></a>
+				<a href="http://www.facebook.com/sharer.php?u=<?= $shareURL ?>" target="_blank"><img src="<?= THEME_URL ?>/images/facebook.png" alt="Share this Post" /></a>
+				<a href="http://twitter.com/share?text=<?= urlencode($post['title']) ?>&url=<?= $shareURL ?>" target="_blank"><img src="<?= THEME_URL ?>/images/twitter.png" alt="Tweet this Post" /></a>
+				<a href="https://plus.google.com/share?url=<?= $shareURL ?>" target="_blank"><img src="<?= THEME_URL ?>/images/gplus.png" alt="+1 this Post" /></a>
+			</div>
+			<?php
+			if(isset($post['author']['profile']['bitcoin-address']) AND trim($post['author']['profile']['bitcoin-address']['value']) != ''){
+				$btcAddress = $post['author']['profile']['bitcoin-address']['value'];
+			?>
+			Tip This Post: <a href="bitcoin:<?= $btcAddress ?>"><?= $btcAddress ?></a>
+
+			<?php
+			}//endif
+			?>
+			<div class="blog-cats">
+				<?php
+				if(count($post['categories']) > 0){
+					echo 'Categories: ';
+					$catList = array();
+					foreach($post['categories'] as $cat){
+						$catList[] =  '<a href="'.SITE_URL.'/'.$app['url'].'/category/'.$cat['slug'].'">'.$cat['name'].'</a>';
+					}
+					echo join(', ', $catList);
+				}
+				?>
+			</div>
+			<?php
+			if($commentsEnabled == 1){
+			?>
+			<div class="blog-commentCount">
+				<a href="<?= $post['url'] ?>#disqus_thread"><!--<?= $post['commentCount'] ?> <?= pluralize('Comment', $post['commentCount'], true) ?>--></a>
+			</div>
+			<?php
+			}//endif
+			?>
+		</div>
+		<div class="clear"></div>
+	</li>
+<?php
+}//endforeach
+?>
+</ul>
+<?php
+if($numPages > 1){
+?>
+<div class="blog-paging">
+Pages:
+<?php
+
+for($i = 1; $i <= $numPages; $i++){
+	$active = '';
+	if((isset($_GET['page']) AND $_GET['page'] == $i) OR (!isset($_GET['page']) AND $i == 1)){
+		$active = 'active';
+	}
+	echo '<a href="?page='.$i.'" class="'.$active.'">'.$i.'</a> ';
+}
+
+?>
+</div>
+<?php
+}//endif
+?>
+<script type="text/javascript">
+var disqus_shortname = '<?= DISQUS_DEFAULT_FORUM ?>'; // required: replace example with your forum shortname
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function () {
+var s = document.createElement('script'); s.async = true;
+s.type = 'text/javascript';
+s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());
+</script>
