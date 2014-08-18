@@ -10,7 +10,7 @@ define('SITE_DOMAIN', ''); //default system domain (without http://)
 define('MYSQL_DB', '');
 define('MYSQL_USER', '');
 define('MYSQL_PASS', '');
-define('MYSQL_HOST', '');
+define('MYSQL_HOST', 'localhost');
 
 define('DATE_FORMAT', 'F j\, Y \a\t g:i A'); //default display date formatting
 

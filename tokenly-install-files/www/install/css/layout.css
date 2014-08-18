@@ -1,0 +1,68 @@
+
+.main{
+	margin-top: 50px;
+}
+
+.checkboxList{
+	display: block;
+	padding: 20px;
+	border: solid 1px #ccc;
+	position: relative;
+	margin-bottom: 20px;
+	max-height: 250px;
+	overflow-y: scroll;
+}
+.checkboxList label{
+	margin-left: 30px;
+	margin-bottom: 10px;
+}
+.checkboxList input[type="checkbox"]{
+	float: left;
+}
+input[type="submit"]{
+	font-size: 18px;
+	padding: 20px;
+}
+
+.error{
+	color: #C00;
+	font-weight: 700;
+	font-size: 16px;
+}
+
+/* #Media Queries
+================================================== */
+
+	/* Smaller than standard 960 (devices and browsers) */
+	@media only screen and (max-width: 959px) {}
+
+	/* Tablet Portrait size to standard 960 (devices and browsers) */
+	@media only screen and (min-width: 768px) and (max-width: 959px) {}
+
+	/* All Mobile Sizes (devices and browser) */
+	@media only screen and (max-width: 767px) {}
+
+	/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+	@media only screen and (min-width: 480px) and (max-width: 767px) {}
+
+	/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+	@media only screen and (max-width: 479px) {}
+
+
+/* #Font-Face
+================================================== */
+/* 	This is the proper syntax for an @font-face file
+		Just create a "fonts" folder at the root,
+		copy your FontName into code below and remove
+		comment brackets */
+
+/*	@font-face {
+	    font-family: 'FontName';
+	    src: url('../fonts/FontName.eot');
+	    src: url('../fonts/FontName.eot?iefix') format('eot'),
+	         url('../fonts/FontName.woff') format('woff'),
+	         url('../fonts/FontName.ttf') format('truetype'),
+	         url('../fonts/FontName.svg#webfontZam02nTh') format('svg');
+	    font-weight: normal;
+	    font-style: normal; }
+*/
