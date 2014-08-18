@@ -1,6 +1,5 @@
 ##General to do list..
 
-* Build installation script
 * Documentation. For everything.
 * Setup Wiki
 * Seperate LTB website and theme specific elements from default view files and modules
