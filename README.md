@@ -16,7 +16,7 @@ Current primary to do list and feature requests can be found on the Trello board
 
 ##Installation
 
-See directory: /tokenly-install-files
+See directory: [/tokenly-install-files](/tokenly-install-files)
 
 ##Primary Features (to date)
 
