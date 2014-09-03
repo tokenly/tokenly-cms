@@ -121,7 +121,9 @@ class Tokenly_Install extends Slick_Core_Model
 			$this->insert('group_access', array('moduleId' => $module['moduleId'], 'groupId' => $addRoot));
 		}
 		foreach($getPerms as $perm){
-			$this->insert('group_perms', array('permId' => $perm['permId'], 'groupId' => $addRoot));
+			if($perm['permKey'] != 'isTroll'){
+				$this->insert('group_perms', array('permId' => $perm['permId'], 'groupId' => $addRoot));
+			}
 		}
 		
 		//register user
@@ -133,6 +135,7 @@ class Tokenly_Install extends Slick_Core_Model
 		$useData['regDate'] = timestamp();
 		$useData['slug'] = genURL($useData['username']);		
 		$useData['email'] = trim($userData['email']);
+		$useData['activated'] = 1;
 		
 		$addUser = $this->insert('users', $useData);
 		if(!$addUser){
@@ -144,7 +147,11 @@ class Tokenly_Install extends Slick_Core_Model
 		if(!$addToRoot){
 			throw new Exception('Error adding new user to root group');
 		}
-		
+		//add to default group
+		$addToDefault = $this->insert('group_users', array('groupId' => $addDefault, 'userId' => $addUser));
+		if(!$addToDefault){
+			throw new Exception('Error adding new user to default group');
+		}
 		
 		return true;
 	}
