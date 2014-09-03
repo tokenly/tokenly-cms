@@ -5,11 +5,6 @@
 		echo '<p class="error">'.$loginMessage.'</p>';
 	}
 	?>
-	<p>
-		<em><strong>Attention</strong> users with accounts on the old letstalkbitcoin.com <strong> or the ltbcoin.com forums</strong>: To access your account,
-		please use the link to the password reset form below, or alternatively <a href="<?= SITE_URL ?>/contact-us">contact us</a>
-		to get a temporary password. You may also need to re-upload a profile picture and profile information.</em>
-	</p>
 	<?= $loginForm->display() ?>
 	<p>
 		Forgot your password? <a href="<?= SITE_URL ?>/account/reset">Click here to reset your password.</a>

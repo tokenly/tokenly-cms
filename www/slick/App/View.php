@@ -94,6 +94,20 @@ class Slick_App_View extends Slick_Core_View
 			return false;
 		}
 		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
+		$userId = 0;
+		if(isset($_SESSION['accountAuth'])){
+			$getUser = $tca->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			if($getUser){
+				$userId = $getUser['userId'];
+			}
+		}
+		$checkTCA = $tca->checkItemAccess($userId, $pageModule['moduleId'], $get['menuId'], 'menu');
+		if(!$checkTCA){
+			return false;
+		}				
+		
 		if(!isset(self::$menuData[$get['menuId']])){
 			self::$menuData[$get['menuId']] = array();
 			self::$menuData[$get['menuId']]['pages'] = $model->fetchAll('SELECT m.*, p.url
@@ -135,13 +149,20 @@ class Slick_App_View extends Slick_Core_View
 						$addOutput['target'] = '_blank';
 					}
 				}
-			
+				$tcaSlug = 'menu-link';
 			}
 			else{
 				$addOutput['isLink'] = false;
 				$addOutput['itemId'] = $item['menuPageId'];
 				$addOutput['url'] = $getSite['url'].'/'.$item['url'];
+				$tcaSlug = 'menu-page';
 			}
+			
+			$checkTCA = $tca->checkItemAccess($userId, $pageModule['moduleId'], $addOutput['itemId'], $tcaSlug);
+			if(!$checkTCA){
+				continue;
+			}						
+			
 			$isLink = 0;
 			if($addOutput['isLink']){
 				$isLink = 1;
@@ -185,6 +206,7 @@ class Slick_App_View extends Slick_Core_View
 			}
 			$menu = $getMenu;
 		}
+		
 
 		if(count($menu) > 0){
 			$output = '<ul class="'.$class.'">';
@@ -247,6 +269,20 @@ class Slick_App_View extends Slick_Core_View
 	{
 		$block = Slick_App_View::getBlock($id);
 		if(!$block OR $block['active'] == 0){
+			return false;
+		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
+		$userId = 0;
+		if(isset($_SESSION['accountAuth'])){
+			$getUser = $tca->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			if($getUser){
+				$userId = $getUser['userId'];
+			}
+		}
+		$checkTCA = $tca->checkItemAccess($userId, $pageModule['moduleId'], $block['blockId'], 'content-block');
+		if(!$checkTCA){
 			return false;
 		}
 		

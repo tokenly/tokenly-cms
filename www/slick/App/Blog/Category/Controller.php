@@ -27,6 +27,13 @@ class Slick_App_Blog_Category_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$checkTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $output['category']['categoryId'], 'blog-category');
+		if(!$checkTCA){
+			$output['view'] = '403';
+			return $output;
+		}
+		
 		$output['view'] = '../list';
 		$output['title'] = $output['category']['name'];
 		$postLimit = $this->data['app']['meta']['postsPerPage'];

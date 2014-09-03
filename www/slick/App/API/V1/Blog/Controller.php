@@ -114,6 +114,16 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			}
 		}
 		
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}		
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
+		
 		/* Disqus Comments Code */
 		$disqus = new Slick_API_Disqus;
 		$profModel = new Slick_App_Profile_User_Model;
@@ -121,6 +131,11 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		$comment = array();
 		$comment['commentId'] = $getComment['id'];
+		if($comment['commentId'] == null){
+			http_response_code(404);
+			$output['error'] = 'Comment not found';
+			return $output;
+		}
 		$comment['postId'] = $getPost['postId'];
 		$comment['message'] = $getComment['message'];
 		$comment['commentDate'] = $getComment['createdAt'];
@@ -145,7 +160,10 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		if($getComUser){
 			$getComProf = $profModel->getUserProfile($getComUser['userId'], $this->args['data']['site']['siteId']);
 			if($getComProf){
-				$author['profile'] = $getComProf['profile'];
+				$comTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getComProf['userId'], 'user-profile');
+				if($comTCA){
+					$author['profile'] = $getComProf['profile'];
+				}				
 				$author['regDate'] = $getComProf['regDate'];
 				$author['slug'] = $getComProf['slug'];
 			}
@@ -466,6 +484,24 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 				return $output;
 			}
 		}
+		
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}
+
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		
+		$postTCA = $tca->checkItemAccess($thisUser, $postModule['moduleId'], $getPost['postId'], 'blog-post');	
+		if(!$postTCA OR $getPost['published'] == 0){
+			http_response_code(403);
+			$output['error'] = 'You cannot view this post';
+			return $output;
+		}				
 
 		/* Disqus Comments Code */
 		$disqus = new Slick_API_Disqus;
@@ -520,7 +556,10 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			if($getComUser){
 				$getComProf = $profModel->getUserProfile($getComUser['userId'], $this->args['data']['site']['siteId']);
 				if($getComProf){
-					$author['profile'] = $getComProf['profile'];
+					$comTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getComProf['userId'], 'user-profile');
+					if($comTCA){
+						$author['profile'] = $getComProf['profile'];
+					}
 					$author['regDate'] = $getComProf['regDate'];
 					$author['slug'] = $getComProf['slug'];
 				}
@@ -559,6 +598,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		$output['comments'] = $getComments;
 		*/
 		
+		http_response_code(200);
 		return $output;
 	}
 	
@@ -608,6 +648,26 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}		
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		
+		$postTCA = $tca->checkItemAccess($thisUser, $postModule['moduleId'], $getPost['postId'], 'blog-post');	
+		if(!$postTCA OR $getPost['published'] == 0){
+			http_response_code(403);
+			$output['error'] = 'You cannot view this post';
+			return $output;
+		}
+		
+		$authorTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getPost['userId'], 'user-profile');		
+		
 		unset($getPost['userId']);
 		unset($getPost['siteId']);
 		unset($getPost['author']['userId']);
@@ -632,6 +692,10 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$getPost['image'] = null;
 		}
 		
+
+		if(!$authorTCA){
+			$getPost['author']['profile'] = array();
+		}
 		
 		
 		if(isset($this->args['data']['strip-html']) AND ($this->args['data']['strip-html'] == 'true' || $this->args['data']['strip-html'] === true)){
@@ -640,7 +704,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		$output['post'] = $getPost;
-		
+		http_response_code(200);
 		return $output;
 	}
 	
@@ -681,6 +745,23 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 				return $output;
 			}
 		}
+		
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}			
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$catTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $get['categoryId'], 'blog-category');
+		if(!$catTCA){
+			http_response_code(403);
+			$output['error'] = 'You may not view this category';
+			return $output;
+		}
+		
 		
 		$children = $model->getCategories($this->args['data']['site']['siteId'], $get['categoryId']);
 		if(count($children) > 0){
@@ -767,8 +848,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 	{
 		$model = new Slick_App_Dashboard_BlogCategory_Model;
 		$getCats = $model->getCategories($this->args['data']['site']['siteId']);
-		$output['categories'] = $getCats;
 		
+		$output['categories'] = $getCats;
 		return $output;
 	}
 
@@ -786,9 +867,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 				default:
 					$output = $this->getArchive();
 					break;
-				
 			}
-			
 		}
 		else{
 			http_response_code(400);
@@ -807,6 +886,12 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $this->getPost();
 		}
 		
+		try{
+			$this->args['data']['user'] = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$this->args['data']['user'] = false;
+		}
 
 		try{
 			$output['posts'] = $this->model->getAllPosts($this->args['data']);
@@ -816,6 +901,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
+		
+		http_response_code(200);
 		
 		return $output;
 	}

@@ -1,6 +1,20 @@
 <?php
 $thisURL = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
 
+
+function checkUserTCA($userId, $profUserId)
+{
+	$tca = new Slick_App_LTBcoin_TCA_Model;
+	$module = $tca->get('modules', 'user-profile', array(), 'slug');
+	if(!$userId OR ($userId AND $userId != $profUserId)){
+		$checkTCA = $tca->checkItemAccess($userId, $module['moduleId'], $profUserId, 'user-profile');
+		if(!$checkTCA){
+			return false;
+		}
+	}
+	return true;
+}
+
 ?>
 <?php
 if($user AND $topic['locked'] == 0){
@@ -28,24 +42,51 @@ if($user AND $topic['locked'] == 0){
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/board/<?= $board['slug'] ?>" class="board-back-link">Back to <?= $board['name'] ?></a>
 </p>
+<div class="topic-paging paging">
+	<?php
+	if($numPages > 1){
+		echo '<strong>Pages:</strong> ';
+		for($i = 1; $i <= $numPages; $i++){
+			$active = '';
+			if((isset($_GET['page']) AND $_GET['page'] == $i) OR (!isset($_GET['page']) AND $i == 1)){
+				$active = 'active';
+			}
+			echo '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'].'?page='.$i.'" class="'.$active.'">'.$i.'</a>';
+		}
+	}
+	?>
+</div>
 <h2 class="topic-heading">Comments</h2>
 <?php
 if($page == 1){
 	
 ?>
 <div class="thread-op">
+	<?php
+	$userId = 0;
+	if($user){
+		$userId = $user['userId'];
+	}
+	$checkUserTCA = checkUserTCA($userId, $topic['userId']);
+	
+	$avImage = $topic['author']['avatar'];
+	if(!isExternalLink($topic['author']['avatar'])){
+		$avImage = SITE_URL.'/files/avatars/'.$topic['author']['avatar'];
+	}
+	$avImage = '<img src="'.$avImage.'" alt="" />';
+	if($checkUserTCA){
+		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$topic['author']['slug'].'">'.$avImage.'</a>';	
+	}
+	
+	$topicUsername = $topic['author']['username'];
+	if($checkUserTCA){
+		$topicUsername = '<a href="'.SITE_URL.'/profile/user/'.$topic['author']['slug'].'" target="_blank">'.$topicUsername.'</a>';
+	}	
+	?>
 	<div class="op-author">
-		<span class="post-username"><a href="<?= SITE_URL ?>/profile/user/<?= $topic['author']['slug'] ?>"><?= $topic['author']['username'] ?></a></span>
+		<span class="post-username"><?= $topicUsername ?></span>
 		<div class="profile-pic">
-			<?php
-			$avImage = $topic['author']['avatar'];
-			if(!isExternalLink($topic['author']['avatar'])){
-				$avImage = SITE_URL.'/files/avatars/'.$topic['author']['avatar'];
-			}
-			echo '<a href="'.SITE_URL.'/profile/user/'.$topic['author']['slug'].'"><img src="'.$avImage.'" alt="" /></a>';
-		
-
-			?>
+			<?= $avImage ?>
 		</div>
 		<div class="post-author-info">
 			Posts: <?= Slick_App_Account_Home_Model::getUserPostCount($topic['userId']) ?>
@@ -54,8 +95,11 @@ if($page == 1){
 				echo '<br>Location: '.$topic['author']['profile']['location']['value'];
 			}
 			
+			
 			if($user AND $user['userId'] != $topic['userId']){
-				echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+				if($checkUserTCA){
+					echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+				}
 			}
 			?>
 			
@@ -185,15 +229,31 @@ if(count($replies) == 0){
 				echo '<div class="post-buried post-username">[deleted]</div>';
 			}
 			else{
-			?>
-			<span class="post-username"><a href="<?= SITE_URL ?>/profile/user/<?= $reply['author']['slug'] ?>"><?= $reply['author']['username'] ?></a></span>
-			<div class="profile-pic">
-				<?php
+				$userId = 0;
+				if($user){
+					$userId = $user['userId'];
+				}
+				$checkUserTCA = checkUserTCA($userId, $reply['userId']);
+				
 				$avImage = $reply['author']['avatar'];
 				if(!isExternalLink($reply['author']['avatar'])){
 					$avImage = SITE_URL.'/files/avatars/'.$reply['author']['avatar'];
 				}
-				echo '<a href="'.SITE_URL.'/profile/user/'.$reply['author']['slug'].'"><img src="'.$avImage.'" alt="" /></a>';
+				$avImage = '<img src="'.$avImage.'" alt="" />';
+				if($checkUserTCA){
+					$avImage = '<a href="'.SITE_URL.'/profile/user/'.$reply['author']['slug'].'">'.$avImage.'</a>';	
+				}
+				
+				$replyUsername = $reply['author']['username'];
+				if($checkUserTCA){
+					$replyUsername = '<a href="'.SITE_URL.'/profile/user/'.$reply['author']['slug'].'" target="_blank">'.$replyUsername.'</a>';
+				}
+			?>
+			<span class="post-username"><?= $replyUsername ?></span>
+			<div class="profile-pic">
+				<?php
+
+				echo $avImage;
 				
 				?>
 			</div>
@@ -205,7 +265,9 @@ if(count($replies) == 0){
 					echo '<br>Location: '.$reply['author']['profile']['location']['value'];
 				}
 				if($user AND $user['userId'] != $reply['userId']){
-					echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+					if($checkUserTCA){					
+						echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+					}
 				}				
 				?>
 			</div>
@@ -497,7 +559,7 @@ if(!$user OR $perms['canPostReply']){
 			var thisType = $(this).data('type');
 			var thisLink = $(this);
 			$.post(url, {type: thisType, itemId: thisId}, function(data){
-				console.log(data);
+				//console.log(data);
 				if(typeof data.error != 'undefined'){
 					console.log(data.error);
 					return false;

@@ -16,7 +16,7 @@ class Slick_App_Forum_Controller extends Slick_App_AppControl
 				$output['view'] = '404';
 				return $output;
 			}
-			$output['categories'] = $this->model->getForumCategories($this->site, $this->app);
+			$output['categories'] = $this->model->getForumCategories($this->site, $this->app, $output['user']);
 			$output['view'] = 'home'; //load forum home
 			$output['title'] = $this->app['meta']['forum-title'];
 			$numTopics = $this->model->fetchSingle('SELECT count(*) as total

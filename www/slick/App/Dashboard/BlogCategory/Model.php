@@ -64,8 +64,24 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 	
 	public function getCategories($siteId, $parentId = 0, $menuMode = 0)
 	{
+		$thisUser = false;
+		if(isset($_SESSION['accountAuth'])){
+			$getUser = $this->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			if($getUser){
+				$thisUser = $getUser['userId'];
+			}
+		}
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		
 		$get = $this->getAll('blog_categories', array('parentId' => $parentId, 'siteId' => $siteId), array(), 'rank', 'asc');
 		foreach($get as $key => $row){
+			$catTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $row['categoryId'], 'blog-category');
+			if(!$catTCA){
+				unset($get[$key]);
+				continue;
+			}	
+			
 			$getChildren = $this->getCategories($siteId, $row['categoryId'], $menuMode);
 			if(count($getChildren) > 0){
 				$get[$key]['children'] = $getChildren;

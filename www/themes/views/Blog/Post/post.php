@@ -3,6 +3,10 @@ if($post['formatType'] == 'markdown'){
 	$post['content'] = markdown($post['content']);
 	$post['excerpt'] = markdown($post['excerpt']);
 }
+$tca = new Slick_App_LTBcoin_TCA_Model;
+$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+$authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['author']['userId'], 'user-profile');
 ?>
 <div class="blog-post">
 	<div class="blog-avatar">
@@ -19,7 +23,11 @@ if($post['formatType'] == 'markdown'){
 	if(!isExternalLink($post['author']['avatar'])){
 		$avImage = SITE_URL.'/files/avatars/'.$post['author']['avatar'];
 	}
-	echo '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'"><img src="'.$avImage.'" alt="" /></a>';
+	$avImage = '<img src="'.$avImage.'" alt="" />';
+	if($authorTCA){
+		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$avImage.'</a>';
+	}
+	echo $avImage;
 	
 	?>
 	</div>
@@ -29,10 +37,13 @@ if($post['formatType'] == 'markdown'){
 	if(isset($post['author']['profile']['real-name']) AND trim($post['author']['profile']['real-name']['value']) != ''){
 		$displayName =  $post['author']['profile']['real-name']['value'];
 	}
+	if($authorTCA){
+		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$displayName.'</a>';
+	}
 ?>
 		<div class="blog-date">
 			Published on <?= date('F jS, Y', strtotime($post['publishDate'])) ?> by 
-			<a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>"><?= $displayName ?></a>
+			<?= $displayName ?>
 		</div>
 		<div class="blog-content">
 			<?php
@@ -95,6 +106,9 @@ if($post['formatType'] == 'markdown'){
 		<hr>
 		<a name="comments"></a>
 		<h3>Comments</h3>
+		<p>
+			Make sure to make use of the  "downvote" button for any spammy posts, and the "upvote" feature for interesting conversation. Be excellent.
+		</p>
 		<!--<?php
 		/*if(!isset($comments) OR count($comments) == 0){
 			echo '<p>No comments yet</p>';

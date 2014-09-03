@@ -303,9 +303,26 @@ class Slick_Core_Model
 	{
 		$where = '';
 		$values = array();
-		if($field != '' AND $value != ''){
-			$where = 'WHERE '.$field.' = :'.$field;
-			$values[':'.$field] = $value;
+		if($field != ''){
+			if(is_array($field)){
+				$where = '';
+				$fnum = 0;
+				foreach($field as $f => $v){
+					if($fnum == 0){
+						$where .= ' WHERE '.$f.' = :'.$f.' ';
+					}
+					else{
+						$where .= ' AND '.$f.' = :'.$f.' ';
+					}
+					$values[':'.$f] = $v;
+					$fnum++;
+				}
+			}
+			elseif($value != ''){
+				$where = 'WHERE '.$field.' = :'.$field;
+				$values[':'.$field] = $value;
+			}
+
 		}
 		
 		$sql = 'SELECT count(*) as total FROM '.$table.' '.$where;

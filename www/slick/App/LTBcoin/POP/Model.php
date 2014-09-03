@@ -1,8 +1,6 @@
 <?php
 class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 {
-	
-	
 	function __construct()
 	{
 		parent::__construct();
@@ -68,6 +66,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			return 0;
 		}
 		
+		$dayNums = array();
 		$numPosts = 0;
 		foreach($getPosts as $post){
 			if($minLength != 0 AND strlen(strip_tags($post['message'])) < $minLength){
@@ -81,10 +80,17 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					continue;
 				}
 			}
+			$postDate = date('Y-m-d', strtotime($post['createdAt']));
+			if(!isset($dayNums[$postDate])){
+				$dayNums[$postDate] = 1;
+			}
+			else{
+				$dayNums[$postDate]++;
+			}
 			$numPosts++;
 		}
 		
-		return $numPosts;
+		return array('total' => $numPosts, 'days' => $dayNums);
 	}
 	
 	
@@ -100,8 +106,9 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		$numPosts = 0;
 		$numTopics = 0;
 		$values = array(':id' => $userId);
+		$dayNums = array();
 		if($andTopics >= 0){
-			$sql = 'SELECT postId, content FROM forum_posts WHERE userId = :id';
+			$sql = 'SELECT postId, content, postTime FROM forum_posts WHERE userId = :id';
 			if(is_array($timeframe)){
 				$sql .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
 			}
@@ -113,10 +120,19 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					}
 				}
 			}
+			foreach($get as $row){
+				$rowDate = date('Y-m-d', strtotime($row['postTime']));
+				if(!isset($dayNums[$rowDate])){
+					$dayNums[$rowDate] = 1;
+				}
+				else{
+					$dayNums[$rowDate]++;
+				}
+			}
 			$numPosts =  count($get);
 		}
 		if($andTopics != 0){
-			$sql2 = 'SELECT topicId, content FROM forum_topics WHERE userId = :id';
+			$sql2 = 'SELECT topicId, content, postTime FROM forum_topics WHERE userId = :id';
 			if(is_array($timeframe)){
 				$sql2 .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
 			}
@@ -128,10 +144,29 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					}
 				}
 			}			
+			foreach($get2 as $row){
+				$rowDate = date('Y-m-d', strtotime($row['postTime']));
+				if(!isset($dayNums[$rowDate])){
+					$dayNums[$rowDate] = 1;
+				}
+				else{
+					$dayNums[$rowDate]++;
+				}
+			}			
 			$numTopics =  count($get2);
 		}
 		
-		return $numPosts + $numTopics;
+		return array('total' => ($numPosts + $numTopics), 'days' => $dayNums);
+	}
+	
+	public function negateUserBuriedPosts($userId, $timeframe = false)
+	{
+		$sql = 'SELECT postId, content FROM forum_posts WHERE userId = :id AND buried = 1';
+		if(is_array($timeframe)){
+			$sql .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
+		}
+		$get = $this->fetchAll($sql, array(':id' => $userId));
+		return count($get) * $this->weights['postScore'];
 	}
 	
 	/*
@@ -190,10 +225,11 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$popFields = $fields;
 		}
 		
-		$output = array('userId' => $userId, 'info' => array(), 'score' => 0, 'extra' => array());
+		$output = array('userId' => $userId, 'info' => array(), 'score' => 0, 'extra' => array(), 'negativeScore' => 0);
 		foreach($popFields as $field){
 			$score = 0;
 			$num = 0;
+			$negate = 0;
 			switch($field){
 				case 'views':
 					$num = $this->getUserFirstViews($userId, $timeframe);
@@ -208,15 +244,28 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					break;
 				case 'comments':
 					$num = $this->getNumUserComments($userId, $timeframe);
-					$score = $this->diminishScore($num, $this->weights['commentScore']);
+					foreach($num['days'] as $numDay => $dayPosts){
+						$score += $this->diminishScore($dayPosts, $this->weights['commentScore']);
+					}
+					$output['extra'] = $num['days'];
+					$num = $num['total'];
 					break;
 				case 'posts':
-					$num = $this->getNumUserPosts($userId, $timeframe, 0, 0);
-					$score = $this->diminishScore($num, $this->weights['postScore']);
+					$num = $this->getNumUserPosts($userId, $timeframe, 0, 0);					
+					foreach($num['days'] as $numDay => $dayPosts){
+						$score += $this->diminishScore($dayPosts, $this->weights['postScore']);
+					}
+					$output['extra'] = $num['days'];
+					$num = $num['total'];
+					$negate = $this->negateUserBuriedPosts($userId, $timeframe);
 					break;
 				case 'threads':
 					$num = $this->getNumUserPosts($userId, $timeframe, 0, -1);
-					$score = $this->diminishScore($num, $this->weights['threadScore']);				
+					foreach($num['days'] as $numDay => $dayPosts){
+						$score += $this->diminishScore($dayPosts, $this->weights['threadScore']);
+					}		
+					$output['extra'] = $num['days'];
+					$num = $num['total'];				
 					break;
 				case 'magic-words':
 					$num = $this->getNumUserWords($userId, $timeframe);
@@ -224,7 +273,11 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					break;
 				case 'likes':
 					$num = $this->getNumUserLikes($userId, $timeframe);
-					$score = $this->diminishScore($num, $this->weights['likeScore']);
+					foreach($num['days'] as $numDay => $dayPosts){
+						$score += $this->diminishScore($dayPosts, $this->weights['likeScore']);
+					}		
+					$output['extra'] = $num['days'];
+					$num = $num['total'];						
 					break;
 				case 'referrals':
 					$num = $this->getNumUserActiveReferrals($userId, $timeframe);
@@ -232,7 +285,10 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					break;
 				case 'blog-posts':
 					$num = $this->getNumUserPublishedPosts($userId, $timeframe);
-					$score = $num * $this->weights['publishScore'];
+					$score = ($num * $this->weights['publishScore']) * ($this->weights['writerCut'] / 100);
+					
+					$editorNum = $this->getNumUserEditedPosts($userId, $timeframe);
+					$score += ($editorNum * $this->weights['publishScore']) * ($this->weights['editorCut'] / 100);
 					break;
 				case 'pov':
 					$pov = $this->getUserPOV($userId, $timeframe);
@@ -245,6 +301,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			
 			$output['info'][$field] = $num;
 			$output['score'] += $score;
+			$output['negativeScore'] += $negate;
 			
 		}
 		
@@ -263,12 +320,14 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$getScore = $this->getPopScore($user['userId'], $timeframe, $fields);
 			$getScore['address'] = $user['value'];
 			$getScore['username'] = $user['username'];
+			$getScore['trueScore'] = $getScore['score'];
+			$getScore['score'] -= $getScore['negativeScore'];
 			$totalScore += $getScore['score'];
 			$scores[] = $getScore;
 		}
 		
 		foreach($scores as $score){
-			if($score['score'] == 0){
+			if($score['score'] <= 0){
 				continue;
 			}
 			$score['percent'] = ($score['score'] / $totalScore) * 100;
@@ -298,6 +357,8 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		$output['likeScore'] = $meta->getAppMeta($appId, 'pop-like-weight');
 		$output['referralScore'] = $meta->getAppMeta($appId, 'pop-referral-weight');
 		$output['publishScore'] = $meta->getAppMeta($appId, 'pop-publish-weight');
+		$output['editorCut'] = $meta->getAppMeta($appId, 'pop-editor-cut');
+		$output['writerCut'] = 100 - $output['editorCut'];
 		
 		foreach($output as $key => $val){
 			$output[$key] = floatval($val);
@@ -344,6 +405,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			}
 		}
 		$num = 0;
+		$dayNums = array();
 		foreach($this->likeData as $like){
 			switch($like['type']){
 				case 'post':
@@ -359,11 +421,19 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			if(!$getItem OR !isset($getItem['userId'])){
 				continue;
 			}
+			
 			if($getItem['userId'] == $userId AND $like['userId'] != $userId){
+				$likeDate = date('Y-m-d', strtotime($like['likeTime']));
+				if(!isset($dayNums[$likeDate])){
+					$dayNums[$likeDate] = 1;
+				}
+				else{
+					$dayNums[$likeDate]++;
+				}
 				$num++;
 			}
 		}
-		return $num;	
+		return array('total' => $num, 'days' => $dayNums);	
 	}
 	
 	public function getNumUserActiveReferrals($userId, $timeframe = false)
@@ -399,6 +469,19 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		return count($get);
 	}
 	
+	public function getNumUserEditedPosts($userId, $timeframe = false)
+	{
+		$sql = 'SELECT userId FROM blog_posts
+				WHERE (editedBy = :editId OR (userId = :userId AND editedBy = 0)) AND published = 1';
+		if(is_array($timeframe)){
+			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
+		}				
+		
+		$get = $this->fetchAll($sql, array(':userId' => $userId, 'editId' => $userId));
+		
+		return count($get);
+	}	
+	
 	public function getUserPOV($userId, $timeframe = false)
 	{
 		$score = 0;
@@ -409,19 +492,24 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$this->postModel = new Slick_App_Blog_Post_Model;
 		}
 		
+		$blogModule = $this->get('modules', 'blog-post', array(), 'slug');
+		
 		$sql = 'SELECT postId, userId, url, title, views FROM blog_posts
-				WHERE userId = :userId AND published = 1';
+				WHERE (userId = :userId OR editedBy = :editedBy) AND published = 1';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
 		}				
 		
-		$get = $this->fetchAll($sql, array(':userId' => $userId));
+		$get = $this->fetchAll($sql, array(':userId' => $userId, 'editedBy' => $userId));
 		$pageIndex = Slick_App_Controller::$pageIndex;
 		$getSite = $this->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$povScores = array();
 		foreach($get as $post){
+			
+			//get view count
 			$thisScore =  $post['views'] * $this->weights['viewScore'];
 			
+			/*
 			$getMeta = $this->postModel->getPostMeta($post['postId']);
 			$post['meta'] = array();
 			foreach($getMeta as $mkey => $val){
@@ -435,8 +523,15 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 				//multiply by 4!
 				$thisScore = $thisScore * 4;
 			}
+			*/
 			
+			//get magic word count
+			$getWords = $this->fetchSingle('SELECT count(*) as total FROM pop_words WHERE moduleId = :blogModule AND itemId = :postId',
+										array('blogModule' => $blogModule['moduleId'], 'postId' => $post['postId']));
+			$post['wordSubmits'] = $getWords['total'];
+			$thisScore += intval($getWords['total']) * $this->weights['wordScore'];
 			
+			//get disqus comment count
 			$getIndex = extract_row($pageIndex, array('itemId' => $post['postId'], 'moduleId' => 28));
 			$postURL = $getSite['url'].'/blog/post/'.$post['url'];
 			if($getIndex AND count($getIndex) > 0){
@@ -450,6 +545,12 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 				$post['comments'] = $numReplies;
 			}
 			
+			if($post['userId'] == $userId AND $post['editedBy'] != $userId){
+				$thisScore = $thisScore * ($this->weights['writerCut'] / 100);
+			}
+			elseif($post['userId'] != $userId AND $post['editedBy'] == $userId){
+				$thisScore = $thisScore * ($this->weights['editorCut'] / 100);
+			}
 			
 			$popScores[] = array('post' => $post, 'score' => $thisScore);
 			$score += $thisScore;

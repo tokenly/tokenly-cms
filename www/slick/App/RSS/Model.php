@@ -37,7 +37,15 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		
 		$feed = new FeedWriter(RSS2);
 		$feed->setTitle($rssMeta['blog-feed-title']);
-		$feed->setLink($data['site']['url'].'/'.$rssApp['url'].'/'.$feedModule['url'].'/blog');
+		
+		if(isset($_SERVER['HTTP_FROMLINK'])){
+			$feed->setLink($_SERVER['HTTP_FROMLINK']);
+		}
+		else{
+			$newGet = $_GET;
+			unset($newGet['params']);
+			$feed->setLink($data['site']['url'].'/'.$rssApp['url'].'/'.$feedModule['url'].'/blog?'.http_build_query($newGet));
+		}
 		$feed->setDescription($rssMeta['blog-feed-description']);
 		
 	

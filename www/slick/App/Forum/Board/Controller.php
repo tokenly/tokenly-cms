@@ -5,6 +5,8 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 	{
 		parent::__construct();
 		$this->model = new Slick_App_Forum_Board_Model;
+		$this->tca = new Slick_App_LTBcoin_TCA_Model;
+		
 	}
 	
 	public function init()
@@ -23,6 +25,11 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		$getBoard = $this->model->get('forum_boards', $this->args[2], array(), 'slug');
 		if(!$getBoard OR $getBoard['siteId'] != $this->data['site']['siteId']){
 			$output['view'] = '404';
+			return $output;
+		}
+		$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
+		if(!$checkTCA){
+			$output['view'] = '403';
 			return $output;
 		}
 		

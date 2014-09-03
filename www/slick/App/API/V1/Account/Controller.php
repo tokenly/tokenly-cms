@@ -130,11 +130,15 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 			}
 		}
 		
+		if(isset($this->args['data']['avatar'])){
+			$useData['avatar'] = $this->args['data']['avatar'];
+		}
+		
 		try{
 			$update = $this->model->updateSettings($this->user, $useData, $getApp, true);
 		}
 		catch(Exception $e){
-			http_response_code(400);
+			http_response_code(401);
 			$output['error'] = $e->getMessage();
 			return $output;
 		}

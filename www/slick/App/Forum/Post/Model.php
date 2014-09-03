@@ -37,14 +37,20 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		}
 		
 		$useData['content'] = strip_tags($useData['content']);
-		
 		$useData['postTime'] = timestamp();
+		
+		if($appData['perms']['isTroll']){
+			$useData['trollPost'] = 1;
+		}
+		
 		$post = $this->insert('forum_posts', $useData);
 		if(!$useData){
 			throw new Exception('Message required');
 		}
 		
-		$this->edit('forum_topics', $useData['topicId'], array('lastPost' => timestamp()));
+		if(!$appData['perms']['isTroll']){
+			$this->edit('forum_topics', $useData['topicId'], array('lastPost' => timestamp()));
+		}
 		
 		$useData['postId'] = $post;
 		
@@ -55,24 +61,25 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		if($numPages > 1){
 			$page = '?page='.$numPages;
 		}
-
-		mention($useData['content'], '%username% has mentioned you in a 
-				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].$page.'#post-'.$useData['postId'].'">forum post.</a>',
-				$useData['userId'], $useData['postId'], 'forum-reply');
-				
-		$getSubs = $this->getAll('forum_subscriptions', array('topicId' => $data['topicId']));
-		foreach($getSubs as $sub){
-			if($sub['userId'] != $useData['userId']){
-				$notification = '<a href="'.$appData['site']['url'].'/profile/user/'.$appData['user']['slug'].'">'.$appData['user']['username'].'</a> posted a new 
-								reply in a forum topic you are subscribed to: <a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].$page.'#post-'.$useData['postId'].'">'.$appData['topic']['title'].'</a>';
-				Slick_App_Meta_Model::notifyUser($sub['userId'], $notification, $useData['postId'], 'topic-subscription');
-			}
-			
+		
+		if(!isset($useData['trollPost'])){
+			mention($useData['content'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].$page.'#post-'.$useData['postId'].'">forum post.</a>',
+					$useData['userId'], $useData['postId'], 'forum-reply');
+					
+			$getSubs = $this->getAll('forum_subscriptions', array('topicId' => $data['topicId']));
+			foreach($getSubs as $sub){
+				if($sub['userId'] != $useData['userId']){
+					$notifyData = $appData;
+					$notifyData['postId'] = $useData['postId'];
+					$notifyData['page'] = $page;
+					$notifyData['sub'] = $sub;
+					Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.forumSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
+				}
+			}				
 		}
-		
-	
+
 		return $useData;
-		
 	}
 	
 	public function editPost($id, $data, $appData)
@@ -98,10 +105,14 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		if(!$edit){
 			throw new Exception('Error editing post');
 		}
-
-		mention($useData['content'], '%username% has mentioned you in a 
-				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].'">forum post.</a>',
-				$appData['user']['userId'], $id, 'forum-reply');
+		
+		$getPost = $this->get('forum_posts', $id);
+		
+		if($getPost['trollPost'] != 1){
+			mention($useData['content'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].'">forum post.</a>',
+					$appData['user']['userId'], $id, 'forum-reply');
+		}
 		
 		return $this->get('forum_posts', $id);
 		
@@ -117,9 +128,20 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		}
 		$limit = 'LIMIT '.$start.', '.$max;
 		
+		$andTroll = ' AND trollPost = 0 ';
+		if(isset($_GET['trollVision'])){
+			$andTroll = '';
+		}
+		else{
+			if($data['user'] AND $data['perms']['isTroll']){
+				$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+			}
+		}
+		
 		$get = $this->fetchAll('SELECT * FROM 
 								forum_posts
-								WHERE topicId = :topicId
+								WHERE topicId = :topicId AND buried = 0
+								'.$andTroll.'
 								ORDER BY postId ASC
 								'.$limit,
 								array(':topicId' => $topicId));
@@ -176,14 +198,16 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		}
 		
 		$getTopic = $this->get('forum_topics', $topicId);
-		mention($useData['content'], '%username% has mentioned you in a 
-				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$getTopic['url'].'">forum thread.</a>',
-				$appData['user']['userId'], $topicId, 'forum-topic');
+		if($getTopic['trollPost'] != 1){
+			mention($useData['content'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$getTopic['url'].'">forum thread.</a>',
+					$appData['user']['userId'], $topicId, 'forum-topic');
+		}
 		
 		return $this->get('forum_topics', $topicId);
 	}
 	
-	public function getMoveTopicForm($site)
+	public function getMoveTopicForm($site, $user)
 	{
 		$form = new Slick_UI_Form;
 		
@@ -195,7 +219,14 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 									  array(':siteId' => $site['siteId']));
 		$boardId = new Slick_UI_Select('boardId');
 		$boardId->setLabel('New Board');
+		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$tca = new Slick_App_LTBcoin_TCA_Model;
 		foreach($getBoards as $board){
+			$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['categoryId'], 'category');
+			$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['boardId'], 'board');
+			if(!$checkCat OR !$checkBoard){
+				continue;
+			}
 			$boardId->addOption($board['boardId'], $board['name']);
 		}
 		$form->add($boardId);
@@ -204,7 +235,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		
 	}
 	
-	public function moveTopic($id, $data)
+	public function moveTopic($id, $data, $user)
 	{
 		if(!isset($data['boardId'])){
 			throw new Exception('Board Required');
@@ -214,13 +245,20 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 			throw new Exception('Board not found');
 		}
 		
+		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['categoryId'], 'category');
+		$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['boardId'], 'board');
+		
+		if(!$checkCat OR !$checkBoard){
+			throw new Exception('You do not have permission to move into that board');
+		}
+
 		$edit = $this->edit('forum_topics', $id, array('boardId' => $getBoard['boardId']));
 		if(!$edit){
 			throw new Exception('Error moving thread');
-		}
-		
+		}		
 		return $getBoard;
-		
 	}
 	
 	public function getPostPage($postId, $perPage)

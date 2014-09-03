@@ -153,6 +153,7 @@ class Slick_App_Dashboard_LTBcoin_POP_Controller extends Slick_App_ModControl
 				}
 			}
 		}
+		array_push($headings, 'Negative Points');
 
 		$infoData[] = $headings;
 		foreach($reportData as $rep){
@@ -160,8 +161,8 @@ class Slick_App_Dashboard_LTBcoin_POP_Controller extends Slick_App_ModControl
 			foreach($rep['info'] as $head => $num){
 				$row[] = $num;
 			}
+			$row[] = $rep['negativeScore'];
 			$infoData[] = $row;
-			
 		}
 		
 		$filename = 'POP-Report-'.$getReport['reportId'].'_'.timestamp().'.csv';

@@ -1,6 +1,8 @@
 <?php
 class Slick_App_Dashboard_LTBcoin_POP_Model extends Slick_Core_Model
 {
+	private $startDate = '2014-06-27 00:00:00';
+	private $realStart = '2014-01-01';
 
 	public function getPOPForm()
 	{
@@ -10,6 +12,31 @@ class Slick_App_Dashboard_LTBcoin_POP_Model extends Slick_Core_Model
 		$label->setLabel('Label (optional)');
 		$form->add($label);
 		
+		$startDate = $this->startDate;
+		$curDate = timestamp();
+		
+		$chooseWeek = new Slick_UI_Select('week');
+		$chooseWeek->setLabel('Report Week');
+		
+		$diff = strtotime($startDate, 0) - strtotime($curDate, 0);
+		$weeks = intval(abs(floor($diff / 604800))) - 1;
+		for($i = $weeks; $i >= 0; $i--){
+			if($i == 0){
+				$weekStart = strtotime($this->realStart);
+			}
+			else{
+				$weekStart = strtotime($startDate) + (604800 * $i) + 86400;
+			}
+			$weekEnd = strtotime($startDate) + ((604800 * $i) + 604800 + 86340);
+			$weekStartDate = date('F jS, Y', $weekStart);
+			$weekEndDate = date('F jS, Y', $weekEnd);
+			$weekName = 'Week '.($i + 1).' '.$weekStartDate.' - '.$weekEndDate;
+			$chooseWeek->addOption($i, $weekName);
+		}
+		$chooseWeek->setSelected($weeks);
+		$form->add($chooseWeek);
+		
+		/*
 		$start = new Slick_UI_Date('startDate');
 		$start->setLabel('Start Date');
 		$start->setMinYear(2014);
@@ -21,6 +48,7 @@ class Slick_App_Dashboard_LTBcoin_POP_Model extends Slick_Core_Model
 		$end->setMinYear(2014);
 		$end->setMaxYear(date('Y'));
 		$form->add($end);
+		*/
 		
 		$fields = new Slick_UI_CheckboxList('fields');
 		$fields->setLabel('Choose Metrics');
@@ -44,8 +72,25 @@ class Slick_App_Dashboard_LTBcoin_POP_Model extends Slick_Core_Model
 	
 	public function generateReport($data)
 	{
+		/*
 		$data['startDate'] = date('Y-m-d', strtotime($data['startDate']));
 		$data['endDate'] = date('Y-m-d', strtotime($data['endDate']));
+		*/
+		//figure out dates based on selected week
+		$weekNum = intval($data['week']);
+		$startTime = strtotime($this->startDate);
+		if($weekNum == 0){
+			$weekStartTime = strtotime($this->realStart);
+		}
+		else{
+			$weekStartTime = $startTime + (604800 * $weekNum) + 86400;
+		}
+		
+		$weekEndTime = $startTime + ((604800 * $weekNum) + 604800 + 86340);
+		
+		
+		$data['startDate'] = date('Y-m-d H:i:s', $weekStartTime);
+		$data['endDate'] = date('Y-m-d H:i:s', $weekEndTime);
 		
 		$timeframe = array('start' => $data['startDate'], 'end' => $data['endDate']);
 		$pop = new Slick_App_LTBcoin_POP_Model;

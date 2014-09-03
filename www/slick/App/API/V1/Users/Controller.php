@@ -138,7 +138,23 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}		
+		
 		$profile = $model->getUserProfile($getUser['userId'], $this->args['data']['site']['siteId']);
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
+		
+		$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getUser['userId'], 'user-profile');
+		if(!$userTCA){
+			$profile['profile'] = array();
+		}		
+		
 		unset($profile['userId']);
 		if($profile['showEmail'] == 0){
 			unset($profile['email']);
@@ -147,7 +163,6 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		unset($profile['pubProf']);
 		unset($profile['lastActive']);
 		unset($profile['lastAuth']);
-		
 		
 		$output['profile'] = $profile;
 		
@@ -234,6 +249,18 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 										FROM users
 										ORDER BY userId DESC
 										LIMIT '.$start.', '.$max);
+										
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}		
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
+		
+												
 		foreach($users as $key => $user){
 			$profile = $profModel->getUserProfile($user['userId'], $this->args['data']['site']['siteId']);
 			if($profile['pubProf'] == 0){
@@ -246,13 +273,18 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 				unset($user['email']);
 			}
 			$user['avatar'] = $profile['avatar'];
-			$profile = $profile['profile'];
-
-			unset($profile['regDate']);
-			unset($profile['userId']);
-			unset($profile['lastAuth']);
-			unset($profile['lastActive']);
-			$user['profile'] = $profile;
+			$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $user['userId'], 'user-profile');
+			if(!$userTCA){
+				$user['profile'] = array();
+			}
+			else{
+				$profile = $profile['profile'];
+				unset($profile['regDate']);
+				unset($profile['userId']);
+				unset($profile['lastAuth']);
+				unset($profile['lastActive']);
+				$user['profile'] = $profile;
+			}
 			unset($user['lastAuth']);
 			unset($user['lastActive']);
 			unset($user['userId']);

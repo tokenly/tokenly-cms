@@ -12,11 +12,21 @@ if(isset($board)){
 }
 $catList = '';
 $model = new Slick_Core_Model;
+$boardModule = $model->get('modules', 'forum-board', array(), 'slug');
+$tca = new Slick_App_LTBcoin_TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
 foreach($getCats as $cat){
+	$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $cat['categoryId'], 'category');
+	if(!$checkTCA){
+		continue;
+	}	
 	$catList .= '<li><h3>'.$cat['name'].'</h3></li>';
 	$getBoards = $model->getAll('forum_boards', array('categoryId' => $cat['categoryId'], 'active' => 1), array(), 'rank', 'asc');
 	foreach($getBoards as $board){
+		$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['boardId'], 'board');
+		if(!$checkTCA){
+			continue;
+		}
 		$itemClass = '';
 		if($board['slug'] == $activeBoard){
 			$itemClass .= ' active';

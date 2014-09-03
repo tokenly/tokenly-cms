@@ -2,11 +2,13 @@
 	<div>
 		<?= $this->displayBlock('home-sidebar') ?>
 	</div>
-
 </div>
 <div class="home-posts-cont">
 	<?php
-
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$title = 'Recent Posts';
 		$catModel = new Slick_App_Blog_Category_Model;
 		$settings = new Slick_App_Dashboard_Settings_Model;
@@ -30,6 +32,18 @@
                 OR (trim($post['coverImage']) == '' AND $post['featured'] != 1)){
 				continue;
 			}
+			
+			$postTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $post['postId'], 'blog-post');
+			if(!$postTCA){
+				continue;
+			}
+			
+			foreach($post['categories'] as $cat){
+				$catTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+				if(!$catTCA){
+					continue 2;
+				}
+			}
 
 			$class = '';
 			if(isset($post['soundcloud-url'])){
@@ -41,11 +55,18 @@
 			}
 			$avatar = '';
 			$author = $post['author'];
+			
+			$authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $author['userId'], 'user-profile');
+			
 			$avImage = $author['avatar'];
 			if(!isExternalLink($author['avatar'])){
 				$avImage = SITE_URL.'/files/avatars/'.$author['avatar'];
 			}
-			$avatar = '<span class="circle-avatar"><a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'"><img src="'.$avImage.'" alt="" /></a></span>';
+			$avImage = '<img src="'.$avImage.'" alt="" />';
+			if($authorTCA){
+				$avImage = '<a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'">'.$avImage.'</a>';
+			}
+			$avatar = '<span class="circle-avatar">'.$avImage.'</span>';
 			
 			?>
 			<li class="<?= $class ?>">
@@ -72,8 +93,12 @@
 						if(!isset($post['author']['profile']['real-name']) OR trim($post['author']['profile']['real-name']['value']) == ''){
 							$post['author']['profile']['real-name'] = array('value' => $post['author']['username']);
 						}
+						$authorLink = $post['author']['profile']['real-name']['value'];
+						if($authorTCA){
+							$authorLink = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$authorLink.'</a>';
+						}
 						?>
-							<?= $avatar ?><a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>"><?= $post['author']['profile']['real-name']['value'] ?></a>
+							<?= $avatar ?><?= $authorLink ?>
 					</div>
 				</div>
 				<div class="post-title">

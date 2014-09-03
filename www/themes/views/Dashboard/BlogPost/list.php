@@ -8,6 +8,9 @@ foreach($postList as $key => $val){
 	elseif($val['ready'] == 1){
 		$postList[$key]['status'] = 'Ready';
 	}
+	elseif($val['status'] == 'editing'){
+		$postList[$key]['status'] = 'Editing';
+	}
 	else{
 		$postList[$key]['status'] = 'Draft';
 	}

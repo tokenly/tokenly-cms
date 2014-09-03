@@ -81,8 +81,10 @@ class Slick_App_AppControl extends Slick_Core_Controller
     public static function checkModuleAccess($moduleId, $redirect = true)
     {
 		$model = new Slick_Core_Model;
+		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$controller = new Slick_Core_Controller;
+		
 		if(!isset($_SESSION['accountAuth'])){
 			if($redirect){
 				$controller->redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI'], 1);
@@ -112,10 +114,19 @@ class Slick_App_AppControl extends Slick_Core_Controller
 				$access = 1;
 			}
 		}
+
+		$checkTCA = $tca->checkItemAccess($get['userId'], $moduleId, 0, '');
+		if($checkTCA){
+			$access = 1;
+		}
+		if(!$checkTCA AND $access === 1){
+			$access = 0;
+		}
+	
 		if($access === 1){
 			return true;
 		}
-		
+
 		if($redirect){
 			$controller->redirect($getSite['url'].'/403?r='.$_SERVER['REQUEST_URI'], 1);
 			die();

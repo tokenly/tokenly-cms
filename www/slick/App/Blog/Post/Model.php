@@ -14,6 +14,10 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 			}
 		}
 		
+		$get['modifiedDate'] = $get['editTime'];
+		unset($get['editTime']);
+		
+		
 		$output = $get;
 		$profModel = new Slick_App_Profile_User_Model;
 		$output['author'] = $profModel->getUserProfile($get['userId'], $siteId);
@@ -94,11 +98,10 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['post']['url'].'#comment-'.$post.'">blog comment.</a>',
 				$useData['userId'], $post, 'blog-reply');
 		
+		$notifyData = $appData;
+		$notifyData['postId'] = $post;
 		if($appData['user']['userId'] != $appData['post']['userId']){
-			Slick_App_Meta_Model::notifyUser($appData['post']['userId'],
-			'<a href="'.$appData['site']['url'].'/profile/user/'.$appData['user']['slug'].'">'.$appData['user']['username'].'</a>
-			posted a comment on your blog post: <a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['post']['url'].'#comment-'.$post.'">'.$appData['post']['title'].'</a>.',
-											$post, $type = 'new-reply');
+			Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
 		}
 		
 		return $post;

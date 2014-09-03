@@ -8,6 +8,8 @@
 <p>
 	Go to your <a href="<?= SITE_URL ?>/<?= $app['url'] ?>/address-manager">Address Manager</a> to add and verify new bitcoin addresses.
 </p>
+<form action="" method="post">
+<input type="submit" name="forceRefresh" style="font-size: 14px;" id="forceRefresh" value="Force Balance Refresh" />
 <h4>My Tokens</h4>
 <p>
 	<?php

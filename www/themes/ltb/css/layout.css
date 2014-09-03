@@ -2022,6 +2022,10 @@ a.anchor{display: block; position: relative; top: -150px; visibility: hidden;}
 	padding-left: 0px;
 }
 
+.pop-report-form select{
+	width: 450px;
+}
+
 /* Smaller than standard 960 (devices and browsers) */
 @media only screen and (max-width: 959px) {
 	.container{

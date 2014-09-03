@@ -59,20 +59,26 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		$useData['postTime'] = timestamp();
 		$useData['lastPost'] = timestamp();
 		
+		if($appData['perms']['isTroll']){
+			$useData['trollPost'] = 1;
+		}
+		
 		$post = $this->insert('forum_topics', $useData);
 		if(!$post){
 			throw new Exception('Error posting topic');
 		}
 		
-		mention($useData['content'], '%username% has mentioned you in a 
-				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/post/'.$useData['url'].'">forum thread.</a>',
-				$useData['userId'], $useData['postId'], 'forum-topic');
-				
+		if(!isset($useData['trollPost'])){
+		
+			mention($useData['content'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/post/'.$useData['url'].'">forum thread.</a>',
+					$useData['userId'], $useData['postId'], 'forum-topic');
+					
+		}
+		
 		//auto subscribe to thread
 		$subscribe = $this->insert('forum_subscriptions', array('userId' => $useData['userId'], 'topicId' => $post));
-		
 
-		
 		return $useData;
 		
 	}
@@ -97,31 +103,88 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 				$andFilters = ' WHERE boardId IN('.join(',', $filters).') ';
 			}
 			
+			if(isset($_GET['trollVision'])){
+				$andTroll = '';
+			}
+			else{
+				if($data['user'] AND $data['perms']['isTroll']){
+					if($andFilters != ''){
+						$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+					}
+					else{
+						$andTroll = ' WHERE (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+					}
+				}
+				else{
+					if($andFilters != ''){
+						$andTroll = ' AND trollPost = 0 ';
+					}
+					else{
+						$andTroll = ' WHERE trollPost = 0 ';
+					}
+				}
+			}
+			
 			$topics = $this->fetchAll('SELECT * 
 									   FROM forum_topics
 									   '.$andFilters.'
+									   '.$andTroll.'
 									   ORDER BY lastPost DESC
 									   '.$limit);
 		}
 		else{
+			
+			$andTroll = ' AND trollPost = 0 ';
+			if(isset($_GET['trollVision'])){
+				$andTroll = '';
+			}
+			else{
+				if($data['user'] AND $data['perms']['isTroll']){
+					$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+				}
+			}
+			
 			$topics = $this->fetchAll('SELECT * 
 									   FROM forum_topics
 									   WHERE boardId = :boardId AND sticky != 1
+									   '.$andTroll.'
 									   ORDER BY
 									   lastPost DESC
 									   '.$limit, array(':boardId' => $boardId) );
 		}
-								   
 		
+		$topics = $this->checkTopicsTCA($topics, $data);
+								
 		$topics = $this->parseTopics($topics, $data, $all);
 		
 		return $topics;
 		
 	}
 	
+	public function checkTopicsTCA($topics, $data)
+	{
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
+		foreach($topics as $k => $row){
+			$getBoard = $this->get('forum_boards', $row['boardId']);
+			$checkCat = $tca->checkItemAccess($data['user'], $data['module']['moduleId'], $getBoard['categoryId'], 'category');
+			$checkBoard = $tca->checkItemAccess($data['user'], $data['module']['moduleId'], $row['boardId'], 'board');
+			if(!$checkBoard OR !$checkCat){
+				unset($topics[$k]);
+				continue;
+			}
+			$checkTCA = $tca->checkItemAccess($data['user'], $postModule['moduleId'], $row['topicId'], 'topic');
+			if(!$checkTCA){
+				unset($topics[$k]);
+			}
+		}
+		return $topics;
+	}
+	
 	public function getAllStickyPosts($data)
 	{
 		$topics = $this->getAll('forum_topics', array('sticky' => 1));
+		$topics = $this->checkTopicsTCA($topics, $data);
 		$topics = $this->parseTopics($topics, $data, true);
 		return $topics;
 		
@@ -130,6 +193,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
     public function getBoardStickyPosts($data, $boardId)
     {
 		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'boardId' => $boardId));
+		$topics = $this->checkTopicsTCA($topics, $data);
 		$topics = $this->parseTopics($topics, $data, true);
 		return $topics;
     }
@@ -137,12 +201,24 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function parseTopics($topics, $data, $all = false)
 	{
-		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$profModel = new Slick_App_Profile_User_Model;
+		$profileModule = $this->get('modules', 'user-profile', array(), 'slug');
+
+		$andTroll = ' AND trollPost = 0 ';
+		if(isset($_GET['trollVision'])){
+			$andTroll = '';
+		}
+		else{
+			if($data['user'] AND $data['perms']['isTroll']){
+				$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+			}
+		}
 
 		foreach($topics as $key => $row){
 			
 			$author = $profModel->getUserProfile($row['userId'], $data['site']['siteId']);
+
 			$topics[$key]['author'] = $author;
 			$linkClass = '';
 			$linkExtra = '';
@@ -160,29 +236,47 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 				
 				$topics[$key]['link'] .= '<div class="post-category">Board: <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$getBoard['slug'].'">'.$getBoard['name'].'</a></div>';
 			}
-			$avatar = '';
 			
+			$checkAuthorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $author['userId'], 'user-profile'); 
+			
+			$avatar = '';
 			$avImage = $author['avatar'];
 			if(!isExternalLink($author['avatar'])){
 				$avImage = $data['site']['url'].'/files/avatars/'.$author['avatar'];
 			}
-			$avatar = '<span class="mini-avatar"><a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'"><img src="'.$avImage.'" alt="" /></a></span>';
+			$avImage = '<img src="'.$avImage.'" alt="" />';
+			if($checkAuthorTCA){
+				$avImage = '<a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'">'.$avImage.'</a>';
+			}
+			$avatar = '<span class="mini-avatar">'.$avImage.'</span>';
 		
-
-			$topics[$key]['started'] = $avatar.'<a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'">'.$author['username'].'</a>
+			$authorLink = $author['username'];
+			if($checkAuthorTCA){
+				$authorLink = '<a href="'.$data['site']['url'].'/profile/user/'.$author['slug'].'">'.$authorLink.'</a>';
+			}
+			
+			$topics[$key]['started'] = $avatar.$authorLink.'
 										<br>
 										<span class="post-date">'.formatDate($row['postTime']).'</span>';
-			$topics[$key]['numReplies'] = $this->count('forum_posts', 'topicId', $row['topicId']);
+										
+			$countReplies = $this->fetchSingle('SELECT count(*) as total
+												FROM forum_posts
+												WHERE topicId = :topicId AND buried = 0
+												'.$andTroll, array(':topicId' => $row['topicId']));
+												
+			$topics[$key]['numReplies'] = $countReplies['total'];
 			
 			$topics[$key]['lastPost'] = '';
 			if($topics[$key]['numReplies'] > 0){
 				$lastPost = $this->fetchSingle('SELECT * 
 												FROM forum_posts
 												WHERE topicId = :id AND buried = 0
+												'.$andTroll.'
 												ORDER BY postId DESC
 												LIMIT 1', array(':id' => $row['topicId']));
 				if($lastPost){
 					$lastAuthor = $profModel->getUserProfile($lastPost['userId'], $data['site']['siteId']);
+					$lastAuthorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $lastAuthor['userId'], 'user-profile');
 					$andPage = '';
 					$numPages = ceil($topics[$key]['numReplies'] / $data['app']['meta']['postsPerPage']);
 					if($numPages > 1){
@@ -206,10 +300,18 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 					if(!isExternalLink($lastAuthor['avatar'])){
 						$avImage = $data['site']['url'].'/files/avatars/'.$lastAuthor['avatar'];
 					}
-					$avatar = '<span class="mini-avatar"><a href="'.$data['site']['url'].'/profile/user/'.$lastAuthor['slug'].'"><img src="'.$avImage.'" alt="" /></a></span>';
+					$avImage = '<img src="'.$avImage.'" alt="" />';
+					if($lastAuthorTCA){
+						$avImage = '<a href="'.$data['site']['url'].'/profile/user/'.$lastAuthor['slug'].'">'.$avImage.'</a>';
+					}
+					$avatar = '<span class="mini-avatar">'.$avImage.'</span>';
 					
+					$lastAuthorLink = $lastAuthor['username'];
+					if($lastAuthorTCA){
+						$lastAuthorLink = '<a href="'.$data['site']['url'].'/profile/user/'.$lastAuthor['slug'].'">'.$lastAuthorLink.'</a>';
+					}
 					
-					$topics[$key]['lastPost'] = $avatar.'<a href="'.$data['site']['url'].'/profile/user/'.$lastAuthor['slug'].'">'.$lastAuthor['username'].'</a>
+					$topics[$key]['lastPost'] = $avatar.$lastAuthorLink.'
 												
 												<span class="post-date">'.formatDate($lastPost['postTime']).'</span>';
 				}

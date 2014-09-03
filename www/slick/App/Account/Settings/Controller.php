@@ -29,7 +29,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 			if($accountModule){
 				$checkAccess = Slick_App_AppControl::checkModuleAccess($accountModule['moduleId'], false);
 				if($checkAccess){
-					$thisUser = $this->model->get('users', $this->args[2], array('userId', 'username', 'slug', 'email'));
+					$thisUser = $this->model->get('users', $this->args[2], array('userId', 'username', 'slug', 'email','activated'));
 					if(!$thisUser){
 						$output['view'] = '404';
 						return $output;
@@ -46,9 +46,10 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 		
 		
 		$output['form'] = $this->model->getSettingsForm($thisUser, $this->data['app'], $output['adminView']);
-		
+
 		if(posted()){
 			$data = $output['form']->grabData();
+
 			
 			try{
 				$update = $this->model->updateSettings($thisUser, $data, $this->data['app'], false, $output['adminView']);
@@ -76,7 +77,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 		}
 		
 		$getTokenVal = $this->model->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
-										array(':userId' => $this->data['user']['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
+										array(':userId' => $thisUser['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
 		if($getTokenVal){
 			$getSettings['field-'.PRIMARY_TOKEN_FIELD] = $getTokenVal['value'];
 		}

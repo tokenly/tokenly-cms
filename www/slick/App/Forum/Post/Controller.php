@@ -5,6 +5,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 	{
 		parent::__construct();
 		$this->model = new Slick_App_Forum_Post_Model;
+		$this->tca = new Slick_App_LTBcoin_TCA_Model;
 	}
 	
 	public function init()
@@ -22,7 +23,16 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			$output['view'] = '404';
 			return $output;
 		}
-
+		
+		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
+		$getBoard = $this->model->get('forum_boards', $getTopic['boardId']);
+		$checkCat = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getBoard['categoryId'], 'category');
+		$checkBoard = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getTopic['boardId'], 'board');
+		$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getTopic['topicId'], 'topic');
+		if(!$checkTCA OR !$checkBoard OR !$checkCat){
+			$output['view'] = '403';
+			return $output;
+		}
 		
 		$likeUsers = $this->model->fetchAll('SELECT u.username, u.userId, u.slug
 									  FROM user_likes l
@@ -31,7 +41,6 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$getTopic['likeUsers'] = $likeUsers;
 		$getTopic['likes'] = count($likeUsers);
 		
-		$getBoard = $this->model->get('forum_boards', $getTopic['boardId']);
 		if($getBoard['siteId'] != $this->data['site']['siteId']){
 			$output['view'] = '404';
 			return $output;
@@ -126,7 +135,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['title'] = $getTopic['title'].' - '.$getBoard['name'];
 		
 		$output['page'] = 1;
-		$output['totalReplies'] = $this->model->count('forum_posts', 'topicId', $getTopic['topicId']);
+		$output['totalReplies'] = $this->model->count('forum_posts', array('topicId' => $getTopic['topicId'], 'buried' => 0));
 		$output['numPages'] = ceil($output['totalReplies'] / $this->data['app']['meta']['postsPerPage']);
 		if(isset($_GET['page'])){
 			$page = intval($_GET['page']);
@@ -315,7 +324,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1, 'content' => '[deleted]'));
+		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1));
 		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
 		$output['view'] = 'topic';
 		
@@ -419,7 +428,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$output['view'] = 'move-topic';
-		$output['form'] = $this->model->getMoveTopicForm($this->data['site']);
+		$output['form'] = $this->model->getMoveTopicForm($this->data['site'], $this->data['user']);
 		$output['topic'] = $this->topic;
 		$output['board'] = $this->board;
 		$output['message'] = '';
@@ -429,7 +438,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		if(posted()){
 			$data = $output['form']->grabData();
 			try{
-				$move = $this->model->moveTopic($this->topic['topicId'], $data);
+				$move = $this->model->moveTopic($this->topic['topicId'], $data, $this->data['user']);
 			}
 			catch(Exception $e){
 				$output['message'] = $e->getMessage();
@@ -478,9 +487,11 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			echo json_encode($output);
 			die();
 		}
-		Slick_App_Meta_Model::notifyUser($this->topic['userId'], '<a href="'.$this->data['site']['url'].'/profile/user/'.$this->data['user']['slug'].'">'.$this->data['user']['username'].'</a> likes your forum thread
-		<a href="'.$this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].'">'.$this->topic['title'].'</a>',
-				$this->topic['topicId'], 'like-topic-'.$this->data['user']['userId']);
+		
+		$notifyData = $this->data;
+		$notifyData['topic'] = $this->topic;
+		Slick_App_Meta_Model::notifyUser($this->topic['userId'], 'emails.likeThreadNotice', $this->topic['topicId'], 
+										 'like-topic-'.$this->data['user']['userId'], false, $notifyData);
 		
 		$output['result'] = 'success';
 		echo json_encode($output);
@@ -570,9 +581,11 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		if($getPost['userId'] != $this->data['user']['userId']){
-			Slick_App_Meta_Model::notifyUser($getPost['userId'], '<a href="'.$this->data['site']['url'].'/profile/user/'.$this->data['user']['slug'].'">'.$this->data['user']['username'].'</a> likes your forum post in
-			<a href="'.$this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].$andPage.'#post-'.$getPost['postId'].'">'.$this->topic['title'].'.</a>',
-					$getPost['postId'], 'like-post-'.$this->data['user']['userId']);
+			$notifyData = $this->data;
+			$notifyData['topic'] = $this->topic;
+			$notifyData['page'] = $andPage;
+			$notifyData['post'] = $getPost;
+			Slick_App_Meta_Model::notifyUser($getPost['userId'], 'emails.likePostNotice', $getPost['postId'], 'like-post-'.$this->data['user']['userId'], false, $notifyData);
 		}
 		
 		$output['result'] = 'success';
@@ -720,9 +733,6 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		switch($_POST['type']){
 			case 'topic':
 				$getItem = $this->model->get('forum_topics', $_POST['itemId']);
-				if($getItem){
-					$reportMessage = ' the thread <a href="'.$this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getItem['url'].'">'.$getItem['title'].'</a>';
-				}
 				break;
 			case 'post':
 				$getItem = $this->model->get('forum_posts', $_POST['itemId']);
@@ -730,9 +740,9 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 					$getTopic = $this->model->get('forum_topics', $getItem['topicId']);
 					$getPoster = $this->model->get('users', $getItem['userId'], array('userId', 'slug', 'username'));
 					$postPage = $this->model->getPostPage($getItem['postId'], $this->data['app']['meta']['postsPerPage']);
-					
-					$reportMessage = ' a post by <a href="'.$this->data['site']['url'].'/profile/user/'.$getPoster['slug'].'">'.$getPoster['username'].'</a> in the thread <a href="'.$this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getTopic['url'].'?page='.$postPage.'#post-'.$getItem['postId'].'">'.$getTopic['title'].'</a>';
-				
+					$getItem['topic'] = $getTopic;
+					$getItem['poster'] = $getPoster;
+					$getItem['postPage'] = $postPage;
 				}
 
 				break;
@@ -741,6 +751,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		if(!$getItem){
 			http_response_code(400);
 			$output['error'] = 'Post not found';
+			echo json_encode($output);
+			die();
+		}
+		
+		if($getItem['userId'] == $this->data['user']['userId']){
+			http_response_code(400);
+			$output['error'] = 'Cannot flag your own post';
 			echo json_encode($output);
 			die();
 		}
@@ -784,8 +801,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			}
 			
 			foreach($notifyList as $notifyUser){
-				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, '<a href="'.$this->data['site']['url'].'/profile/user/'.$this->data['user']['slug'].'">'.$this->data['user']['username'].'</a> has flagged/reported '.$reportMessage.' - please investigate.',
-								$_POST['itemId'], 'report-'.$_POST['type'], true);
+				if($notifyUser == $this->data['user']['userId']){
+					continue;
+				}
+				$notifyData = $this->data;
+				$notifyData['item'] = $getItem;
+				$notifyData['notifyUser'] = $notifyUser;
+				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $_POST['itemId'], 'report-'.$_POST['type'], true, $notifyData);
 				
 			}
 		}

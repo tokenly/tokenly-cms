@@ -48,7 +48,6 @@ class Slick_App_Dashboard_BlogCategory_Controller extends Slick_App_ModControl
 		$output = array('view' => 'list');
 		$output['catList'] = $this->model->getCategories($this->data['site']['siteId']);
 
-		
 		return $output;
 		
 	}
@@ -97,6 +96,14 @@ class Slick_App_Dashboard_BlogCategory_Controller extends Slick_App_ModControl
 			return false;
 		}
 		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
+		if(!$checkTCA){
+			$output['view'] = '403';
+			return $output;
+		}
+		
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBlogCategoryForm($this->data['site']['siteId'], $this->args[3]);
 		$output['formType'] = 'Edit';
@@ -140,6 +147,15 @@ class Slick_App_Dashboard_BlogCategory_Controller extends Slick_App_ModControl
 			$this->redirect($this->site.'/'.$this->moduleUrl);
 			return false;
 		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
+		if(!$checkTCA){
+			$output['view'] = '403';
+			return $output;
+		}
+				
 		
 		$delete = $this->model->delete('blog_categories', $this->args[3]);
 		$this->redirect($this->site.'/'.$this->moduleUrl);

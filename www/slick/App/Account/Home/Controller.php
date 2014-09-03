@@ -1,5 +1,4 @@
 <?php
-ini_set('display_errors', 1);
 class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 {
 	public $args;
@@ -21,6 +20,21 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 				if($log){
 					die();
 				}
+			}
+			
+			if(isset($this->args[1])){
+				switch($this->args[1]){
+					case 'verify';
+						$output = $this->verifyAccount($output);
+						break;
+					case 'success':
+						$output = $this->showSuccess($output);
+						break;
+					default:
+						$output['view'] = '404';
+						break;
+				}
+				return $output;
 			}
 			
 			$output['view'] = 'auth';
@@ -113,8 +127,7 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		}
 		
 		if($register){
-
-			$this->redirect($this->site.'/dashboard', 1);
+			$this->redirect($this->site.'/'.$this->data['app']['url'].'/success', 1);
 		}
 		
 		return $output;
@@ -160,6 +173,33 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		
 	}
     
+    public function verifyAccount($output)
+    {
+		if(!isset($this->args[2]) OR trim($this->args[2]) == ''){
+			$output['view'] = '404';
+			return $output;
+		}
+		
+		$getUser = $this->model->get('users', $this->args[2], array(), 'activate_code');
+		if(!$getUser OR $getUser['activated'] == 1){
+			$output['view'] = '404';
+			return $output;
+		}
+		
+		$this->model->edit('users', $getUser['userId'], array('activate_code' => '', 'activated' => 1));
+		
+		$output['view'] = 'verify-success';
+		
+		return $output;
+	}
+	
+	public function showSuccess($output)
+	{
+		$output['view'] = 'register-success';
+		$output['title'] = 'Register Account';
+		
+		return $output;
+	}
     
     
 }

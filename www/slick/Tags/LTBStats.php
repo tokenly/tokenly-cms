@@ -20,6 +20,10 @@ class Slick_Tags_LTBStats
 			$stats['totalIssued'] = $asset['supply'] / SATOSHI_MOD;
 			
 			$balances = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN')));
+			$balances2 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 1000));
+			$balances3 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 2000));
+			$balances = array_merge($balances, $balances2);
+			$balances = array_merge($balances, $balances3);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
 				if($balance['quantity'] == 0){
@@ -284,13 +288,13 @@ class Slick_Tags_LTBStats
 					<li><em>Magic word:</em> <?= $appMeta['pop-listen-weight'] ?></li>
 					<li><em>Post "like" received:</em> <?= $appMeta['pop-like-weight'] ?></li>
 					<li><em>Newly registered (one time):</em> <?= $appMeta['pop-register-weight'] ?></li>
-					<li>Note: comments, posts and "likes" have diminishing returns the more frequently they are done.<br>
+					<li><strong>Note:</strong> comments, posts and "likes" have diminishing returns the more frequently they are done each day.<br>
 							<a href="https://docs.google.com/document/d/1L7HmE8IupFiSrfqk9BgNa4Zg9XogqtScyQjTw0k2xCc" target="_blank">See here</a>
-							 for more information
+							 for more information.</li>
 				</ul>
 			</li>
 			<li>
-				<strong>Proof of Quality (PoQ)</strong>
+				<strong>Proof of Quality/Publication (PoQ)</strong>
 				<ul>
 					<li><em>Published article:</em> <?= $appMeta['pop-publish-weight'] ?></li>
 				</ul>
@@ -300,6 +304,9 @@ class Slick_Tags_LTBStats
 				<ul>
 					<li><em>Article pageview:</em> <?= $appMeta['pop-view-weight'] ?></li>
 					<li><em>Article comment:</em> <?= $appMeta['pop-comment-weight'] ?></li>
+					<li><em>Magic Word (podcast only):</em> <?= $appMeta['pop-listen-weight'] ?></li>
+					<li><strong>Note:</strong> <?= $appMeta['pop-editor-cut'] ?>% of points from Proof of Quality and Proof of Value
+							calculations are given to blog editors</li>					
 				</ul>
 			</li>
 			<li>
@@ -308,6 +315,19 @@ class Slick_Tags_LTBStats
 					<li><em>Active Referral:</em> <?= $appMeta['pop-referral-weight'] ?></li>
 				</ul>
 			</li>
+			<li>
+				<strong><em>Negative</em> Proof of Participation</strong>
+				<ul>
+					<li>
+						There are some instances where you can receive <em>negative</em> Proof of Participation points. Such as:
+						<ul>
+							<li>
+						* If you make a forum post and it gets deleted/buried (e.g is a spam post) by our moderators, you lose a full <strong><?= $appMeta['pop-forum-post-weight'] ?> points</strong>
+						for each offense.
+							</li>
+						</ul>
+					</li>
+				</ul>
 		</ul>
 		
 		<br>

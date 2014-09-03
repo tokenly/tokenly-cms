@@ -3,8 +3,9 @@
 	<strong><a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/send">Send New Message</a></strong>
 </p>
 
-
 <?php
+$tca = new Slick_App_LTBcoin_TCA_Model;
+$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 echo '<h3>'.ucfirst($pmbox).'</h3>';
 if($pmbox == 'inbox'){
 	echo '<p><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/sent">View Sent Messages (Outbox)</a></p>';
@@ -34,18 +35,34 @@ else{
 			$message['subject'] = '(no subject)';
 		}
 		
-		
+		$toTCA = true;
+		if($message['to']['userId'] != $user['userId']){
+			$toTCA = $tca->checkItemAccess($user['userId'], $profileModule['moduleId'], $message['to']['userId'], 'user-profile');
+		}
+		$fromTCA = true;
+		if($message['from']['userId'] != $user['userId']){
+			$fromTCA = $tca->checkItemAccess($user['userId'], $profileModule['moduleId'], $message['from']['userId'], 'user-profile');
+		}
+				
 		$avImage = $message['from']['avatar'];
 		if(!isExternalLink($message['from']['avatar'])){
 			$avImage = SITE_URL.'/files/avatars/'.$message['from']['avatar'];
 		}
-		$avatar = '<span class="mini-avatar"><a href="'.SITE_URL.'/profile/user/'.$message['from']['slug'].'" target="_blank"><img src="'.$avImage.'" alt="" /></a></span>';
+		$avImage = '<img src="'.$avImage.'" alt="" />';
+		if($fromTCA){
+			$avImage = '<a href="'.SITE_URL.'/profile/user/'.$message['from']['slug'].'" target="_blank">'.$avImage.'</a>';
+		}
+		$avatar = '<span class="mini-avatar">'.$avImage.'</span>';
 				
 		$avImage2 = $message['to']['avatar'];
 		if(!isExternalLink($message['to']['avatar'])){
 			$avImage2 = SITE_URL.'/files/avatars/'.$message['to']['avatar'];
 		}
-		$avatar2 = '<span class="mini-avatar"><a href="'.SITE_URL.'/profile/user/'.$message['to']['slug'].'" target="_blank"><img src="'.$avImage2.'" alt="" /></a></span>';
+		$avImage2 = '<img src="'.$avImage2.'" alt="" />';
+		if($toTCA){
+			$avImage2 = '<a href="'.SITE_URL.'/profile/user/'.$message['to']['slug'].'" target="_blank">'.$avImage2.'</a>';
+		}
+		$avatar2 = '<span class="mini-avatar">'.$avImage2.'</span>';
 		
 		if($message['isRead'] == 0 AND $message['userId'] != $user['userId']){
 			$message['subject'] = '<strong class="unread">'.$message['subject'].'</strong>';
@@ -55,15 +72,23 @@ else{
 			$message['subject'] .= ' <i class="fa fa-mail-reply" title="replied"></i>';
 		}
 		
+		$fromDisplayName = $message['from']['username'];
+		$toDisplayName = $message['to']['username'];
+		if($fromTCA){
+			$fromDisplayName = '<a href="'.SITE_URL.'/profile/user/'.$message['from']['slug'].'" target="_blank">'.$fromDisplayName.'</a>';
+		}
+		if($toTCA){
+			$toDisplayName = '<a href="'.SITE_URL.'/profile/user/'.$message['to']['slug'].'" target="_blank">'.$toDisplayName.'</a>';
+		}
 		echo '<tr>
 				<td>
 					<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/view/'.$message['messageId'].'#message-'.$message['messageId'].'" title="'.str_replace('"', "'", shortenMsg($message['message'], 50)).'">'.$message['subject'].'</a>
 				</td>
 				<td>'.$avatar.'
-					<a href="'.SITE_URL.'/profile/user/'.$message['from']['slug'].'" target="_blank">'.$message['from']['username'].'</a>
+					'.$fromDisplayName.'
 				</td>
 				<td>'.$avatar2.'
-					<a href="'.SITE_URL.'/profile/user/'.$message['to']['slug'].'" target="_blank">'.$message['to']['username'].'</a>
+					'.$toDisplayName.'
 				</td>
 				<td>
 					'.formatDate($message['sendDate']).'

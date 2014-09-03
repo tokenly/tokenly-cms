@@ -39,9 +39,17 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		
 		if(!$getPost){
 			$output['view'] = '404';
-			http_response_code(404);
 			return $output;
 		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$checkTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$checkTCA){
+			$output['view'] = '403';
+			return $output;
+		}
+		
 		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
 		$cats = array();
 		foreach($getCats as $cat){
@@ -49,6 +57,14 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 			$cats[] = $getCat;
 		}
 		$getPost['categories'] = $cats;
+		
+		foreach($getPost['categories'] as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+			$output['view'] = '403';
+			return $output;
+			}
+		}
 
 		$output['post'] = $getPost;
 		$output['view'] = 'post';

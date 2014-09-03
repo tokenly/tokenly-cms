@@ -59,7 +59,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		
 		$ref = new Slick_UI_Textbox('refUser');
 		$ref->setLabel('Referred By (enter referral username)');
-		if($user['affiliate']){
+		if(isset($user['affiliate']) AND $user['affiliate']){
 			$ref->addAttribute('disabled');
 			$ref->setValue($user['affiliate']['username']);
 		}
@@ -94,6 +94,14 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 			$pass->setLabel('Enter current password to complete changes');
 			$pass->addAttribute('required');
 			$form->add($pass);
+		}
+		
+		if($adminView){
+			$activate = new Slick_UI_Checkbox('activated');
+			$activate->setBool(1);
+			$activate->setValue(1);
+			$activate->setLabel('Account Active?');
+			$form->add($activate);
 		}
 
 		return $form;
@@ -150,7 +158,18 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 			}
 		}
 		
-		if(!$user['affiliate'] AND isset($data['refUser']) AND trim($data['refUser']) != ''){
+		if($adminView AND isset($data['activated'])){
+			$data['activated'] = intval($data['activated']);
+			if($data['activated'] == 1){
+				$useData['activated'] = 1;
+				$useData['activate_code'] = '';
+			}
+			else{
+				$useData['activated'] = 0;
+			}
+		}
+		
+		if(isset($user['affiliate']) AND !$user['affiliate'] AND isset($data['refUser']) AND trim($data['refUser']) != ''){
 			$getRef = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => trim(strtolower($data['refUser']))));
 			if($getRef){
 				//check if its on of their own referrals
@@ -197,7 +216,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 				
 					if(count($getAddress) > 0){
 						$getAddress = $getAddress[0];
-						$addressModel->editAddress($getAddress['addressId'], array('isPrimary' => 1, 'isXCP' => 1));
+						$addressModel->editAddress($getAddress['addressId'], array('isPrimary' => 1, 'isXCP' => 1, 'label' => 'LTBcoin Compatible Address'));
 					}
 					else{
 						//insert new address
@@ -298,6 +317,10 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		$output['showEmail'] = $meta->getUserMeta($user['userId'], 'showEmail');
 		$output['emailNotify'] = $meta->getUserMeta($user['userId'], 'emailNotify');
 		$output['username'] = $user['username'];
+		if(!isset($user['activated'])){
+			$user['activated'] = 1;
+		}
+		$output['activated'] = $user['activated'];
 		
 		return $output;
 	}

@@ -1,7 +1,17 @@
 <?php
 include(THEME_PATH.'/inc/header.php');
 $catModel = new Slick_App_Dashboard_BlogCategory_Model;
-$getCats = array_merge(array(array('url' => SITE_URL.'/blog', 'label' => 'All')), $catModel->getCategories($site['siteId'], 0, 1));
+$categories = $catModel->getCategories($site['siteId'], 0, 1);
+$tca = new Slick_App_LTBcoin_TCA_Model;
+$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+foreach($categories as $ck => $cv){
+	$checkCatTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $cv['categoryId'], 'blog-category');
+	if(!$checkCatTCA){
+		unset($categories[$ck]);
+		continue;
+	}
+}
+$getCats = array_merge(array(array('url' => SITE_URL.'/blog', 'label' => 'All')), $categories);
 $getArchive = $catModel->getArchiveList($site['siteId']);
 ?>
 <div class="main">

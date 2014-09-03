@@ -118,6 +118,7 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 	public static function getDashMenu()
 	{
 		$model = new Slick_Core_Model;
+		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$getUser = Slick_App_Account_Home_Model::userInfo();
 		if(!$getUser){
 			return false;
@@ -145,6 +146,10 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 									ORDER BY dashGroup ASC, rank ASC');
 		$menu = array();
 		foreach($getMenu as $item){
+			$itemTCA = $tca->checkItemAccess($getUser['userId'], $item['moduleId'], 0, '');
+			if(!$itemTCA){
+				continue;
+			}
 			if($item['checkAccess'] == 1){
 				if(!in_array($item['moduleId'], $access)){
 					continue;

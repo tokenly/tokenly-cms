@@ -8,8 +8,7 @@ class Slick_App_Page_View_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         $this->model = new Slick_App_Page_View_Model;
-        
-        
+        $this->tca = new Slick_App_LTBcoin_TCA_Model;
     }
     
     public function init()
@@ -23,6 +22,11 @@ class Slick_App_Page_View_Controller extends Slick_App_ModControl
 				return $output;
 			}
 			
+			$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $this->itemId, 'page');
+			if(!$checkTCA){
+				$output['view'] = '403';
+				return $output;
+			}
 			$getPage = $this->model->getPageData($this->itemId);
 			if($getPage){
 				$output = array_merge($getPage, $output);
@@ -32,20 +36,13 @@ class Slick_App_Page_View_Controller extends Slick_App_ModControl
 				}
 			}
 			else{
-				http_response_code(400);
 				$output['view'] = '404';
 			}
-			
 		}
 		else{
-			http_response_code(400);
 			$output['view'] = '404';
 		}
-		
-		
 		return $output;
-		
-		
 	}
 	
 	

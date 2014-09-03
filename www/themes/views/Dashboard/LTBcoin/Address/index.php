@@ -18,6 +18,9 @@
 		Enable additional features on the site and provide you additional account data (quick access to token balances etc.)
 	</li>
 </ul>
+<p>
+	<strong>Note:</strong> You do not need a verified address to receive weekly LTBcoin rewards.
+</p>
 <h3>Add New Address</h3>
 <?php
 if(isset($message) AND trim($message) != ''){

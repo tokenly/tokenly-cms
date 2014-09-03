@@ -236,7 +236,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		return false;
 	}
 	
-	public static function notifyUser($userId, $message, $itemId = 0, $type = '', $allowDupe = false)
+	public static function notifyUser($userId, $message, $itemId = 0, $type = '', $allowDupe = false, $data = array())
 	{
 		$model = new Slick_Core_Model;
 		if($itemId != 0 AND $type != '' AND !$allowDupe){
@@ -246,34 +246,48 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			}
 		}
 		
+		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		
+		//attempt to find a message template, if not, assume custom message
+		$messageFile = str_replace('.', '/', trim($message));
+		$getFile = is_file(SITE_PATH.'/themes/views/'.$messageFile.'.php');
+		$messageOutput = $message;
+		if($getFile){
+			ob_start();
+			include(SITE_PATH.'/themes/views/'.$messageFile.'.php');
+			$messageOutput = ob_get_contents();
+			ob_end_clean();
+		}
+	
 		$meta = new Slick_App_Meta_Model;
 		$notifyEmail = $meta->getUserMeta($userId, 'emailNotify');
 		if($notifyEmail AND $notifyEmail == 1){
 			$getUser = $model->get('users', $userId, array('username', 'email'));
 
-			
 			if(filter_var($getUser['email'], FILTER_VALIDATE_EMAIL)){
-				$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+				$template = '[MESSAGE]';
+				$getTemplate = is_file(SITE_PATH.'/themes/views/emails/template.php');
+				if($getTemplate){
+					ob_start();
+					include(SITE_PATH.'/themes/views/emails/template.php');
+					$template = ob_get_contents();
+					ob_end_clean();
+				}
+				$body = str_replace('[MESSAGE]', $messageOutput, $template);
 				$mail = new Slick_Util_Mail;
 				$mail->addTo($getUser['email']);
 				$mail->setFrom('noreply@'.$getSite['domain']);
 				$mail->setSubject('['.$getSite['name'].'] New notification received');
-				$body = '<p>Hi there '.$getUser['username'].', you have received a new notification on '.$getSite['name'].'. See below</p>
-<p>'.$message.'</p>';
-
 				$mail->setHTML($body);
 				$mail->send();
-
 			}
-
 		}
-
-		$add = $model->insert('user_notifications', array('userId' => $userId, 'message' => $message,
+		
+		$add = $model->insert('user_notifications', array('userId' => $userId, 'message' => $messageOutput,
 													'noteDate' => timestamp(), 'itemId' => $itemId, 'type' => $type));
 		if(!$add){
 			return false;
 		}
-		
 		return $add;
 	}
 	

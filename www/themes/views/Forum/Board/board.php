@@ -35,11 +35,20 @@ if($isAll){
 	
 			$model = new Slick_Core_Model;
 			$getfCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
+			$tca = new Slick_App_LTBcoin_TCA_Model;
 			foreach($getfCats as $fcat){
+				$checkTCA = $tca->checkItemAccess($user, $module['moduleId'], $fcat['categoryId'], 'category');
+				if(!$checkTCA){
+					continue;
+				}
 				$getfBoards = $model->getAll('forum_boards', array('categoryId' => $fcat['categoryId'], 'active' => 1), array(), 'rank', 'asc');
 				if(count($getfBoards) > 0){
 					echo '<div class="clear"></div><h4>'.$fcat['name'].'</h4>';
 					foreach($getfBoards as $fboard){
+						$checkTCA = $tca->checkItemAccess($user, $module['moduleId'], $fboard['boardId'], 'board');
+						if(!$checkTCA){
+							continue;
+						}						
 						$checked = 'checked';
 						if(isset($boardFilters) AND count($boardFilters) > 0 AND !in_array($fboard['boardId'], $boardFilters)){
 							$checked = '';

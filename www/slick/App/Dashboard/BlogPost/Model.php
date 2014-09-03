@@ -75,9 +75,18 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		$author->setLabel('Author');
 		$form->add($author);
 		
+		$editor = new Slick_UI_Select('editedBy');
+		$editor->addOption(0, '[nobody]');
+		foreach($getUsers as $writer){
+			$editor->addOption($writer['userId'], $writer['username']);
+		}
+		$editor->setLabel('Editor');
+		$form->add($editor);		
+		
 		$status = new Slick_UI_Select('status');
 		$status->addOption('draft', 'Draft');
 		$status->addOption('ready', 'Ready for Publishing');
+		$status->addOption('editing', 'Editing/Processing');
 		$status->addOption('published', 'Published');
 		$status->setLabel('Post Status');
 		$form->add($status);
@@ -266,6 +275,7 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 			}
 		}		
 		
+		//legacy status stuff, get rid of later
 		$useData['published'] = 0;
 		$useData['ready'] = 0;
 		switch($useData['status']){
@@ -279,8 +289,16 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 				$useData['published'] = 1;
 				break;
 		}
+		//unset($useData['status']);
 		
-		unset($useData['status']);
+		if($appData['perms']['canChangeEditor'] AND isset($data['editedBy'])){
+			$useData['editedBy'] = intval($data['editedBy']);
+		}
+		elseif(($appData['perms']['canSetEditStatus'] OR $appData['perms']['canChangeEditor'])
+			AND ($useData['status'] == 'published' OR $useData['status'] == 'editing')){
+			$useData['editedBy'] = $appData['user']['userId'];
+		}		
+		
 		$add = $this->insert('blog_posts', $useData);
 		if(!$add){
 			throw new Exception('Error adding post');
@@ -375,21 +393,21 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		}
 		
 		$postSite = $this->get('sites', $getPost['siteId']);
-		$postUser = $this->get('users', $getPost['userId'], array('username', 'email','slug'));
+		$postUser = $this->get('users', $getPost['userId'], array('userId','username', 'email','slug'));
 		
 		foreach($editors as $editor){
 			if($editor == $getPost['userId']){
 				continue;
 			}
-			$message = 'A blog post by <a href="'.$postSite['url'].'/profile/user/'.$postUser['slug'].'" target="_blank">'.$postUser['username'].'</a> has 
-						been marked as ready for publishing, please review (or pass along to the appropriate person): 
-						<a href="'.$postSite['url'].'/dashboard/blog-post/edit/'.$getPost['postId'].'" target="_blank">'.$getPost['title'].'</a>';
-			
-			$notify = Slick_App_Meta_Model::notifyUser($editor, $message, $postId, 'blog-post-ready', true);
-			
+
+			$notifyData = array();
+			$notifyData['site'] = $postSite;
+			$notifyData['user'] = $postUser;
+			$notifyData['post'] = $getPost;
+			$notifyData['editorId'] = $editor;
+			$notify = Slick_App_Meta_Model::notifyUser($editor, 'emails.readyPublishNotice', $postId, 'blog-post-ready', true, $notifyData);
 		}
 		return true;
-
 	}
 	
 		
@@ -412,7 +430,8 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 				$useData[$key] = $data[$key];
 			}
 		}
-
+		
+		//generate URL
 		if(trim($useData['url']) == ''){
 			$useData['url'] = $useData['title'];
 		}
@@ -423,10 +442,12 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		}
 		
 		if($getPost['formatType'] == 'markdown' AND $useData['formatType'] != 'markdown'){
+			//convert from markdown to html editor
 			$useData['content'] = markdown($useData['content']);
 			$useData['excerpt'] = markdown($useData['excerpt']);
 		}
 
+		//legacy status stuff, get rid of this later
 		$useData['published'] = 0;
 		$useData['ready'] = 0;
 		switch($useData['status']){
@@ -440,9 +461,20 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 				$useData['published'] = 1;
 				break;
 		}
-		unset($useData['status']);
+		//unset($useData['status']);
 		
 		$useData['editTime'] = timestamp();
+		
+		if($appData['perms']['canChangeEditor'] AND isset($data['editedBy'])){
+			$useData['editedBy'] = intval($data['editedBy']);
+		}
+		if($getPost['editedBy'] == 0
+			AND ($appData['perms']['canSetEditStatus'] OR $appData['perms']['canChangeEditor'])
+			AND (($getPost['status'] != 'published' OR $getPost['published'] == 0) AND $getPost['status'] != 'editing')
+			AND ($useData['status'] == 'published' OR $useData['status'] == 'editing')){
+			$useData['editedBy'] = $appData['user']['userId'];
+		}
+
 		
 		$edit = $this->edit('blog_posts', $id, $useData);
 		if(!$edit){

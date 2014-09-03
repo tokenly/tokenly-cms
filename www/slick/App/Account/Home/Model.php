@@ -125,6 +125,9 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$useData['regDate'] = timestamp();
 		$useData['slug'] = genURL($data['username']);
 		
+		//generate activation code
+		$useData['activate_code'] = hash('sha256', time().$genPass['salt'].$useData['slug'].mt_rand(0,1000));
+		
 		$add = $this->insert('users', $useData);
 		if(!$add){
 			http_response_code(400);
@@ -132,8 +135,26 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 		
 		if(!$noAuth){
-			$this->generateAuthToken($add);
+			//disable auto logging in when registering
+			//$this->generateAuthToken($add);
 		}
+		
+		$getSite = $this->getAll('sites', array('isDefault' => 1));
+		$getSite = $getSite[0];
+		
+		$accountApp = $this->get('apps', 'account', array(), 'slug');
+		
+		$activateURL = $getSite['url'].'/'.$accountApp['url'].'/verify/'.$useData['activate_code'];
+		
+		//generate activation email
+		$mail = new Slick_Util_Mail;
+		$mail->setFrom('noreply@'.SITE_DOMAIN);
+		$mail->addTo($useData['email']);
+		$mail->setSubject(SITE_NAME.' - Account Activiation');
+		$mail->setHTML('<p>Thank you for registering at '.SITE_NAME.'</p>
+							<p>To activate your account, click here: <a href="'.$activateURL.'">'.$activateURL.'</a></p>');
+							
+		$send = $mail->send();
 		
 		//assign them to any default groups
 		$getGroups = $this->getAll('groups', array('isDefault' => 1));
@@ -227,8 +248,13 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		
 		$get = $this->get('users', $data['username'], array(), 'username');
 		if(!$get){
-			http_response_code(400);
+			http_response_code(401);
 			throw new Exception('Invalid credentials');
+		}
+		
+		if($get['activated'] == 0){
+			http_response_code(403);
+			throw new Exception('Account not activated. Please check your email');
 		}
 
 		$meta = new Slick_App_Meta_Model;
@@ -264,7 +290,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 
 		$pass = hash('sha256', $get['spice'].$data['password']);
 		if($pass != $get['password']){
-			http_response_code(400);
+			http_response_code(401);
 			$getAttempts++;
 			$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
 			throw new Exception('Invalid credentials');

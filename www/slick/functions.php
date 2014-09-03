@@ -256,8 +256,9 @@ function mention($str, $message, $userId, $itemId = 0, $type = '')
 {
 	$match = preg_match_all('/\B\@([\w\-]+)/', $str, $matches);
 	$model = new Slick_Core_Model;
+	$tca = new Slick_App_LTBcoin_TCA_Model;
 	
-
+	$profileModule = $model->get('modules', 'user-profile', array(), 'slug');
 	$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	$thisUser = $model->get('users', $userId, array('userId', 'username', 'slug'));
 	
@@ -267,7 +268,12 @@ function mention($str, $message, $userId, $itemId = 0, $type = '')
 
 		$getUser = $model->get('users', $user, array('userId', 'username'), 'slug');
 		if($getUser AND $getUser['userId'] != $userId){
-			$message = str_replace('%username%', '<a href="'.$getSite['url'].'/profile/user/'.$thisUser['slug'].'">'.$thisUser['username'].'</a>', $message);
+			$replace = $thisUser['username'];
+			$checkTCA = $tca->checkItemAccess($getUser['userId'], $profileModule['moduleId'], $thisUser['userId'], 'user-profile');
+			if($checkTCA){
+				$replace = '<a href="'.$getSite['url'].'/profile/user/'.$thisUser['slug'].'">'.$replace.'</a>';
+			}
+			$message = str_replace('%username%', $replace, $message);
 			$notify = Slick_App_Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type);
 			if($notify){
 			
@@ -512,5 +518,7 @@ function replaceNonSGML($string)
 	
 	return $string;
 }
+
+
 
 ?>

@@ -18,7 +18,12 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Controller extends Slick_App_ModCont
 			$output['grouped'] = true;
 		}
 		
-		$output['addressBalances'] = $this->model->getUserBalances($this->data['user']['userId'], $output['grouped']);
+		$forceRefresh = false;
+		if(posted() AND isset($_POST['forceRefresh'])){
+			$forceRefresh = true;
+		}
+		
+		$output['addressBalances'] = $this->model->getUserBalances($this->data['user']['userId'], $output['grouped'], 'btc', $forceRefresh);
 		
 		return $output;
 	}

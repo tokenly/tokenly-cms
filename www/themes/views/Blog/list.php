@@ -6,6 +6,10 @@ if(isset($category)){
 		echo '<div class="blog-description">'.$category['description'].'</div>';
 	}
 }
+$tca = new Slick_App_LTBcoin_TCA_Model;
+$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 ?>
 <ul class="blog-list">
 <?php
@@ -25,7 +29,17 @@ if(count($posts) == 0){
 }
 $imagePath = SITE_PATH.'/files/blogs';
 foreach($posts as $post){
-	
+	$postTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $post['postId'], 'blog-post');
+	foreach($post['categories'] as $cat){
+		$catTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+		if(!$catTCA){
+			continue 2;
+		}
+	}
+	if(!$postTCA){
+		continue;
+	}
+
 	$getIndex = $settings->getAll('page_index', array('itemId' => $post['postId'], 'moduleId' => 28, 'siteId' => $site['siteId']));
 
 	if($getIndex AND count($getIndex) > 0){
@@ -36,9 +50,14 @@ foreach($posts as $post){
 		$post['url'] = SITE_URL.'/'.$app['url'].'/post/'.$post['url'];
 	}
 	
+	$authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['author']['userId'], 'user-profile');
+	
 	$displayName = $post['author']['username'];
-	if(trim($post['author']['profile']['real-name']['value']) != ''){
+	if(isset($post['author']['profile']['real-name']) AND trim($post['author']['profile']['real-name']['value']) != ''){
 		$displayName =  $post['author']['profile']['real-name']['value'];
+	}
+	if($authorTCA){
+		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$displayName.'</a>';
 	}
 	
 	if($post['formatType'] == 'markdown'){
@@ -58,7 +77,7 @@ foreach($posts as $post){
 		<h2><a href="<?= $post['url'] ?>"><?= $post['title'] ?></a></h2>
 		<div class="blog-date">
 			Published on <?= date('F jS, Y', strtotime($post['publishDate'])) ?> by 
-			<a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>"><?= $displayName ?></a>
+			<?= $displayName ?>
 		</div>
 		<div class="blog-excerpt">
 			<?php

@@ -57,10 +57,26 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
     {
 		$output = array('view' => 'list');
 		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId']), array(), 'postId');
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		foreach($getPosts as $key => $row){
 			if(!$this->data['perms']['canPublishPost'] AND !$this->data['perms']['canEditOtherPost'] AND $row['userId'] != $this->data['user']['userId']){
 				unset($getPosts[$key]);
 				continue;
+			}
+			$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $row['postId'], 'blog-post');
+			if(!$postTCA){
+				unset($getPosts[$key]);
+				continue;
+			}
+			$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $row['postId']));
+			foreach($getCategories as $cat){
+				$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+				if(!$catTCA){
+					unset($getPosts[$key]);
+					continue 2;
+				}
 			}
 			$getAuthor = $this->model->get('users', $row['userId'], array('username'));
 			$getPosts[$key]['author'] = $getAuthor['username'];
@@ -88,6 +104,12 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			$output['form']->field('status')->removeOption('published');
 			$output['form']->remove('featured');
 		}
+		if(!$this->data['perms']['canSetEditStatus']){
+			$output['form']->field('status')->removeOption('editing');
+		}
+		if(!$this->data['perms']['canChangeEditor']){
+			$output['form']->remove('editedBy');
+		}		
 		
 		if(isset($this->data['perms']['canUseMagicWords']) AND !$this->data['perms']['canUseMagicWords']){
 			$getField = $this->model->get('blog_postMetaTypes', 'magic-word', array(), 'slug');
@@ -116,7 +138,15 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 				if(isset($data['featured'])){
 					unset($data['featured']);
 				}
+				if(isset($data['status']) AND $data['status'] == 'published'){
+					$data['status'] = 'draft';
+				}
 			}
+			if(!$this->data['perms']['canSetEditStatus']){
+				if(isset($data['status']) AND $data['status'] == 'editing'){
+					$data['status'] = 'draft';
+				}
+			}			
 			try{
 				$add = $this->model->addPost($data, $this->data);
 			}
@@ -160,7 +190,20 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			return array('view' => '403');
 		}
 		
-
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$postTCA){
+			return array('view' => '403');
+		}
+		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		foreach($getCategories as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+				return array('view' => '403');
+			}
+		}	
 		
 		$getPost['categories'] = $this->model->getPostFormCategories($getPost['postId']);
 		
@@ -182,6 +225,12 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			$output['form']->field('status')->removeOption('published');
 			$output['form']->remove('featured');
 		}
+		if(!$this->data['perms']['canChangeEditor']){
+			$output['form']->remove('editedBy');
+		}
+		if(!$this->data['perms']['canSetEditStatus']){
+			$output['form']->field('status')->removeOption('editing');
+		}
 		if(!$this->data['perms']['canChangeAuthor']){
 			$output['form']->remove('userId');
 		}
@@ -201,6 +250,11 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 					unset($data['featured']);
 				}
 			}
+			if(!$this->data['perms']['canSetEditStatus']){
+				if(isset($data['status']) AND $data['status'] == 'editing'){
+					$data['status'] = 'draft';
+				}
+			}
 			try{
 				$add = $this->model->editPost($this->args[3], $data, $this->data);
 			}
@@ -215,16 +269,16 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			}
 			
 		}
-		$getPost['status'] = '';
+		//$getPost['status'] = '';
 		if($getPost['published'] == 1){
 			$getPost['status'] = 'published';
 		}
 		elseif($getPost['ready'] == 1){
 			$getPost['status'] = 'ready';
 		}
-		else{
+		/*else{
 			$getPost['status'] = 'draft';
-		}
+		}*/
 		
 		$output['form']->setValues($getPost);
 		
@@ -257,6 +311,21 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			return array('view' => '403');
 		}
 		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$postTCA){
+			return array('view' => '403');
+		}
+		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		foreach($getCategories as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+				return array('view' => '403');
+			}
+		}			
+		
 		$delete = $this->model->delete('blog_posts', $this->args[3]);
 		$this->redirect($this->site.'/'.$this->moduleUrl);
 		return true;
@@ -275,6 +344,21 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			$this->redirect($this->site.'/'.$this->moduleUrl);
 			return false;
 		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$postTCA){
+			return array('view' => '403');
+		}
+		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		foreach($getCategories as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+				return array('view' => '403');
+			}
+		}				
 		
 		
 		if($getPost['formatType'] == 'markdown'){
@@ -298,10 +382,8 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		}
 		
 		
-		
-		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
 		$cats = array();
-		foreach($getCats as $cat){
+		foreach($getCategories as $cat){
 			$getCat = $this->model->get('blog_categories', $cat['categoryId']);
 			$cats[] = $getCat;
 		}
@@ -331,6 +413,21 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		if(!$getPost){
 			return array('view' => '404');
 		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$postTCA){
+			return array('view' => '403');
+		}
+		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		foreach($getCategories as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+				return array('view' => '403');
+			}
+		}			
 		
 		ob_end_clean();
 		header('Content-Type: application/json');		

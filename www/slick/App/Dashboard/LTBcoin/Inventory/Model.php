@@ -21,7 +21,7 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 		return $balances;
 	}
 	
-	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc')
+	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false)
 	{
 		$meta = new Slick_App_Meta_Model;
 		$time = time();
@@ -40,7 +40,7 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 		$newChecked = false;
 		$balances = array();
 		foreach($getAddresses as $address){
-			if($timeDiff >= $this->addressCacheRate){
+			if($timeDiff >= $this->addressCacheRate OR $forceRefresh){
 				$balances[$address['address']] = $this->checkAddressBalances($address['addressId']);
 				$newChecked = true;
 			}

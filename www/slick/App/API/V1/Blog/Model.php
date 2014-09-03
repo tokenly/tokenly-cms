@@ -123,10 +123,10 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 			}
 		}
 		
-		$getPostFields = 'p.postId, p.siteId, p.title, p.url, p.content, p.userId, p.publishDate, p.image, p.excerpt, p.views, p.featured, p.coverImage, p.commentCount, p.commentCheck, p.formatType ';
+		$getPostFields = 'p.postId, p.siteId, p.title, p.url, p.content, p.userId, p.publishDate, p.editTime as modifiedDate, p.image, p.excerpt, p.views, p.featured, p.coverImage, p.commentCount, p.commentCheck, p.formatType ';
 		$minimizeData = false;
 		if(isset($data['minimize']) AND intval($data['minimize']) === 1){
-			$getPostFields = 'p.postId, p.siteId, p.title, p.url, p.excerpt, p.userId, p.publishDate, p.featured, p.coverImage, p.formatType';
+			$getPostFields = 'p.postId, p.siteId, p.title, p.url, p.excerpt, p.userId, p.publishDate, p.editTime as modifiedDate, p.featured, p.coverImage, p.image, p.formatType';
 			$minimizeData = true;
 		}
 		
@@ -159,7 +159,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 		$postedBefore = false;
 		$beforeTime = false;
 		if(isset($_SERVER['HTTP_IF_POSTED_BEFORE'])){
-			if(is_int($_SERVER['HTTP_IF_POSTED_BEFORE'])){
+			if(is_numeric($_SERVER['HTTP_IF_POSTED_BEFORE'])){
 				$beforeTime = intval($_SERVER['HTTP_IF_POSTED_BEFORE']);
 			}
 			else{
@@ -167,7 +167,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 			}
 		}
 		elseif(isset($data['posted-before']) AND trim($data['posted-before']) != ''){
-			if(is_int($data['posted-before'])){
+			if(is_numeric($data['posted-before'])){
 				$beforeTime = intval($data['posted-before']);
 			}
 			else{
@@ -177,6 +177,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 		if($beforeTime !== false){
 			$postedBefore = date('Y-m-d H:i:s', $beforeTime);
 		}
+
 		if($postedBefore !== false){
 			$andWhen .= ' AND publishDate <= "'.$postedBefore.'" ';
 		}
@@ -233,20 +234,37 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 
 		$profModel = new Slick_App_Profile_User_Model;
 		$postModel = new Slick_App_Blog_Post_Model;
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		if(!isset($data['isRSS'])){
 			$disqus = new Slick_API_Disqus;
 		}
 		$origExtra = $getExtra;
+		if(!isset($data['user'])){
+			$data['user'] = false;
+		}
 		foreach($getPosts as $key => $post){
 			if(isset($filled[$post['postId']])){
 				continue;
 			}
 			
+			
+			$postTCA = $tca->checkItemAccess($data['user'], $postModule['moduleId'], $post['postId'], 'blog-post');
+			if(!$postTCA){
+				unset($getPosts[$key]);
+				continue;
+			}
+			
 			if(!$minimizeData){
 				if(!isset($data['noProfiles']) OR (isset($data['noProfiles']) AND !$data['noProfiles'])){
+					$authorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $post['userId'], 'user-profile');
 					$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $data['site']['siteId']);
 					unset($getPosts[$key]['author']['lastActive']);
 					unset($getPosts[$key]['author']['lastAuth']);
+					if(!$authorTCA){
+						$getPosts[$key]['author']['profile'] = array();
+					}
 				}
 			}
 			
@@ -290,7 +308,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
 			}
 		
 			
-			if(trim($post['image']) != ''){
+			if(isset($post['image']) AND trim($post['image']) != ''){
 				$getPosts[$key]['image'] = $data['site']['url'].'/files/blogs/'.$post['image'];
 			}
 			else{

@@ -39,6 +39,13 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 			}
 		}
 		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+		$checkTCA = $tca->checkItemAccess($useData['userId'], $profileModule['moduleId'], $getUser['userId'], 'user-profile');
+		if(!$checkTCA){
+			throw new Exception('You cannot send a message to this user');
+		}
+		
 		$insertData = array('userId' => $useData['userId'], 'toUser' => $getUser['userId'], 'message' => encrypt_string(strip_tags($useData['message'])),
 							'subject' => encrypt_string(strip_tags($useData['subject'])), 'sendDate' => timestamp());
 		
@@ -49,13 +56,15 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		
 		//notify user
 		$subject = strip_tags(trim($useData['subject']));
-		if($subject == ''){
+		if(trim($subject) == ''){
 			$subject = '(no subject)';
 		}
 		
-		Slick_App_Meta_Model::notifyUser($getUser['userId'], '<a href="'.$this->appData['site']['url'].'/profile/user/'.$this->appData['user']['slug'].'">'.$this->appData['user']['username'].'</a> has sent you a message:
-				<a href="'.$this->appData['site']['url'].'/'.$this->appData['app']['url'].'/'.$this->appData['module']['url'].'/view/'.$add.'#message">'.$subject.'</a>.',
-										$add, 'private-message');
+		$notifyData = $this->appData;
+		$notifyData['messageId'] = $add;
+		$notifyData['subject'] = $subject;
+		$notifyData['toUser'] = $getUser['userId'];
+		Slick_App_Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
 		
 		return $add;
 		
@@ -138,9 +147,11 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 			$subject = '(no subject)';
 		}
 		
-		Slick_App_Meta_Model::notifyUser($getUser['userId'], '<a href="'.$this->appData['site']['url'].'/profile/user/'.$this->appData['user']['slug'].'">'.$this->appData['user']['username'].'</a> has sent you a message:
-				<a href="'.$this->appData['site']['url'].'/'.$this->appData['app']['url'].'/'.$this->appData['module']['url'].'/view/'.$add.'#message">'.$subject.'</a>.',
-										$add, 'private-message');
+		$notifyData = $this->appData;
+		$notifyData['messageId'] = $add;
+		$notifyData['subject'] = $subject;
+		$notifyData['toUser'] = $useData['toUser'];
+		Slick_App_Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
 		
 		return $add;
 	}

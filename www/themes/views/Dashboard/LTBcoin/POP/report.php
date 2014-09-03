@@ -83,6 +83,7 @@ foreach($report['info'] as &$row){
 			$vList = '<ul>';
 			$totalViews = 0;
 			$totalComments = 0;
+			$totalWords = 0;
 			foreach($row['extra'] as $extraRow){
 				if(isset($extraRow['post']['views'])){
 					$totalViews += $extraRow['post']['views'];
@@ -90,15 +91,24 @@ foreach($report['info'] as &$row){
 				if(isset($extraRow['post']['comments'])){
 					$totalComments += $extraRow['post']['comments'];
 				}
+				if(isset($extraRow['post']['wordSubmits'])){
+					$totalWords = $extraRow['post']['wordSubmits'];
+				}
 			
 			}
 			$vList .= '<li># Posts: '.count($row['extra']).'</li>';
 			$vList .= '<li>Post Views: '.$totalViews.'</li>';
 			$vList .= '<li>Comments: '.$totalComments.'</li>';
+			if($totalWords > 0){
+				$vList .= '<li>Magic Words: '.$totalWords.'</li>';
+			}
 			$vList .= '</ul>';
 			$v = $vList;
 		}
 		$row['username'] .= '<li><strong>'.$k.':</strong> '.$v.'</li>';
+	}
+	if($row['negativeScore'] > 0){
+		$row['username'] .= '<li><strong>Negative Points:</strong> '.$row['negativeScore'].'</li>';
 	}
 	$row['username'] .= '</ul>';
 }

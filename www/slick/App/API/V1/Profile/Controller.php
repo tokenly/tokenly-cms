@@ -158,6 +158,17 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 										FROM users
 										ORDER BY userId DESC
 										LIMIT '.$start.', '.$max);
+										
+		try{
+			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$thisUser = false;
+		}		
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');			
+										
 		foreach($users as $key => $user){
 			$profile = $profModel->getUserProfile($user['userId'], $this->args['data']['site']['siteId']);
 			if($profile['pubProf'] == 0){
@@ -170,13 +181,18 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 				unset($user['email']);
 			}
 			$user['avatar'] = $profile['avatar'];
-			$profile = $profile['profile'];
-
-			unset($profile['regDate']);
-			unset($profile['userId']);
-			unset($profile['lastAuth']);
-			unset($profile['lastActive']);
-			$user['profile'] = $profile;
+			$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $user['userId'], 'user-profile');
+			if(!$userTCA){
+				$user['profile'] = array();
+			}
+			else{
+				$profile = $profile['profile'];
+				unset($profile['regDate']);
+				unset($profile['userId']);
+				unset($profile['lastAuth']);
+				unset($profile['lastActive']);
+				$user['profile'] = $profile;
+			}
 			unset($user['lastAuth']);
 			unset($user['lastActive']);
 			unset($user['userId']);
