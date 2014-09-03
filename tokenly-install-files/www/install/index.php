@@ -92,7 +92,7 @@ class Tokenly_Install extends Slick_Core_Model
 		}
 		
 		//create site
-		$addSite = $this->insert('sites', array('name' => $siteData['name'], 'domain' => $siteData['domain'], 'url' => $siteData['url'], 'isDefault' => 1, 'themeId' => 1));
+		$addSite = $this->insert('sites', array('siteId' => 1, 'name' => $siteData['name'], 'domain' => $siteData['domain'], 'url' => $siteData['url'], 'isDefault' => 1, 'themeId' => 1));
 		if(!$addSite){
 			throw new Exception('Error adding to sites table');
 		}
