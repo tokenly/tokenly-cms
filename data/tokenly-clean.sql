@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.37, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.38, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: tokenly
 -- ------------------------------------------------------
--- Server version	5.5.37-0ubuntu0.14.04.1
+-- Server version	5.5.38-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -315,10 +315,13 @@ CREATE TABLE `blog_posts` (
   `commentCheck` datetime DEFAULT NULL,
   `formatType` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'wysiwyg',
   `editTime` datetime DEFAULT NULL,
+  `editedBy` int(11) unsigned DEFAULT '0',
+  `status` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'draft',
   PRIMARY KEY (`postId`),
   KEY `url` (`url`),
   KEY `userId` (`userId`),
   KEY `siteId` (`siteId`),
+  KEY `editedBy` (`editedBy`),
   CONSTRAINT `blog_posts_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
   CONSTRAINT `blog_posts_ibfk_2` FOREIGN KEY (`siteId`) REFERENCES `sites` (`siteId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=460 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -417,7 +420,7 @@ CREATE TABLE `dash_menu` (
   PRIMARY KEY (`itemId`),
   KEY `moduleId` (`moduleId`),
   CONSTRAINT `dash_menu_ibfk_1` FOREIGN KEY (`moduleId`) REFERENCES `modules` (`moduleId`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -426,7 +429,7 @@ CREATE TABLE `dash_menu` (
 
 LOCK TABLES `dash_menu` WRITE;
 /*!40000 ALTER TABLE `dash_menu` DISABLE KEYS */;
-INSERT INTO `dash_menu` VALUES (1,1,' ',0,'Dashboard Home',0,NULL),(2,23,' ',1,'Account Settings',0,NULL),(3,21,' ',2,'My Profile',0,NULL),(4,3,' ',60,'Logout',0,''),(5,8,'System',0,'System Stats',1,NULL),(6,9,'System',1,'System Settings',1,NULL),(7,7,'System',2,'Sub-Sites',1,NULL),(8,4,'System',3,'Apps & Modules',1,NULL),(9,12,'System',4,'Themes',1,NULL),(10,25,'System',5,'Dashboard Menu',1,NULL),(11,10,'Users',1,'User Accounts',1,''),(12,11,'Users',1,'Groups',1,NULL),(13,20,'Users',2,'User Profile Fields',1,NULL),(14,16,'CMS',0,'Pages',1,NULL),(15,15,'CMS',1,'Content Blocks',1,NULL),(16,14,'CMS',2,'Page Tags',1,NULL),(17,13,'CMS',3,'Menus',1,NULL),(18,18,'CMS',4,'Menu Items',1,NULL),(19,19,'CMS',5,'File browser',1,NULL),(20,26,'Blog',1,'Categories',1,''),(21,27,'Blog',1,'Posts',1,NULL),(24,37,'Blog',0,'Blog Settings',1,'/blog'),(39,37,'Users',0,'Account System Settings',1,'/account'),(40,37,'Forum',0,'Forum Settings',1,'/forum'),(41,38,'Forum',1,'Categories',1,''),(42,39,'Forum',2,'Boards',1,''),(43,42,' ',3,'Notifications',0,''),(44,43,'Blog',50,'Post Metadata Types',1,''),(45,37,'RSS',0,'RSS Settings',1,'/rss'),(46,37,'Store',0,'Store Settings',1,'/store'),(47,47,'Store',0,'Categories',1,''),(48,48,'Store',20,'Products',1,''),(49,49,'Blog',100,'Disqus Comments',1,''),(50,50,'LTBcoin',10,'Share Distributor',1,''),(51,51,'LTBcoin',50,'Asset Dropper',1,''),(52,37,'LTBcoin',0,'LTBcoin Settings',1,'/ltbcoin'),(53,52,'System',100,'Notification Pusher',1,''),(54,53,'LTBcoin',160,'Proof of Participation',1,''),(55,54,'LTBcoin',200,'Magic Words',1,''),(56,59,'LTBcoin',220,'Magic Word Submissions',1,''),(57,60,'LTBcoin',230,'Address Manager',1,''),(58,62,' ',4,'Referrals',0,''),(59,63,' ',10,'Private Messages',0,''),(60,64,'LTBcoin',240,'Token Inventory',1,''),(61,65,'LTBcoin',250,'Asset Cache',1,'');
+INSERT INTO `dash_menu` VALUES (1,1,' ',0,'Dashboard Home',0,NULL),(2,23,' ',1,'Account Settings',0,NULL),(3,21,' ',2,'My Profile',0,NULL),(4,3,' ',60,'Logout',0,''),(5,8,'System',0,'System Stats',1,NULL),(6,9,'System',1,'System Settings',1,NULL),(7,7,'System',2,'Sub-Sites',1,NULL),(8,4,'System',3,'Apps & Modules',1,NULL),(9,12,'System',4,'Themes',1,NULL),(10,25,'System',5,'Dashboard Menu',1,NULL),(11,10,'Users',1,'User Accounts',1,''),(12,11,'Users',1,'Groups',1,NULL),(13,20,'Users',2,'User Profile Fields',1,NULL),(14,16,'CMS',0,'Pages',1,NULL),(15,15,'CMS',1,'Content Blocks',1,NULL),(16,14,'CMS',2,'Page Tags',1,NULL),(17,13,'CMS',3,'Menus',1,NULL),(18,18,'CMS',4,'Menu Items',1,NULL),(19,19,'CMS',5,'File browser',1,NULL),(20,26,'Blog',1,'Categories',1,''),(21,27,'Blog',1,'Posts',1,NULL),(24,37,'Blog',0,'Blog Settings',1,'/blog'),(39,37,'Users',0,'Account System Settings',1,'/account'),(40,37,'Forum',0,'Forum Settings',1,'/forum'),(41,38,'Forum',1,'Categories',1,''),(42,39,'Forum',2,'Boards',1,''),(43,42,' ',3,'Notifications',0,''),(44,43,'Blog',50,'Post Metadata Types',1,''),(45,37,'RSS',0,'RSS Settings',1,'/rss'),(46,37,'Store',0,'Store Settings',1,'/store'),(47,47,'Store',0,'Categories',1,''),(48,48,'Store',20,'Products',1,''),(49,49,'Blog',100,'Disqus Comments',1,''),(50,50,'LTBcoin',10,'Share Distributor',1,''),(51,51,'LTBcoin',50,'Asset Dropper',1,''),(52,37,'LTBcoin',0,'LTBcoin Settings',1,'/ltbcoin'),(53,52,'System',100,'Notification Pusher',1,''),(54,53,'LTBcoin',160,'Proof of Participation',1,''),(55,54,'LTBcoin',200,'Magic Words',1,''),(56,59,'LTBcoin',220,'Magic Word Submissions',1,''),(57,60,'LTBcoin',230,'Address Manager',1,''),(58,62,' ',4,'Referrals',0,''),(59,63,' ',10,'Private Messages',0,''),(60,64,'LTBcoin',240,'Token Inventory',1,''),(61,65,'LTBcoin',250,'Asset Cache',1,''),(62,67,'RSS',100,'RSS Feed Proxies',1,'');
 /*!40000 ALTER TABLE `dash_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -508,6 +511,7 @@ CREATE TABLE `forum_posts` (
   `buried` int(2) DEFAULT '0',
   `postTime` datetime DEFAULT NULL,
   `editTime` datetime DEFAULT NULL,
+  `trollPost` int(2) DEFAULT '0',
   PRIMARY KEY (`postId`),
   KEY `userId` (`userId`),
   KEY `topicId` (`topicId`),
@@ -575,6 +579,7 @@ CREATE TABLE `forum_topics` (
   `views` int(11) DEFAULT '0',
   `lockTime` datetime DEFAULT NULL,
   `lockedBy` int(11) unsigned DEFAULT '0',
+  `trollPost` int(2) DEFAULT '0',
   PRIMARY KEY (`topicId`),
   KEY `boardId` (`boardId`),
   KEY `url` (`url`),
@@ -856,7 +861,7 @@ CREATE TABLE `modules` (
 
 LOCK TABLES `modules` WRITE;
 /*!40000 ALTER TABLE `modules` DISABLE KEYS */;
-INSERT INTO `modules` VALUES (1,1,'Dashboard Home','dash-home',1,'Home','',0),(2,2,'Account Home','account-home',1,'Home','',0),(3,2,'Logout','logout',1,'Logout','logout',0),(4,1,'Apps & Modules','modules',1,'Modules','modules',1),(7,1,'Sites','sites',1,'Sites','sites',1),(8,1,'Stats','stats',1,'Stats','stats',1),(9,1,'Settings','settings',1,'Settings','settings',1),(10,1,'Accounts','accounts',1,'Accounts','accounts',1),(11,1,'Groups','groups',1,'Groups','groups',1),(12,1,'Themes','themes',1,'Themes','themes',1),(13,1,'Menus','menus',1,'Menus','menus',1),(14,1,'Page Tags','page-tags',1,'PageTags','page-tags',1),(15,1,'Content Blocks','content-blocks',1,'ContentBlocks','content-blocks',1),(16,1,'Pages','pages',1,'Pages','pages',1),(17,5,'Page View','page-view',1,'View','',0),(18,1,'Menu Items','menu-items',1,'MenuItems','menu-items',1),(19,1,'Files','files',1,'Files','files',1),(20,1,'Profile Fields','profile-fields',1,'ProfileFields','profile-fields',1),(21,2,'Profile','account-profile',1,'Profile','profile',0),(22,6,'User Profile','user-profile',1,'User','user',0),(23,2,'Account Settings','account-settings',1,'Settings','settings',0),(24,2,'Reset Password','account-reset',1,'Reset','reset',0),(25,1,'Dashboard Menu','dash-menu',1,'DashMenu','dash-menu',0),(26,1,'Blog Categories','blog-category',1,'BlogCategory','blog-category',1),(27,1,'Blog Posts','blog-posts',1,'BlogPost','blog-post',1),(28,7,'Post','blog-post',1,'Post','post',0),(29,7,'Category','blog-category',1,'Category','category',0),(30,7,'Archive','blog-archive',1,'Archive','archive',0),(31,1,'Blog Comments','blog-comments',0,'BlogComments','blog-comments',1),(32,6,'Member List','member-list',1,'Members','members',0),(37,1,'App Settings','app-settings',1,'AppSettings','app-settings',1),(38,1,'Forum Categories','forum-categories',1,'ForumCategory','forum-cats',1),(39,1,'Forum Boards','forum-boards',1,'ForumBoard','forum-boards',1),(40,25,'Board','forum-board',1,'Board','board',0),(41,25,'Post','forum-post',1,'Post','post',0),(42,2,'Notification','notification',1,'Notification','notifications',0),(43,1,'Post Metadata Types','blog-post-meta',1,'BlogMeta','blog-meta',1),(46,26,'RSS Feed','rss-feed',1,'Feed','feed',0),(47,1,'Store Categories','store-categories',1,'StoreCategory','store-category',1),(48,1,'Store Products','store-products',1,'StoreProduct','store-product',1),(49,1,'Disqus Comments','disqus-comments',1,'Disqus','disqus',1),(50,1,'Share Distributor','share-distribute',1,'LTBcoin_Distribute','xcp-distribute',1),(51,1,'Asset Dropper','asset-drop',1,'LTBcoin_AssetDrop','asset-drop',1),(52,1,'Notification Pusher','notification-pusher',1,'Notifier','notifier',1),(53,1,'Proof of Participation','ltbcoin-pop',1,'LTBcoin_POP','ltbcoin-pop',1),(54,1,'Magic Words','magic-words',1,'LTBcoin_MagicWords','magic-words',1),(59,1,'Magic Word Submissions','magic-word-submits',1,'LTBcoin_MagicWordSubmits','all-magic-words',1),(60,1,'Address Manager','address-manager',1,'LTBcoin_Address','address-manager',1),(62,2,'Referrals','account-referrals',1,'Referral','referrals',1),(63,2,'Messages','private-message',1,'Message','messages',0),(64,1,'Token Inventory','token-inventory',1,'LTBcoin_Inventory','inventory',1),(65,1,'Asset Cache','asset-cache',1,'LTBcoin_AssetCache','asset-cache',1);
+INSERT INTO `modules` VALUES (1,1,'Dashboard Home','dash-home',1,'Home','',0),(2,2,'Account Home','account-home',1,'Home','',0),(3,2,'Logout','logout',1,'Logout','logout',0),(4,1,'Apps & Modules','modules',1,'Modules','modules',1),(7,1,'Sites','sites',1,'Sites','sites',1),(8,1,'Stats','stats',1,'Stats','stats',1),(9,1,'Settings','settings',1,'Settings','settings',1),(10,1,'Accounts','accounts',1,'Accounts','accounts',1),(11,1,'Groups','groups',1,'Groups','groups',1),(12,1,'Themes','themes',1,'Themes','themes',1),(13,1,'Menus','menus',1,'Menus','menus',1),(14,1,'Page Tags','page-tags',1,'PageTags','page-tags',1),(15,1,'Content Blocks','content-blocks',1,'ContentBlocks','content-blocks',1),(16,1,'Pages','pages',1,'Pages','pages',1),(17,5,'Page View','page-view',1,'View','',0),(18,1,'Menu Items','menu-items',1,'MenuItems','menu-items',1),(19,1,'Files','files',1,'Files','files',1),(20,1,'Profile Fields','profile-fields',1,'ProfileFields','profile-fields',1),(21,2,'Profile','account-profile',1,'Profile','profile',0),(22,6,'User Profile','user-profile',1,'User','user',0),(23,2,'Account Settings','account-settings',1,'Settings','settings',0),(24,2,'Reset Password','account-reset',1,'Reset','reset',0),(25,1,'Dashboard Menu','dash-menu',1,'DashMenu','dash-menu',0),(26,1,'Blog Categories','blog-categories',1,'BlogCategory','blog-category',1),(27,1,'Blog Posts','blog-posts',1,'BlogPost','blog-post',1),(28,7,'Post','blog-post',1,'Post','post',0),(29,7,'Category','blog-category',1,'Category','category',0),(30,7,'Archive','blog-archive',1,'Archive','archive',0),(31,1,'Blog Comments','blog-comments',0,'BlogComments','blog-comments',1),(32,6,'Member List','member-list',1,'Members','members',0),(37,1,'App Settings','app-settings',1,'AppSettings','app-settings',1),(38,1,'Forum Categories','forum-categories',1,'ForumCategory','forum-cats',1),(39,1,'Forum Boards','forum-boards',1,'ForumBoard','forum-boards',1),(40,25,'Board','forum-board',1,'Board','board',0),(41,25,'Post','forum-post',1,'Post','post',0),(42,2,'Notification','notification',1,'Notification','notifications',0),(43,1,'Post Metadata Types','blog-post-meta',1,'BlogMeta','blog-meta',1),(46,26,'RSS Feed','rss-feed',1,'Feed','feed',0),(47,1,'Store Categories','store-categories',1,'StoreCategory','store-category',1),(48,1,'Store Products','store-products',1,'StoreProduct','store-product',1),(49,1,'Disqus Comments','disqus-comments',1,'Disqus','disqus',1),(50,1,'Share Distributor','share-distribute',1,'LTBcoin_Distribute','xcp-distribute',1),(51,1,'Asset Dropper','asset-drop',1,'LTBcoin_AssetDrop','asset-drop',1),(52,1,'Notification Pusher','notification-pusher',1,'Notifier','notifier',1),(53,1,'Proof of Participation','ltbcoin-pop',1,'LTBcoin_POP','ltbcoin-pop',1),(54,1,'Magic Words','magic-words',1,'LTBcoin_MagicWords','magic-words',1),(59,1,'Magic Word Submissions','magic-word-submits',1,'LTBcoin_MagicWordSubmits','all-magic-words',1),(60,1,'Address Manager','address-manager',1,'LTBcoin_Address','address-manager',1),(62,2,'Referrals','account-referrals',1,'Referral','referrals',1),(63,2,'Messages','private-message',1,'Message','messages',0),(64,1,'Token Inventory','token-inventory',1,'LTBcoin_Inventory','inventory',1),(65,1,'Asset Cache','asset-cache',1,'LTBcoin_AssetCache','asset-cache',1),(66,26,'Proxy Feed','proxy-feed',1,'Proxy','proxy',1),(67,1,'RSS Feed Proxies','rss-feed-proxy',1,'RSSProxy','rss-feed-proxy',1);
 /*!40000 ALTER TABLE `modules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1165,6 +1170,31 @@ CREATE TABLE `profile_fields` (
 LOCK TABLES `profile_fields` WRITE;
 /*!40000 ALTER TABLE `profile_fields` DISABLE KEYS */;
 /*!40000 ALTER TABLE `profile_fields` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `proxy_url`
+--
+
+DROP TABLE IF EXISTS `proxy_url`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `proxy_url` (
+  `proxyId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(255) NOT NULL,
+  `url` text NOT NULL,
+  PRIMARY KEY (`proxyId`),
+  KEY `slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `proxy_url`
+--
+
+LOCK TABLES `proxy_url` WRITE;
+/*!40000 ALTER TABLE `proxy_url` DISABLE KEYS */;
+/*!40000 ALTER TABLE `proxy_url` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1661,6 +1691,8 @@ CREATE TABLE `users` (
   `lastAuth` datetime DEFAULT NULL,
   `lastActive` datetime DEFAULT NULL,
   `slug` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `activated` int(2) DEFAULT '0',
+  `activate_code` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`userId`),
   KEY `username` (`username`),
   KEY `email` (`email`),
@@ -1787,4 +1819,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-08-18 14:31:43
+-- Dump completed on 2014-09-02 23:06:17
