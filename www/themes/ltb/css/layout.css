@@ -981,6 +981,9 @@ box-shadow:         0px 1px 5px 0px rgba(50, 50, 50, 0.5);
 .post-content blockquote p {
 	font-size: 12px;
 }
+.markdown-preview blockquote p {
+	font-size: 12px;
+}
 .forum-stats{
 	
 }
