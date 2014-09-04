@@ -109,13 +109,13 @@ if($page == 1){
 		<div class="post-content" data-user-slug="<?= $topic['author']['slug'] ?>" data-message="<?= base64_encode($topic['content']) ?>">
 			<?= markdown($topic['content']) ?>
 		</div>
-		<div class="forum-sig">
 			<?php
 			if(isset($topic['author']['profile']['forum-signature']['value'])){
+				echo "		<div class=\"forum-sig\">\n";
 				echo markdown($topic['author']['profile']['forum-signature']['value']);
+				echo "		</div>\n";
 			}
 			?>
-		</div>
 	</div>
 	<div class="clear"></div>
 	<span class="post-date">Posted on <?= formatDate($topic['postTime']) ?>
@@ -279,13 +279,13 @@ if(count($replies) == 0){
 			<div class="post-content" <?php if($reply['buried'] == 0){ ?>data-user-slug="<?= $reply['author']['slug'] ?>" data-message="<?= base64_encode($reply['content']) ?>" <?php }//endif ?>>
 				<?= markdown($reply['content']) ?>
 			</div>
-			<div class="forum-sig">
 				<?php
 				if($reply['buried'] != 1 AND isset($reply['author']['profile']['forum-signature']['value'])){
+					echo "		<div class=\"forum-sig\">\n";
 					echo markdown($reply['author']['profile']['forum-signature']['value']);
+					echo "		</div>\n";
 				}
 				?>
-			</div>
 		</div>
 		<div class="clear"></div>
 		<span class="post-date">Posted on <?= formatDate($reply['postTime']) ?>
