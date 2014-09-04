@@ -19,7 +19,7 @@ function checkUserTCA($userId, $profUserId)
 <?php
 if($user AND $topic['locked'] == 0){
 ?>
-<p style="float: right; vertical-align: top; margin-top: 10px; width: 110px; text-align: center;">
+<p style="float: right; vertical-align: top; margin-top: 10px; width: 120px; text-align: center;">
 	<a class="board-control-link" href="#post-reply">Post Reply</a>
 	<?php
 	$subscribeText = 'Subscribe';
@@ -379,7 +379,7 @@ if(!$user OR $perms['canPostReply']){
 	<a name="post-reply"></a>
 	<?php
 	if($user){
-			echo '<p style="float: right; vertical-align: top; margin-top: 10px; width: 110px; text-align: center;">';
+			echo '<p style="float: right; vertical-align: top; margin-top: 10px; width: 120px; text-align: center;">';
 			echo '<a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
 			echo '</p>';	
 	}
