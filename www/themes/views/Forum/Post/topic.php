@@ -307,8 +307,10 @@ if(count($replies) == 0){
 			echo '</div>';
 		}		
 		$permaPage = '';
+		$returnPage = '';
 		if(isset($_GET['page']) AND intval($_GET['page']) > 1){
 			$permaPage = '?page='.intval($_GET['page']);
+			$returnPage = '?retpage='.intval($_GET['page']);
 		}
 		?>
 		<span class="post-permalink"><a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/<?= $topic['url'] ?><?= $permaPage ?>#post-<?= $reply['postId'] ?>">Permalink</a></span>
@@ -336,10 +338,10 @@ if(count($replies) == 0){
 				}
 				echo '</span>';
 				if(($user['userId'] == $reply['userId'] AND $perms['canEditSelf']) OR ($user['userId'] != $reply['userId'] AND $perms['canEditOther'])){
-					echo '<a href="'.$thisURL.'/edit/'.$reply['postId'].'">Edit Post</a>';
+					echo '<a href="'.$thisURL.'/edit/'.$reply['postId'].$returnPage.'">Edit Post</a>';
 				}
 				if(($user['userId'] == $reply['userId'] AND $perms['canBurySelf']) OR ($user['userId'] != $reply['userId'] AND $perms['canBuryOther'])){
-					echo '<a href="'.$thisURL.'/delete/'.$reply['postId'].'" class="delete">Bury Post</a>';
+					echo '<a href="'.$thisURL.'/delete/'.$reply['postId'].$returnPage.'" class="delete">Bury Post</a>';
 				}
 				echo '<div class="clear"></div></div>';
 			
