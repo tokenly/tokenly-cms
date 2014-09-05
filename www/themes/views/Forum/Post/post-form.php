@@ -1,7 +1,7 @@
 <?php
 
 $formTitle = 'Edit Post - '.$topic['title'];
-$backLink = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
+$backLink = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'].$permaPage;
 
 ?>
 <h1><?= $formTitle ?></h1>

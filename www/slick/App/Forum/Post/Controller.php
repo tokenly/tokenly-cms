@@ -251,6 +251,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['message'] = '';
 		$output['topic'] = $this->topic;
 		$output['board'] = $this->board;
+		$output['permaPage'] = (($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '').'#post-'.$getPost['postId'];
 		
 		if(posted()){
 			$data = $output['form']->grabData();
@@ -265,7 +266,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			}
 			
 			if($edit){
-				$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+				$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$output['permaPage']);
 			}
 		}
 		
@@ -325,7 +326,8 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1));
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+		$permaPage = ($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '';
+		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
 		$output['view'] = 'topic';
 		
 		return $output;
