@@ -31,6 +31,6 @@ See directory: [/tokenly-install-files](/tokenly-install-files)
 
 ##Features coming soon..
 
-* Token Controlled Access/Token Controlled Viewpoints
+* [Token Controlled Viewpoints](https://docs.google.com/document/d/17l3ElFp45vYqyLw2OlzAZ3j0baTry4bS5bOqgRmMKLY/edit)
 * E-Commerce system w/ built in support for bitcoin and token based payments
 * Q&A (stackoverflow style) system
