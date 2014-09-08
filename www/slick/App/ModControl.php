@@ -16,6 +16,7 @@ class Slick_App_ModControl extends Slick_Core_Controller
 		$output = array();
 		if(intval($this->data['module']['checkAccess']) === 1){
 			Slick_App_AppControl::checkModuleAccess($this->data['module']['moduleId']);
+
 		}
 		
 		return $output;

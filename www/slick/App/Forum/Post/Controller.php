@@ -19,10 +19,15 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		
 		
 		$getTopic = $this->model->get('forum_topics', $this->args[2], array(), 'url');
-		if(!$getTopic){
+		if(!$getTopic OR $getTopic['buried'] == 1){
 			$output['view'] = '404';
 			return $output;
 		}
+		
+		if($this->data['user']){
+			$output['perms'] = $this->checkModPerms($getTopic['boardId'], $this->data);
+			$this->data['perms'] = $output['perms'];
+		}		
 		
 		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
 		$getBoard = $this->model->get('forum_boards', $getTopic['boardId']);
@@ -108,6 +113,12 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 					break;
 				case 'report':
 					$newOutput = $this->reportPost();
+					break;
+				case 'permadelete':
+					$newOutput = $this->permaDelete();
+					break;
+				case 'request-ban':
+					$newOutput = $this->requestBan();
 					break;
 				default:
 					$output['view'] = '404';
@@ -325,10 +336,9 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1));
+		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1, 'buriedBy' => $this->data['user']['userId'], 'buryTime' => timestamp()));
 		$permaPage = ($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '';
 		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
-		$output['view'] = 'topic';
 		
 		return $output;
 	}
@@ -344,10 +354,9 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$delete = $this->model->delete('forum_topics', $this->topic['topicId']);
+		$delete = $this->model->edit('forum_topics', $this->topic['topicId'], array('buried' => 1, 'buriedBy' => $this->data['user']['userId'], 'buryTime' => timestamp()));
 		$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
-		$output['view'] = 'topic';
-		
+
 		return $output;
 	}
 	
@@ -745,6 +754,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 					$getItem['topic'] = $getTopic;
 					$getItem['poster'] = $getPoster;
 					$getItem['postPage'] = $postPage;
+					$getItem['boardId'] = $getTopic['boardId'];
 				}
 
 				break;
@@ -791,13 +801,25 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$getPerm = extract_row($getPerms, array('permKey' => 'canReceiveReports'));
 		if($getPerm){
 			$getPerm = $getPerm[0];
-			$permGroups = $this->model->getAll('group_perms', array('permId' => $getPerm['permId']));
 			$notifyList = array();
-			foreach($permGroups as $permGroup){
-				$groupUsers = $this->model->getAll('group_users', array('groupId' => $permGroup['groupId']));
-				foreach($groupUsers as $gUser){
-					if(!in_array($gUser['userId'], $notifyList)){
-						$notifyList[] = $gUser['userId'];
+			
+			//check for forum mods
+			$getMods = $this->model->getAll('forum_mods', array('boardId' => $getItem['boardId']));
+			if(count($getMods) > 0){
+				foreach($getMods as $mod){
+					if(!in_array($mod['userId'], $notifyList)){
+						$notifyList[] = $mod['userId'];
+					}
+				}
+			}
+			else{
+				$permGroups = $this->model->getAll('group_perms', array('permId' => $getPerm['permId']));
+				foreach($permGroups as $permGroup){
+					$groupUsers = $this->model->getAll('group_users', array('groupId' => $permGroup['groupId']));
+					foreach($groupUsers as $gUser){
+						if(!in_array($gUser['userId'], $notifyList)){
+							$notifyList[] = $gUser['userId'];
+						}
 					}
 				}
 			}
@@ -827,6 +849,130 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		
 		echo json_encode($output);
 		die();
+	}
+	
+	public function checkModPerms($boardId, $appData)
+	{
+		if(isset($appData['app']['meta']['mod-group'])){
+			$modGroup = $this->model->get('groups', $appData['app']['meta']['mod-group']);
+			if($modGroup){
+				$forumMod = $this->model->getAll('forum_mods', array('userId' => $appData['user']['userId'], 'boardId' => $boardId));
+				if($forumMod AND count($forumMod) > 0){
+					$forumMod = $forumMod[0];
+					$groupPerms = $this->model->getAll('group_perms', array('groupId' => $modGroup['groupId']));
+					foreach($groupPerms as $perm){
+						$getPerm = $this->model->get('app_perms', $perm['permId']);
+						if(isset($appData['perms'][$getPerm['permKey']])){
+							$appData['perms'][$getPerm['permKey']] = true;
+						}
+					}					
+				}
+			}
+		}
+		return $appData['perms'];
+	}
+	
+	private function permaDelete()
+	{
+		$output = array();
+		if(!$this->data['user']){
+			$output['view'] = '403';
+			return $output;
+		}
+		
+		if(isset($this->args[4])){
+			if(!$this->data['perms']['canPermaDeletePost']){
+				$output['view'] = '403';
+				return $output;
+			}
+			$getPost = $this->model->get('forum_posts', $this->args[4]);
+			if(!$getPost OR $getPost['topicId'] != $this->topic['topicId']){
+				$output['view'] = '404';
+				return $output;
+			}
+			
+			$delete = $this->model->delete('forum_posts', $getPost['postId']);
+			$permaPage = ($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '';
+			$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
+		}
+		else{
+			if(!$this->data['perms']['canPermaDeleteTopic']){
+				$output['view'] = '403';
+				return $output;
+			}
+			$delete = $this->model->delete('forum_topics', $this->topic['topicId']);
+			$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
+		}
+		
+		return $output;
+	}
+	
+	private function requestBan()
+	{
+		ob_end_clean();
+		header('Content-Type: text/json');		
+		$output = array();
+		
+		if(!$this->data['user'] OR !$this->data['perms']['canRequestBan']){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission';
+			echo json_encode($output);
+			die();
+		}
+		
+		if(!posted() OR !isset($this->args[4])){
+			http_response_code(400);
+			$output['error'] = 'Invalid request';
+			echo json_encode($output);
+			die();
+		}
+		
+		$getUser = $this->model->get('users', $this->args[4]);
+		if(!$getUser){
+			http_response_code(404);
+			$output['error'] = 'User not found';
+			echo json_encode($output);
+			die();
+		}
+		
+		$message = '';
+		if(isset($_POST['message'])){
+			$message = htmlentities(trim($_POST['message']));
+		}
+		
+		$getPerms = $this->model->getAll('app_perms', array('appId' => $this->data['app']['appId']));
+		$getPerm = extract_row($getPerms, array('permKey' => 'canReceiveBanRequest'));
+		if($getPerm){
+			$getPerm = $getPerm[0];
+			$notifyList = array();
+		
+			$permGroups = $this->model->getAll('group_perms', array('permId' => $getPerm['permId']));
+			foreach($permGroups as $permGroup){
+				$groupUsers = $this->model->getAll('group_users', array('groupId' => $permGroup['groupId']));
+				foreach($groupUsers as $gUser){
+					if(!in_array($gUser['userId'], $notifyList)){
+						$notifyList[] = $gUser['userId'];
+					}
+				}
+			}
+			
+			foreach($notifyList as $notifyUser){
+				if($notifyUser == $this->data['user']['userId']){
+					continue;
+				}
+				$notifyData = $this->data;
+				$notifyData['banUser'] = $getUser;
+				$notifyData['banMessage'] = $message;
+				$notifyData['notifyUser'] = $notifyUser;
+				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.banRequestNotice', $getUser['userId'], 'banrequest', true, $notifyData);
+				
+			}
+		}		
+		
+		$output['result'] = 'success';
+		echo json_encode($output);
+		die();		
+		return $output;
 	}
 
 }

@@ -108,7 +108,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		$values = array(':id' => $userId);
 		$dayNums = array();
 		if($andTopics >= 0){
-			$sql = 'SELECT postId, content, postTime FROM forum_posts WHERE userId = :id';
+			$sql = 'SELECT postId, content, postTime, topicId FROM forum_posts WHERE userId = :id AND buried = 0';
 			if(is_array($timeframe)){
 				$sql .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
 			}
@@ -120,7 +120,12 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					}
 				}
 			}
-			foreach($get as $row){
+			foreach($get as $gk => $row){
+				$getTopic = $this->get('forum_topics', $row['topicId'], array('topicId', 'buried'));
+				if($getTopic['buried'] == 1){
+					unset($get[$gk]);
+					continue;
+				}
 				$rowDate = date('Y-m-d', strtotime($row['postTime']));
 				if(!isset($dayNums[$rowDate])){
 					$dayNums[$rowDate] = 1;
@@ -132,7 +137,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$numPosts =  count($get);
 		}
 		if($andTopics != 0){
-			$sql2 = 'SELECT topicId, content, postTime FROM forum_topics WHERE userId = :id';
+			$sql2 = 'SELECT topicId, content, postTime FROM forum_topics WHERE userId = :id AND buried = 0';
 			if(is_array($timeframe)){
 				$sql2 .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
 			}

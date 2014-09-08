@@ -169,6 +169,10 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		
 		$form->add($excerpt);
 		
+		$notes = new Slick_UI_Textarea('notes');
+		$notes->setLabel('Notes');
+		$form->add($notes);
+		
 		$form->setSubmitText('Save & Submit');
 		
 		return $form;
@@ -233,7 +237,8 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 	public function addPost($data, $appData)
 	{
 		$req = array('title' => true, 'url' => false, 'siteId' => true, 'status' => true,
-					 'content' => false, 'userId' => true, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'formatType' => false);
+					 'content' => false, 'userId' => true, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'formatType' => false,
+					 'notes' => false);
 		$useData = array();
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
@@ -415,7 +420,8 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 	{
 		$getPost = $this->get('blog_posts', $id);
 		$req = array('title' => true, 'url' => false, 'siteId' => true, 
-					'content' => false, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'userId' => true, 'status' => true, 'formatType' => false);
+					'content' => false, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'userId' => true, 'status' => true, 'formatType' => false,
+					'notes' => false);
 		$useData = array();
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){

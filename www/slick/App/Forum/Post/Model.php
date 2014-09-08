@@ -100,6 +100,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 			}
 		}
 		$useData['editTime'] = timestamp();
+		$useData['editedBy'] = $appData['user']['userId'];
 		
 		$edit = $this->edit('forum_posts', $id, $useData);
 		if(!$edit){
@@ -179,6 +180,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 			}
 		}
 		$useData['editTime'] = timestamp();
+		$useData['editedBy'] = $appData['user']['userId'];
 		
 		if(isset($_GET['regen-url'])){
 			$useData['url'] = genURL($useData['title']);

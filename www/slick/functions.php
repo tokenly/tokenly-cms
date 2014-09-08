@@ -390,8 +390,15 @@ function checkRequiredFields($data, $fields = array())
 	foreach($data as $k => $v){
 		$req[$k] = false;
 		foreach($fields as $fieldK => $field){
-			if($k == $fieldK){
-				$req[$k] = true;
+			if(is_numeric($fieldK)){
+				if($k == $field){
+					$req[$k] = true;
+				}
+			}
+			else{
+				if($fieldK == $k AND $field){
+					$req[$k] = true;
+				}
 			}
 		}
 	}

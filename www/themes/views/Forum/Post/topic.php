@@ -134,8 +134,12 @@ if($page == 1){
 		else{
 			echo '<a class="report-post" data-id="'.$topic['topicId'].'" data-type="topic" href="#">Flag/Report</a>';
 		}
+	
 		echo '</div>';
 	}
+	if($user AND $perms['canRequestBan']){
+		echo '<div class="report-link"><a class="request-ban" data-id="'.$topic['userId'].'" href="#">Request Ban</a></div>';
+	}	
 	
 	$likeList = array();
 	foreach($topic['likeUsers'] as $likeUser){
@@ -185,8 +189,11 @@ if($page == 1){
 		if(($user['userId'] == $topic['userId'] AND $perms['canMoveSelf']) OR ($user['userId'] != $topic['userId'] AND $perms['canMoveOther'])){
 			echo '<a href="'.$thisURL.'/move">Move</a>';
 		}
+		if($perms['canPermaDeleteTopic']){
+			echo '<a href="'.$thisURL.'/permadelete" class="delete">Permadelete</a>';
+		}
 		if(($user['userId'] == $topic['userId'] AND $perms['canDeleteSelfTopic']) OR ($user['userId'] != $topic['userId'] AND $perms['canDeleteOtherTopic'])){
-			echo '<a href="'.$thisURL.'/delete" class="delete" style="float: right; margin-right: 60px;">Delete</a>';
+			echo '<a href="'.$thisURL.'/delete" class="delete" style="float: right; margin-right: 60px;">Bury Thread</a>';
 		}
 		
 		if($user){
@@ -305,7 +312,10 @@ if(count($replies) == 0){
 				echo '<a class="report-post" data-id="'.$reply['postId'].'" data-type="post" href="#">Flag/Report</a>';
 			}
 			echo '</div>';
-		}		
+		}	
+		if($user AND $perms['canRequestBan']){
+			echo '<div class="report-link"><a class="request-ban" data-id="'.$reply['userId'].'" href="#">Request Ban</a></div>';
+		}			
 		$permaPage = '';
 		$returnPage = '';
 		if(isset($_GET['page']) AND intval($_GET['page']) > 1){
@@ -342,6 +352,9 @@ if(count($replies) == 0){
 				}
 				if(($user['userId'] == $reply['userId'] AND $perms['canBurySelf']) OR ($user['userId'] != $reply['userId'] AND $perms['canBuryOther'])){
 					echo '<a href="'.$thisURL.'/delete/'.$reply['postId'].$returnPage.'" class="delete">Bury Post</a>';
+				}
+				if($perms['canPermaDeletePost']){
+					echo '<a href="'.$thisURL.'/permadelete/'.$reply['postId'].$returnPage.'" class="delete">Permadelete</a>';
 				}
 				echo '<div class="clear"></div></div>';
 			
@@ -571,6 +584,36 @@ if(!$user OR $perms['canPostReply']){
 				}
 			});
 		});
+		
+		<?php
+		if($user AND $perms['canRequestBan']){
+		?>
+		$('.request-ban').click(function(e){
+			e.preventDefault();
+			var reason = prompt('Please enter a reason for the ban request. An Admin will investigate');
+			if(!prompt || prompt == null){
+				return false;
+			}
+			
+			var thisId = $(this).data('id');
+			var thisLink = $(this);
+			var url = '<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/<?= $topic['url'] ?>/request-ban/' + thisId;
+			$.post(url, {message: reason}, function(data){
+				console.log(data);
+				if(typeof data.error != 'undefined'){
+					console.log(data.error);
+					return false;
+				}
+				else{
+					$(thisLink).parent().html('<em>Request Sent</em>');
+				}
+			});
+			
+		});
+		
+		<?php
+		}//endif
+		?>
 		
 	});
 </script>

@@ -23,10 +23,17 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		}
 		
 		$getBoard = $this->model->get('forum_boards', $this->args[2], array(), 'slug');
-		if(!$getBoard OR $getBoard['siteId'] != $this->data['site']['siteId']){
+		if(!$getBoard OR $getBoard['siteId'] != $this->data['site']['siteId'] OR $getBoard['active'] == 0){
 			$output['view'] = '404';
 			return $output;
 		}
+		
+		if($this->data['user']){
+			$postControl = new Slick_App_Forum_Post_Controller;
+			$output['perms'] = $postControl->checkModPerms($getBoard['boardId'], $this->data);
+			$this->data['perms'] = $output['perms'];
+		}				
+		
 		$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
 		if(!$checkTCA){
 			$output['view'] = '403';
@@ -51,6 +58,8 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
+		$dashModel = new Slick_App_Dashboard_ForumBoard_Model;
+		
 		$output['board'] = $getBoard;
 		$output['title'] = $getBoard['name'];
 		$output['view'] = 'board';
@@ -58,6 +67,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		$output['numPages'] = ceil($output['totalTopics'] / $this->data['app']['meta']['topicsPerPage']);
 		$output['page'] = 1;
 		$output['isAll'] = false;
+		$output['moderators'] = $dashModel->getBoardMods($getBoard['boardId']);
 		if(isset($_GET['page'])){
 			$page = intval($_GET['page']);
 			if($page > 1 AND $page <= $output['numPages']){

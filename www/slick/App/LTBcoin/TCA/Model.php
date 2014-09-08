@@ -30,7 +30,7 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 	* @param $itemType string
 	* @return bool
 	*/
-	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '')
+	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true)
 	{
 		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType);
 		if(!isset(self::$locks[$lockHash])){
@@ -38,7 +38,7 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 		}
 		$getLocks = self::$locks[$lockHash];
 		if(count($getLocks) == 0){
-			return true;
+			return $defaultReturn;
 		}
 		if(is_array($userId)){
 			$userId = $userId['userId'];

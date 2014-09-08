@@ -109,8 +109,50 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 	}
 
 
+	public function getBoardMods($boardId)
+	{
+		$sql = 'SELECT u.userId, u.username, u.email, u.slug
+				FROM forum_mods m
+				LEFT JOIN users u ON m.userId = u.userId
+				WHERE m.boardId = :boardId
+				ORDER BY u.username ASC';
+		$get = $this->fetchAll($sql, array(':boardId' => $boardId));
+		return $get;
+	}
 
-
+	public function getModForm()
+	{
+		$form = new Slick_UI_Form;
+		
+		$id = new Slick_UI_Textbox('userId');
+		$id->setLabel('Add New Moderator');
+		$id->addAttribute('placeholder', 'Username or User ID');
+		$form->add($id);
+		
+		$form->setSubmitText('Add Mod');
+		
+		return $form;
+	}
+	
+	public function addMod($boardId, $userId)
+	{
+		
+		$userId = trim($userId);
+		$get = $this->get('users', $userId, array(), 'username');
+		if(!$get){
+			$get = $this->get('users', intval($userId));
+			if(!$get){
+				throw new Exception('User not found');
+			}
+		}
+		
+		$getMod = $this->getAll('forum_mods', array('userId' => $userId, 'boardId' => $boardId));
+		if(count($getMod) > 0){
+			throw new Exception('User already a moderator');
+		}
+		
+		return $this->insert('forum_mods', array('userId' => $get['userId'], 'boardId' => $boardId));
+	}
 
 }
 

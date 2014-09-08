@@ -439,8 +439,12 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$totalPosts = 0;
 		$forumApp = $model->get('apps', 'forum', array('appId'), 'slug');
 		if($forumApp){
-			$numTopics = $model->count('forum_topics', 'userId', $userId);
-			$numReplies = $model->count('forum_posts', 'userId', $userId);
+			$numTopics = $model->fetchSingle('SELECT count(*) as total FROM forum_topics WHERE userId = :userId AND buried = 0',
+											array(':userId' => $userId));
+			$numTopics = $numTopics['total'];
+			$numReplies = $model->fetchSingle('SELECT count(*) as total FROM forum_posts WHERE userId = :userId AND buried = 0',
+											array(':userId' => $userId));
+			$numReplies = $numReplies['total'];
 			$totalPosts += $numTopics + $numReplies;
 		}
 		

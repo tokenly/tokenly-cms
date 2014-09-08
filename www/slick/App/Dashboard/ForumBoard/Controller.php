@@ -31,6 +31,9 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 				case 'delete':
 					$output = $this->deleteBoard();
 					break;
+				case 'remove-mod':
+					$output = $this->removeModerator();
+					break;
 				default:
 					$output = $this->showBoards();
 					break;
@@ -106,23 +109,38 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
 		$output['formType'] = 'Edit';
+		$output['boardMods'] = $this->model->getBoardMods($getBoard['boardId']);
+		$output['modForm'] = $this->model->getModForm();
+		$output['getBoard'] = $getBoard;
 		
 		if(posted()){
-			$data = $output['form']->grabData();
-			$data['siteId'] = $this->data['site']['siteId'];
-			try{
-				$add = $this->model->editBoard($this->args[3], $data);
+			if(isset($_POST['userId'])){
+				try{
+					$add = $this->model->addMod($getBoard['boardId'], $_POST['userId']);
+				}
+				catch(Exception $e){
+					$output['error'] = $e->getMessage();
+				}
+				if($add){
+					$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
+					return true;
+				}							
 			}
-			catch(Exception $e){
-				$output['error'] = $e->getMessage();
-				$add = false;
-			}
-			
-			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
-			}
-			
+			else{			
+				$data = $output['form']->grabData();
+				$data['siteId'] = $this->data['site']['siteId'];
+				try{
+					$add = $this->model->editBoard($this->args[3], $data);
+				}
+				catch(Exception $e){
+					$output['error'] = $e->getMessage();
+					$add = false;
+				}
+				if($add){
+					$this->redirect($this->site.'/'.$this->moduleUrl);
+					return true;
+				}				
+			}			
 		}
 		$output['form']->setValues($getBoard);
 		
@@ -140,7 +158,6 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 			return false;
 		}
 		
-		
 		$getBoard = $this->model->get('forum_boards', $this->args[3]);
 		if(!$getBoard){
 			$this->redirect($this->site.'/'.$this->moduleUrl);
@@ -150,6 +167,30 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 		$delete = $this->model->delete('forum_boards', $this->args[3]);
 		$this->redirect($this->site.'/'.$this->moduleUrl);
 		return true;
+	}
+	
+	private function removeModerator()
+	{
+		if(!isset($this->args[3]) OR !isset($this->args[4])){
+			$this->redirect($this->site.'/'.$this->moduleUrl);
+			return false;
+		}
+		
+		$getBoard = $this->model->get('forum_boards', $this->args[3]);
+		$getUser = $this->model->get('users', $this->args[4]);
+		if(!$getBoard OR !$getUser){
+			$this->redirect($this->site.'/'.$this->moduleUrl);
+			return false;
+		}
+		$boardMod = $this->model->getAll('forum_mods', array('userId' => $getUser['userId'], 'boardId' => $getBoard['boardId']));
+		if(!$boardMod OR count($boardMod) == 0){
+			$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
+			return false;
+		}
+		
+		$this->model->delete('forum_mods', $boardMod[0]['modId']);
+		
+		$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
 	}
 	
 

@@ -129,6 +129,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 									   FROM forum_topics
 									   '.$andFilters.'
 									   '.$andTroll.'
+									   AND buried = 0
 									   ORDER BY lastPost DESC
 									   '.$limit);
 		}
@@ -146,7 +147,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			
 			$topics = $this->fetchAll('SELECT * 
 									   FROM forum_topics
-									   WHERE boardId = :boardId AND sticky != 1
+									   WHERE boardId = :boardId AND sticky != 1 AND buried = 0
 									   '.$andTroll.'
 									   ORDER BY
 									   lastPost DESC
@@ -183,7 +184,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function getAllStickyPosts($data)
 	{
-		$topics = $this->getAll('forum_topics', array('sticky' => 1));
+		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'buried' => 0));
 		$topics = $this->checkTopicsTCA($topics, $data);
 		$topics = $this->parseTopics($topics, $data, true);
 		return $topics;
@@ -192,7 +193,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
     
     public function getBoardStickyPosts($data, $boardId)
     {
-		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'boardId' => $boardId));
+		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'boardId' => $boardId, 'buried' => 0));
 		$topics = $this->checkTopicsTCA($topics, $data);
 		$topics = $this->parseTopics($topics, $data, true);
 		return $topics;

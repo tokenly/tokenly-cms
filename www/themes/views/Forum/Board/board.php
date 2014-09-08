@@ -8,6 +8,17 @@ if($isAll){
 if(trim($board['description']) != ''){
 	echo '<div class="board-description">'.$board['description'].'</div>';
 }
+if(!$isAll){
+	if(count($moderators) > 0){
+		echo '<p><strong>Moderators:</strong> ';
+		$modList = array();
+		foreach($moderators as $mod){
+			$modList[] = '<a href="'.SITE_URL.'/profile/user/'.$mod['slug'].'">'.$mod['username'].'</a>';
+		}
+		echo join(', ', $modList);
+		echo '</p>';
+	}
+}
 ?>
 <?php
 if(!$isAll AND $user AND $perms['canPostTopic']){

@@ -102,7 +102,7 @@ class Slick_App_Forum_Model extends Slick_Core_Model
 	{
 		$lastTopic = $this->fetchSingle('SELECT * 
 										FROM forum_topics
-										WHERE boardId = :id AND trollPost = 0
+										WHERE boardId = :id AND trollPost = 0 AND buried = 0
 										ORDER BY topicId DESC
 										LIMIT '.$offset.', 1', array(':id' => $board['boardId']));
 		if(!$lastTopic){
@@ -120,7 +120,7 @@ class Slick_App_Forum_Model extends Slick_Core_Model
 		$lastPost = $this->fetchSingle('SELECT p.* 
 										FROM forum_posts p
 										LEFT JOIN forum_topics t ON t.topicId = p.topicId
-										WHERE t.boardId = :id AND p.buried = 0 AND p.trollPost = 0
+										WHERE t.boardId = :id AND p.buried = 0 AND p.trollPost = 0 AND t.buried = 0
 										ORDER BY p.postId DESC
 										LIMIT '.$offset.', 1', array(':id' => $board['boardId']));					
 		if(!$lastPost){

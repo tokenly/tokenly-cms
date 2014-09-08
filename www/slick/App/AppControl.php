@@ -115,14 +115,18 @@ class Slick_App_AppControl extends Slick_Core_Controller
 			}
 		}
 
-		$checkTCA = $tca->checkItemAccess($get['userId'], $moduleId, 0, '');
+		$defaultReturn = true;
+		if($redirect AND $access === 0){
+			$defaultReturn = false;
+		}
+		$checkTCA = $tca->checkItemAccess($get['userId'], $moduleId, 0, '', $defaultReturn);
 		if($checkTCA){
 			$access = 1;
 		}
 		if(!$checkTCA AND $access === 1){
 			$access = 0;
 		}
-	
+
 		if($access === 1){
 			return true;
 		}

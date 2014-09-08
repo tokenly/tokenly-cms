@@ -20,18 +20,28 @@ foreach($getCats as $cat){
 	if(!$checkTCA){
 		continue;
 	}	
-	$catList .= '<li><h3>'.$cat['name'].'</h3></li>';
+	
 	$getBoards = $model->getAll('forum_boards', array('categoryId' => $cat['categoryId'], 'active' => 1), array(), 'rank', 'asc');
-	foreach($getBoards as $board){
+	foreach($getBoards as $bk => $board){
 		$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['boardId'], 'board');
 		if(!$checkTCA){
+			unset($getBoards[$bk]);
 			continue;
 		}
-		$itemClass = '';
-		if($board['slug'] == $activeBoard){
-			$itemClass .= ' active';
+	}
+	if(count($getBoards) > 0){
+		$catClass = '';
+		if($cat['slug'] == 'token-viewpoints'){
+			$catClass = 'tcv-category';
 		}
-		$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$board['name'].'</a></li>';
+		$catList .= '<li><h3>'.$cat['name'].'</h3></li>';
+		foreach($getBoards as $board){
+			$itemClass = $catClass;
+			if($board['slug'] == $activeBoard){
+				$itemClass .= ' active';
+			}
+			$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$board['name'].'</a></li>';
+		}
 	}
 }
 $board = $realBoard;
