@@ -904,10 +904,14 @@ box-shadow:         0px 1px 5px 0px rgba(50, 50, 50, 0.5);
 	font-style: italic;
 }
 
-.thread-op{
-
-	padding: 10px;
+.thread-op {
+	padding: 0px;
+	padding-bottom: 10px;
 }
+.thread-op > * {
+	margin-left: 10px;
+}
+
 .op-author{
 	display: block;
 	margin-bottom: 15px;
@@ -926,10 +930,16 @@ box-shadow:         0px 1px 5px 0px rgba(50, 50, 50, 0.5);
 	list-style-type: none;
 	display: block;
 	margin-bottom: 20px;
-	padding: 10px;
-
-	
 }
+.reply-list > li > * {
+	margin: 10px;
+}
+.reply-list > li > .post-controls {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+
 .reply-list > li:nth-child(odd){
 	background: #f5f5f5;
 	border: none;
