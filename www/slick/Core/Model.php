@@ -318,7 +318,7 @@ class Slick_Core_Model
 					$fnum++;
 				}
 			}
-			elseif($value != ''){
+			else{
 				$where = 'WHERE '.$field.' = :'.$field;
 				$values[':'.$field] = $value;
 			}

@@ -22,7 +22,7 @@ class Slick_App_API_V1_Register_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$output['result'] = $create;
+		$output = $create;
 		
 		return $output;
 	}

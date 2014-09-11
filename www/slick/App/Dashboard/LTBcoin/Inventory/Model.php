@@ -102,7 +102,7 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 			}
 			if($balance['quantity'] == 0){
 				if($isCurrent){
-					$this->delete('xcp_balances', $balance['balanceId']);
+					$this->delete('xcp_balances', $isCurrent);
 				}
 				continue;
 			}

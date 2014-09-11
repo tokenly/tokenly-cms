@@ -50,11 +50,13 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		$output['profile'] = $prof;
 
 		if(isset($_SERVER['is_api'])){
-			$getSite = $this->get('sites', $siteId);
-			$output['avatar'] = $getSite['url'].'/files/avatars/'.$output['avatar'];
+			if(!isExternalLink($output['avatar'])){
+				$getSite = $this->get('sites', $siteId);
+				$output['avatar'] = $getSite['url'].'/files/avatars/'.$output['avatar'];
+			}
 			if(count($output['profile']) == 0){
 				$output['profile'] = null;
-			}
+			}			
 		}
 		
 		return $output;

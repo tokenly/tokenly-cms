@@ -24,7 +24,9 @@ class Slick_App_API_Controller extends Slick_Core_Controller
 			}
 		}
 		if(!isset($output['error']) OR $output['error'] == null){
-			http_response_code(200);
+			if(!in_array(http_response_code(), array(200,201,202))){
+				http_response_code(200);
+			}
 		}
 		ob_start();
 		echo json_encode($output);

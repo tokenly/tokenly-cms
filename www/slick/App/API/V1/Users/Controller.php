@@ -152,7 +152,7 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		
 		$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getUser['userId'], 'user-profile');
 		if(!$userTCA){
-			$profile['profile'] = array();
+			$profile['profile'] = null;
 		}		
 		
 		unset($profile['userId']);
@@ -243,10 +243,11 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		
 		$start = ($page * $max) - $max;
 		
-		$totalUsers = $this->model->count('users');
+		$totalUsers = $this->model->count('users', 'activated', 1);
 		
 		$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
 										FROM users
+										WHERE activated = 1
 										ORDER BY userId DESC
 										LIMIT '.$start.', '.$max);
 										
