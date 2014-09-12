@@ -37,6 +37,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
             $className = 'Slick_App_'.$this->app['location'].'_'.$this->module['location'].'_Controller';
         }
 
+		$tca = new Slick_App_LTBcoin_TCA_Model;
         $output['user'] = Slick_App_Account_Home_Model::userInfo();
         if($output['user']){
 			$output['perms'] = array();
@@ -53,6 +54,8 @@ class Slick_App_AppControl extends Slick_Core_Controller
 					}
 				}
 			}
+			$output['perms'] = $tca->checkPerms($output['user']['userId'], $output['perms'], $this->module['moduleId'], 0, '');
+			
 		}
 		else{
 			if(isset($_GET['ref'])){

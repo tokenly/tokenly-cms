@@ -16,8 +16,10 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
     public function init()
     {
 		$output = parent::init();
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
-		
+		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], 0, '');
 		
         if(isset($this->args[2])){
 			switch($this->args[2]){
@@ -61,7 +63,8 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		foreach($getPosts as $key => $row){
-			if(!$this->data['perms']['canPublishPost'] AND !$this->data['perms']['canEditOtherPost'] AND $row['userId'] != $this->data['user']['userId']){
+			$postPerms = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $row['postId'], 'blog-post');
+			if(!$postPerms['canPublishPost'] AND !$postPerms['canEditOtherPost'] AND $row['userId'] != $this->data['user']['userId']){
 				unset($getPosts[$key]);
 				continue;
 			}
@@ -80,6 +83,7 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			}
 			$getAuthor = $this->model->get('users', $row['userId'], array('username'));
 			$getPosts[$key]['author'] = $getAuthor['username'];
+			$getPosts[$key]['perms'] = $postPerms;
 		}
 		$output['postList'] = $getPosts;
 
@@ -180,6 +184,12 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		if(!$getPost){
 			return array('view' => '404');
 		}
+
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');	
+
+		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 		
 		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
 		OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canEditOtherPost'])){
@@ -190,9 +200,6 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			return array('view' => '403');
 		}
 		
-		$tca = new Slick_App_LTBcoin_TCA_Model;
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 		if(!$postTCA){
 			return array('view' => '403');
@@ -348,6 +355,7 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 		if(!$postTCA){
 			return array('view' => '403');

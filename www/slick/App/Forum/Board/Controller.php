@@ -26,19 +26,20 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		if(!$getBoard OR $getBoard['siteId'] != $this->data['site']['siteId'] OR $getBoard['active'] == 0){
 			$output['view'] = '404';
 			return $output;
-		}
-		
-		if($this->data['user']){
-			$postControl = new Slick_App_Forum_Post_Controller;
-			$output['perms'] = $postControl->checkModPerms($getBoard['boardId'], $this->data);
-			$this->data['perms'] = $output['perms'];
-		}				
+		}			
 		
 		$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
 		if(!$checkTCA){
 			$output['view'] = '403';
 			return $output;
 		}
+		
+		if($this->data['user']){
+			$postControl = new Slick_App_Forum_Post_Controller;
+			$output['perms'] = $postControl->checkModPerms($getBoard['boardId'], $this->data);
+			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
+			$this->data['perms'] = $output['perms'];
+		}			
 		
 		$this->board = $getBoard;
 		$newOutput = false;

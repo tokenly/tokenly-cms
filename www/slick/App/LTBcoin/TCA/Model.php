@@ -11,15 +11,55 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 {
 	public static $balances = array();
 	public static $locks = array();
+	public static $rows = false;
 	
 	function __construct()
 	{
 		parent::__construct();
 		$this->inventory = new Slick_App_Dashboard_LTBcoin_Inventory_Model;
+		if(!self::$rows){
+			//load all token_access entries
+			self::$rows = $this->getAll('token_access', array(), array(), 'stackOrder', 'ASC');
+		}
 	}
 	
 	/**
-	* Checks if the currently logged in user can access a specific item or module based on their cached counterparty token balances
+	* Takes an array of permissions and checks against the token_access table for TCA
+	*
+	* @param $userId integer|bool|Array 
+	* If an array, assumes its from $data['user'] and tries to grab user ID from that.
+	* If 0 or false, assumes no user is logged in.
+	* 
+	* @param $perms Array
+	* @param $moduleId integer
+	* @param $itemId integer
+	* @param $itemType string
+	* @param $defaultReturn bool
+	* @return Array	
+	*/
+	public function checkPerms($userId, $perms, $moduleId, $itemId = 0, $itemType = '')
+	{
+		foreach($perms as $key => $val){
+			$getPerm = $this->get('app_perms', $key, array(), 'permKey');
+			if($getPerm){
+				$defaultReturn = true;
+				if(!$val){
+					$defaultReturn = false;
+				}
+				$checkAccess = $this->checkItemAccess($userId, $moduleId, $itemId, $itemType, $defaultReturn, $getPerm['permId']);
+				if(!$checkAccess){
+					$perms[$key] = false;
+				}
+				else{
+					$perms[$key] = true;
+				}
+			}
+		}
+		return $perms;
+	}
+	
+	/**
+	* Checks if the currently logged in user can access a specific item, module or permission based on their cached counterparty token balances
 	* 
 	* @param $userId integer|bool|Array 
 	* If an array, assumes its from $data['user'] and tries to grab user ID from that.
@@ -28,13 +68,15 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 	* @param $moduleId integer
 	* @param $itemId integer
 	* @param $itemType string
+	* @param $defaultReturn bool
+	* @param $permId integry
 	* @return bool
 	*/
-	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true)
+	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0)
 	{
-		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType);
+		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
 		if(!isset(self::$locks[$lockHash])){
-			self::$locks[$lockHash] = $this->getAll('token_access', array('moduleId' => $moduleId, 'itemId' => $itemId, 'itemType' => $itemType, 'permId' => 0), array(), 'stackOrder', 'asc');
+			self::$locks[$lockHash] = extract_row(self::$rows, array('moduleId' => $moduleId, 'itemId' => $itemId, 'itemType' => $itemType, 'permId' => $permId), true);
 		}
 		$getLocks = self::$locks[$lockHash];
 		if(count($getLocks) == 0){
@@ -156,5 +198,4 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 		}
 		return false;
 	}
-	
 }

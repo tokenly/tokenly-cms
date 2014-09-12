@@ -24,12 +24,15 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
+		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
+		
 		if($this->data['user']){
 			$output['perms'] = $this->checkModPerms($getTopic['boardId'], $this->data);
+			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $this->data['module']['moduleId'], $getTopic['topicId'], 'topic');
+			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $boardModule['moduleId'], $getTopic['boardId'], 'board');
 			$this->data['perms'] = $output['perms'];
 		}		
 		
-		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
 		$getBoard = $this->model->get('forum_boards', $getTopic['boardId']);
 		$checkCat = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getBoard['categoryId'], 'category');
 		$checkBoard = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getTopic['boardId'], 'board');

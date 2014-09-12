@@ -20,7 +20,7 @@ function checkUserTCA($userId, $profUserId)
 if($user AND $topic['locked'] == 0){
 ?>
 <p style="float: right; vertical-align: top; margin-top: 10px; width: 120px; text-align: center;">
-	<a class="board-control-link" href="#post-reply">Post Reply</a>
+	<?php if($perms['canPostReply']){ ?><a class="board-control-link" href="#post-reply">Post Reply</a><?php }//endif ?>
 	<?php
 	$subscribeText = 'Subscribe';
 	$subscribeClass = 'subscribe';
@@ -441,9 +441,10 @@ if(!$user OR $perms['canPostReply']){
 		</p>
 	<?php
 	}
+	echo '</div>';
 }
 ?>
-</div>
+
 <script type="text/javascript" src="<?= THEME_URL ?>/js/Markdown.Converter.js"></script>
 <script type="text/javascript">
 	$(document).ready(function(){

@@ -8,8 +8,6 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         $this->model = new Slick_App_Blog_Post_Model;
-        
-        
     }
     
     public function init()
@@ -48,6 +46,10 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		if(!$checkTCA){
 			$output['view'] = '403';
 			return $output;
+		}
+		
+		if($this->data['user']){
+			$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $this->data['module']['moduleId'], $getPost['postId'], 'blog-post');
 		}
 		
 		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));

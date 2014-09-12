@@ -16,22 +16,6 @@ foreach($postList as $key => $val){
 	}
 }
 
-$table = $this->generateTable($postList, array('fields' => array('postId' => 'ID', 'title' =>'Title',
-																'author' => 'Author', 'status' => 'Status',
-																'postDate' => 'Posted Date/Time'),
-												'class' => 'admin-table mobile-table',
-												'actions' => array( array('text' => 'Edit',
-																		 'data' => 'postId', 'heading' => '',
-																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'),																		 
-																		array('text' => 'Delete', 'class' => 'delete',
-																		 'data' => 'postId', 'heading' => '',
-																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/')
-																	),
-												'options' => array(array('field' => 'published', 'params' => array('functionWrap' => 'boolToText')),
-															array('field' => 'publishDate', 'params' => array('functionWrap' => 'formatDate')),
-															array('field' => 'postDate', 'params' => array('functionWrap' => 'formatDate'))
-															)));
-
 ?>
 <h2>Blog Posts</h2>
 <p>
@@ -69,16 +53,16 @@ foreach($postList as $post){
 	$editLink = '';
 	$deleteLink = '';
 	
-	if(($user['userId'] == $post['userId'] AND $perms['canEditSelfPost'])
-		OR ($user['userId'] != $post['userId'] AND $perms['canEditOtherPost'])){
-		if($post['published'] == 0 OR ($post['published'] == 1 AND $perms['canPublishPost'])){
+	if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
+		OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
+		if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
 			$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'">View/Edit</a>';
 		}
 	}
 	
-	if(($user['userId'] == $post['userId'] AND $perms['canDeleteSelfPost'])
-		OR ($user['userId'] != $post['userId'] AND $perms['canDeleteOtherPost'])){
-		if($post['published'] == 0 OR ($post['published'] == 1 AND $perms['canPublishPost'])){
+	if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
+		OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
+		if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
 			$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/'.$post['postId'].'" class="delete">Delete</a>';
 		}
 	}
@@ -97,7 +81,5 @@ foreach($postList as $post){
 }
 echo '</tbody></table>';
 
-	// echo $table->display();
-	 
 }
 ?>
