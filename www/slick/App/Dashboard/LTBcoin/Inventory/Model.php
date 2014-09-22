@@ -21,7 +21,7 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 		return $balances;
 	}
 	
-	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false)
+	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false, $keepAddress = false)
 	{
 		$meta = new Slick_App_Meta_Model;
 		$time = time();
@@ -47,7 +47,7 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 			else{
 				$balances[$address['address']] = $this->getAddressBalances($address['addressId']);
 			}
-			if(count($balances[$address['address']]) == 0){
+			if(!$keepAddress AND count($balances[$address['address']]) == 0){
 				unset($balances[$address['address']]);
 			}
 		}

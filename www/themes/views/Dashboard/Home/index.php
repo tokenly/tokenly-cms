@@ -23,6 +23,12 @@
 	}
 	?>
 </p>
+<p>
+	Just added a new Access Token?
+		<form action="<?= SITE_URL ?>/dashboard/inventory" method="post" style=" margin: 0px;">
+		<input type="submit" name="forceRefresh" style="font-size: 10px; margin: 0px;" id="forceRefresh" value="Update My Inventory" />
+		</form>
+</p>
 <h3>Account Information</h3>
 <?php
 $profModel = new Slick_App_Profile_User_model;

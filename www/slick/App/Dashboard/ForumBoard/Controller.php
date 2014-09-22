@@ -16,6 +16,8 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
     public function init()
     {
 		$output = parent::init();
+		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'forum');
+			
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
@@ -43,7 +45,7 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 			$output = $this->showBoards();
 		}
 		$output['template'] = 'admin';
-        
+        $output['perms'] = $this->data['perms'];	
         return $output;
     }
     
@@ -57,6 +59,13 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 													 ORDER BY c.rank ASC, b.categoryId ASC, b.rank ASC',
 													array(':siteId' => $this->data['site']['siteId']));
 
+		if(!$this->data['perms']['canManageAllBoards']){
+			foreach($output['boardList'] as $key => $board){
+				if($board['ownerId'] != $this->data['user']['userId']){
+					unset($output['boardList'][$key]);
+				}
+			}
+		}
 		
 		return $output;
 		
@@ -66,12 +75,28 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 	private function addBoard()
 	{
 		$output = array('view' => 'form');
+		if(!$this->data['perms']['canManageAllBoards']){
+			$output['view'] = '403';
+			return $output;
+		}
 		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		if(!$this->data['perms']['canChangeBoardCategory']){
+			$output['form']->remove('categoryId');
+		}
+		if(!$this->data['perms']['canChangeBoardOwner']){
+			$output['form']->remove('ownerId');
+		}
+		if(!$this->data['perms']['canChangeBoardRank']){
+			$output['form']->remove('rank');
+		}
 		$output['formType'] = 'Add';
 		
 		if(posted()){
 			$data = $output['form']->grabData();
 			$data['siteId'] = $this->data['site']['siteId'];
+			if(!$this->data['perms']['canChangeBoardCategory']){
+				$data['categoryId'] = 0;
+			}
 			try{
 				$add = $this->model->addBoard($data);
 			}
@@ -107,7 +132,20 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 		}
 		
 		$output = array('view' => 'form');
+		if(!$this->data['perms']['canManageAllBoards'] AND $getBoard['ownerId'] != $this->data['user']['userId']){
+			$output['view'] = '403';
+			return $output;
+		}
 		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		if(!$this->data['perms']['canChangeBoardOwner']){
+			$output['form']->remove('ownerId');
+		}
+		if(!$this->data['perms']['canChangeBoardCategory']){
+			$output['form']->remove('categoryId');
+		}
+		if(!$this->data['perms']['canChangeBoardRank']){
+			$output['form']->remove('rank');
+		}		
 		$output['formType'] = 'Edit';
 		$output['boardMods'] = $this->model->getBoardMods($getBoard['boardId']);
 		$output['modForm'] = $this->model->getModForm();
@@ -164,6 +202,11 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 			return false;
 		}
 		
+		if(!$this->data['perms']['canManageAllBoards'] AND $getBoard['ownerId'] != $this->data['user']['userId']){
+			$this->redirect($this->site.'/'.$this->moduleUrl);
+			return false;
+		}		
+		
 		$delete = $this->model->delete('forum_boards', $this->args[3]);
 		$this->redirect($this->site.'/'.$this->moduleUrl);
 		return true;
@@ -182,6 +225,12 @@ class Slick_App_Dashboard_ForumBoard_Controller extends Slick_App_ModControl
 			$this->redirect($this->site.'/'.$this->moduleUrl);
 			return false;
 		}
+		
+		if(!$this->data['perms']['canManageAllBoards'] AND $getBoard['ownerId'] != $this->data['user']['userId']){
+			$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
+			return false;
+		}				
+		
 		$boardMod = $this->model->getAll('forum_mods', array('userId' => $getUser['userId'], 'boardId' => $getBoard['boardId']));
 		if(!$boardMod OR count($boardMod) == 0){
 			$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);

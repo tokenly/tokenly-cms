@@ -123,7 +123,7 @@ class Slick_API_Bitcoin {
 						);
 		$request = json_encode($request);
 		$request = str_replace(array('[{', '}]'), array('{', '}'), $request);
-
+		
 		$this->debug && $this->debug.='***** Request *****'."\n".$request."\n".'***** End Of request *****'."\n\n";
 		
 		// performs the HTTP POST

@@ -5,6 +5,7 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 	public function getBoardForm($siteId)
 	{
 		$form = new Slick_UI_Form;
+		$form->setFileEnc();
 		
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
 		$categoryId = new Slick_UI_Select('categoryId');
@@ -24,6 +25,15 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		$slug->setLabel('Slug / URL (blank to auto generate)');
 		$form->add($slug);	
 		
+		$ownerId = new Slick_UI_Select('ownerId');
+		$ownerId->setLabel('Board Owner');
+		$ownerId->addOption(0, '[nobody]');
+		$getUsers = $this->getAll('users');
+		foreach($getUsers as $user){
+			$ownerId->addOption($user['userId'], $user['username']);
+		}
+		$form->add($ownerId);
+		
 		$rank = new Slick_UI_Textbox('rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);
@@ -34,10 +44,10 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		$active->setValue(1);
 		$form->add($active);
 		
-		$description = new Slick_UI_Textarea('description', 'html-editor');
-		$description->setLabel('Description');
+		$description = new Slick_UI_Textarea('description');
+		$description->setLabel('Description (use markdown)');
 		$form->add($description);
-
+		
 		return $form;
 	}
 	
@@ -64,6 +74,11 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
+		$useData['slug'] = $this->checkDupeSlug($useData['slug']);
+		
+		if(isset($data['ownerId'])){
+			$useData['ownerId'] = $data['ownerId'];
+		}
 		
 		$add = $this->insert('forum_boards', $useData);
 		if(!$add){
@@ -77,7 +92,7 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		
 	public function editBoard($id, $data)
 	{
-		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'rank' => false, 'description' => false, 'active' => false, 'categoryId' => false);
+		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'description' => false, 'active' => false);
 		$useData = array();
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
@@ -93,17 +108,28 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 			}
 		}
 		
+		if(isset($data['categoryId'])){
+			$useData['categoryId'] = $data['categoryId'];
+		}
+		
+		if(isset($data['rank'])){
+			$useData['rank'] = intval($data['rank']);
+		}
+		
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
+		$useData['slug'] = $this->checkDupeSlug($useData['slug'], $id);
 		
+		if(isset($data['ownerId'])){
+			$useData['ownerId'] = $data['ownerId'];
+		}
 		
 		$edit = $this->edit('forum_boards', $id, $useData);
 		if(!$edit){
 			throw new Exception('Error editing board');
 		}
-		
-		
+			
 		return true;
 		
 	}
@@ -153,7 +179,22 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		
 		return $this->insert('forum_mods', array('userId' => $get['userId'], 'boardId' => $boardId));
 	}
-
+	
+	public function checkDupeSlug($slug, $boardId = 0)
+	{
+		$sql = 'SELECT count(*) as total FROM forum_boards WHERE slug LIKE :slug';
+		$values = array(':slug' => $slug.'%');
+		if($boardId != 0){
+			$sql .= ' AND boardId != :boardId';
+			$values[':boardId'] = $boardId;
+		}
+		
+		$get = $this->fetchSingle($sql,$values);
+		if(!$get OR $get['total'] == 0){
+			return $slug;
+		}
+		return $slug.'-'.($get['total']+1);
+	}
 }
 
 ?>

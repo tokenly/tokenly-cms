@@ -22,7 +22,7 @@ if(trim($app['meta']['forum-description']) != ''){
 						<h3><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$board['name'].'</a></h3>
 						';
 				if(trim($board['description']) != ''){
-					echo '<div class="board-description">'.$board['description'].'</div>';
+					echo '<div class="board-description">'.Slick_App_Page_View_Model::parsePageTags(markdown($board['description']), true).'</div>';
 				}
 				
 				$mostRecent = '';

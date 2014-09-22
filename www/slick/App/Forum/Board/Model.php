@@ -96,11 +96,17 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			
 			$filters = $this->getBoardFilters($data['user']);
 			$andFilters = '';
-			if(count($filters) > 0){
-				foreach($filters as &$filter){
+			$filterNum = 0;
+			if(count($filters['antifilters']) > 0){
+				$andFilters = ' WHERE ';
+				foreach($filters['antifilters'] as &$filter){
 					$filter = intval($filter);
+					if($filterNum > 0){
+						$andFilters .= ' AND';
+					}
+					$andFilters .= ' boardId != '.$filter.' ';
+					$filterNum++;
 				}
-				$andFilters = ' WHERE boardId IN('.join(',', $filters).') ';
 			}
 			
 			if(isset($_GET['trollVision'])){
@@ -205,7 +211,10 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$profModel = new Slick_App_Profile_User_Model;
 		$profileModule = $this->get('modules', 'user-profile', array(), 'slug');
-
+		$meta = new Slick_App_Meta_Model;
+		$tokenApp = $this->get('apps', 'ltbcoin', array(), 'slug'); 
+		$tokenSettings = $meta->appMeta($tokenApp['appId']); 
+		
 		$andTroll = ' AND trollPost = 0 ';
 		if(isset($_GET['trollVision'])){
 			$andTroll = '';
@@ -234,8 +243,23 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$topics[$key]['link'] = '<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$row['url'].'" title="'.str_replace('"', '', shorten(strip_tags($row['content']), 150)).'" class="'.$linkClass.'">'.$linkExtra.$row['title'].'</a>';
 			if($all){
 				$getBoard = $this->get('forum_boards', $row['boardId']);
-				
-				$topics[$key]['link'] .= '<div class="post-category">Board: <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$getBoard['slug'].'">'.$getBoard['name'].'</a></div>';
+				$extraBoardClass = '';
+				$boardImage = '';
+				if($getBoard['categoryId'] == $tokenSettings['tca-forum-category']){
+					$extraBoardClass = 'tcv-category';
+					//check for access_token link on board
+					$access_token = $this->getAll('forum_boardMeta', array('boardId' => $getBoard['boardId'], 'metaKey' => 'access_token'));
+					if(count($access_token) > 0){
+						$access_token = $access_token[0];
+						$getAsset = $this->get('xcp_assetCache', $access_token['value'], array(), 'asset');
+						if($getAsset){
+							if(trim($getAsset['image']) != ''){
+								$boardImage = '<img class="mini-board-img" src="'.$data['site']['url'].'/files/tokens/'.$getAsset['image'].'" alt="" /> ';
+							}
+						}
+					}
+				}
+				$topics[$key]['link'] .= '<div class="post-category '.$extraBoardClass.'"><a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$getBoard['slug'].'">'.$boardImage.$getBoard['name'].'</a></div>';
 			}
 			
 			$checkAuthorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $author['userId'], 'user-profile'); 
@@ -329,14 +353,28 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		if(!$user){
 			//use cookies
 			if(isset($_COOKIE['boardFilters'])){
-				$output = explode(',', $_COOKIE['boardFilters']);
+				$output['filters'] = explode(',', $_COOKIE['boardFilters']);
+			}
+			if(isset($_COOKIE['boardAntiFilters'])){
+				$output['antifilters'] = explode(',', $_COOKIE['boardAntiFilters']);
+			}
+			else{
+				//turn this into a setting at some point
+				$output['antifilters'] = array(31,47,57,48,50,49,51); //non english boards	
 			}
 		}
 		else{
 			$meta = new Slick_App_Meta_Model;
 			$userFilters = $meta->getUserMeta($user['userId'], 'boardFilters');
+			$userAntiFilters = $meta->getUserMeta($user['userId'], 'boardAntiFilters');
 			if($userFilters){
-				$output = explode(',', $userFilters);
+				$output['filters'] = explode(',', $userFilters);
+			}
+			if($userAntiFilters){
+				$output['antifilters'] = explode(',', $userAntiFilters);
+			}
+			else{
+				$output['antifilters'] = array(31,47,57,48,50,49,51); //non english boards
 			}
 		}
 		
@@ -349,15 +387,25 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$filters = array($filters);
 		}
 		$filterList = join(',', $filters);
+		$getBoards = $this->getAll('forum_boards', array(), array('boardId'));
+		$antiFilters = array();
+		foreach($getBoards as $board){
+			if(!in_array($board['boardId'], $filters)){
+				$antiFilters[] = $board['boardId'];
+			}
+		}
+		$antiFilterList = join(',', $antiFilters);
 		if(!$user){
 			//set for 60 days
 			$set = setcookie('boardFilters', $filterList, time()+5184000, '/', $_SERVER['HTTP_HOST']);
+			$set = setcookie('boardAntiFilters', $antiFilterList, time()+5184000, '/', $_SERVER['HTTP_HOST']);
 		}
 		else{
 			$meta = new Slick_App_Meta_Model;
 			$set = $meta->updateUserMeta($user['userId'], 'boardFilters', $filterList);
+			$set2 = $meta->updateUserMeta($user['userId'], 'boardAntiFilters', $antiFilterList);
 		}
-		if(!$set){
+		if(!$set OR !$set2){
 			return false;
 		}
 		return true;
@@ -365,15 +413,22 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function countFilteredTopics($filters = array())
 	{
-		if(count($filters) == 0){
-			return 0;
-		}
-		
-		foreach($filters as &$filter){
+		$andSQL = 'WHERE';
+		$num = 0;
+		foreach($filters['antifilters'] as &$filter){
 			$filter = intval($filter);
+			if($num > 0){
+				$andSQL .= ' AND';
+			}
+			$andSQL .= ' boardId != '.$filter.' ';
+			
+			$num++;
+		}
+		if(count($filters['antifilters']) == 0){
+			$andSQL = '';
 		}
 		
-		$count = $this->fetchSingle('SELECT count(*) as total FROM forum_topics WHERE boardId IN('.join(',',$filters).')');
+		$count = $this->fetchSingle('SELECT count(*) as total FROM forum_topics '.$andSQL);
 		if(!$count){
 			return 0;
 		}

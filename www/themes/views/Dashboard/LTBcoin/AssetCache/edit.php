@@ -1,7 +1,13 @@
+<?php
+if(trim($thisAsset['image']) != ''){
+	echo '<p style="float: right; vertical-align: top;"><img src="'.SITE_URL.'/files/tokens/'.$thisAsset['image'].'" alt="" /></p>';
+}
+?>
 <h2>Edit Asset Details: <?= $thisAsset['asset'] ?></h2>
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Go Back</a>
 </p>
+<div class="clear"></div>
 <?php
 if(isset($message) AND trim($message) != ''){
 	echo '<p class="error">'.$message.'</p>';

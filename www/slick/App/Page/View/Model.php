@@ -60,7 +60,7 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 		return $newStr;
 	}
 	
-	public static function parsePageTags($str)
+	public static function parsePageTags($str, $strip = false)
 	{
 		$model = new Slick_Core_Model;
 		$newStr = $str;
@@ -74,6 +74,10 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 				$exp = array(substr($match, 0, $checkPos), substr($match, ($checkPos + 1)));
 				foreach($tags as $tag){
 					if($tag['tag'] == trim($exp[0])){
+						if($strip){
+							$newStr = str_replace('['.$match.']', '', $newStr);
+							continue 2;
+						}
 						$class = new $tag['class'];
 						if(isset($exp[1])){
 							$params = explode(',', $exp[1]);
@@ -96,6 +100,10 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 			else{
 				foreach($tags as $tag){
 					if($tag['tag'] == trim($match)){
+						if($strip){
+							$newStr = str_replace('['.$match.']', '', $newStr);
+							continue 2;
+						}						
 						$class = new $tag['class'];
 						$newStr = str_replace('['.$match.']', $class->display(), $newStr);
 					}

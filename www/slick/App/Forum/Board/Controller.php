@@ -139,12 +139,8 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		}
 		
 		$output['boardFilters'] = $this->model->getBoardFilters($this->data['user']);
-		if(count($output['boardFilters']) > 0){
-			$output['totalTopics'] = $this->model->countFilteredTopics($output['boardFilters']);
-		}
-		else{
-			$output['totalTopics'] = $this->model->count('forum_topics');
-		}
+		$output['totalTopics'] = $this->model->countFilteredTopics($output['boardFilters']);
+
 		
 		$output['numPages'] = ceil($output['totalTopics'] / $this->data['app']['meta']['topicsPerPage']);
 		$output['page'] = 1;

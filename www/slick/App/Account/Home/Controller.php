@@ -72,7 +72,13 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 			}
 			$getDash = $this->model->get('apps', 'dashboard', array(), 'slug');
 			if($getDash){
-				$this->redirect($this->site.'/'.$getDash['url'], 1);
+				if(isset($_REQUEST['r'])){
+					$this->redirect($this->site.$_GET['r']);
+				}
+				else{
+					$this->redirect($this->site.'/'.$getDash['url'], 1);
+				}				
+				
 				return $output;
 			}
 			else{

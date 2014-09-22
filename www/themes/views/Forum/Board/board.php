@@ -1,12 +1,34 @@
 <?php
+$model = new Slick_Core_Model;
+$boardToken = '';
 if($isAll){
 	$board = array('name' => 'Recent Posts', 'description' => '', 'slug' => 'all');
 }
+else{
+	$access_token = $model->getAll('forum_boardMeta', array('boardId' => $board['boardId'], 'metaKey' => 'access_token'));
+	if(count($access_token) > 0){
+		$access_token = $access_token[0];
+		$getAsset = $model->get('xcp_assetCache', $access_token['value'], array(), 'asset');
+		if($getAsset){
+			$boardImage = '';
+			if(trim($getAsset['image']) != ''){
+				$boardImage = '<img class="board-img" src="'.$site['url'].'/files/tokens/'.$getAsset['image'].'" alt="" title="'.$getAsset['asset'].'" /><br>';
+			}
+			$boardToken = '<div class="board-image-cont"><a href="#asset-info" class="fancy">'.$boardImage.$getAsset['asset'].'</a></div>';
+			$boardToken .= '<div id="asset-info" style="display: none;">'.markdown($getAsset['description']);
+			if(trim($getAsset['link']) != ''){
+				$boardToken .= '<p><strong>More Info:</strong> <a href="'.$getAsset['link'].'" target="_blank">'.$getAsset['link'].'</a></p>';
+			}
+			$boardToken .= '</div>';
+		}
+	}
+}
+echo $boardToken;
 ?>
 <h1><?= $board['name'] ?></h1>
 <?php
 if(trim($board['description']) != ''){
-	echo '<div class="board-description">'.$board['description'].'</div>';
+	echo '<div class="board-description">'.Slick_App_Page_View_Model::parsePageTags(markdown($board['description'])).'</div>';
 }
 if(!$isAll){
 	if(count($moderators) > 0){
@@ -61,7 +83,7 @@ if($isAll){
 							continue;
 						}						
 						$checked = 'checked';
-						if(isset($boardFilters) AND count($boardFilters) > 0 AND !in_array($fboard['boardId'], $boardFilters)){
+						if(isset($boardFilters) AND count($boardFilters['antifilters']) > 0 AND in_array($fboard['boardId'], $boardFilters['antifilters'])){
 							$checked = '';
 						}
 						echo '<input type="checkbox" id="b-'.$fboard['boardId'].'" name="boardFilters[]" '.$checked.' value="'.$fboard['boardId'].'" />';

@@ -10,6 +10,7 @@
 </p>
 <form action="" method="post">
 <input type="submit" name="forceRefresh" style="font-size: 14px;" id="forceRefresh" value="Force Balance Refresh" />
+</form>
 <h4>My Tokens</h4>
 <p>
 	<?php

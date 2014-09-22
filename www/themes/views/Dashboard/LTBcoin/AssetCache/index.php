@@ -1,8 +1,12 @@
 <h2>XCP Asset Cache</h2>
+<?php
+if($perms['canViewAllAssets']){
+?>
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/add">Add Asset</a>
 </p>
 <?php
+}//endif
 if(count($assetList) == 0){
 	echo '<p>No assets available in cache</p>';
 }

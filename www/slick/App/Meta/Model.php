@@ -109,7 +109,14 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 	
 	public function appMeta($appId)
 	{
-
+		$getApp = $this->get('apps', $appId);
+		if(!$getApp){
+			$getApp = $this->get('apps', $appId, array(), 'slug');
+			if(!$getApp){
+				return false;
+			}
+		}
+		$appId = $getApp['appId'];
 		if(isset(self::$appMeta[$appId])){
 			return self::$appMeta[$appId];
 		}

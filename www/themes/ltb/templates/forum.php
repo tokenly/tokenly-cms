@@ -15,6 +15,9 @@ $model = new Slick_Core_Model;
 $boardModule = $model->get('modules', 'forum-board', array(), 'slug');
 $tca = new Slick_App_LTBcoin_TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
+$meta = new Slick_App_Meta_Model;
+$tokenApp = $model->get('apps', 'ltbcoin', array(), 'slug'); 
+$tokenSettings = $meta->appMeta($tokenApp['appId']); 
 foreach($getCats as $cat){
 	$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $cat['categoryId'], 'category');
 	if(!$checkTCA){
@@ -31,7 +34,7 @@ foreach($getCats as $cat){
 	}
 	if(count($getBoards) > 0){
 		$catClass = '';
-		if($cat['slug'] == 'token-viewpoints'){
+		if($cat['categoryId'] == $tokenSettings['tca-forum-category']){
 			$catClass = 'tcv-category';
 		}
 		$catList .= '<li><h3>'.$cat['name'].'</h3></li>';
@@ -40,7 +43,18 @@ foreach($getCats as $cat){
 			if($board['slug'] == $activeBoard){
 				$itemClass .= ' active';
 			}
-			$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$board['name'].'</a></li>';
+			$boardImage = '';
+			$access_token = $model->getAll('forum_boardMeta', array('boardId' => $board['boardId'], 'metaKey' => 'access_token'));
+			if(count($access_token) > 0){
+				$access_token = $access_token[0];
+				$getAsset = $model->get('xcp_assetCache', $access_token['value'], array(), 'asset');
+				if($getAsset){
+					if(trim($getAsset['image']) != ''){
+						$boardImage = '<img class="mini-board-img" src="'.$data['site']['url'].'/files/tokens/'.$getAsset['image'].'" alt="" />';
+					}
+				}
+			}			
+			$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$boardImage.$board['name'].'</a></li>';
 		}
 	}
 }

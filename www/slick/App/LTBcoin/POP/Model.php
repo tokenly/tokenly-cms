@@ -121,8 +121,13 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 				}
 			}
 			foreach($get as $gk => $row){
-				$getTopic = $this->get('forum_topics', $row['topicId'], array('topicId', 'buried'));
+				$getTopic = $this->get('forum_topics', $row['topicId'], array('topicId', 'buried', 'boardId'));
 				if($getTopic['buried'] == 1){
+					unset($get[$gk]);
+					continue;
+				}
+				$getBoard = $this->get('forum_boards', $getTopic['boardId'], array('boardId', 'categoryId'));
+				if($getBoard['categoryId'] == $this->appMeta['tca-forum-category']){
 					unset($get[$gk]);
 					continue;
 				}
@@ -137,7 +142,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$numPosts =  count($get);
 		}
 		if($andTopics != 0){
-			$sql2 = 'SELECT topicId, content, postTime FROM forum_topics WHERE userId = :id AND buried = 0';
+			$sql2 = 'SELECT topicId, content, postTime, boardId FROM forum_topics WHERE userId = :id AND buried = 0';
 			if(is_array($timeframe)){
 				$sql2 .= ' AND postTime >= "'.$timeframe['start'].'" AND postTime <= "'.$timeframe['end'].'"';
 			}
@@ -149,7 +154,12 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					}
 				}
 			}			
-			foreach($get2 as $row){
+			foreach($get2 as $k2 => $row){
+				$getBoard = $this->get('forum_boards', $row['boardId'], array('boardId', 'categoryId'));
+				if($getBoard['categoryId'] == $this->appMeta['tca-forum-category']){
+					unset($get2[$k2]);
+					continue;
+				}
 				$rowDate = date('Y-m-d', strtotime($row['postTime']));
 				if(!isset($dayNums[$rowDate])){
 					$dayNums[$rowDate] = 1;
@@ -499,7 +509,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		
 		$blogModule = $this->get('modules', 'blog-post', array(), 'slug');
 		
-		$sql = 'SELECT postId, userId, url, title, views FROM blog_posts
+		$sql = 'SELECT postId, userId, url, title, views, editedBy FROM blog_posts
 				WHERE (userId = :userId OR editedBy = :editedBy) AND published = 1';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
@@ -550,10 +560,10 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 				$post['comments'] = $numReplies;
 			}
 			
-			if($post['userId'] == $userId AND $post['editedBy'] != $userId){
+			if($post['editedBy'] != 0 AND $post['userId'] == $userId AND $post['editedBy'] != $userId){
 				$thisScore = $thisScore * ($this->weights['writerCut'] / 100);
 			}
-			elseif($post['userId'] != $userId AND $post['editedBy'] == $userId){
+			elseif($post['editedBy'] != 0 AND $post['userId'] != $userId AND $post['editedBy'] == $userId){
 				$thisScore = $thisScore * ($this->weights['editorCut'] / 100);
 			}
 			

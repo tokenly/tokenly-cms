@@ -173,6 +173,10 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$meta->updateUserMeta($add, 'pubProf', 1);
 		$meta->updateUserMeta($add, 'emailNotify', 1);
 		
+		if(isset($data['site_referral'])){
+			$meta->updateUserMeta($add, 'site_referral', trim(htmlentities(strip_tags($data['site_referral']))));
+		}
+		
 		if(isset($_SESSION['affiliate-ref'])){
 			$getLink = $this->get('user_meta', $_SESSION['affiliate-ref'], array('userId'), 'metaValue');
 			if($getLink){
