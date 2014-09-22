@@ -1,19 +1,6 @@
 <?php
 class Slick_Tags_ForumBuilder
 {
-	/*
-	on submit
-	- in admin
-		- show a history of orders. what users made them, how much was paid. times, what boards, etc.
-	- in general:
-		- make token board names bolded in recent posts listings
-		- on token access boards, show the token name and pop up for description somewhere
-		- show moderators on forum main home page
-		- allow for coin images/logos to be uploaded and displayed on board and topic pages
-		- they will need a way to update title/description/image/asset description/required amounts at some point
-		- fix filter issue
-	
-	*/
 	function __construct()
 	{
 		$this->model = new Slick_Core_Model;
