@@ -1,5 +1,5 @@
 <?php
-class Slick_App_API_V1_Blog_Model extends Slick_Core_Model
+class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 {
 	public function getAllPosts($data, $getExtra = 0, $start = 0, $filled = array())
 	{

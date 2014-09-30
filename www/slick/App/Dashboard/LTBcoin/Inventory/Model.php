@@ -83,7 +83,8 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 			$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getAddress['address'])));
 		}
 		catch(Exception $e){
-			return false;
+			return $this->getAddressBalances($addressId);
+			//return false;
 		}
 		$fullBalances = array();
 		foreach($getBalances as $balance){

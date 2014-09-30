@@ -170,22 +170,35 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function checkTopicsTCA($topics, $data)
 	{
-		$tca = new Slick_App_LTBcoin_TCA_Model;
-		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
 		foreach($topics as $k => $row){
-			$getBoard = $this->get('forum_boards', $row['boardId']);
-			$checkCat = $tca->checkItemAccess($data['user'], $data['module']['moduleId'], $getBoard['categoryId'], 'category');
-			$checkBoard = $tca->checkItemAccess($data['user'], $data['module']['moduleId'], $row['boardId'], 'board');
-			if(!$checkBoard OR !$checkCat){
+			$checkTopic = $this->checkTopicTCA($data['user'], $row);
+			if(!$checkTopic){
 				unset($topics[$k]);
 				continue;
 			}
-			$checkTCA = $tca->checkItemAccess($data['user'], $postModule['moduleId'], $row['topicId'], 'topic');
-			if(!$checkTCA){
-				unset($topics[$k]);
-			}
 		}
 		return $topics;
+	}
+	
+	public function checkTopicTCA($user, $row)
+	{
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
+		$getBoard = $this->get('forum_boards', $row['boardId']);
+		$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['categoryId'], 'category');
+		if(!$checkCat){
+			return false;
+		}
+		$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $row['boardId'], 'board');
+		if(!$checkBoard){
+			return false;
+		}
+		$checkTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $row['topicId'], 'topic');
+		if(!$checkTCA){
+			return false;
+		}
+		return true;
 	}
 	
 	public function getAllStickyPosts($data)

@@ -46,7 +46,7 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 				if(!$val){
 					$defaultReturn = false;
 				}
-				$checkAccess = $this->checkItemAccess($userId, $moduleId, $itemId, $itemType, $defaultReturn, $getPerm['permId']);
+				$checkAccess = $this->checkItemAccess($userId, $moduleId, $itemId, $itemType, $defaultReturn, $getPerm['permId'], $val);
 				if(!$checkAccess){
 					$perms[$key] = false;
 				}
@@ -72,7 +72,7 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 	* @param $permId integry
 	* @return bool
 	*/
-	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0)
+	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0, $override = false)
 	{
 		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
 		if(!isset(self::$locks[$lockHash])){
@@ -94,7 +94,12 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 		$getBalances = self::$balances[$userId];
 		$stack = array();
 		foreach($getLocks as $lock){
-			$hasReq = $this->parseLock($getBalances, $lock);
+			if($lock['overrideable'] == 1 AND $override){
+				$hasReq = true;
+			}
+			else{
+				$hasReq = $this->parseLock($getBalances, $lock);
+			}
 			$stack[] = array('hasReq' => $hasReq, 'stackOp' => $lock['stackOp']);
 		}
 		$doCheck = $this->parseStack($stack);
