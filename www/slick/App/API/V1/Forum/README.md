@@ -18,20 +18,20 @@
 
 ###Methods Being Built Still
 
-- /threads [POST] (create new thread)
-- /threads/{URL} [PATCH] (edit thread)
-- /threads/{URL} [DELETE] (buries thread)
-- /threads/{URL} [POST] (reply)
-- /threads/{URL}/{reply ID} [PATCH] (edit reply)
-- /threads/{URL}/{reply ID} [DELETE] (bury reply)
-- /opts/flag [POST] (flag a thread or post)
-- /opts/like [POST] (like a thread or post)
-- /opts/unlike [POST] (unlike thread/post)
-- /opts/move [POST] (move a thread to different board)
-- /opts/lock [POST] (lock a thread)
-- /opts/unlock [POST] (unlock a thread)
-- /opts/sticky [POST] (set thread to sticky)
-- /opts/unsticky [POST] (unsticky thread)
+- /threads [POST] - (create new thread)
+- /threads/{URL} [PATCH] - (edit thread)
+- /threads/{URL} [DELETE] - (buries thread)
+- /threads/{URL} [POST] - (reply)
+- /threads/{URL}/{reply ID} [PATCH] - (edit reply)
+- /threads/{URL}/{reply ID} [DELETE] - (bury reply)
+- /opts/flag [POST] - (flag a thread or post)
+- /opts/like [POST] - (like a thread or post)
+- /opts/unlike [POST] - (unlike thread/post)
+- /opts/move [POST] - (move a thread to different board)
+- /opts/lock [POST] - (lock a thread)
+- /opts/unlock [POST] - (unlock a thread)
+- /opts/sticky [POST] - (set thread to sticky)
+- /opts/unsticky [POST] - (unsticky thread)
 
 ###Methods
 
