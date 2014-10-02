@@ -64,7 +64,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		
 		if(!isset($useData['trollPost'])){
 			mention($useData['content'], '%username% has mentioned you in a 
-					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].$page.'#post-'.$useData['postId'].'">forum post.</a>',
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].$page.'#post-'.$useData['postId'].'">forum post.</a>'."\n<p></p>\n<p>".$useData['content']."</p>",
 					$useData['userId'], $useData['postId'], 'forum-reply');
 					
 			$getSubs = $this->getAll('forum_subscriptions', array('topicId' => $data['topicId']));
@@ -74,6 +74,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 					$notifyData['postId'] = $useData['postId'];
 					$notifyData['page'] = $page;
 					$notifyData['sub'] = $sub;
+					$notifyData['postContent'] = $useData['content'];
 					Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.forumSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
 				}
 			}				

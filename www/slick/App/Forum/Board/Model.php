@@ -71,7 +71,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		if(!isset($useData['trollPost'])){
 		
 			mention($useData['content'], '%username% has mentioned you in a 
-					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/post/'.$useData['url'].'">forum thread.</a>',
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/post/'.$useData['url'].'">forum thread.</a>'."\n<p></p>\n<p>".$useData['content']."</p>",
 					$useData['userId'], $useData['postId'], 'forum-topic');
 					
 		}

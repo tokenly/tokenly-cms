@@ -10,4 +10,11 @@ if($checkTCA){
 
 	$notification = $culprit.' posted a new 
 					reply in a forum topic you are subscribed to: <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$data['topic']['url'].$data['page'].'#post-'.$data['postId'].'">'.$data['topic']['title'].'</a>';
+
+    if (strlen($data['postContent'])) {
+        $notification .= "\n";
+        $notification .= "<p></p>\n";
+        $notification .= "<p>".$data['postContent']."</p>\n";
+    }
+
 	echo $notification;
