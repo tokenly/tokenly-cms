@@ -132,8 +132,9 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 				continue;
 			}
 			$cat['boards'] = $getBoards;
-		}													
-		$output['result'] = $getCats;
+		}				
+		$getCats = array_values($getCats);								
+		$output['categories'] = $getCats;
 		return $output;
 	}
 	
@@ -200,7 +201,8 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$output['error'] = 'Category not found';
 			return $output;
 		}
-		$output['result'] = $getCat;
+		$getCat['boards'] = array_values($getCat['boards']);
+		$output['category'] = $getCat;
 		return $output;
 	}
 	
@@ -241,7 +243,8 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 				$board['description'] = markdown($board['description']);
 			}
 		}
-		$output['result'] = $getBoards;
+		$getBoards = array_values($getBoards);
+		$output['boards'] = $getBoards;
 		return $output;	
 	}
 	
@@ -293,7 +296,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		if(isset($this->args['data']['parse-markdown']) AND (intval($this->args['data']['parse-markdown']) === 1 OR $this->args['data']['parse-markdown'] == 'true')){
 			$getBoard['description'] = markdown($getBoard['description']);
 		}		
-		$output['result'] = $getBoard;
+		$output['board'] = $getBoard;
 		return $output;
 	}
 	
@@ -321,7 +324,8 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		
 		//get thread list
 		$this->args['data']['user'] = $this->user;
-		$output['result'] = $this->model->getThreadList($this->args['data']);
+		$output = $this->model->getThreadList($this->args['data']);
+		$output['threads'] = array_values($output['threads']);
 		
 		
 		return $output;	
@@ -380,7 +384,10 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		}
 		
 		$this->args['data']['user'] = $this->user;
-		$output['result'] = $this->model->getThreadData($getThread, $this->args['data']);
+		$output = $this->model->getThreadData($getThread, $this->args['data']);
+		if(isset($output['replies'])){
+			$output['replies'] = array_values($output['replies']);
+		}
 		
 		return $output;	
 	}
@@ -493,7 +500,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			}					
 		}
 		//return output
-		$output['result'] = $getPost;
+		$output['post'] = $getPost;
 		return $output;	
 	}
 	
@@ -711,7 +718,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		
 		//add checks for permissions for specific category/board/topic
 		
-		$output['result'] = $perms;
+		$output['perms'] = $perms;
 		
 		return $output;	
 	}

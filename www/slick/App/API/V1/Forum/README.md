@@ -2,7 +2,7 @@
 
 ###General Info
 * API URL prefix: /api/v1/forum
-* All responses return either code 200 and "result", or "error" field and appropriate error code
+* All responses return either code 200 and results, or "error" field and appropriate error code
 
 ###Method Summary
 
@@ -121,7 +121,7 @@
 		* **strip-html** (bool)  - set to true to strip out any possible HTML in output data
 		* **parse-markdown** (bool) - set to true to parse markdown content from threads into HTML
 		* **no-content** (bool) - set to true to exclude post content from listings (faster)
-		* **sort** (string) - choose sorting mode... options are: recent, oldest, time-desc, time-asc, alph-asc, alph-desc
+		* **sort** (string) - choose sorting mode... options are: recent, oldest, time-desc, time-asc, alph-asc, alph-desc, sticky (recent but with sticky posts first)
 		* **no-profiles** (bool) - set to true to exclude user profiles for thread OP and most recent reply
 	* **Returns:**
 		* next (int)|null - gives the next # of entries to use as the "start" parameter. If null, there are no further entries that can be viewed
@@ -179,7 +179,9 @@
 		* **limit** (int) - number of reply rows to return. defaults 20
 		* **strip-html** (bool)  - set to true to strip out any possible HTML in output data
 		* **parse-markdown** (bool) - set to true to parse markdown content from threads into HTML		
-		* **no-profiles** (bool) - set to true to exclude user profiles from data		
+		* **no-profiles** (bool) - set to true to exclude user profiles from data
+		* **thread-only** (bool) - set to true to return only thread data, no replies
+		* **replies-only** (bool) - set to true to return only replies, no main thread data		
 	* **Returns:**
 		* thread (array)
 			* topicId (int)

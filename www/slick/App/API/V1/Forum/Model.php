@@ -108,6 +108,9 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				case 'alph-desc':
 					$sort = 't.title DESC';
 					break;
+				case 'sticky':
+					$sort = 't.sticky DESC, t.lastPost DESC';
+					break;
 			}
 		}
 		$sql = 'SELECT t.topicId, t.userId, t.title, t.url'.$andContent.', t.boardId, b.name as boardName, b.slug as boardSlug, b.categoryId, c.name as categoryName, c.slug as categorySlug, t.locked, t.postTime, t.editTime, t.lastPost, t.sticky, t.views, t.lockTime, t.lockedBy, t.editedBy
@@ -419,6 +422,8 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		* @param $data['parse-markdown'] true|false - parses any markdown in content etc.
 		* @param $data['no-profiles'] true|false - excludes user profiles from return data
 		* @param $data['sort'] string - can be set to either "asc" to sort by date in ascending order, or "desc" to sort in descending order (newest to oldest)
+		* @param $data['thread-only'] true|false - set to true to return only thread data, no replies
+		* @param $data['replies-only'] true|false - set to true to return only list of replies
 	*
 	*/
 	public function getThreadData($thread, $data)
@@ -474,8 +479,12 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 			}
 		}
 		//setup output
-		$output['thread'] = $thread;
-		$output['replies'] = $this->getThreadReplies($thread, $data);
+		if(!isset($data['replies-only']) OR (isset($data['replies-only']) AND ($data['replies-only'] != 'true' AND $data['replies-only'] != '1'))){
+			$output['thread'] = $thread;
+		}
+		if(!isset($data['thread-only']) OR (isset($data['thread-only']) AND ($data['thread-only'] != 'true' AND $data['thread-only'] != '1'))){
+			$output['replies'] = $this->getThreadReplies($thread, $data);
+		}
 		return $output;
 	}
 	

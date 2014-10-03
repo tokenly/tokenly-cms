@@ -74,7 +74,10 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
+		$useData['slug'] = strip_tags($useData['slug']);
 		$useData['slug'] = $this->checkDupeSlug($useData['slug']);
+		$useData['name'] = strip_tags($useData['name']);
+		$useData['description'] = strip_tags($useData['description']);
 		
 		if(isset($data['ownerId'])){
 			$useData['ownerId'] = $data['ownerId'];
@@ -119,7 +122,10 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
+		$useData['slug'] = strip_tags($useData['slug']);
 		$useData['slug'] = $this->checkDupeSlug($useData['slug'], $id);
+		$useData['name'] = strip_tags($useData['name']);
+		$useData['description'] = strip_tags($useData['description']);
 		
 		if(isset($data['ownerId'])){
 			$useData['ownerId'] = $data['ownerId'];
