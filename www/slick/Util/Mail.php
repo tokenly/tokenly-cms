@@ -98,6 +98,17 @@ class Slick_Util_Mail
 		//will add functionality to use SMTP server through sockets instead of mail function
 		//for performance reasons
 		
+		if (defined('DEBUG_EMAIL_LOG') AND strlen(DEBUG_EMAIL_LOG)) {
+			// don't send mail - just log it to the debug file
+			$debug_text = 
+				'- '.date("Y-m-d H:i:s")."\n".str_repeat('-', 60)."\n".
+				"To: $to\nSubject: $subject\nFrom: {$this->sendmailFrom}\n".implode("\n", $headers)."\n\n$body\n";
+			$fd = fopen(DEBUG_EMAIL_LOG, 'a');
+			fwrite($fd, $debug_text."\n");
+			fclose($fd);
+			return true;
+		}
+
 		return mail($to,$subject,$body,$headers,"-f ".$this->sendmailFrom);	
 	}
 	
