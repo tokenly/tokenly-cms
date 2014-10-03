@@ -259,11 +259,26 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		$messageFile = str_replace('.', '/', trim($message));
 		$getFile = is_file(SITE_PATH.'/themes/views/'.$messageFile.'.php');
 		$messageOutput = $message;
+		$notificationMessageOutput = $messageOutput;
 		if($getFile){
 			ob_start();
 			include(SITE_PATH.'/themes/views/'.$messageFile.'.php');
 			$messageOutput = ob_get_contents();
 			ob_end_clean();
+
+			// try a separate view for the notification
+			$notificationMessageOutput = $messageOutput;
+			$message_paths = explode('.', trim($message));
+			if ($message_paths[0] == 'emails') {
+				$message_paths[0] = 'notifications';
+				$notificationMessageFile = implode('/', $message_paths);
+				if (is_file(SITE_PATH.'/themes/views/'.$notificationMessageFile.'.php')) {
+					ob_start();
+					include(SITE_PATH.'/themes/views/'.$notificationMessageFile.'.php');
+					$notificationMessageOutput = ob_get_contents();
+					ob_end_clean();
+				}
+			}
 		}
 	
 		$meta = new Slick_App_Meta_Model;
@@ -290,7 +305,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			}
 		}
 		
-		$add = $model->insert('user_notifications', array('userId' => $userId, 'message' => $messageOutput,
+		$add = $model->insert('user_notifications', array('userId' => $userId, 'message' => $notificationMessageOutput,
 													'noteDate' => timestamp(), 'itemId' => $itemId, 'type' => $type));
 		if(!$add){
 			return false;

@@ -252,7 +252,7 @@ function get_object_vars_all($obj) {
   return $values;
 }
 
-function mention($str, $message, $userId, $itemId = 0, $type = '')
+function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData = array())
 {
 	$match = preg_match_all('/\B\@([\w\-]+)/', $str, $matches);
 	$model = new Slick_Core_Model;
@@ -273,8 +273,9 @@ function mention($str, $message, $userId, $itemId = 0, $type = '')
 			if($checkTCA){
 				$replace = '<a href="'.$getSite['url'].'/profile/user/'.$thisUser['slug'].'">'.$replace.'</a>';
 			}
+			$notifyData['username'] = $replace;
 			$message = str_replace('%username%', $replace, $message);
-			$notify = Slick_App_Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type);
+			$notify = Slick_App_Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type, false, $notifyData);
 			if($notify){
 			
 				$success = true;
