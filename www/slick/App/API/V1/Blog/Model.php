@@ -345,11 +345,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					$getPosts[$key]['content'] = strip_tags($post['content']);
 				}
 			}
-		
-
-			
 		}
-
 
 		return $getPosts;
 	}

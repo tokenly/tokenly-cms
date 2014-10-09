@@ -11,11 +11,15 @@
 	Also be aware that WYSiWYG editor content cannot be automatically transfered to the markdown editor (you may do this manually).
 </p>
 <?php
+
 if(isset($error) AND $error != null){
 	echo '<p class="error">'.$error.'</p>';
 }
 
 if(isset($post)){
+	$model = new Slick_Core_Model;
+	$getAuthor = $model->get('users', $post['userId']);
+	
 	$imagePath = SITE_PATH.'/files/blogs';
 	if(isset($post['image']) AND trim($post['image']) != '' AND file_exists($imagePath.'/'.$post['image'])){
 		echo '<div style="float: right; vertical-align: top; width: 150px;"><strong>Featured Image:</strong><br><img style="max-width: 100%;" src="'.SITE_URL.'/files/blogs/'.$post['image'].'" alt="" /></div>';
@@ -28,6 +32,18 @@ if(isset($post)){
 	?>
 	<p>
 		<a class="view-draft" href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/preview/<?= $post['postId'] ?>" target="_blank">Preview Post as Draft</a>
+	</p>
+	<p>
+		<strong>Author:</strong> <a href="<?= SITE_URL ?>/profile/user/<?= $getAuthor['slug'] ?>" target="_blank"><?= $getAuthor['username'] ?></a>
+		<?php
+		$editorName = 'No one';
+		if($post['editedBy'] != 0){
+			$getEditor = $model->get('users', $post['editedBy']);
+			$editorName = '<a href="'.SITE_URL.'/profile/user/'.$getEditor['slug'].'" target="_blank">'.$getEditor['username'].'</a>';
+		}
+		?>
+		<br>
+		<strong>Editor:</strong> <?= $editorName ?>
 	</p>
 	<?php
 }

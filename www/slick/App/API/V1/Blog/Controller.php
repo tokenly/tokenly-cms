@@ -475,9 +475,9 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 
 		$model = new Slick_App_Blog_Post_Model;
 		
-		$getPost = $model->get('blog_posts', $this->args[2], array('postId', 'url'), 'url');
+		$getPost = $model->get('blog_posts', $this->args[2], array('postId', 'url', 'published'), 'url');
 		if(!$getPost){
-			$getPost = $model->get('blog_posts', $this->args[2], array('postId','url'));
+			$getPost = $model->get('blog_posts', $this->args[2], array('postId','url', 'published'));
 			if(!$getPost){
 				http_response_code(400);
 				$output['error'] = 'Post not found';
@@ -901,7 +901,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
+
 		http_response_code(200);
 		
 		return $output;
