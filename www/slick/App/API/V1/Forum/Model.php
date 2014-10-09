@@ -559,4 +559,138 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$output = $getPosts;
 		return $output;
 	}
+	
+	/**
+	* Sets up and passes data on to main postTopic function in parent model.
+	*
+	* @param $data Array data from API controller
+	* @param $data['boardId'] integer - board ID to place topic in
+	* @param $data['title'] string - topic title
+	* @param $data['content'] string - thread content
+	* @param $data['parse-markdown'] true|false - set to true to return post data in parsed markdown
+	* @return Array newly created thread data
+	*
+	*/
+	public function postThread($data)
+	{
+		$appData = array();
+		$appData['user'] = $data['user'];
+		$appData['site'] = $data['site'];
+		$appData['app'] = $this->get('apps', 'forum', array(), 'slug');
+		$appData['module'] = $this->get('modules', 'forum-board', array(), 'slug');
+		$appData['perms'] = $data['user']['perms'];
+		$useData = $data;
+		$useData['userId'] = $data['user']['userId'];
+		$post = $this->postTopic($useData, $appData);
+		if(isset($data['parse-markdown']) AND ($data['parse-markdown'] == 'true' OR intval($data['parse-markdown']) === 1)){
+			$post['content'] = markdown($post['content']);
+		}
+		return $post;
+	}
+	
+	/**
+	* Passes data into main editTopic function from Forum Post Model
+	*
+	* @param $data Array data from API controller
+	* @param $data['title'] string - topic title
+	* @param $data['content'] string - thread content
+	* @param $data['parse-markdown'] true|false - set to true to return post data in parsed markdown
+	* @return Array edited thread data
+	*
+	*/
+	public function editThread($data)
+	{
+		$postModel = new Slick_App_Forum_Post_Model;
+		$appData = array();
+		$appData['user'] = $data['user'];
+		$appData['site'] = $data['site'];
+		$appData['app'] = $this->get('apps', 'forum', array(), 'slug');
+		$appData['module'] = $this->get('modules', 'forum-post', array(), 'slug');
+		$appData['perms'] = $data['user']['perms'];
+		$post = $postModel->editTopic($data['thread']['topicId'], $data, $appData);
+		if(isset($data['parse-markdown']) AND ($data['parse-markdown'] == 'true' OR intval($data['parse-markdown']) === 1)){
+			$post['content'] = markdown($post['content']);
+		}
+		unset($post['trollPost']);
+		unset($post['buried']);
+		unset($post['buriedBy']);
+		unset($post['buryTime']);
+		return $post;
+	}
+	
+	/**
+	* Posts a reply to a thread, passing data into main postReply method
+	*
+	* @param $data Array - data from API controller
+	* @param $data['content'] string - reply content
+	* @param $data['parse-markdown'] true|false - set to true to return content as parsed HTML
+	* @return Array - new post data
+	* 
+	*/
+	public function postReply($data)
+	{
+		$postModel = new Slick_App_Forum_Post_Model;
+		$meta = new Slick_App_Meta_Model;
+		if(!isset($data['content'])){
+			throw new Exception('content required');
+		}
+		$useData = array();
+		$useData['topicId'] = $data['thread']['topicId'];
+		$useData['userId'] = $data['user']['userId'];
+		$useData['content'] = $data['content'];
+		$appData = array();
+		$appData['user'] = $data['user'];
+		$appData['site'] = $data['site'];
+		$appData['app'] = $this->get('apps', 'forum', array(), 'slug');
+		$appData['app']['meta'] = $meta->appMeta($appData['app']['appId']);
+		$appData['module'] = $this->get('modules', 'forum-post', array(), 'slug');
+		$appData['perms'] = $data['user']['perms'];
+		$appData['topic'] = $data['thread'];
+		$post = $postModel->postReply($useData, $appData);
+		if(isset($data['parse-markdown']) AND ($data['parse-markdown'] == 'true' OR intval($data['parse-markdown']) === 1)){
+			$post['content'] = markdown($post['content']);
+		}
+		if(isset($post['trollPost'])){
+			unset($post['trollPost']);
+		}
+		return $post;
+	}
+	
+	/**
+	* Edits an individual reply
+	*
+	* @param $data Array - data from API controller
+	* @param $data['content'] string - new post content
+	* @param $data['parse-markdown'] true|false - set to true to return content as parsed HTML
+	* @return Array - new edited post data
+	*
+	*/
+	public function editReply($data)
+	{
+		$postModel = new Slick_App_Forum_Post_Model;
+		$meta = new Slick_App_Meta_Model;
+		if(!isset($data['content'])){
+			throw new Exception('content required');
+		}
+		$useData = array();
+		$useData['content'] = $data['content'];		
+		
+		$appData = array();
+		$appData['user'] = $data['user'];
+		$appData['site'] = $data['site'];
+		$appData['app'] = $this->get('apps', 'forum', array(), 'slug');
+		$appData['app']['meta'] = $meta->appMeta($appData['app']['appId']);
+		$appData['module'] = $this->get('modules', 'forum-post', array(), 'slug');
+		$appData['perms'] = $data['user']['perms'];
+		$appData['topic'] = $data['thread'];
+		$post = $postModel->editPost($data['post']['postId'], $useData, $appData);
+		if(isset($data['parse-markdown']) AND ($data['parse-markdown'] == 'true' OR intval($data['parse-markdown']) === 1)){
+			$post['content'] = markdown($post['content']);
+		}
+		unset($post['trollPost']);
+		unset($post['buried']);
+		unset($post['buriedBy']);
+		unset($post['buryTime']);
+		return $post;
+	}
 }

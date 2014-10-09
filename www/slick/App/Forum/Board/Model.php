@@ -18,9 +18,24 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	}
 	
 
-	public function checkURLExists($url)
+	public function checkURLExists($url, $ignore = 0, $count = 0)
 	{
-		return $this->count('forum_topics', 'url', $url);
+		$useurl = $url;
+		if($count > 0){
+			$useurl = $url.'-'.$count;
+		}
+		$get = $this->get('forum_topics', $useurl, array('topicId', 'url'), 'url');
+		if($get AND $get['topicId'] != $ignore){
+			//url exists already, search for next level of url
+			$count++;
+			return $this->checkURLExists($url, $ignore, $count);
+		}
+		
+		if($count > 0){
+			$url = $url.'-'.$count;
+		}
+
+		return $url;
 	}
 	
 	public function postTopic($data, $appData)
@@ -30,7 +45,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new Exception($key.' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -45,6 +60,19 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			throw new Exception('Post body required');
 		}
 		
+		$getBoard = $this->get('forum_boards', $useData['boardId']);
+		if(!$getBoard OR $getBoard['active'] == 0){
+			throw new Exception('Board does not exist');
+		}
+		
+		//check their tokens for access controls
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$checkTCA = $tca->checkItemAccess($useData['userId'], $boardModule['moduleId'], $useData['boardId'], 'board');
+		if(!$checkTCA){
+			throw new Exception('You cannot post to this board');
+		}		
+		
 		$useData['content'] = strip_tags($useData['content']);
 		
 		$useData['url'] = genURL($useData['title']);
@@ -52,10 +80,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$useData['url'] = substr(md5($useData['title']), 0, 10);
 		}
 		
-		$checkURL = $this->checkURLExists($useData['url']);
-		if($checkURL){
-			$useData['url'] .= '-'.$checkURL + 1;
-		}
+		$useData['url'] = $this->checkURLExists($useData['url']);
 		$useData['postTime'] = timestamp();
 		$useData['lastPost'] = timestamp();
 		
@@ -73,7 +98,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$notifyData['url'] = $useData['url'];
 			$notifyData['postContent'] = $useData['content'];
 			mention($useData['content'], 'emails.forumTopicMention',
-					$useData['userId'], $useData['postId'], 'forum-topic', $notifyData);
+					$useData['userId'], $post, 'forum-topic', $notifyData);
 
 			// check board subscriptions
 			$boardId = $useData['boardId'];
@@ -97,7 +122,30 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		//auto subscribe to thread
 		$subscribe = $this->insert('forum_subscriptions', array('userId' => $useData['userId'], 'topicId' => $post));
 
-		return $useData;
+		if(isset($useData['trollPost'])){
+			unset($useData['trollPost']);
+		}
+		$useData['topicId'] = $post;
+
+		$useData['views'] = 0;
+		
+		$threadData = array();
+		$threadData['topicId'] = $post;
+		$threadData['boardId'] = $useData['boardId'];
+		$threadData['userId'] = $useData['userId'];
+		$threadData['title'] = $useData['title'];
+		$threadData['url'] = $useData['url'];
+		$threadData['content'] = $useData['content'];
+		$threadData['locked'] = 0;
+		$threadData['postTime'] = $useData['postTime'];
+		$threadData['editTime'] = null;
+		$threadData['lastPost'] = $useData['lastPost'];
+		$threadData['sticky'] = 0;
+		$threadData['lockTime'] = null;
+		$threadData['lockedBy'] = 0;
+		$threadData['editedBy'] = 0;
+		
+		return $threadData;
 		
 	}
 	

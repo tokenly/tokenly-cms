@@ -15,6 +15,7 @@
 * /threads [GET]
 * /threads/{ID} [GET]
 * /threads/{ID}/{PostID} [GET]
+* /opts/perms [GET]
 
 ###Methods Being Built Still
 
@@ -229,3 +230,114 @@
 			* editedBy (int)
 			* author (array)
 				* see previous author field for reference.
+* **/threads/{ID}/{REPLYID} (get single reply)**
+	* **METHOD:** GET
+	* **Params:**
+		* no-profiles (bool)(optional)
+		* strip-html (bool)(optional)
+		* parse-markdown (bool)(optional)
+	* **Returns:**
+		* post
+			* postId (int)
+			* userId (int)
+			* topicId (int)
+			* content (string) 
+			* postTime (timestamp)
+			* editTime (timestamp)
+			* editedBy (timestamp)
+			* author (array)
+				* (user profile data)
+* **/threads (create thread)**
+	* **Method:** POST
+	* **Params:**
+		* boardId (int)
+		* title (string)
+		* content (string)
+		* parse-markdown (bool)(optional)
+	* **Returns:**
+		* thread
+			* topicId (int)
+			* boardId (int)
+			* userId (int)
+			* title (string)
+			* url (string)
+			* content (string)
+			* locked (int)
+			* postTime (timestamp)
+			* editTime (timestamp default null)
+			* lastPost (timestamp)
+			* sticky (int)
+			* views (int)
+			* lockTime (timestamp default null)
+			* lockedBy (int)
+			* editedBy (int)
+* **/threads/{ID} (edit thread)**
+	* **Method:** PATCH
+	* **Params:**
+		* title (string)
+		* content (string)
+		* parse-markdown (bool)(optional)
+	* **Returns:**
+		* thread
+			* topicId (int)
+			* boardId (int)
+			* userId (int)
+			* title (string)
+			* url (string)
+			* content (string)
+			* locked (int)
+			* postTime (timestamp)
+			* editTime (timestamp)
+			* lastPost (timestamp)
+			* sticky (int)
+			* views (int)
+			* lockTime (timestamp)
+			* lockedBy (int)
+			* editedBy (int)
+* **/threads/{ID} (delete thread)**
+	* **Method:** DELETE
+	* **Params:** none
+	* **Returns:**
+		* result: "success"
+* **/threads/{ID} (post reply)**
+	* **Method:** POST
+	* **Params:**
+		* content (string)
+		* parse-markdown (bool)(optional)
+	* **Returns:**
+		* post
+			* postId (int)
+			* topicId (int)
+			* userId (int)
+			* content (string)
+			* postTime (timestamp)
+* **/threads/{ID}/{REPLYID} (edit reply)**
+	* **Method:** PATCH
+	* **Params:**
+		* content (string)
+		* parse-markdown (bool)(optional)
+	* **Returns:**
+		* post
+			* postId (int)
+			* topicId (int)
+			* userId (int)
+			* content (string)
+			* postTime (timestamp)
+			* editTime (timestamp)
+			* editedBy (int)
+* **/threads/{ID}/{REPLYID} (delete reply)**
+	* **Method:** DELETE
+	* **Params:** none
+	* **Returns:**
+		* result: "success"
+* **/opts/perms**
+	* **Method:** GET
+	* **Params:** 
+		* boardId (int)(optional)
+		* topicId (int)(optional)
+	* **Returns:**
+		* perms
+			* (dictionary list of forum permissions)
+	* List of permissions under "perms" field is formatted <perm key> = true|false. If true, means the user does indeed have that permission available. If false, no access
+	* If topicId or boardId is set, it will check permissions for those specific items. Permissions can change depending on what items are being dealt with. (e.g moderator only has mod permissions in certain boards)
+

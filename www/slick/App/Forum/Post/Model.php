@@ -98,7 +98,18 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 			
 		}
 
-		return $useData;
+		$returnData = array();
+		$returnData['postId'] = $useData['postId'];
+		$returnData['topicId'] = $useData['topicId'];
+		$returnData['userId'] = $useData['userId'];
+		$returnData['content'] = $useData['content'];
+		$returnData['postTime'] = $useData['postTime'];
+		if(isset($useData['trollPost'])){
+			$returnData['trollPost'] = $useData['trollPost'];
+		}
+		
+
+		return $returnData;
 	}
 	
 	public function editPost($id, $data, $appData)
@@ -108,7 +119,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new Exception($key.' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -207,10 +218,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 				$useData['url'] = substr(md5($useData['title']), 0, 10);
 			}
 			$boardModel = new Slick_App_Forum_Board_Model;
-			$checkURL = $boardModel->checkURLExists($useData['url']);
-			if($checkURL){
-				$useData['url'] .= '-'.$checkURL + 1;
-			}
+			$useData['url'] = $boardModel->checkURLExists($useData['url'], $topicId);
 		}
 		
 		$edit = $this->edit('forum_topics', $topicId, $useData);

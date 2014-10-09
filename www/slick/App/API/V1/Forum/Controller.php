@@ -131,6 +131,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 				unset($getCats[$key]);
 				continue;
 			}
+			$getBoards = array_values($getBoards);
 			$cat['boards'] = $getBoards;
 		}				
 		$getCats = array_values($getCats);								
@@ -311,23 +312,18 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 	protected function threads()
 	{
 		$output = array();
-		
 		//route to individual thread
 		if(isset($this->args[2])){
 			return $this->getThread();
 		}
-		
 		//check if posting a new thread
 		if($this->useMethod == 'POST'){
 			return $this->postThread();
 		}
-		
 		//get thread list
 		$this->args['data']['user'] = $this->user;
 		$output = $this->model->getThreadList($this->args['data']);
 		$output['threads'] = array_values($output['threads']);
-		
-		
 		return $output;	
 	}
 	
@@ -393,49 +389,111 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 	}
 	
 	/**
-	*
-	*
-	*
+	* Creates a new forum thread in the desired board. Must be logged in and have permission.
+	* For data params, accepts boardId, title and content. Can also pass parse-markdown=true to return content in HTML format
+	* 
+	* @return Array
 	*
 	*/
 	protected function postThread()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(!$this->perms['canPostTopic']){
+			http_response_cide('403');
+			$output['error'] = 'You do not have permission for this';
+			return $output;
+		}
+		$user = $this->user;
+		$user['perms'] = $this->perms;
+		$this->args['data']['user'] = $user;
+		try{
+			$post = $this->model->postThread($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['thread'] = $post;
 		return $output;	
 	}
 	
 	/**
+	* Edits an existing thread
 	*
-	*
-	*
+	* @return Array
 	*
 	*/	
 	protected function editThread()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(($this->thread['userId'] == $this->user['userId'] AND !$this->perms['canEditSelf']) OR
+			($this->thread['userId'] != $this->user['userId'] AND !$this->perms['canEditOther'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission to edit this';
+			return $output;
+		}
+		$user = $this->user;
+		$user['perms'] = $this->perms;
+		$this->args['data']['user'] = $user;
+		$this->args['data']['thread'] = $this->thread;
+		try{
+			$edit = $this->model->editThread($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['thread'] = $edit;
 		return $output;	
 	}
 	
 	/**
+	* Buries/archives a thread
 	*
-	*
-	*
+	* @return Array
 	*
 	*/
 	protected function buryThread()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(($this->thread['userId'] == $this->user['userId'] AND !$this->perms['canDeleteSelfTopic']) OR
+			($this->thread['userId'] != $this->user['userId'] AND !$this->perms['canDeleteOtherTopic'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission to delete this';
+			return $output;
+		}
+		$delete = $this->model->edit('forum_topics', $this->thread['topicId'], array('buried' => 1, 'buriedBy' => $this->user['userId'], 'buryTime' => timestamp()));
+		if(!$delete){
+			http_response_code(400);
+			$output['error'] = 'Error burying thread';
+			return $output;
+		}
+		$output['result'] = 'success';
 		return $output;	
 	}
 	
 	/**
+	* Grabs data for specific reply, or routes to specific post actions
 	*
-	*
-	*
-	*
+	* @return Array
+	* 
 	*/
 	protected function getPost()
 	{
@@ -505,41 +563,107 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 	}
 	
 	/**
+	* Post reply to a thread
 	*
-	*
-	*
+	* @return Array
+	* @method POST
 	*
 	*/
 	protected function postReply()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(!$this->perms['canPostReply']){
+			http_response_cide('403');
+			$output['error'] = 'You do not have permission for this';
+			return $output;
+		}
+		$user = $this->user;
+		$user['perms'] = $this->perms;
+		$this->args['data']['user'] = $user;
+		$this->args['data']['thread'] = $this->thread;
+		try{
+			$post = $this->model->postReply($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['post'] = $post;
 		return $output;	
 	}
 	
 	/**
+	* Edits an individual forum post/reply.
 	*
-	*
-	*
+	* @return Array
+	* @method PATCH
 	*
 	*/
 	protected function editPost()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(($this->post['userId'] == $this->user['userId'] AND !$this->perms['canEditSelf']) OR
+			($this->post['userId'] != $this->user['userId'] AND !$this->perms['canEditOther'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission to edit this';
+			return $output;
+		}
+		$user = $this->user;
+		$user['perms'] = $this->perms;
+		$this->args['data']['user'] = $user;
+		$this->args['data']['thread'] = $this->thread;
+		$this->args['data']['post'] = $this->post;
+		try{
+			$edit = $this->model->editReply($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['post'] = $edit;
 		return $output;	
 	}
 	
 	/**
-	*
-	*
-	*
+	* Sets individual post to archived/buried
+	* 
+	* @return Array
+	* @method DELETE
 	*
 	*/
 	protected function buryPost()
 	{
 		$output = array();
-		
+		if(!$this->user){
+			http_response_code('401');
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		if(($this->post['userId'] == $this->user['userId'] AND !$this->perms['canBurySelf']) OR
+			($this->post['userId'] != $this->user['userId'] AND !$this->perms['canBuryOther'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission to delete this';
+			return $output;
+		}
+		$delete = $this->model->edit('forum_posts', $this->post['postId'], array('buried' => 1, 'buriedBy' => $this->user['userId'], 'buryTime' => timestamp()));
+		if(!$delete){
+			http_response_code(400);
+			$output['error'] = 'Error burying post';
+			return $output;
+		}
+		$output['result'] = 'success';
 		return $output;	
 	}
 	
@@ -717,6 +841,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		}
 		
 		//add checks for permissions for specific category/board/topic
+		//come back to this
 		
 		$output['perms'] = $perms;
 		

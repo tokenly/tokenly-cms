@@ -93,6 +93,7 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 			$useData['url'] = $useData['name'];
 		}
 		$useData['url'] = genURL($useData['url']);
+		$useData['url'] = $this->checkURLExists($useData['url'], $data['siteId']);
 		
 		$getContent =false;
 		if(isset($_POST['content_inkpad'])){
@@ -173,6 +174,7 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 			$useData['url'] = $useData['name'];
 		}
 		$useData['url'] = genURL($useData['url']);
+		$useData['url'] = $this->checkURLExists($useData['url'], $useData['siteId'], $id);
 		
 		if($getPage['formatType'] == 'markdown' AND $useData['formatType'] != 'markdown'){
 			$useData['content'] = markdown($useData['content']);
@@ -206,6 +208,29 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 			$meta->updatePageMeta($pageId, 'inkpad-url', $url);
 		}
 		
+		return $url;
+	}
+	
+	public function checkURLExists($url, $siteId, $ignore = 0, $count = 0)
+	{
+		$useurl = $url;
+		if($count > 0){
+			$useurl = $url.'-'.$count;
+		}
+		$pageModule = $this->get('modules', 'page-view', array(), 'slug');
+		$values = array(':url' => $useurl, ':siteId' => $siteId);
+				
+		$get = $this->fetchSingle('SELECT * FROM page_index WHERE url = :url AND siteId = :siteId', $values);
+		if($get AND $get['itemId'] != $ignore){
+			//url exists already, search for next level of url
+			$count++;
+			return $this->checkURLExists($url, $siteId, $ignore, $count);
+		}
+		
+		if($count > 0){
+			$url = $url.'-'.$count;
+		}
+
 		return $url;
 	}
 

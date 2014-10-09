@@ -331,7 +331,6 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output = array();
 		
 		$getPost = $this->model->get('forum_posts', $this->args[4]);
-		$getPost = $this->model->get('forum_posts', $this->args[4]);
 		if(!$this->data['user'] OR !$getPost OR $getPost['buried'] == 1
 			OR (($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canBuryOther'])
 			OR ($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canBurySelf']))){
