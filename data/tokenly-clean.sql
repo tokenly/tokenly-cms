@@ -337,6 +337,30 @@ LOCK TABLES `blog_posts` WRITE;
 /*!40000 ALTER TABLE `blog_posts` ENABLE KEYS */;
 UNLOCK TABLES;
 
+
+
+--
+-- Table structure for table `board_subscriptions`
+--
+
+DROP TABLE IF EXISTS `board_subscriptions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `board_subscriptions` (
+  `subId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `userId` int(11) unsigned NOT NULL,
+  `boardId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`subId`),
+  UNIQUE KEY `userId_boardId` (`userId`,`boardId`),
+  KEY `userId` (`userId`),
+  KEY `boardId` (`boardId`),
+  CONSTRAINT `board_subscriptions_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
+  CONSTRAINT `board_subscriptions_ibfk_2` FOREIGN KEY (`boardId`) REFERENCES `forum_boards` (`boardId`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+
 --
 -- Table structure for table `coin_addresses`
 --

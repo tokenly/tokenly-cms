@@ -45,6 +45,12 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		$newOutput = false;
 		if(isset($this->args[3])){
 			switch($this->args[3]){
+				case 'subscribe':
+					$newOutput = $this->subscribeBoard();
+					break;
+				case 'unsubscribe':
+					$newOutput = $this->unsubscribeBoard();
+					break;
 				case 'post':
 					$newOutput = $this->postTopic();
 					break;
@@ -171,5 +177,70 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		
 		return $output;
 	}
+
+
+	private function subscribeBoard()
+	{
+		ob_end_clean();
+		header('Content-Type: text/json');
+		$output = array();
+		if(!$this->data['user']){
+			http_response_code(400);
+			$output['error'] = 'Not logged in';
+			echo json_encode($output);
+			die();
+		}
+		
+		$getSubs = $this->model->getAll('board_subscriptions', array('userId' => $this->data['user']['userId'], 'boardId' => $this->board['boardId']));
+		
+		if(count($getSubs) > 0){
+			$output['error'] = 'Already subscribed to this topic!';
+		}
+		else{
+			$insert = $this->model->insert('board_subscriptions', array('userId' => $this->data['user']['userId'], 'boardId' => $this->board['boardId']));
+			if(!$insert){
+				$output['error'] = 'Error subscribing, please try again';
+			}
+			else{
+				$output['result'] = 'success';
+			}
+		}
+		
+		echo json_encode($output);
+		die();
+	}
+	
+	private function unsubscribeBoard()
+	{
+		ob_end_clean();
+		header('Content-Type: text/json');
+		$output = array();
+		if(!$this->data['user']){
+			http_response_code(400);
+			$output['error'] = 'Not logged in';
+			echo json_encode($output);
+			die();
+		}
+		$getSubs = $this->model->getAll('board_subscriptions', array('userId' => $this->data['user']['userId'], 'boardId' => $this->board['boardId']));
+		
+		if(count($getSubs) == 0){
+			$output['error'] = 'Not yet subscribed to this topic!';
+		}
+		else{
+			$delete = $this->model->sendQuery('DELETE FROM board_subscriptions WHERE userId = :userId AND boardId = :boardId',
+							array(':userId' => $this->data['user']['userId'], ':boardId' => $this->board['boardId']));
+			if(!$delete){
+				$output['error'] = 'Error unsubscribing, please try again';
+			}
+			else{
+				$output['result'] = 'success';
+			}
+		}
+		
+		
+		echo json_encode($output);
+		die();
+	}
+	
 }
 

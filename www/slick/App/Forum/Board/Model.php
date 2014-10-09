@@ -74,6 +74,24 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$notifyData['postContent'] = $useData['content'];
 			mention($useData['content'], 'emails.forumTopicMention',
 					$useData['userId'], $useData['postId'], 'forum-topic', $notifyData);
+
+			// check board subscriptions
+			$boardId = $useData['boardId'];
+			$notifyData['topic'] = $useData;
+			$getBoardSubs = $this->getAll('board_subscriptions', array('boardId' => $boardId));
+			foreach($getBoardSubs as $sub) {
+				// don't notify self
+				if($sub['userId'] == $useData['userId']) { continue; }
+
+				// fetch the board name
+				if (!isset($notifyData['board'])) {
+					$notifyData['board'] = $this->get('forum_boards', $boardId);
+				}
+
+				// notify the user
+				Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
+			}
+			
 		}
 		
 		//auto subscribe to thread

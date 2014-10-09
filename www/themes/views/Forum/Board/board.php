@@ -42,15 +42,40 @@ if(!$isAll){
 	}
 }
 ?>
+
+<?php
+
+// subscribe to board
+if(!$isAll AND $user){
+	$subscribeText = 'Subscribe to Board';
+	$subscribeClass = 'subscribe';
+
+	$model = new Slick_Core_Model;
+	$getSubs = $model->getAll('board_subscriptions',
+				array('userId' => $user['userId'], 'boardId' => $board['boardId']));
+	if(count($getSubs) > 0){
+		$subscribeClass = 'unsubscribe';
+		$subscribeText = 'Unsubscribe from Board';
+	}
+
+	echo '<p style="float: right; vertical-align: top; margin-top: 10px; width: 190px; text-align: center;">';
+	echo '<br><a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
+	echo '</p>';
+}
+
+?>
+
 <?php
 if(!$isAll AND $user AND $perms['canPostTopic']){
 	echo '<div class="board-controls">
 			<ul>
-				<li><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$board['slug'].'/post">Post New Topic</a></li>
+				<li style="width: 190px; text-align: center;"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$board['slug'].'/post">Post New Topic</a></li>
 			</ul>
 		  </div>';
 	
 }
+
+
 
 if($isAll){
 ?>
@@ -211,7 +236,43 @@ foreach($onlineUsers as $oUser){
 			}
 			
 		});
+
+		$('.content').delegate('.subscribe', 'click', function(e){
+			e.preventDefault();
+			var thisLink = $('.subscribe');
+			var url = '<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/<?= $board['slug'] ?>/subscribe';
+			$.post(url, function(data){
+				if(typeof data.error != 'undefined'){
+					alert(data.error);
+					return false;
+				}
+				else{
+					thisLink.html('Unsubscribe from Board');
+					thisLink.addClass('unsubscribe');
+					thisLink.removeClass('subscribe');
+					
+				}
+			});
+			
+		});
 		
+		$('.content').delegate('.unsubscribe', 'click', function(e){
+			e.preventDefault();
+			var thisLink = $('.unsubscribe');
+			var url = '<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/<?= $board['slug'] ?>/unsubscribe';
+			$.post(url, function(data){
+				if(typeof data.error != 'undefined'){
+					alert(data.error);
+					return false;
+				}
+				else{
+					thisLink.html('Subscribe to Board');
+					thisLink.addClass('subscribe');
+					thisLink.removeClass('unsubscribe');
+				}
+			});
+			
+		});		
 	});
 </script>
 
