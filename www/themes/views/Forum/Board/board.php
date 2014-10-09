@@ -25,23 +25,6 @@ else{
 }
 echo $boardToken;
 ?>
-<h1><?= $board['name'] ?></h1>
-<?php
-if(trim($board['description']) != ''){
-	echo '<div class="board-description">'.Slick_App_Page_View_Model::parsePageTags(markdown($board['description'])).'</div>';
-}
-if(!$isAll){
-	if(count($moderators) > 0){
-		echo '<p><strong>Moderators:</strong> ';
-		$modList = array();
-		foreach($moderators as $mod){
-			$modList[] = '<a href="'.SITE_URL.'/profile/user/'.$mod['slug'].'">'.$mod['username'].'</a>';
-		}
-		echo join(', ', $modList);
-		echo '</p>';
-	}
-}
-?>
 
 <?php
 
@@ -58,11 +41,29 @@ if(!$isAll AND $user){
 		$subscribeText = 'Unsubscribe from Board';
 	}
 
-	echo '<p style="float: right; vertical-align: top; margin-top: 10px; width: 190px; text-align: center;">';
-	echo '<br><a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
+	echo '<p style="float: right; vertical-align: top; width: 190px; text-align: center;">';
+	echo '<a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
 	echo '</p>';
 }
 
+?>
+
+<h1><?= $board['name'] ?></h1>
+<?php
+if(trim($board['description']) != ''){
+	echo '<div class="board-description">'.Slick_App_Page_View_Model::parsePageTags(markdown($board['description'])).'</div>';
+}
+if(!$isAll){
+	if(count($moderators) > 0){
+		echo '<p><strong>Moderators:</strong> ';
+		$modList = array();
+		foreach($moderators as $mod){
+			$modList[] = '<a href="'.SITE_URL.'/profile/user/'.$mod['slug'].'">'.$mod['username'].'</a>';
+		}
+		echo join(', ', $modList);
+		echo '</p>';
+	}
+}
 ?>
 
 <?php
