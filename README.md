@@ -2,7 +2,7 @@
 
 The official CMS platform used by the Let's Talk Bitcoin! Network. 
 
-Current primary to do list and feature requests can be found on the Trello board: https://trello.com/b/sU2rcKen/ltb-platform-support
+Outstanding tasks, bugs, enhancements etc. can be found on the [issues](https://github.com/cryptonaut420/tokenly/issues) page.
 
 ##Requirements
 
@@ -28,9 +28,10 @@ See directory: [/tokenly-install-files](/tokenly-install-files)
 * User participation reports (for "crypto rewards" program)
 * Counterparty token distribution system
 * Bitcoin address management/verification & Counterparty token tracking
+* [Token Controlled Viewpoints](https://docs.google.com/document/d/17l3ElFp45vYqyLw2OlzAZ3j0baTry4bS5bOqgRmMKLY/edit)
 
 ##Features coming soon..
 
-* [Token Controlled Viewpoints](https://docs.google.com/document/d/17l3ElFp45vYqyLw2OlzAZ3j0baTry4bS5bOqgRmMKLY/edit)
 * E-Commerce system w/ built in support for bitcoin and token based payments
 * Q&A (stackoverflow style) system
+* Lots of other stuff!
