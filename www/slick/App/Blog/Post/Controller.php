@@ -35,7 +35,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 			$getPost = $this->model->getPost($this->itemId, $this->data['site']['siteId']);
 		}
 		
-		if(!$getPost){
+		if(!$getPost OR $getPost['published'] == 0){
 			$output['view'] = '404';
 			return $output;
 		}

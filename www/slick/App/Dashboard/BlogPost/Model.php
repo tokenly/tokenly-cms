@@ -258,6 +258,7 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 			$useData['url'] = $useData['title'];
 		}
 		$useData['url'] = genURL($useData['url']);
+		$useData['url'] = $this->checkURLExists($useData['url']);
 		$useData['postDate'] = timestamp();
 		
 		$getExcerpt = false;
@@ -354,6 +355,7 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		
 		
 	}
+
 	
 	private function notifyEditorsOnReady($postId, $appData)
 	{
@@ -442,6 +444,7 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 			$useData['url'] = $useData['title'];
 		}
 		$useData['url'] = genURL($useData['url']);
+		$useData['url'] = $this->checkURLExists($useData['url'], $id);
 		
 		if(!$useData['userId']){
 			unset($useData['userId']);
@@ -583,6 +586,27 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		
 		return $url;
 	}
+	
+	public function checkURLExists($url, $ignore = 0, $count = 0)
+	{
+		$useurl = $url;
+		if($count > 0){
+			$useurl = $url.'-'.$count;
+		}
+		$get = $this->get('blog_posts', $useurl, array('postId', 'url'), 'url');
+		if($get AND $get['postId'] != $ignore){
+			//url exists already, search for next level of url
+			$count++;
+			return $this->checkURLExists($url, $ignore, $count);
+		}
+		
+		if($count > 0){
+			$url = $url.'-'.$count;
+		}
+
+		return $url;
+	}	
+	
 }
 
 ?>
