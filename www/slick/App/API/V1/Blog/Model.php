@@ -182,8 +182,19 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			$andWhen .= ' AND publishDate <= "'.$postedBefore.'" ';
 		}
 		
+		$andSites = '(';
+		$andSiteNum = 0;
+		foreach($siteList as $useSite){
+			if($andSiteNum > 0){
+				$andSites .= ' OR ';
+			}
+			$andSites .= ' p.siteId = '.$useSite;
+			$andSiteNum++;
+		}
+		$andSites .= ')';
 		
 		if(count($metaFilters['true']) > 0 || count($metaFilters['false']) > 0){
+			
 			
 			if(count($metaFilters['true']) > 0){
 				$andMeta .= ' AND p.postId IN((
@@ -201,11 +212,13 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				
 			}
 			
+
+			
 			$sql = 'SELECT '.$getPostFields.'
 					 FROM blog_posts p
 					 LEFT JOIN blog_postMeta mv ON mv.postId = p.postId
 					 LEFT JOIN blog_postMetaTypes mt ON mt.metaTypeId = mv.metaTypeId
-					 WHERE p.siteId IN('.join(',', $siteList).')
+					 WHERE '.$andSites.'
 					 AND p.published = 1
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
@@ -213,19 +226,19 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 '.$andMeta.'
 					 '.$andWhen.'
 					 GROUP BY postId
-					 ORDER BY publishDate DESC
+					 ORDER BY p.postId DESC
 					 LIMIT '.$start.', '.$limit;
 		}
 		else{
 			$sql = 'SELECT '.$getPostFields.'
 					 FROM blog_posts p
-					 WHERE p.siteId IN('.join(',', $siteList).')
+					 WHERE '.$andSites.'
 					 AND p.published = 1
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
 					 '.$andUsers.'
 					 '.$andWhen.'
-					 ORDER BY publishDate DESC
+					 ORDER BY p.postId DESC
 					 LIMIT '.$start.', '.$limit;
 		}
 		
