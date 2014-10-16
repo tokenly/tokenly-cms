@@ -1,6 +1,23 @@
 <?php
 class Slick_App_Forum_Board_Model extends Slick_Core_Model
 {
+	public static $boards = array();
+	public static $boardMeta = array();
+	
+	function __construct()
+	{
+		parent::__construct();
+		$getBoards = $this->getAll('forum_boards');
+		$getBoardMeta = $this->getAll('forum_boardMeta');
+		foreach($getBoards as $board){
+			self::$boards[$board['boardId']] = $board;
+		}
+		foreach($getBoardMeta as $boardMeta){
+			self::$boardMeta[$board['boardId']] = $boardMeta;
+		}
+	}
+	
+	
 	public function getTopicForm()
 	{
 		$form = new Slick_UI_Form;
@@ -170,7 +187,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 					if($filterNum > 0){
 						$andFilters .= ' AND';
 					}
-					$andFilters .= ' boardId != '.$filter.' ';
+					$andFilters .= ' t.boardId != '.$filter.' ';
 					$filterNum++;
 				}
 			}
@@ -181,48 +198,50 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			else{
 				if($data['user'] AND $data['perms']['isTroll']){
 					if($andFilters != ''){
-						$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+						$andTroll = ' AND (t.trollPost = 0 OR (t.trollPost = 1 AND t.userId = '.$data['user']['userId'].')) ';
 					}
 					else{
-						$andTroll = ' WHERE (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+						$andTroll = ' WHERE (t.trollPost = 0 OR (t.trollPost = 1 AND t.userId = '.$data['user']['userId'].')) ';
 					}
 				}
 				else{
 					if($andFilters != ''){
-						$andTroll = ' AND trollPost = 0 ';
+						$andTroll = ' AND t.trollPost = 0 ';
 					}
 					else{
-						$andTroll = ' WHERE trollPost = 0 ';
+						$andTroll = ' WHERE t.trollPost = 0 ';
 					}
 				}
 			}
-			
-			$topics = $this->fetchAll('SELECT * 
-									   FROM forum_topics
+
+			$topics = $this->fetchAll('SELECT t.*, c.total as count
+									   FROM forum_topics t
+									   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
 									   '.$andFilters.'
 									   '.$andTroll.'
-									   AND buried = 0
-									   ORDER BY lastPost DESC
+									   AND t.buried = 0
+									   ORDER BY t.lastPost DESC
 									   '.$limit);
 		}
 		else{
 			
-			$andTroll = ' AND trollPost = 0 ';
+			$andTroll = ' AND t.trollPost = 0 ';
 			if(isset($_GET['trollVision'])){
 				$andTroll = '';
 			}
 			else{
 				if($data['user'] AND $data['perms']['isTroll']){
-					$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
+					$andTroll = ' AND (t.trollPost = 0 OR (t.trollPost = 1 AND t.userId = '.$data['user']['userId'].')) ';
 				}
 			}
 			
-			$topics = $this->fetchAll('SELECT * 
-									   FROM forum_topics
-									   WHERE boardId = :boardId AND sticky != 1 AND buried = 0
+			$topics = $this->fetchAll('SELECT t.*, c.total as count
+									   FROM forum_topics t
+									   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+									   WHERE t.boardId = :boardId AND t.sticky != 1 AND t.buried = 0
 									   '.$andTroll.'
 									   ORDER BY
-									   lastPost DESC
+									   t.lastPost DESC
 									   '.$limit, array(':boardId' => $boardId) );
 		}
 		
@@ -251,7 +270,8 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
 		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
-		$getBoard = $this->get('forum_boards', $row['boardId']);
+		$getBoard = extract_row(self::$boards, array('boardId' =>  $row['boardId']));
+		$getBoard = $getBoard[0];
 		$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['categoryId'], 'category');
 		if(!$checkCat){
 			return false;
@@ -321,13 +341,14 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			}
 			$topics[$key]['link'] = '<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$row['url'].'" title="'.str_replace('"', '', shorten(strip_tags($row['content']), 150)).'" class="'.$linkClass.'">'.$linkExtra.$row['title'].'</a>';
 			if($all){
-				$getBoard = $this->get('forum_boards', $row['boardId']);
+				$getBoard = extract_row(self::$boards, array('boardId' => $row['boardId']));
+				$getBoard = $getBoard[0];
 				$extraBoardClass = '';
 				$boardImage = '';
 				if($getBoard['categoryId'] == $tokenSettings['tca-forum-category']){
 					$extraBoardClass = 'tcv-category';
 					//check for access_token link on board
-					$access_token = $this->getAll('forum_boardMeta', array('boardId' => $getBoard['boardId'], 'metaKey' => 'access_token'));
+					$access_token = extract_row(self::$boardMeta, array('boardId' => $getBoard['boardId'], 'metaKey' => 'access_token'));
 					if(count($access_token) > 0){
 						$access_token = $access_token[0];
 						$getAsset = $this->get('xcp_assetCache', $access_token['value'], array(), 'asset');
@@ -362,17 +383,20 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$topics[$key]['started'] = $avatar.$authorLink.'
 										<br>
 										<span class="post-date">'.formatDate($row['postTime']).'</span>';
-										
-			$countReplies = $this->fetchSingle('SELECT count(*) as total
-												FROM forum_posts
-												WHERE topicId = :topicId AND buried = 0
-												'.$andTroll, array(':topicId' => $row['topicId']));
-												
-			$topics[$key]['numReplies'] = $countReplies['total'];
+			
+			if(!isset($row['count'])){
+				$countReplies = $this->fetchSingle('SELECT count(*) as total FROM forum_posts WHERE buried = 0 AND trollPost = 0
+													 AND topicId = :topicId', array(':topicId' => $row['topicId']));
+				$row['count'] = 0;
+				if($countReplies){
+					$row['count'] = $countReplies['total'];
+				}
+			}
+			$topics[$key]['numReplies'] = $row['count'];
 			
 			$topics[$key]['lastPost'] = '';
 			if($topics[$key]['numReplies'] > 0){
-				$lastPost = $this->fetchSingle('SELECT * 
+				$lastPost = $this->fetchSingle('SELECT userId, postTime
 												FROM forum_posts
 												WHERE topicId = :id AND buried = 0
 												'.$andTroll.'
