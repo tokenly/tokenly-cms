@@ -99,10 +99,14 @@ class Slick_Util_Mail
 		//for performance reasons
 		
 		if (defined('DEBUG_EMAIL_LOG') AND strlen(DEBUG_EMAIL_LOG)) {
+			$implodeHeader = $headers;
+			if(is_array($headers)){
+				$implodeHeader = join("\n", $implodeHeader);
+			}
 			// don't send mail - just log it to the debug file
 			$debug_text = 
 				'- '.date("Y-m-d H:i:s")."\n".str_repeat('-', 60)."\n".
-				"To: $to\nSubject: $subject\nFrom: {$this->sendmailFrom}\n".implode("\n", $headers)."\n\n$body\n";
+				"To: $to\nSubject: $subject\nFrom: {$this->sendmailFrom}\n".$implodeHeader."\n\n$body\n";
 			$fd = fopen(DEBUG_EMAIL_LOG, 'a');
 			fwrite($fd, $debug_text."\n");
 			fclose($fd);

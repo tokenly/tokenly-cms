@@ -12,6 +12,7 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 	public static $balances = array();
 	public static $locks = array();
 	public static $rows = false;
+	public static $appPerms = false;
 	
 	function __construct()
 	{
@@ -20,6 +21,9 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 		if(!self::$rows){
 			//load all token_access entries
 			self::$rows = $this->getAll('token_access', array(), array(), 'stackOrder', 'ASC');
+		}
+		if(!self::$appPerms){
+			self::$appPerms = $this->getAll('app_perms', array(), array('permId', 'permKey', 'appId'));
 		}
 	}
 	
@@ -40,8 +44,9 @@ class Slick_App_LTBcoin_TCA_Model extends Slick_Core_Model
 	public function checkPerms($userId, $perms, $moduleId, $itemId = 0, $itemType = '')
 	{
 		foreach($perms as $key => $val){
-			$getPerm = $this->get('app_perms', $key, array(), 'permKey');
+			$getPerm = extract_row(self::$appPerms, array('permKey' => $key));
 			if($getPerm){
+				$getPerm = $getPerm[0];
 				$defaultReturn = true;
 				if(!$val){
 					$defaultReturn = false;

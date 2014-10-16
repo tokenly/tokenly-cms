@@ -8,12 +8,23 @@ class Slick_Core_Model
 	public $error = null;
 	public static $queryCache = array();
 	public static $cacheMode = true;
+	public static $queryLog = array();
+	public static $indexes = array();
 
 	function __construct()
 	{
 		if(!self::$db){
 			$this->db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
 			$this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+			$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
+											FROM   information_schema.STATISTICS
+											WHERE  TABLE_SCHEMA = DATABASE()');
+			foreach($getIndexList as $index){
+				if($index['INDEX_NAME'] == 'PRIMARY'){
+					self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];
+				}
+			}
+			
 		}
 	}
 	/**
@@ -22,13 +33,19 @@ class Slick_Core_Model
 	*/
 	public function sendQuery($sql, $values = array())
 	{
+		$logKey = md5($sql);
+		if(!isset(self::$queryLog[$logKey])){
+			self::$queryLog[$logKey] = array('sql' => $sql, 'count' => 0, 'values' => array() );
+		}
+		self::$queryLog[$logKey]['values'][] = $values;
+		self::$queryLog[$logKey]['count']++;
+		
 		$query = $this->db->prepare($sql);
 		if(!$query){
 			self::$failedQueries++;
 			return false;
 		}
 		$execute = $query->execute($values);
-
 		if(!$execute){
 			$this->error = $query->errorInfo();
 			
@@ -153,12 +170,7 @@ class Slick_Core_Model
 	public function edit($table, $id, $data, $indexName = '')
 	{
 		if($indexName == ''){
-			$indexes = $this->fetchAll('SHOW INDEX FROM '.$table);
-			foreach($indexes as $index){
-				if($index['Key_name'] == 'PRIMARY'){
-					$indexName = $index['Column_name'];
-				}
-			}
+			$indexName = self::$indexes[$table];
 		}
 		
 		if($indexName == ''){
@@ -179,12 +191,7 @@ class Slick_Core_Model
 	public function delete($table, $id, $indexName = '')
 	{
 		if($indexName == ''){
-			$indexes = $this->fetchAll('SHOW INDEX FROM '.$table);
-			foreach($indexes as $index){
-				if($index['Key_name'] == 'PRIMARY'){
-					$indexName = $index['Column_name'];
-				}
-			}
+			$indexName = self::$indexes[$table];
 		}
 		
 		if($indexName == ''){
@@ -277,12 +284,7 @@ class Slick_Core_Model
 	public function get($table, $id, $fields = array(), $indexName = '')
 	{
 		if($indexName == ''){
-			$indexes = $this->fetchAll('SHOW INDEX FROM '.$table);
-			foreach($indexes as $index){
-				if($index['Key_name'] == 'PRIMARY'){
-					$indexName = $index['Column_name'];
-				}
-			}
+			$indexName = self::$indexes[$table];
 		}
 		
 		if($indexName == ''){

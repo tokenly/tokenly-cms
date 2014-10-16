@@ -82,8 +82,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		if($fullData != 0){
 			return $get;
 		}
-
-
+		
 		self::$userMeta[$userId][$key] = $get['metaValue'];		
 		
 		return $get['metaValue'];

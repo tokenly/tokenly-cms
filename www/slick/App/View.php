@@ -84,7 +84,7 @@ class Slick_App_View extends Slick_Core_View
     public static function getMenu($id, $parentId = 0, $parentLink = 0, $apiMode = 0)
     {
 		$model = new Slick_Core_Model;
-		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array('siteId', 'url'), 'domain');
+		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$get = $model->fetchSingle('SELECT * FROM menus WHERE slug = :id AND siteId = :siteId', array(':id' => $id, ':siteId' => $curSite['siteId']));
 		if(!$get){
 			$get = $model->fetchSingle('SELECT * FROM menus WHERE menuId = :id AND siteId = :siteId', array(':id' => $id, ':siteId' => $curSite['siteId']));
@@ -246,7 +246,7 @@ class Slick_App_View extends Slick_Core_View
 	public static function getBlock($id)
 	{
 		$model = new Slick_Core_Model;
-		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array('siteId'), 'domain');
+		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$get = $model->fetchSingle('SELECT * FROM content_blocks WHERE slug = :id AND siteId = :siteId',
 									array(':siteId' => $curSite['siteId'], ':id' => $id));		
 		if(!$get){
