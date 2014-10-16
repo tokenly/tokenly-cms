@@ -145,6 +145,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 					$appData['user']['userId'], $id, 'forum-reply');
 		}
 		
+		Slick_Core_Model::$cacheMode = false;
 		return $this->get('forum_posts', $id);
 		
 	}
@@ -232,7 +233,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$getTopic['url'].'">forum thread.</a>',
 					$appData['user']['userId'], $topicId, 'forum-topic');
 		}
-		
+		Slick_Core_Model::$cacheMode = false;
 		return $this->get('forum_topics', $topicId);
 	}
 	
