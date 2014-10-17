@@ -323,6 +323,7 @@ CREATE TABLE `blog_posts` (
   KEY `userId` (`userId`),
   KEY `siteId` (`siteId`),
   KEY `editedBy` (`editedBy`),
+  KEY `publishDate` (`publishDate`),
   CONSTRAINT `blog_posts_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
   CONSTRAINT `blog_posts_ibfk_2` FOREIGN KEY (`siteId`) REFERENCES `sites` (`siteId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=681 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
