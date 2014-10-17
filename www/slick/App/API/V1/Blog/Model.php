@@ -216,8 +216,6 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			
 			$sql = 'SELECT '.$getPostFields.'
 					 FROM blog_posts p
-					 LEFT JOIN blog_postMeta mv ON mv.postId = p.postId
-					 LEFT JOIN blog_postMetaTypes mt ON mt.metaTypeId = mv.metaTypeId
 					 WHERE '.$andSites.'
 					 AND p.published = 1
 					 AND p.publishDate <= "'.timestamp().'"
