@@ -6,7 +6,12 @@
 <head>
 	<meta charset="utf-8">
 	<title><?= $title ?> | <?= $siteName ?></title>
-	<meta name="description" content="Let's Talk Bitcoin is a twice weekly show about the ideas, people and projects building the new digital economy and the future of money.">
+	<?php
+	if(!isset($metaDescription)){
+		$metaDescription = "Let's Talk Bitcoin is a twice weekly show about the ideas, people and projects building the new digital economy and the future of money.";
+	}
+	?>
+	<meta name="description" content="<?= $metaDescription ?>">
 	<meta name="author" content="Adam B. Levine">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/base.css">
@@ -53,7 +58,7 @@
 			//grab last 10 posts with soundcloud ids
 			$scModel = new Slick_App_API_V1_Blog_Model;
 			$scPosts = $scModel->getAllPosts(array('page' => 1, 'limit' => 10, 'soundcloud-id' => 'true', 'site' => $site, 'noProfiles' => true,
-													'noCategories' => true, 'noComments' => true));
+													'noCategories' => true, 'noComments' => true, 'minimize' => true));
 			$mediaPlayer = array();
 			foreach($scPosts as $scKey => $scPost){
 				$scPost['title'] = '<a href="'.SITE_URL.'/blog/post/'.$scPost['url'].'" title="'.$scPost['title'].'" target="_blank">'.$scPost['title'].'</a>';

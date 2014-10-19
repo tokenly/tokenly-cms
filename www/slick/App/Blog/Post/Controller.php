@@ -77,6 +77,17 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		$output['user'] = Slick_App_Account_Home_Model::userInfo();
 		$output['canonical'] = $this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url'];
 		
+		$metaDesc = $getPost['excerpt'];
+		if(trim($metaDesc) == ''){
+			$metaDesc = shortenMsg(strip_tags($getPost['content']), 500);
+		}
+		if($getPost['formatType'] == 'markdown'){
+			$metaDesc = markdown($metaDesc);
+		}
+		$metaDesc = strip_tags($metaDesc);
+		$output['metaDescription'] = $metaDesc;
+		
+		
 		$commentsEnabled = $this->data['app']['meta']['enableComments'];
 		if(!$output['user'] OR (intval($commentsEnabled) == 0)){
 			$output['commentForm'] = false;
