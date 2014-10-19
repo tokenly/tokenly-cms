@@ -1,3 +1,8 @@
+<style>
+strong{
+	color:green;
+}
+</style>
 <h2>Notification Pusher</h2>
 <p>
 	Use this form to manually send out notifications to specific user groups (or all users). Content editor is disabled
