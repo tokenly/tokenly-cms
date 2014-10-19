@@ -9,7 +9,7 @@ if($error != ''){
 	echo '<p class="error">'.$error.'</p>';
 }
 elseif($success != ''){
-	echo '<p><strong>'.$success.'</strong></p>';
+	echo '<p><strong class="error">'.$success.'</strong></p>';
 }
 ?>
 <?= $form->display() ?>
