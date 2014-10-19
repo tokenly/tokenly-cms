@@ -1,2 +1,2 @@
-<h2>Site Down for Maintenance</h2>
+<h2 class="error">Site Down for Maintenance</h2>
 <?= $disabledMessage ?>
