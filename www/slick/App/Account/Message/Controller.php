@@ -131,7 +131,7 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 		}
 		
 		$chainEnd = $this->model->getEndOfChain($getMessage['messageId']);
-		if($chainEnd != $getMessage['messageId']){
+		if($chainEnd != $getMessage['messageId'] AND !posted()){
 			$this->redirect($this->site.$this->moduleUrl.'/view/'.$chainEnd.'#message-'.$getMessage['messageId']);
 			return $output;
 		}
@@ -158,7 +158,7 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 			$data = $output['form']->grabData();
 			$data['userId'] = $this->data['user']['userId'];
 			$data['toUser'] = $getMessage['userId'];
-			$data['replyId'] = $getMessage['messageId'];
+			$data['replyId'] = $chainEnd; //make sure reply is always from latest in PM chain
 			
 			if($getMessage['userId'] == $this->data['user']['userId']){
 				$data['toUser'] = $getMessage['toUser'];
