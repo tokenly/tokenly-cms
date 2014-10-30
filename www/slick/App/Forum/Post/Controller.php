@@ -265,6 +265,9 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['message'] = '';
 		$output['topic'] = $this->topic;
 		$output['board'] = $this->board;
+		if(!isset($_GET['retpage'])){
+			$_GET['retpage'] = 0;
+		}
 		$output['permaPage'] = (($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '').'#post-'.$getPost['postId'];
 		
 		if(posted()){

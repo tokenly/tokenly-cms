@@ -11,7 +11,7 @@ if(isset($board)){
 	$realBoard = $board;		
 }
 $catList = '';
-$model = new Slick_Core_Model;
+$model = new Slick_App_Forum_Board_Model;
 $boardModule = $model->get('modules', 'forum-board', array(), 'slug');
 $tca = new Slick_App_LTBcoin_TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
@@ -44,7 +44,8 @@ foreach($getCats as $cat){
 				$itemClass .= ' active';
 			}
 			$boardImage = '';
-			$access_token = $model->getAll('forum_boardMeta', array('boardId' => $board['boardId'], 'metaKey' => 'access_token'));
+			$access_token = extract_row($model::$boardMeta, array('boardId' => $board['boardId']));
+
 			if(count($access_token) > 0){
 				$access_token = $access_token[0];
 				$getAsset = $model->get('xcp_assetCache', $access_token['value'], array(), 'asset');

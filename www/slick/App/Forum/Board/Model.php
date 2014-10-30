@@ -13,7 +13,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			self::$boards[$board['boardId']] = $board;
 		}
 		foreach($getBoardMeta as $boardMeta){
-			self::$boardMeta[$board['boardId']] = $boardMeta;
+			self::$boardMeta[$boardMeta['boardId']] = $boardMeta;
 		}
 	}
 	
@@ -120,10 +120,12 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			// check board subscriptions
 			$boardId = $useData['boardId'];
 			$notifyData['topic'] = $useData;
+			$notifyData['page'] = '';
 			$getBoardSubs = $this->getAll('board_subscriptions', array('boardId' => $boardId));
 			foreach($getBoardSubs as $sub) {
 				// don't notify self
 				if($sub['userId'] == $useData['userId']) { continue; }
+				$notifyData['sub'] = $sub['userId'];
 
 				// fetch the board name
 				if (!isset($notifyData['board'])) {
@@ -131,7 +133,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 				}
 
 				// notify the user
-				Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
+				Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $post, 'topic-subscription', false, $notifyData);
 			}
 			
 		}

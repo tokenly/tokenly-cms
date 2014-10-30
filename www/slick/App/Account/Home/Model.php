@@ -394,9 +394,9 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	public static function getUsersOnline()
 	{
 		$model = new Slick_Core_Model;
-		$get = $model->fetchSingle('SELECT COUNT(*) as total FROM users
-									WHERE  ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200');
-		
+		$sql= 'SELECT COUNT(*) as total FROM users
+									WHERE  ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200';
+		$get = $model->fetchSingle($sql);
 		if(!$get){
 			return false;
 		}

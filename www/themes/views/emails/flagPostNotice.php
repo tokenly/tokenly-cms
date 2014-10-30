@@ -9,9 +9,17 @@ $culprit = $data['user']['username'];
 if($checkTCA){
 	$culprit = '<a href="'.$data['site']['url'].'/profile/user/'.$data['user']['slug'].'">'.$culprit.'</a>';
 }
-
-switch($_POST['type']){
+$type = '';
+if(isset($data['type'])){
+	$type = $data['type'];
+}
+elseif(isset($_POST['type'])){
+	$type = $_POST['type'];
+}
+$reportMessage = '';
+switch($type){
 	case 'topic':
+	case 'thread':
 		$reportMessage = ' the thread <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$getItem['url'].'">'.$getItem['title'].'</a>';
 		break;
 	case 'post':
@@ -23,7 +31,6 @@ switch($_POST['type']){
 			$reportMessage = ' a post by <a href="'.$data['site']['url'].'/profile/user/'.$getPoster['slug'].'">'.$getPoster['username'].'</a> in the thread <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$getTopic['url'].'?page='.$postPage.'#post-'.$getItem['postId'].'">'.$getTopic['title'].'</a>';
 		
 		}
-
 		break;
 }
 echo '<p>'.$culprit.' has flagged/reported '.$reportMessage.' - please investigate.</p>';

@@ -15,24 +15,24 @@
 * /threads [GET]
 * /threads/{ID} [GET]
 * /threads/{ID}/{PostID} [GET]
-* /opts/perms [GET]
-
-###Methods Being Built Still
-
 - /threads [POST] - (create new thread)
 - /threads/{URL} [PATCH] - (edit thread)
 - /threads/{URL} [DELETE] - (buries thread)
 - /threads/{URL} [POST] - (reply)
 - /threads/{URL}/{reply ID} [PATCH] - (edit reply)
 - /threads/{URL}/{reply ID} [DELETE] - (bury reply)
-- /opts/flag [POST] - (flag a thread or post)
+* /opts/perms [GET] - (get list of user forum permissions)
+- /opts/flag [POST] - (flag a thread or post as spam)
 - /opts/like [POST] - (like a thread or post)
+- /opts/like [GET] - (check if post is liked)
 - /opts/unlike [POST] - (unlike thread/post)
 - /opts/move [POST] - (move a thread to different board)
 - /opts/lock [POST] - (lock a thread)
 - /opts/unlock [POST] - (unlock a thread)
 - /opts/sticky [POST] - (set thread to sticky)
 - /opts/unsticky [POST] - (unsticky thread)
+
+
 
 ###Methods
 
@@ -333,11 +333,81 @@
 * **/opts/perms**
 	* **Method:** GET
 	* **Params:** 
-		* boardId (int)(optional)
-		* topicId (int)(optional)
+		* type (string)(optional) - type of item to check for.. category, topic or board.
+		* id (int)(optional) - topicId, boardId or categoryId
 	* **Returns:**
 		* perms
 			* (dictionary list of forum permissions)
 	* List of permissions under "perms" field is formatted <perm key> = true|false. If true, means the user does indeed have that permission available. If false, no access
-	* If topicId or boardId is set, it will check permissions for those specific items. Permissions can change depending on what items are being dealt with. (e.g moderator only has mod permissions in certain boards)
+	* If type and id is set, it will check permissions for those specific items. Permissions can change depending on what items are being dealt with. (e.g moderator only has mod permissions in certain boards)
+* **/opts/flag**
+	* **Method:** POST
+	* **Params:**
+		* type (string) - topic or post. "thread" can also be used instead of topic (same thing)
+		* id (int) - topicId or postId
+	* **Returns:**
+		* result (bool)
+	* Flags a post or thread as spam, notifies any relevant moderators.
+* **/opts/like**
+	* **Method:** POST
+	* **Params:**
+		* type (string) - topic or post. "thread" can also be used instead of topic (same thing)
+		* id (int) - topicId or postId	
+	* **Returns:**
+		* result (bool)
+	* "likes" / upvotes a post or a thread
+* **/opts/like** (check if liked)
+	* **Method:** GET
+	* **Params:**
+		* type (string) - topic or post
+		* id (int) - topicId or postId	
+	* **Returns:**
+		* liked (bool)
+	* returns true if post has been "liked" by user already. False otherwise.
+* **/opts/unlike**
+	* **Method:** POST
+	* **Params:**
+		* type (string) - topic or post
+		* id (int) - topicId or postId	
+	* **Returns:**
+		* result (bool)
+	* removes a users "like" from post or thread.
+* **/opts/lock**
+	* **Method:** POST
+	* **Params:**
+		* id (int) - topicId of thread you want to lock
+	* **Returns:**
+		* result (bool)
+	* Sets thread to "locked" state
+* **/opts/unlock**
+	* **Method:** POST
+	* **Params:**
+		* id (int) - topicId of thread you want to lock
+	* **Returns:**
+		* result (bool)
+	* Removes "locked" state from thread
+* **/opts/sticky**
+	* **Method:** POST
+	* **Params:**
+		* id (int) - topicId of thread you want to sticky
+	* **Returns:**
+		* result (bool)
+	* Sets thread to "sticky" state
+* **/opts/unsticky**
+	* **Method:** POST
+	* **Params:**
+		* id (int) - topicId of thread you want to un-sticky
+	* **Returns:**
+		* result (bool)
+	* Removes "sticky" state from thread
+* **/opts/move**
+	* **Method:** POST
+	* **Params:**
+		* from-type (string) - type of item you want to move.. options: topic, thread (alias)
+		* from-id (int) - ID of item to move, e.g the thread topicId
+		* to-type (string) - type of area to move the item into.. options: board
+		* to-id (int) - ID of area to move item minto, e.g the boardId
+	* **Returns:**
+		* result (bool)
+	* Moves a thread from one board to another.
 

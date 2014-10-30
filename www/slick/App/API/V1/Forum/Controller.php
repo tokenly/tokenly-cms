@@ -16,7 +16,10 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 	{
 		parent::__construct();
 		$this->model = new Slick_App_API_V1_Forum_Model;
-		$this->tca = new Slick_App_LTBcoin_TCA_Model; //load token controlled access functions	
+		$this->tca = new Slick_App_LTBcoin_TCA_Model; //load token controlled access functions
+		$this->meta = new Slick_App_Meta_Model;
+		$this->forumApp = $this->model->get('apps', 'forum', array(), 'slug');
+		$this->forumApp['meta'] = $this->meta->appMeta($this->forumApp['appId']);
 		$this->boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
 		$this->postModule = $this->model->get('modules', 'forum-post', array(), 'slug');
 	}
@@ -722,129 +725,315 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 	}
 	
 	/**
+	* Flags a specific forum post or thread to the monitors, must be logged in.
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function flagPost()
 	{
 		$output = array();
+		$checkMethod = $this->checkMethod('POST');
+		if(is_array($checkMethod)){
+			return $checkMethod;
+		}
+		if(!$this->user){
+			http_response_code(401);
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
 		
-		return $output;	
+		try{
+			$this->args['data']['user'] = $this->user;
+			$flag = $this->model->flagPost($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		
+		$output['result'] = $flag;
+		
+		return $output;
 	}
 	
 	/**
+	* "Like" a post or a thread. If GET, returns {"liked": true|false} if item is already liked.
 	*
-	*
-	*
-	*
+	* @method GET|POST
+	* @return Array
 	*/
 	protected function like()
 	{
 		$output = array();
-		
+		if(!in_array($this->useMethod, array('GET', 'POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('GET', 'POST');
+			return $output;
+		}
+		if(!$this->user){
+			http_response_code(401);
+			$output['error'] = 'Not Authorized';
+			return $output;
+		}
+		$this->args['data']['user'] = $this->user;
+		if($this->useMethod == 'GET'){
+			try{
+				$check = $this->model->checkLikePost($this->args['data']);
+			}
+			catch(Exception $e){
+				http_response_code(400);
+				$output['error'] = $e->getMessage();
+				return $output;
+			}
+			
+			$output['liked'] = $check;
+		}
+		else{
+			try{
+				$update = $this->model->likePost($this->args['data']);
+			}
+			catch(Exception $e){
+				http_response_code(400);
+				$output['error'] = $e->getMessage();
+				return $output;
+			}
+			
+			$output['result'] = $update;
+		}
+
 		return $output;	
 	}
 	
 	/**
+	* "Unlikes" a post or thread.
 	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*
 	*/
 	protected function unlike()
 	{
 		$output = array();
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		if(!$this->user){
+			http_response_code(401);
+			$output['error'] = 'Not logged in';
+			return $output;
+		}
 		
-		return $output;	
+		try{
+			$this->args['data']['user'] = $this->user;
+			$unlike = $this->model->unlikePost($this->args['data']);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		
+		$output['result'] = $unlike;
+		return $output;
+		
 	}
 	
 	/**
+	* Moves a thread into a different forum board
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function moveThread()
 	{
 		$output = array();
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		try{
+			$this->args['data']['user'] = $this->user;
+			$this->args['data']['perms'] = $this->perms;
+			$move = $this->model->moveThread($this->args['data']);
+		}
+		catch(Exception $e){
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
 		
-		return $output;	
+		$output['result'] = $move;
+		return $output;
+		
 	}
 	
 	/**
+	* Locks a forum thread
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function lockThread()
 	{
 		$output = array();
-		
-		return $output;	
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		try{
+			$this->args['data']['user'] = $this->user;
+			$this->args['data']['perms'] = $this->perms;
+			$lock = $this->model->lockThread($this->args['data']);
+		}
+		catch(Exception $e){
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['result'] = $lock;
+		return $output;
 	}
 	
 	/**
+	* Removes lock state from forum thread. Functions exact same as "lock" method
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function unlockThread()
 	{
 		$output = array();
-		
-		return $output;	
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		try{
+			$this->args['data']['user'] = $this->user;
+			$this->args['data']['perms'] = $this->perms;
+			$lock = $this->model->lockThread($this->args['data'], 0);
+		}
+		catch(Exception $e){
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['result'] = $lock;
+		return $output;
 	}
 	
 	/**
+	* Sets a forum thread to sticky status
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function stickyThread()
 	{
 		$output = array();
-		
-		return $output;	
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		try{
+			$this->args['data']['user'] = $this->user;
+			$this->args['data']['perms'] = $this->perms;
+			$sticky = $this->model->stickyThread($this->args['data']);
+		}
+		catch(Exception $e){
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['result'] = $sticky;
+		return $output;
 	}
 	
 	/**
+	* Removes sticky state from forum thread. Functions exact same as "sticky" method
 	*
-	*
-	*
-	*
+	* @method POST
+	* @return Array
 	*/
 	protected function unstickyThread()
 	{
 		$output = array();
-		
-		return $output;	
+		if(!in_array($this->useMethod, array('POST'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('POST');
+			return $output;
+		}		
+		try{
+			$this->args['data']['user'] = $this->user;
+			$this->args['data']['perms'] = $this->perms;
+			$sticky = $this->model->stickyThread($this->args['data'], 0);
+		}
+		catch(Exception $e){
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		$output['result'] = $sticky;
+		return $output;
 	}
 	
 	/**
+	* Obtains list of user permissions for various actions in the forum app. format array(<permision-key>: true|false)
 	*
-	*
-	*
-	*
+	* @param 'type' string - (optional) possible options: topic,thread,board,category. Include this along with an ID to check for permissions on a specific area in the forums, which may differ (e.g moderator permissions on specific boards)
+	* @param 'id' int - (optional) topicId, boardId or categoryId (depending on 'type' field)
+	* @return Array
 	*/
 	protected function getPerms()
 	{
 		$output = array();
-		
+		if(!in_array($this->useMethod, array('GET'))){
+			http_response_code(400);
+			$output['error'] = 'Invalid Request Method';
+			$output['methods'] = array('GET');
+			return $output;
+		}		
 		$perms = $this->perms;
+		$validTypes = array('category', 'board', 'topic', 'thread');
+		if($this->user AND isset($this->args['data']['type']) AND isset($this->args['data']['id']) AND in_array($this->args['data']['type'], $validTypes)){
+			switch($this->args['data']['type']){
+				case 'topic':
+				case 'thread':
+					$getItem = $this->model->get('forum_topics', $this->args['data']['id']);
+					if($getItem){
+						$perms = $this->tca->checkPerms($this->user['userId'], $perms, $this->postModule['moduleId'], $getItem['topicId'], 'topic');
+					}
+					break;
+				case 'board':
+					$getItem = $this->model->get('forum_boards', $this->args['data']['id']);
+					if($getItem){
+						$perms = $this->tca->checkPerms($this->user['userId'], $perms, $this->boardModule['moduleId'], $getItem['boardId'], 'board');
+						$forumControl = new Slick_App_Forum_Post_Controller;
+						$boardAppData = array('perms' => $perms, 'user' => $this->user, 'app' => $this->forumApp);
+						$perms = $forumControl->checkModPerms($getItem['boardId'], $boardAppData);		
+					}		
+					break;
+				case 'category':
+					$getItem = $this->model->get('forum_categories', $this->args['data']['id']);
+					if($getItem){
+						$perms = $this->tca->checkPerms($this->user['userId'], $perms, $this->boardModule['moduleId'], $getItem['categoryId'], 'category');
+					}							
+					break;
+			}
+		}
 		if(isset($perms['isTroll'])){
 			unset($perms['isTroll']);
 		}
-		
-		//add checks for permissions for specific category/board/topic
-		//come back to this
-		
 		$output['perms'] = $perms;
-		
 		return $output;	
 	}
 	

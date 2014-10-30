@@ -693,4 +693,522 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		unset($post['buryTime']);
 		return $post;
 	}
+	
+	/**
+	* Flags a forum thread or post as spam / against rules. Notifications sent to moderators.
+	* 
+	* @param $data Array - data from API controller
+	* @param $data['type'] - type of post to flag.. options: thread, post
+	* @param $data['id'] - postId or topicId of item in question
+	* @return bool
+	*/
+	public function flagPost($data)
+	{
+		$req = array('type', 'id');
+		foreach($req as $required){
+			if(!isset($data[$required]) OR trim($data[$required]) == ''){
+				throw new Exception($required.' required');
+			}
+		}
+
+		$meta = new Slick_App_Meta_Model;
+		$postModel = new Slick_App_Forum_Post_Model;
+		$reportedPosts = $meta->getUserMeta($data['user']['userId'], 'reportedPosts');
+		if(!$reportedPosts){
+			$reportedPosts = array();
+		}
+		else{
+			$reportedPosts = json_decode($reportedPosts, true);
+		}
+		
+		$app = $this->get('apps', 'forum', array(), 'slug');
+		$app['meta'] = $meta->appMeta($app['appId']);
+		$module = $this->get('modules', 'forum-post', array(), 'slug');
+		$data['app'] = $app;
+		$data['module'] = $module;
+		$validTypes = array('post', 'thread', 'topic');
+		
+		if(!isset($data['id']) OR !isset($data['type']) OR !in_array($data['type'], $validTypes)){
+			throw new Exception('Invalid parameters');
+		}
+		
+		$getItem = false;
+		$reportMessage = 'a post';
+		switch($data['type']){
+			case 'thread':
+			case 'topic':
+				$getItem = $this->get('forum_topics', $data['id']);
+				break;
+			case 'post':
+				$getItem = $this->get('forum_posts', $data['id']);
+				if($getItem){
+					$getTopic = $this->get('forum_topics', $getItem['topicId']);
+					$getPoster = $this->get('users', $getItem['userId'], array('userId', 'slug', 'username'));
+					$postPage = $postModel->getPostPage($getItem['postId'], $app['meta']['postsPerPage']);
+					$getItem['topic'] = $getTopic;
+					$getItem['poster'] = $getPoster;
+					$getItem['postPage'] = $postPage;
+					$getItem['boardId'] = $getTopic['boardId'];
+				}
+
+				break;
+		}
+		
+		if(!$getItem){
+			throw new Exception('Item not found');
+		}
+		
+		if($getItem['userId'] == $data['user']['userId']){
+			throw new Exception('Cannot flag your own content');
+		}
+		
+		foreach($reportedPosts as $report){
+			$hasReported = false;
+			switch($report['type']){
+				case 'topic':
+				case 'thread':
+					if(isset($getItem['topicId']) AND $getItem['topicId'] == $report['itemId']){
+						$hasReported = true;
+					}
+					break;
+				case 'post':
+					if(isset($getItem['postId']) AND $getItem['postId'] == $report['itemId']){
+						$hasReported = true;
+					}
+					break;
+			}
+			if($hasReported){
+				throw new Exception('Item already reported');
+			}
+		}
+		
+		//notify users
+		$getPerms = $this->getAll('app_perms', array('appId' => $app['appId']));
+		$getPerm = extract_row($getPerms, array('permKey' => 'canReceiveReports'));
+		if($getPerm){
+			$getPerm = $getPerm[0];
+			$notifyList = array();
+			
+			//check for forum mods
+			$getMods = $this->getAll('forum_mods', array('boardId' => $getItem['boardId']));
+			if(count($getMods) > 0){
+				foreach($getMods as $mod){
+					if(!in_array($mod['userId'], $notifyList)){
+						$notifyList[] = $mod['userId'];
+					}
+				}
+			}
+			else{
+				$permGroups = $this->getAll('group_perms', array('permId' => $getPerm['permId']));
+				foreach($permGroups as $permGroup){
+					$groupUsers = $this->getAll('group_users', array('groupId' => $permGroup['groupId']));
+					foreach($groupUsers as $gUser){
+						if(!in_array($gUser['userId'], $notifyList)){
+							$notifyList[] = $gUser['userId'];
+						}
+					}
+				}
+			}
+			
+			foreach($notifyList as $notifyUser){
+				if($notifyUser == $data['user']['userId']){
+					continue;
+				}
+				$notifyData = $data;
+				$nofityData['reportMessage'] = $reportMessage;
+				$notifyData['item'] = $getItem;
+				$notifyData['notifyUser'] = $notifyUser;
+				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $data['id'], 'report-'.$data['type'], true, $notifyData);
+			}
+		}
+		
+		$reportedPosts[] = array('type' => $data['type'], 'itemId' => $data['id']);
+		$update = $meta->updateUserMeta($data['user']['userId'], 'reportedPosts', json_encode($reportedPosts));
+		if(!$update){
+			throw new Exception('Error reporting item');
+
+		}
+		
+		return true;
+	}
+	
+	/**
+	* "Likes" a post or thread
+	*
+	* @param $data Array - data from API controller
+	* @param $data['type'] - options: thread,post
+	* @param $data['id'] - postId or topicId of item
+	* @return bool
+	*/
+	public function likePost($data)
+	{
+		if(!isset($data['id'])){
+			throw new Exception('id required');
+		}
+		
+		$validTypes = array('topic', 'thread', 'post');
+		if(!isset($data['type']) OR !in_array($data['type'], $validTypes)){
+			throw new Exception('Invalid post type');
+		}
+		$type = $data['type'];
+		$getItem = false;
+		$itemId = false;
+		$typeCat = '';
+		switch($type){
+			case 'topic':
+			case 'thread':
+				$getItem = $this->get('forum_topics', $data['id']);
+				if($getItem){
+					$itemId = $getItem['topicId'];
+				}
+				$typeCat = 'topic';
+				break;
+			case 'post':
+				$getItem = $this->get('forum_posts', $data['id']);
+				if($getItem){
+					$itemId = $getItem['postId'];
+				}
+				$typeCat = 'post';
+				break;
+		}
+		if(!$itemId){
+			throw new Exception('Item not found');
+		}
+		
+
+		$getLike = $this->fetchSingle('SELECT *
+											  FROM user_likes
+											  WHERE userId = :userId AND itemId = :id AND type = :type',
+											 array(':userId' => $data['user']['userId'], ':id' => $itemId, ':type' => $typeCat));
+		if($getLike){
+			throw new Exception('Already liked');
+		}
+		
+
+		$meta = new Slick_App_Meta_Model;
+		$app = $this->get('apps', 'forum', array(), 'slug');
+		$app['meta'] = $meta->appMeta($app['appId']);
+		$module = $this->get('modules', 'forum-post', array(), 'slug');
+		$data['app'] = $app;
+		$data['module'] = $module;
+		
+		$notifyData = $data;
+		$postModel = new Slick_App_Forum_Post_Model;
+		switch($type){
+			case 'topic':
+			case 'thread':
+				$emailView = 'emails.likeThreadNotice';
+				$notifyData['topic'] = $getItem;
+				break;
+			case 'post':
+				$postPage = $postModel->getPostPage($itemId, $data['app']['meta']['postsPerPage']);
+				$andPage = '';
+				if($postPage > 1){
+					$andPage = '?page='.$postPage;
+				}
+				
+				$getTopic = $this->get('forum_topics', $getItem['topicId']);
+				
+				if($getItem['userId'] != $data['user']['userId']){
+					$notifyData['topic'] = $getTopic;
+					$notifyData['page'] = $andPage;
+					$notifyData['post'] = $getItem;
+					$emailView = 'emails.likePostNotice';
+					$typeCat = 'post';
+				}				
+				break;
+		}
+		
+		$like = $this->insert('user_likes', array('userId' => $data['user']['userId'],
+														'itemId' => $itemId, 'type' => $typeCat, 'likeTime' => timestamp()));											
+		if(!$like){
+			throw new Exception('Error adding like');
+		}
+		
+		Slick_App_Meta_Model::notifyUser($getItem['userId'], $emailView, $itemId, 
+										 'like-'.$typeCat.'-'.$data['user']['userId'], false, $notifyData);
+		
+		return true;
+		
+	}
+	/**
+	* Checks to see if a post or thread is liked or not already
+	*
+	* @param $data Array - data from API controller
+	* @param $data['type'] - options: thread,post
+	* @param $data['id'] - postId or topicId of item
+	* @param $returnID - set this to true to return the "likeId" if the item has indeed been liked already
+	* @return bool
+	*/
+	public function checkLikePost($data, $returnID = false)
+	{
+		if(!isset($data['type'])){
+			throw new Exception('type required');
+		}
+		if(!isset($data['id'])){
+			throw new Exception('id required');
+		}
+		$getItem = false;
+		$itemId = false;
+		$useType = '';
+		switch($data['type']){
+			case 'topic':
+			case 'thread':
+				$getItem = $this->get('forum_topics', $data['id']);
+				if($getItem){
+					$itemId = $getItem['topicId'];
+				}
+				$useType = 'topic';
+				break;
+			case 'post':
+				$getItem = $this->get('forum_posts', $data['id']);
+				if($getItem){
+					$itemId = $getItem['postId'];
+				}
+				$useType = 'post';
+				break;
+		}
+		if(!$getItem){
+			throw new Exception('Item not found');
+		}
+		$getLike = $this->getAll('user_likes', array('userId' => $data['user']['userId'], 'itemId' => $itemId, 'type' => $useType));
+		if(is_array($getLike) AND count($getLike) > 0){
+			if($returnID){
+				return $getLike[0]['likeId'];
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	* Removes a "like" entry on a post
+	*
+	* @param $data Array - data from API controller
+	* @param $data['type'] - options: thread,post
+	* @param $data['id'] - postId or topicId of item
+	* @return bool
+	*/
+	public function unlikePost($data)
+	{
+		$getLike = $this->checkLikePost($data, true);
+		if(!$getLike){
+			throw new Exception('Item not liked');
+		}
+		$unlike = $this->delete('user_likes', $getLike);
+		if(!$unlike){
+			throw new Exception('Error removing like on item');
+		}		
+		return true;
+	}
+	
+	/**
+	* Moves a forum thread into a different board
+	*
+	* @param $data Array - data from API controller
+	* @param $data['from-type'] - type of forum item you want to move.. valid options: [thread]
+	* @param $data['from-id'] - ID of item you want to move. e.g the topicId
+	* @param $data['to-type'] - type of area that the item is moving to. valid options: [board]
+	* @param $data['to-id'] - ID of area that item is moving to, e.g the boardId
+	* @return bool
+	*/
+	public function moveThread($data)
+	{
+		if(!$data['user']){
+			http_response_code(401);
+			throw new Exception('Not authorized');
+		}		
+		$req = array('from-type', 'from-id', 'to-type', 'to-id');
+		foreach($req as $required){
+			if(!isset($data[$required]) OR trim($data[$required]) == ''){
+				http_response_code(400);
+				throw new Exception($required.' required');
+			}
+		}
+		$validFrom = array('topic', 'thread');
+		$validTo = array('board');
+		if(!in_array($data['from-type'], $validFrom)){
+			http_response_code(400);
+			throw new Exception('Invalid from-type');
+		}
+		if(!in_array($data['to-type'], $validTo)){
+			http_response_code(400);
+			throw new Exception('Invalid to-type');
+		}
+		$getItem = false;
+		$getItem2 = false;
+		switch($data['from-type']){
+			case 'topic':
+			case 'thread':
+				$getItem = $this->get('forum_topics', $data['from-id']);
+				break;
+		}
+		switch($data['to-type']){
+			case 'board':
+				$getItem2 = $this->get('forum_boards', $data['to-id']);
+				if($getItem2){
+					if($getItem AND isset($getItem['boardId']) AND $getItem['boardId'] == $getItem2['boardId']){
+						http_response_code(400);
+						throw new Exception('Item already exists in this board');
+					}
+					$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+					$tca = new Slick_App_LTBcoin_TCA_Model;
+					$checkCat = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['categoryId'], 'category');
+					$checkBoard = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['boardId'], 'board');
+					
+					if(!$checkCat OR !$checkBoard){
+						http_response_code(403);
+						throw new Exception('You do not have permission to move into that board');
+					}					
+				}
+				break;
+		}
+		if(!$getItem){
+			http_response_code(400);
+			throw new Exception($data['from-type'].' not found');
+		}
+		if(!$getItem2){
+			http_response_code(400);
+			throw new Exception($data['to-type'].' not found');
+		}
+		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canMoveOther'])
+			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canMoveSelf']))){
+			http_response_code(403);
+			throw new Exception('You do not have permission for this');
+		}
+		$edit = false;
+		switch($data['from-type']){
+			case 'topic':
+			case 'thread':
+				switch($data['to-type']){
+					case 'board':
+						$edit = $this->edit('forum_topics', $getItem['topicId'], array('boardId' => $getItem2['boardId']));
+						break;
+				}
+				break;
+		}
+		if(!$edit){
+			http_response_code(400);
+			throw new Exception('Error moving '.$data['from-type']);
+		}		
+		return true;
+	}
+	
+	/**
+	* Sets the "lock" state on a forum thread
+	*
+	* @param $data - data from API controller
+	* @param $data['id'] - topicId of thread you want to lock
+	* @param $state - set to 1 to lock thread, 0 to unlock thread.
+	* @return bool
+	*/
+	public function lockThread($data, $state = 1)
+	{
+		if(!$data['user']){
+			http_response_code(401);
+			throw new Exception('Not authorized');
+		}
+		if(!isset($data['id'])){
+			http_response_code(400);
+			throw new Exception('id required');
+		}
+		$validStates = array(0, 1);
+		if(!in_array($state, $validStates)){
+			http_response_code(400);
+			throw new Exception('Invalid state');
+		}
+		$getItem = $this->get('forum_topics', $data['id']);
+		if(!$getItem){
+			http_response_code(400);
+			throw new Exception('Thread not found');
+		}
+		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canLockOther'])
+			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canLockSelf']))){
+			http_response_code(403);
+			throw new Exception('You do not have permission for this');
+		}
+		$stateMessage = '';
+		$responseMessage = '';
+		$lockStamp = null;
+		$lockBy = 0;
+		switch($state){
+			case 0:
+				$stateMessage = 'unlocked';
+				$responseMessage = 'unlocking';
+				break;
+			case 1:
+				$stateMessage = 'locked';
+				$responseMessage = 'locking';
+				$lockStamp = timestamp();
+				$lockBy = $data['user']['userId'];
+				break;
+		}
+		if($getItem['locked'] == $state){
+			http_response_code(400);
+			throw new Exception('Thread already '.$stateMessage);
+		}
+		$lock = $this->edit('forum_topics', $getItem['topicId'], array('locked' => $state, 'lockTime' => $lockStamp, 'lockedBy' => $lockBy));	
+		if(!$lock){
+			http_response_code(400);
+			throw new Exception('Error '.$responseMessage.' thread');
+		}
+		return true;
+	}
+	
+	/**
+	* Sets the "sticky" state on a forum thread
+	*
+	* @param $data - data from API controller
+	* @param $data['id'] - topicId of thread you want to sticky/unsticky
+	* @param $state - set to 1 to sticky thread, 0 to unsticky thread.
+	* @return bool
+	*/
+	public function stickyThread($data, $state = 1)
+	{
+		if(!$data['user']){
+			http_response_code(401);
+			throw new Exception('Not authorized');
+		}
+		if(!isset($data['id'])){
+			http_response_code(400);
+			throw new Exception('id required');
+		}
+		$validStates = array(0, 1);
+		if(!in_array($state, $validStates)){
+			http_response_code(400);
+			throw new Exception('Invalid state');
+		}
+		$getItem = $this->get('forum_topics', $data['id']);
+		if(!$getItem){
+			http_response_code(400);
+			throw new Exception('Thread not found');
+		}
+		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canStickyOther'])
+			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canStickySelf']))){
+			http_response_code(403);
+			throw new Exception('You do not have permission for this');
+		}
+		$stateMessage = '';
+		$responseMessage = '';
+		switch($state){
+			case 0:
+				$stateMessage = 'unstickied';
+				$responseMessage = 'Error removing sticky status from thread';
+				break;
+			case 1:
+				$stateMessage = 'stickied';
+				$responseMessage = 'Error setting sticky status on thread';
+				break;
+		}
+		if($getItem['sticky'] == $state){
+			http_response_code(400);
+			throw new Exception('Thread already '.$stateMessage);
+		}
+		$lock = $this->edit('forum_topics', $getItem['topicId'], array('sticky' => $state));	
+		if(!$lock){
+			http_response_code(400);
+			throw new Exception($responseMessage);
+		}
+		return true;
+	}	
 }
