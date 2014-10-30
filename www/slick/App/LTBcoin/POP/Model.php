@@ -63,7 +63,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		$getPosts = $disqus->getUserPosts($username, false, 100);
 		
 		if(!$getPosts){
-			return 0;
+			return array('total' => 0, 'days' => array());
 		}
 		
 		$dayNums = array();
@@ -304,6 +304,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					
 					$editorNum = $this->getNumUserEditedPosts($userId, $timeframe);
 					$score += ($editorNum * $this->weights['publishScore']) * ($this->weights['editorCut'] / 100);
+					$output['info']['blog-edits'] = $editorNum;
 					break;
 				case 'pov':
 					$pov = $this->getUserPOV($userId, $timeframe);
@@ -416,7 +417,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			}
 			$this->likeData = $this->fetchAll($sql);
 			if(!$this->likeData){
-				return false;
+				array('total' => 0, 'days' => array());	
 			}
 		}
 		$num = 0;
