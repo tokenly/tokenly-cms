@@ -80,18 +80,22 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 			}
 		}
 		$useLimit = $start.', '.$limit;
+		
+		$api = new Slick_App_API_V1_Blog_Model;
+		$childCats = $api->getChildCategories($categoryId);
+		$catList = array_merge(array($categoryId), $childCats);
 
 		$getPosts = $this->fetchAll('SELECT p.*
 									FROM blog_postCategories c
 									LEFT JOIN blog_posts p ON p.postId = c.postId
 									 WHERE p.siteId = :siteId
-									 AND c.categoryId = :categoryId
+									 AND c.categoryId IN('.join(',', $catList).')
 									 AND p.published = 1
 									 AND p.publishDate <= "'.timestamp().'"
 									 GROUP BY p.postId
 									 ORDER BY p.publishDate DESC
 									 LIMIT '.$useLimit,
-									 array(':siteId' => $siteId, ':categoryId' => $categoryId));
+									 array(':siteId' => $siteId));
 		
 		$profModel = new Slick_App_Profile_User_Model;
 		$postModel = new Slick_App_Blog_Post_Model;

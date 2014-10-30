@@ -49,7 +49,9 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					continue;
 				}
 				$catList[] = $getCat['categoryId'];
+				$catList = array_merge($catList, $this->getChildCategories($getCat['categoryId']));
 			}
+			$catList = array_unique($catList);
 			if(count($catList) > 0){
 				$andCats = ' AND p.postId IN((SELECT postId FROM blog_postCategories WHERE categoryId IN('.join(',', $catList).'))) '; 
 				//$andCats = ' AND c.categoryId IN('.join(',', $catList).') ';
@@ -478,6 +480,18 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		}
 		throw new Exception('Error posting comment..');
 		*/
+	}
+	
+	public function getChildCategories($categoryId, $catList = array())
+	{
+		$get = $this->getAll('blog_categories', array('parentId' => $categoryId), array('categoryId'));
+		if(count($get) > 0){
+			foreach($get as $row){
+				$catList[] = $row['categoryId'];
+				$catList = $this->getChildCategories($row['categoryId'], $catList);
+			}
+		}
+		return $catList;
 	}
 	
 }
