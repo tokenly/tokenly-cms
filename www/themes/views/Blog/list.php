@@ -1,4 +1,11 @@
 <span class="rss-link"><a href="<?= SITE_URL ?>/rss"><img src="<?= THEME_URL ?>/images/rss.png" alt="RSS Feed" /></a></span>
+<?php
+if(isset($category)){
+	if($category['image'] != '' AND file_exists(SITE_PATH.'/files/blogs/'.$category['image'])){
+		echo '<div class="blog-category-image"><img src="'.SITE_URL.'/files/blogs/'.$category['image'].'" alt="" /></div>';
+	}
+}
+?>
 <h1><?= $title ?></h1>
 <?php
 if(isset($category)){
@@ -11,6 +18,7 @@ $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 $postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 $catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 ?>
+<div class="clear"></div>
 <ul class="blog-list">
 <?php
 $extraUrl = '';

@@ -149,6 +149,7 @@ CREATE TABLE `blog_categories` (
   `rank` int(11) DEFAULT '0',
   `siteId` int(11) unsigned NOT NULL,
   `description` longtext COLLATE utf8_unicode_ci,
+  `image` VARCHAR(255) COLLATE utf8_unicode_ci,
   PRIMARY KEY (`categoryId`),
   KEY `slug` (`slug`),
   KEY `siteId` (`siteId`),

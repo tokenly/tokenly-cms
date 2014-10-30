@@ -5,6 +5,7 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 	public function getBlogCategoryForm($siteId, $categoryId = 0)
 	{
 		$form = new Slick_UI_Form;
+		$form->setFileEnc();
 		
 		$name = new Slick_UI_Textbox('name');
 		$name->addAttribute('required');
@@ -31,6 +32,10 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 		$description = new Slick_UI_Textarea('description', 'html-editor');
 		$description->setLabel('Description');
 		$form->add($description);
+		
+		$image = new Slick_UI_File('image');
+		$image->setLabel('Image');
+		$form->add($image);
 
 		return $form;
 	}
@@ -73,6 +78,7 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 		}
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$getSite = $this->get('sites', $siteId);
 		
 		$get = $this->getAll('blog_categories', array('parentId' => $parentId, 'siteId' => $siteId), array(), 'rank', 'asc');
 		foreach($get as $key => $row){
@@ -90,6 +96,12 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 				$get[$key]['target'] = '';
 				$get[$key]['url'] = SITE_URL.'/blog/category/'.$row['slug'];
 				$get[$key]['label'] = $row['name'];
+			}
+			
+			if(isset($_SERVER['is_api'])){
+				if($row['image'] != ''){
+					$get[$key]['image'] = $getSite['url'].'/files/blogs/'.$row['image'];
+				}
 			}
 			
 		}
@@ -128,6 +140,8 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 			throw new Exception('Error adding category');
 		}
 		
+		$this->uploadImage($add);
+		
 		return $add;
 		
 		
@@ -155,15 +169,38 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 			$useData['slug'] = genURL($useData['name']);
 		}
 		
-		
 		$edit = $this->edit('blog_categories', $id, $useData);
 		if(!$edit){
 			throw new Exception('Error editing category');
 		}
 		
+		$this->uploadImage($id);
 		
 		return true;
 		
+	}
+	
+	public function uploadImage($categoryId)
+	{
+		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
+			$getApp = $this->get('apps', 'blog', array(), 'slug');
+			$meta = new Slick_App_Meta_Model;
+			$appMeta = $meta->appMeta($getApp['appId']);
+			$fileName = md5('category-'.$categoryId.'-'.$_FILES['image']['name']).'.jpg';
+			$image = new Slick_Util_Image;
+			$imageWidth = 200;
+			$imageHeight = 200;
+			if(isset($appMeta['category-image-width'])){
+				$imageWidth = intval($appMeta['category-image-width']);
+			}
+			if(isset($appMeta['category-image-height'])){
+				$imageHeight = intval($appMeta['category-image-height']);
+			}
+			$saveImage = $image->resizeImage($_FILES['image']['tmp_name'], SITE_PATH.'/files/blogs/'.$fileName, $imageWidth, $imageHeight);
+			if($saveImage){
+				$this->edit('blog_categories', $categoryId, array('image' => $fileName));
+			}
+		}
 	}
 	
 	public function getArchiveList($siteId)

@@ -692,7 +692,13 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$getPost['image'] = null;
 		}
 		
-
+		if(trim($getPost['coverImage']) != ''){
+			$getPost['coverImage'] = $this->args['data']['site']['url'].'/files/blogs/'.$getPost['coverImage'];
+		}
+		else{
+			$getPost['coverImage'] = null;
+		}
+		
 		if(!$authorTCA){
 			$getPost['author']['profile'] = array();
 		}
@@ -702,6 +708,17 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$getPost['excerpt'] = strip_tags($getPost['excerpt']);
 			$getPost['content'] = strip_tags($getPost['content']);
 		}
+		
+		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		$cats = array();
+		foreach($getCats as $cat){
+			$getCat = $this->model->get('blog_categories', $cat['categoryId']);
+			if($getCat['image'] != ''){
+				$getCat['image'] = $this->args['data']['site']['url'].'/files/blogs/'.$getCat['image'];
+			}
+			$cats[] = $getCat;
+		}
+		$getPost['categories'] = $cats;
 		
 		$output['post'] = $getPost;
 		http_response_code(200);
@@ -744,6 +761,9 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 				$output['error'] = 'Category not found';
 				return $output;
 			}
+		}
+		if($get['image'] != ''){
+			$get['image'] = $this->args['data']['site']['url'].'/files/blogs/'.$get['image'];
 		}
 		
 		try{

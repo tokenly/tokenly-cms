@@ -285,6 +285,9 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				$cats = array();
 				foreach($getCats as $cat){
 					$getCat = $this->get('blog_categories', $cat['categoryId']);
+					if($getCat['image'] != ''){
+						$getCat['image'] = $data['site']['url'].'/files/blogs/'.$getCat['image'];
+					}
 					$cats[] = $getCat;
 				}
 				$getPosts[$key]['categories'] = $cats;

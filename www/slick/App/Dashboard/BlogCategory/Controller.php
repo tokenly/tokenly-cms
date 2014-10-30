@@ -107,6 +107,7 @@ class Slick_App_Dashboard_BlogCategory_Controller extends Slick_App_ModControl
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBlogCategoryForm($this->data['site']['siteId'], $this->args[3]);
 		$output['formType'] = 'Edit';
+		$output['category'] = $getBlogCategory;
 		
 		if(posted()){
 			$data = $output['form']->grabData();
