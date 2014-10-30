@@ -887,7 +887,7 @@ class Parsedown
                 }
             }
 
-            switch ($block['content type'])
+            switch (@$block['content type'])
             {
                 case null:
 

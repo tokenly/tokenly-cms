@@ -229,7 +229,7 @@
 									<span class="next" title="Next"><i class="fa fa-step-forward"></i></span>
 								</div>
 								<div class="track-title">
-									<span class="track"><?= $scPosts[0]['title'] ?></span>
+									<span class="track"><?= @$scPosts[0]['title'] ?></span>
 								</div>
 								<div class="player-pop">
 									<span title="Pop out media player" class="pop-out"><i class="fa fa-caret-square-o-up"></i></span>
