@@ -1951,6 +1951,9 @@ text-overflow:ellipsis;
 }
 .ltb-weekly-cont{
 	margin-top: 15px;
+	position: relative;
+	max-height: 500px;
+	overflow-y: scroll;
 }
 .ltb-weekly-cont h4{
 	color: #000;
@@ -2117,6 +2120,45 @@ img.board-img{
 }
 .abp-leaderboard table thead tr{
 	background: #B9B9B9;
+}
+
+.blog-category-image{
+	width: 150px;
+	float: left;
+	vertical-align: top;
+	position: relative;
+	margin-right: 20px;
+	margin-bottom: 20px;
+}
+.blog-category-image img{
+	max-width: 100%;
+}
+
+.ltb-pop-stats{
+	display: block;
+	position: relative;
+}
+.ltb-pop-stats li{
+	display: block;
+	float: left;
+	width: 25%;
+	vertical-align: top;
+	margin-bottom: 10px;
+}
+.ltb-pop-stats li.full{
+	float: none;
+	width: auto;
+	clear: both;
+}
+
+.public-pop-report-table tr th{
+	font-family: Arial;
+	font-size: 12px;
+	letter-spacing: 0px;
+	line-height: 1.3;
+}
+.public-pop-report-table{
+	table-layout: auto;
 }
 
 /* Smaller than standard 960 (devices and browsers) */
@@ -2560,6 +2602,12 @@ img.board-img{
         .ltb-stat-links{
 			display: none;
         }
+        
+	.ltb-pop-stats li{
+		display: block;
+		float: none;
+		width: auto;
+	}        
 }
 
 /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
