@@ -149,8 +149,8 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['title'] = $getTopic['title'].' - '.$getBoard['name'];
 		
 		$output['page'] = 1;
-		$output['totalReplies'] = $this->model->count('forum_posts', array('topicId' => $getTopic['topicId'], 'buried' => 0));
-		$output['numPages'] = ceil($output['totalReplies'] / $this->data['app']['meta']['postsPerPage']);
+		$output['totalReplies'] = Slick_App_Forum_Post_Model::getNumTopicReplies($this->topic['topicId']);
+		$output['numPages'] = Slick_App_Forum_Post_Model::getNumTopicPages($this->topic['topicId']);
 		if(isset($_GET['page'])){
 			$page = intval($_GET['page']);
 			if($page > 1 AND $page <= $output['numPages']){
@@ -230,8 +230,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$numReplies = $this->model->count('forum_posts', 'topicId', $this->topic['topicId']);
-		$numPages = ceil($numReplies / $this->data['app']['meta']['postsPerPage']);
+		$numPages = Slick_App_Forum_Post_Model::getNumTopicPages($this->topic['topicId']);
 		$page = '';
 		if($numPages > 1){
 			$page = '?page='.$numPages;

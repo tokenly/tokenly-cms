@@ -55,8 +55,8 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		$useData['postId'] = $post;
 		
 
-		$numReplies = $this->count('forum_posts', 'topicId', $appData['topic']['topicId']);
-		$numPages = ceil($numReplies / $appData['app']['meta']['postsPerPage']);
+		$numReplies = Slick_App_Forum_Post_Model::getNumTopicReplies($appData['topic']['topicId']);
+		$numPages = Slick_App_Forum_Post_Model::getNumTopicPages($appData['topic']['topicId']);
 		$page = '';
 		if($numPages > 1){
 			$page = '?page='.$numPages;
@@ -138,8 +138,23 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		}
 		
 		$getPost = $this->get('forum_posts', $id);
+		$numReplies = Slick_App_Forum_Post_Model::getNumTopicReplies($appData['topic']['topicId']);
+		$numPages = Slick_App_Forum_Post_Model::getNumTopicPages($appData['topic']['topicId']);
+		$page = '';
+		if($numPages > 1){
+			$page = '?page='.$numPages;
+		}		
 		
 		if($getPost['trollPost'] != 1){
+			$notifyData = $appData;
+			$notifyData['postId'] = $id;
+			$notifyData['page'] = $page;
+			$notifyData['postContent'] = $useData['content'];
+
+			mention($useData['content'], 'emails.forumPostMention',
+					$getPost['userId'], $id, 'forum-reply', $notifyData);			
+			
+			
 			mention($useData['content'], '%username% has mentioned you in a 
 					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['topic']['url'].'">forum post.</a>',
 					$appData['user']['userId'], $id, 'forum-reply');
@@ -299,7 +314,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		if(!$getPost){
 			return false;
 		}
-		$getAllReplies = $this->getAll('forum_posts', array('topicId' => $getPost['topicId']), array('postId'), 'postTime', 'asc');
+		$getAllReplies = $this->getAll('forum_posts', array('topicId' => $getPost['topicId'], 'buried' => 0, 'trollPost' => 0), array('postId'), 'postTime', 'asc');
 		$totalReplies = count($getAllReplies);
 		$numPages = ceil($totalReplies / $perPage);
 		
@@ -317,6 +332,31 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		
 		return $page;
 		
+	}
+	
+	public static function getNumTopicReplies($topicId)
+	{
+		$model = new Slick_Core_Model;
+		$count = $model->fetchSingle('SELECT count(*) as total
+									 FROM forum_posts
+									 WHERE topicId = :topicId
+									 AND buried = 0 AND trollPost = 0', array(':topicId' => $topicId), 0, true);
+									 
+		return $count['total'];
+	}
+	
+	public static function getNumTopicPages($topicId)
+	{
+		$model = new Slick_App_Meta_Model;
+		$count = Slick_App_Forum_Post_Model::getNumTopicReplies($topicId);
+		$forumApp = $model->get('apps', 'forum', array(), 'slug');
+		$settings = $model->appMeta($forumApp['appId']);
+		$perPage = 10;
+		if(isset($settings['postsPerPage'])){
+			$perPage = $settings['postsPerPage'];
+		}
+		$numPages = ceil($count / $perPage);
+		return $numPages;
 	}
 	
 	
