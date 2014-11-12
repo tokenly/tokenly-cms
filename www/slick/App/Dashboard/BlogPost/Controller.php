@@ -101,7 +101,7 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$output['form'] = $this->model->getPostForm(0, $this->data['themeData'], $this->data['site']['siteId']);
+		$output['form'] = $this->model->getPostForm(0, $this->data['site']['siteId']);
 		$output['formType'] = 'Add';
 
 		if(!$this->data['perms']['canPublishPost']){
@@ -215,7 +215,7 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
 		$getPost['categories'] = $this->model->getPostFormCategories($getPost['postId']);
 		
 		$output = array('view' => 'form');
-		$output['form'] = $this->model->getPostForm($this->args[3], $this->data['themeData'], $this->data['site']['siteId']);
+		$output['form'] = $this->model->getPostForm($this->args[3], $this->data['site']['siteId']);
 		$output['formType'] = 'Edit';
 		$output['post'] = $getPost;
 		

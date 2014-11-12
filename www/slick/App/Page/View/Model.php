@@ -78,21 +78,27 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 							$newStr = str_replace('['.$match.']', '', $newStr);
 							continue 2;
 						}
-						$class = new $tag['class'];
+						$paramData = array();
 						if(isset($exp[1])){
 							$params = explode(',', $exp[1]);
-							$paramData = array();
 							foreach($params as $param){
 								$expP = explode('=', $param);
 								if(isset($expP[1])){
-									$paramData[$expP[0]] = $expP[1];
+									$expVals = explode('|', $expP[1]);
+									if(isset($expVals[1])){
+										$paramData[$expP[0]] = $expVals;
+									}
+									else{
+										$paramData[$expP[0]] = $expP[1];
+									}
 								}
 								else{
 									$paramData[] = $param;
 								}
 							}
-							$class->params = $paramData;
-						}
+						}						
+						$class = new $tag['class']($paramData);
+						$class->params = $paramData;
 						$newStr = str_replace('['.$match.']', $class->display(), $newStr);
 					}
 				}
