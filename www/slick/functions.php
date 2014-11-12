@@ -45,7 +45,6 @@ function convertFloat($float)
 		$str = str_replace('.', '', $str);
 	}
 	return $str;
-	
 }
 
 

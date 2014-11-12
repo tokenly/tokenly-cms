@@ -124,6 +124,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$useData['spice'] = $genPass['salt'];
 		$useData['regDate'] = timestamp();
 		$useData['slug'] = genURL($data['username']);
+		$useData['slug'] = $this->checkSlugExists($useData['slug']);
 		
 		//generate activation code
 		$useData['activate_code'] = hash('sha256', time().$genPass['salt'].$useData['slug'].mt_rand(0,1000));
@@ -463,5 +464,24 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		return $totalPosts;
 	}
 	
+	public function checkSlugExists($slug, $ignore = 0, $count = 0)
+	{
+		$useslug = $slug;
+		if($count > 0){
+			$useslug = $slug.'-'.$count;
+		}
+		$get = $this->get('users', $useslug, array('userId', 'slug'), 'slug');
+		if($get AND $get['userId'] != $ignore){
+			//slug exists already, search for next level of slug
+			$count++;
+			return $this->checkSlugExists($slug, $ignore, $count);
+		}
+		
+		if($count > 0){
+			$slug = $slug.'-'.$count;
+		}
+
+		return $slug;
+	}		
 
 }
