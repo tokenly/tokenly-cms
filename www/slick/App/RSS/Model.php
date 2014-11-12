@@ -83,8 +83,8 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 				$audio = '';
 				if(isset($post['audio-url']) AND trim($post['audio-url']) != ''){
 					$audio = $post['audio-url'];
-					if(isset($post['soundcloud-id']) AND trim($post['soundcloud-id']) != ''){
-						//$audio .= '&ltb.mp3';
+					if(isset($post['soundcloud-id']) AND trim($post['soundcloud-id']) != '' AND !strpos($audio, 'amazonaws')){
+						//$audio .= '&ltb=/ltb.mp3';
 					}
 				}
 				elseif(isset($post['soundcloud-id']) AND trim($post['soundcloud-id']) != ''){
@@ -92,9 +92,12 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 				}
 				
 				$audio = str_replace('https://', 'http://', $audio);
+
 				
 				
 				if(trim($audio) != ''){
+					//use proxy link instead..
+					$audio = $getPostSite['url'].'/rss/pod-proxy/'.$post['postId'].'.mp3';
 					if(isset($post['audio-length']) AND trim($post['audio-length']) != ''){
 						$audioLength = intval($post['audio-length']);
 					}

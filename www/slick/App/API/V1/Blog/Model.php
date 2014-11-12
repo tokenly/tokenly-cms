@@ -344,7 +344,14 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			}
 			
 			if(!isset($getPosts[$key]['audio-url']) AND isset($getPosts[$key]['soundcloud-id'])){
-				$getPosts[$key]['audio-url'] = 'http://api.soundcloud.com/tracks/'.$getPosts[$key]['soundcloud-id'].'/stream?client_id='.SOUNDCLOUD_ID;
+				$streamsURL = 'http://api.soundcloud.com/tracks/'.$getPosts[$key]['soundcloud-id'].'/streams?client_id='.SOUNDCLOUD_ID;
+				$getStream = json_decode(file_get_contents($streamsURL), true);
+				/*if($getStream AND isset($getStream['http_mp3_128_url'])){
+					$getPosts[$key]['audio-url'] = $getStream['http_mp3_128_url'];
+				}
+				else{*/
+					$getPosts[$key]['audio-url'] = 'http://api.soundcloud.com/tracks/'.$getPosts[$key]['soundcloud-id'].'/stream?client_id='.SOUNDCLOUD_ID.'&allow_redirects=true';
+				//}
 			}
 			
 			if($post['formatType'] == 'markdown'){
