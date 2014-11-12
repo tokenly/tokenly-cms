@@ -46,13 +46,27 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 	public function getUserFirstViews($userId, $timeframe = false)
 	{
 		$values = array(':id' => $userId);
-		$sql = 'SELECT popId FROM pop_firstView WHERE userId = :id';
+		$sql = 'SELECT popId, popDate FROM pop_firstView WHERE userId = :id';
 		if(is_array($timeframe)){
 			$sql .= ' AND popDate >= "'.$timeframe['start'].'" AND popDate <= "'.$timeframe['end'].'"';
 		}
 		$get = $this->fetchAll($sql, $values);
 		
-		return count($get);
+		$num = 0;
+		$dayNums = array();
+		foreach($get as $row){
+			$viewDate = date('Y-m-d', strtotime($row['popDate']));
+			if(!isset($dayNums[$viewDate])){
+				$dayNums[$viewDate] = 1;
+			}
+			else{
+				$dayNums[$viewDate]++;
+			}
+			$num++;
+		}
+		$total = count($get);
+		
+		return array('total' => $total, 'days' => $dayNums);
 	}
 	
 	public function getNumUserComments($userId, $timeframe = false, $minLength = 0)
@@ -248,7 +262,12 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			switch($field){
 				case 'views':
 					$num = $this->getUserFirstViews($userId, $timeframe);
-					$score = $num * $this->weights['viewScore'];
+					//$score = $num * $this->weights['viewScore'];
+					foreach($num['days'] as $numDay => $dayPosts){
+						$score += $this->diminishScore($dayPosts, $this->weights['viewScore']);
+					}
+					$output['extra'] = $num['days'];
+					$num = $num['total'];					
 					break;
 				case 'register':
 					$check = $this->checkUserIsNew($userId, $timeframe);
@@ -289,7 +308,8 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 				case 'likes':
 					$num = $this->getNumUserLikes($userId, $timeframe);
 					foreach($num['days'] as $numDay => $dayPosts){
-						$score += $this->diminishScore($dayPosts, $this->weights['likeScore']);
+						//$score += $this->diminishScore($dayPosts, $this->weights['likeScore']);
+						$score += $dayPosts * $this->weights['likeScore'];
 					}		
 					$output['extra'] = $num['days'];
 					$num = $num['total'];						

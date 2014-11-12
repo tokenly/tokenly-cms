@@ -36,10 +36,12 @@ class Slick_Tags_LTBStats
 			$balances3 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 2000));
 			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
 			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
+			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
 			$balances = array_merge($balances, $balances2);
 			$balances = array_merge($balances, $balances3);
 			$balances = array_merge($balances, $balances4);
 			$balances = array_merge($balances, $balances5);
+			$balances = array_merge($balances, $balances6);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
 				if($balance['quantity'] == 0){
@@ -338,9 +340,10 @@ class Slick_Tags_LTBStats
 					<li><em>Unique page view:</em> <?= $appMeta['pop-view-weight'] ?></li>
 					<li><em>Magic word:</em> <?= $appMeta['pop-listen-weight'] ?></li>
 					<li><em>Post "like" received:</em> <?= $appMeta['pop-like-weight'] ?></li>
-					<li><em>Newly registered (one time):</em> <?= $appMeta['pop-register-weight'] ?></li>
 					<li><em>Active Referral:</em> <?= $appMeta['pop-referral-weight'] ?></li>
-					<li><strong>Note:</strong> comments, posts and "likes" have diminishing returns the more frequently they are done each day.<br>
+					<li><strong>Note:</strong> article comments, forum posts and page views have daily diminishing returns.
+												<br>
+												Example: 1 forum post a day will get you 10 points each time, but 2 forum posts will only get you 15 points.<br>
 							<a href="https://docs.google.com/document/d/1L7HmE8IupFiSrfqk9BgNa4Zg9XogqtScyQjTw0k2xCc" target="_blank">See here</a>
 							 for more information.</li>
 				</ul>
@@ -478,7 +481,7 @@ class Slick_Tags_LTBStats
 				$report_type = $expMatch[0];
 				$distId = intval($expMatch[1]);
 				$getDist = $this->model->get('xcp_distribute', $distId);
-				if(!$getDist OR $getDist['complete'] == 0){
+				if(!$getDist){
 					continue;
 				}
 				else{
@@ -1034,14 +1037,15 @@ class Slick_Tags_LTBStats
 		$curDate = timestamp();
 		$diff = strtotime($startDate, 0) - strtotime($curDate, 0);
 		$weeks = intval(abs(floor($diff / 604800))) - 1;
-		$weekStart = strtotime($startDate) + (604800 * $weeks) + 86400;
-		$weekEnd = strtotime($startDate) + ((604800 * $weeks) + 604800 + 86340);
+		$weekStart = strtotime($startDate) + (604800 * $weeks) + (86400 + 3600);
+		$weekEnd = strtotime($startDate) + ((604800 * $weeks) + 604800 + (86340 + 3600));
 		$weekStartDate = date('F jS, Y', $weekStart);
 		$weekEndDate = date('F jS, Y', $weekEnd);
 		$weekName = 'Week #'.($weeks + 1).' '.$weekStartDate.' - '.$weekEndDate;
+		$timeframe = array('start' => date('Y-m-d H:i:s', $weekStart), 'end' => date('Y-m-d H:i:s', $weekEnd));
 		
 		$popModel = new Slick_App_LTBcoin_POP_Model;
-		$getScore = $popModel->getPopScore($user['userId'], array('start' => date('Y-m-d H:i:s', $weekStart), 'end' => date('Y-m-d H:i:s', $weekEnd)),
+		$getScore = $popModel->getPopScore($user['userId'], $timeframe,
 											array('comments', 'posts', 'threads', 'views', 'register', 'magic-words', 'likes'));
 											
 		$popLeaders = $this->getLeaderboardData('pop');
