@@ -2,7 +2,7 @@
 class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 {
 
-	public function getPostForm($postId = 0, $theme, $siteId)
+	public function getPostForm($postId = 0, $siteId, $andUseMeta = true)
 	{
 		$getPost = false;
 		if($postId != 0){
@@ -134,37 +134,39 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		}
 		$form->add($categories);
 		
-		$getMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $siteId, 'hidden' => 0, 'active' => 1), array(), 'rank', 'asc');
-		foreach($getMetaTypes as $field){
-			$slug = 'meta_'.$field['metaTypeId'];
-			switch($field['type']){
-				case 'textbox':
-					$elem = new Slick_UI_Textbox($slug);
-					break;
-				case 'textarea':
-					$elem = new Slick_UI_Textarea($slug);
-					break;
-				case 'select':
-					$elem = new Slick_UI_Select($slug);
-					$options = explode("\n", $field['options']);
-					foreach($options as $option){
-						$option = trim($option);
-						$elem->addOption($option, $option);
-					}
-					break;
-			}
-
-			$elem->setLabel($field['label']);
-			
-			if($postId != 0){
-				$getVal = $this->fetchSingle('SELECT * FROM blog_postMeta WHERE postId = :id AND metaTypeId = :typeId',
-											array(':id' => $postId, ':typeId' => $field['metaTypeId']));
-				if($getVal){
-					$elem->setValue($getVal['value']);
+		if($andUseMeta){
+			$getMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $siteId, 'hidden' => 0, 'active' => 1), array(), 'rank', 'asc');
+			foreach($getMetaTypes as $field){
+				$slug = 'meta_'.$field['metaTypeId'];
+				switch($field['type']){
+					case 'textbox':
+						$elem = new Slick_UI_Textbox($slug);
+						break;
+					case 'textarea':
+						$elem = new Slick_UI_Textarea($slug);
+						break;
+					case 'select':
+						$elem = new Slick_UI_Select($slug);
+						$options = explode("\n", $field['options']);
+						foreach($options as $option){
+							$option = trim($option);
+							$elem->addOption($option, $option);
+						}
+						break;
 				}
+
+				$elem->setLabel($field['label']);
+				
+				if($postId != 0){
+					$getVal = $this->fetchSingle('SELECT * FROM blog_postMeta WHERE postId = :id AND metaTypeId = :typeId',
+												array(':id' => $postId, ':typeId' => $field['metaTypeId']));
+					if($getVal){
+						$elem->setValue($getVal['value']);
+					}
+				}
+				
+				$form->add($elem);
 			}
-			
-			$form->add($elem);
 		}
 		
 		$form->add($excerpt);
@@ -260,6 +262,7 @@ class Slick_App_Dashboard_BlogPost_Model extends Slick_Core_Model
 		$useData['url'] = genURL($useData['url']);
 		$useData['url'] = $this->checkURLExists($useData['url']);
 		$useData['postDate'] = timestamp();
+		$useData['editTime'] = $useData['postDate'];
 		
 		$getExcerpt = false;
 		if(isset($_POST['excerpt_inkpad'])){
