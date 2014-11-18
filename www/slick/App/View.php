@@ -34,7 +34,6 @@ class Slick_App_View extends Slick_Core_View
         if($data['view'] != '404' AND $data['view'] != '403'){
 			if(isset($data['app'])){
 				if($data['module']){
-					
 					$path .= $data['app']['location'].'/'.str_replace('_', '/', $data['module']['location']).'/';
 				}
 				else{
@@ -50,7 +49,12 @@ class Slick_App_View extends Slick_Core_View
 			$data['template'] = 'default';
 			$data['title'] = '404 Page Not Found';
 		}
-
+		
+		
+		if(isset($data['force-view'])){
+			$path = '';
+			$data['view'] = '/views/'.$data['force-view'];
+		}
         $viewPath = SITE_PATH.'/themes/'.$data['theme'].$path.$data['view'].'.php';
         if(!file_exists($viewPath)){
 			$viewPath = SITE_PATH.'/themes/'.$path.$data['view'].'.php';
@@ -296,7 +300,19 @@ class Slick_App_View extends Slick_Core_View
 		return $block['content'];
 		
 	}
-
+	
+	public static function displayFlash($name, $type = true)
+	{
+		$getFlash = Slick_Util_Session::getFlash($name);
+		if(!$getFlash){
+			return false;
+		}
+		$class = '';
+		if($type){
+			$class = Slick_Util_Session::getFlash($name.'-type');
+		}
+		return '<p class="'.$class.'">'.$getFlash.'</p>';
+	}
 
 }
 
