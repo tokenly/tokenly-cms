@@ -12,7 +12,7 @@
 </p>
 <?php
 
-if(isset($error) AND $error != null){
+if(isset($error) AND $error != nullz){
 	echo '<p class="error">'.$error.'</p>';
 }
 

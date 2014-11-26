@@ -21,7 +21,17 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		return true;
 	}
 	
-
+	public function clearUserMeta($userId, $key)
+	{
+		$get = $this->getUserMeta($userId, $key, 1);
+		if($get){
+			$delete = $this->delete('user_meta', $get['metaId']);
+			if($delete){
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public function updateStat($key, $value, $label = '')
 	{

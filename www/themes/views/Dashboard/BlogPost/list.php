@@ -36,15 +36,13 @@ if(count($postList) == 0){
 }
 else{
 	
-echo '<table class="admin-table mobile-table">
+echo '<table class="admin-table data-table submissions-table">
 		<thead>
 			<tr>
-				<th>ID</th>
 				<th>Title</th>
 				<th>Author</th>
 				<th>Status</th>
-				<th>Posted Date</th>
-				<th></th>
+				<th>Publish Date</th>
 				<th></th>
 			</tr>
 		</thead>
@@ -52,11 +50,12 @@ echo '<table class="admin-table mobile-table">
 foreach($postList as $post){
 	$editLink = '';
 	$deleteLink = '';
-	
+	$titleLink = $post['title'];
 	if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
 		OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
 		if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
-			$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'">View/Edit</a>';
+			$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/submissions/edit/'.$post['postId'].'">View/Edit</a>';
+			$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/submissions/edit/'.$post['postId'].'">'.$post['title'].'</a>';
 		}
 	}
 	
@@ -69,13 +68,16 @@ foreach($postList as $post){
 	
 	
 	echo '<tr>';
-	echo '<td>'.$post['postId'].'</td>
-		  <td>'.$post['title'].'</td>
+	echo '
+		  <td class="post-title">'.$titleLink.'</td>
 		  <td>'.$post['author'].'</td>
 		  <td>'.$post['status'].'</td>
-		  <td>'.formatDate($post['postDate']).'</td>
-		  <td>'.$editLink.'</td>
-		  <td>'.$deleteLink.'</td>';
+		  <td>'.date('Y/m/d \<\b\r\> H:i', strtotime($post['publishDate'])).'</td>
+		  <td class="table-actions">
+			'.$editLink.'
+			'.$deleteLink.'
+		  </td>
+			';
 	echo '</tr>';
 	
 }
@@ -83,3 +85,16 @@ echo '</tbody></table>';
 
 }
 ?>
+<link href="//cdn.datatables.net/1.10.3/css/jquery.dataTables.css" rel="stylesheet" />
+<script type="text/javascript" src="//cdn.datatables.net/1.10.3/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('.data-table').DataTable({
+			searching: true,
+			lengthChange: false,
+			paging: true,
+			iDisplayLength: 20,
+			"order": [[ 3, "desc" ]]
+		});
+	});
+</script>

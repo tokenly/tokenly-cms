@@ -1097,8 +1097,6 @@ CREATE TABLE `payment_order` (
   `orderType` varchar(100) DEFAULT NULL,
   `completeTime` datetime DEFAULT NULL,
   PRIMARY KEY (`orderId`),
-  UNIQUE KEY `address_2` (`address`),
-  UNIQUE KEY `account_2` (`account`),
   KEY `address` (`address`),
   KEY `account` (`account`),
   KEY `asset` (`asset`),

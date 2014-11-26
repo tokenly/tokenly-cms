@@ -153,6 +153,9 @@ class Slick_UI_Form
 	
 	public function field($field)
 	{
+		if(!isset($this->fields[$field])){
+			return false;
+		}
 		return $this->fields[$field];
 	}
 	

@@ -8,7 +8,6 @@ class Slick_App_ModControl extends Slick_Core_Controller
 	{
 		parent::__construct();
 		$this->model = new Slick_Core_Model;
-		
 	}
 	
 	public function init()
@@ -16,7 +15,6 @@ class Slick_App_ModControl extends Slick_Core_Controller
 		$output = array();
 		if(intval($this->data['module']['checkAccess']) === 1){
 			Slick_App_AppControl::checkModuleAccess($this->data['module']['moduleId']);
-
 		}
 		
 		return $output;
@@ -35,8 +33,6 @@ class Slick_App_ModControl extends Slick_Core_Controller
 				$this->model->insert('group_access', array('groupId' => $getRoot['groupId'], 'moduleId' => $moduleId));
 			}
 		}
-				
-		
+		return $getModule;
 	}
-	
 }

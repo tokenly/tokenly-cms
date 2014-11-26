@@ -1,6 +1,7 @@
 <?php
 class Slick_Tags_ForumBuilder
 {
+
 	function __construct()
 	{
 		$this->model = new Slick_Core_Model;

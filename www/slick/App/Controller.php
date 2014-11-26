@@ -13,7 +13,7 @@ class Slick_App_Controller extends Slick_Core_Controller
 			$this->args = explode('/', $_REQUEST['params']);	
 		}
         $this->model = new Slick_Core_Model;
-        $this->view = new SLick_App_View;
+        $this->view = new Slick_App_View;
 
 	}
 	
