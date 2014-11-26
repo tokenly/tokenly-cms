@@ -191,4 +191,34 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 		}
 		return false;
 	}
+	
+	public function getWeightedUserTokenScore($userId, $opUserId, $token, $minScore = 0, $maxScore = 5, $tokenStep = 1000, $maxTokens = 500000)
+	{
+		$userBalances = $this->getUserBalances($userId, true);
+		$opBalances = $this->getUserBalances($opUserId, true);
+		$userTokens = 0;
+		$opTokens = 0;
+		$maxSteps = $maxTokens / $tokenStep;
+		$perStep = $maxScore / $maxSteps;
+		$score = 0;		
+		
+		if(isset($userBalances[$token])){ $userTokens = round($userBalances[$token]); }
+		if(isset($opBalances[$token])){ $opTokens = round($opBalances[$token]); }
+		
+		$tokenDiff = $userTokens - $opTokens;
+		if($tokenDiff > $maxTokens){ $tokenDiff = $maxTokens; }
+		
+		$numSteps = $tokenDiff / $tokenStep;
+		if($numSteps > $maxSteps){ $numSteps = $maxSteps; }
+		if($numSteps < 0){ $numSteps = 0; }
+		
+		for($i = 0; $i < $numSteps; $i++){
+			$score += $perStep;
+		}
+		
+		if($score <= $minScore){ $score = $minScore; }
+		if($score >= $maxScore){ $score = $maxScore; }
+		
+		return array('score' => $score, 'user' => $userTokens, 'op' => $opTokens);
+	}	
 }

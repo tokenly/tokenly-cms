@@ -307,11 +307,14 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					break;
 				case 'likes':
 					$num = $this->getNumUserLikes($userId, $timeframe);
+					$totalLikes = 0;
 					foreach($num['days'] as $numDay => $dayPosts){
 						//$score += $this->diminishScore($dayPosts, $this->weights['likeScore']);
-						$score += $dayPosts * $this->weights['likeScore'];
-					}		
-					$output['extra'] = $num['days'];
+						$score += $dayPosts['finalScore'] * $this->weights['likeScore'];
+						$totalLikes += $dayPosts['num'];
+					}
+					$num['days']['total_likes'] = $totalLikes;
+					$output['extra']['likes'] = $num['days'];
 					$num = $num['total'];						
 					break;
 				case 'referrals':
@@ -443,32 +446,59 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		$num = 0;
 		$dayNums = array();
 		foreach($this->likeData as $like){
-			switch($like['type']){
-				case 'post':
-					$getItem = $this->get('forum_posts', $like['itemId']);
-					break;
-				case 'topic':
-					$getItem = $this->get('forum_topics', $like['itemId']);
-					break;
-				default:
-					$getItem = false;
-					break;
+			if($like['opUser'] != 0){
+				$opUser = $like['opUser'];
 			}
-			if(!$getItem OR !isset($getItem['userId'])){
-				continue;
+			else{
+				switch($like['type']){
+					case 'post':
+						$getItem = $this->get('forum_posts', $like['itemId']);
+						break;
+					case 'topic':
+						$getItem = $this->get('forum_topics', $like['itemId']);
+						break;
+					default:
+						$getItem = false;
+						break;
+				}
+				if(!$getItem OR !isset($getItem['userId'])){
+					continue;
+				}
+				$opUser = $getItem['userId'];
 			}
 			
-			if($getItem['userId'] == $userId AND $like['userId'] != $userId){
+			if($opUser == $userId AND $like['userId'] != $userId){
 				$likeDate = date('Y-m-d', strtotime($like['likeTime']));
 				if(!isset($dayNums[$likeDate])){
-					$dayNums[$likeDate] = 1;
+					$dayNums[$likeDate] = array('num' => 1, 'users' => array());
 				}
 				else{
-					$dayNums[$likeDate]++;
+					$dayNums[$likeDate]['num']++;
+				}
+				if(!isset($dayNums[$likeDate]['users'][$like['userId']])){
+					$dayNums[$likeDate]['users'][$like['userId']] = array('num' => 1, 'score' => $like['score']);
+				}
+				else{
+					$dayNums[$likeDate]['users'][$like['userId']]['num']++;
+					$dayNums[$likeDate]['users'][$like['userId']]['score'] += $like['score'];
 				}
 				$num++;
 			}
 		}
+		
+		foreach($dayNums as &$day){
+			foreach($day['users'] as &$dayUser){
+				$perPoint = $dayUser['score'] / $dayUser['num'];
+				$dayUser['finalScore'] = $this->diminishScore($dayUser['num'], $perPoint);
+			}
+		}
+		foreach($dayNums as &$day){
+			$day['finalScore'] = 0;
+			foreach($day['users'] as $dayUser){
+				$day['finalScore'] += $dayUser['finalScore'];
+			}
+		}
+		
 		return array('total' => $num, 'days' => $dayNums);	
 	}
 	

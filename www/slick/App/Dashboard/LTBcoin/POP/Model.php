@@ -102,7 +102,7 @@ class Slick_App_Dashboard_LTBcoin_POP_Model extends Slick_Core_Model
 		if(!isset($data['label'])){
 			$data['label'] = '';
 		}
-		
+
 		$useData = array('totalPoints' => $getScores['totalPoints'], 'info' => json_encode($getScores['data']), 'reportDate' => timestamp(),
 						  'startDate' => $data['startDate'], 'endDate' => $data['endDate'], 'label' => $data['label']);
 						  

@@ -526,6 +526,21 @@ function replaceNonSGML($string)
 	return $string;
 }
 
-
+	function gcd($a, $b)
+	{
+	  while ( $b != 0)
+	  {
+		 $remainder = $a % $b;
+		 $a = $b;
+		 $b = $remainder;
+	  }
+	  return abs ($a);
+	}
+	
+	function getRatio($num1, $num2)
+	{
+		$gcd = gcd($num1,$num2);
+		return array($num1/$gcd,$num2/$gcd);
+	}
 
 ?>

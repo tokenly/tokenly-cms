@@ -31,8 +31,16 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $this->data['module']['moduleId'], $getTopic['topicId'], 'topic');
 			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $boardModule['moduleId'], $getTopic['boardId'], 'board');
 			$this->data['perms'] = $output['perms'];
-		}		
+		}
 		
+		if(isset($this->data['app']['meta']['min-required-upvote-points'])){
+			$getUpvoteScore = $this->model->getUserUpvoteScore($this->data['user']['userId']);
+			if($getUpvoteScore < intval($this->data['app']['meta']['min-required-upvote-points'])){
+				$this->data['perms']['canUpvoteDownvote'] = false;
+				$output['perms']['canUpvoteDownvote'] = false;
+			}
+		}
+
 		$getBoard = $this->model->get('forum_boards', $getTopic['boardId']);
 		$checkCat = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getBoard['categoryId'], 'category');
 		$checkBoard = $this->tca->checkItemAccess($this->data['user'], $boardModule['moduleId'], $getTopic['boardId'], 'board');
@@ -483,6 +491,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
+		if(!$this->data['perms']['canUpvoteDownvote']){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission for this';
+			echo json_encode($output);
+			die();
+		}		
+		
 		$getLike = $this->model->fetchSingle('SELECT *
 											  FROM user_likes
 											  WHERE userId = :userId AND itemId = :id AND type = "topic"',
@@ -494,8 +509,21 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
+		$inventory = new Slick_App_Dashboard_LTBcoin_Inventory_Model;
+		$getScore = $inventory->getWeightedUserTokenScore($this->data['user']['userId'], $this->topic['userId'], 
+															$this->data['app']['meta']['weighted-votes-token'], 
+															$this->data['app']['meta']['min-upvote-points'], 
+															$this->data['app']['meta']['max-upvote-points'], 1000,
+															$this->data['app']['meta']['weighted-vote-token-cap']);
+															
+		if($this->data['user']['userId'] == $this->topic['userId']){
+			$getScore['score'] = 0;
+		}
+		
 		$like = $this->model->insert('user_likes', array('userId' => $this->data['user']['userId'],
-														'itemId' => $this->topic['topicId'], 'type' => 'topic', 'likeTime' => timestamp()));
+														'itemId' => $this->topic['topicId'], 'type' => 'topic', 'likeTime' => timestamp(),
+														'score' => $getScore['score'],
+														'opUser' => $this->topic['userId']));
 		if(!$like){
 			http_response_code(400);
 			$output['error'] = 'Error adding like';
@@ -569,6 +597,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
+		if(!$this->data['perms']['canUpvoteDownvote']){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission for this';
+			echo json_encode($output);
+			die();
+		}
+		
 		$getLike = $this->model->fetchSingle('SELECT *
 											  FROM user_likes
 											  WHERE userId = :userId AND itemId = :id AND type = "post"',
@@ -580,8 +615,21 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
+		$inventory = new Slick_App_Dashboard_LTBcoin_Inventory_Model;
+		$getScore = $inventory->getWeightedUserTokenScore($this->data['user']['userId'], $getPost['userId'], 
+															$this->data['app']['meta']['weighted-votes-token'], 
+															$this->data['app']['meta']['min-upvote-points'], 
+															$this->data['app']['meta']['max-upvote-points'], 1000,
+															$this->data['app']['meta']['weighted-vote-token-cap']);
+															
+		if($this->data['user']['userId'] == $getPost['userId']){
+			$getScore['score'] = 0;
+		}															
+		
 		$like = $this->model->insert('user_likes', array('userId' => $this->data['user']['userId'],
-														'itemId' => $getPost['postId'], 'type' => 'post', 'likeTime' => timestamp()));
+														'itemId' => $getPost['postId'], 'type' => 'post', 'likeTime' => timestamp(),
+														'score' => $getScore['score'],
+														'opUser' => $getPost['userId']));
 		if(!$like){
 			http_response_code(400);
 			$output['error'] = 'Error adding like';

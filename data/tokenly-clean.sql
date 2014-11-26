@@ -1668,6 +1668,8 @@ CREATE TABLE `user_likes` (
   `itemId` int(11) unsigned NOT NULL,
   `type` varchar(40) COLLATE utf8_unicode_ci NOT NULL,
   `likeTime` datetime DEFAULT NULL,
+  `score` DECIMAL(20,8),
+  `opUser` INT(11) unsigned DEFAULT 0,
   PRIMARY KEY (`likeId`),
   KEY `userId` (`userId`),
   KEY `itemId` (`itemId`),

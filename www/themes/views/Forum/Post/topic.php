@@ -149,17 +149,24 @@ if($page == 1){
 	
 	if($user){
 		$model = new Slick_Core_Model;
-		$hasLiked = $model->getAll('user_likes', array('userId' => $user['userId'], 'itemId' => $topic['topicId'], 'type' => 'topic'));
-		$unlike = '';
-		$likeText = 'Like';
-		if(isset($hasLiked[0])){
-			$unlike = 'unlike';
-			$likeText = 'Unlike';
+		$likeLink = '';
+		if($perms['canUpvoteDownvote']){
+			$hasLiked = $model->getAll('user_likes', array('userId' => $user['userId'], 'itemId' => $topic['topicId'], 'type' => 'topic'));
+			$unlike = '';
+			$likeText = 'Like';
+			if(isset($hasLiked[0])){
+				$unlike = 'unlike';
+				$likeText = 'Unlike';
+			}
+			$likeLink = '<a href="#" class="like-post '.$unlike.'" data-id="'.$topic['topicId'].'" title="'.$likeList.'" data-type="topic">'.$likeText.' <span>(<em>'.$topic['likes'].'</em> '.pluralize('like', $topic['likes'], true).')</span></a>';
+			
 		}
-		
+		else{
+			$likeLink = '<em title="'.$likeList.'">'.$topic['likes'].' '.pluralize('like', $topic['likes'], true).'</em>';
+		}
 		echo '	<div class="post-controls">
 					<span class="post-action" style="float: right;">
-					<a href="#" class="like-post '.$unlike.'" data-id="'.$topic['topicId'].'" title="'.$likeList.'" data-type="topic">'.$likeText.' <span>(<em>'.$topic['likes'].'</em> '.pluralize('like', $topic['likes'], true).')</span></a>';
+					'.$likeLink;
 					
 		if($perms['canPostReply'] AND $topic['locked'] == 0){
 			echo ' <a href="#post-reply" class="quote-post">Quote</a>';
@@ -332,16 +339,24 @@ if(count($replies) == 0){
 			$likeList = join(', ', $likeList);
 			
 			if($user AND $reply['buried'] != 1){
-				$hasLiked = $model->getAll('user_likes', array('userId' => $user['userId'], 'itemId' => $reply['postId'], 'type' => 'post'));
-				$unlike = '';
-				$likeText = 'Like';
-				if(isset($hasLiked[0])){
-					$unlike = 'unlike';
-					$likeText = 'Unlike';
+				$likeLink = '';
+				if($perms['canUpvoteDownvote']){
+					$hasLiked = $model->getAll('user_likes', array('userId' => $user['userId'], 'itemId' => $reply['postId'], 'type' => 'post'));
+					$unlike = '';
+					$likeText = 'Like';
+					if(isset($hasLiked[0])){
+						$unlike = 'unlike';
+						$likeText = 'Unlike';
+					}
+					$likeLink = '<a href="#" class="like-post '.$unlike.'" data-id="'.$reply['postId'].'" title="'.$likeList.'" data-type="reply">'.$likeText.' <span>(<em>'.$reply['likes'].'</em> '.pluralize('like', $reply['likes'], true).')</span></a>';
+				}
+				else{
+					$likeLink = '<em title="'.$likeList.'">'.$reply['likes'].' '.pluralize('like', $reply['likes'], true).'</em>';
 				}
 				echo '	<div class="post-controls">
 					<span class="post-action" style="float: right;">
-				<a href="#" class="like-post '.$unlike.'" data-id="'.$reply['postId'].'" title="'.$likeList.'" data-type="reply">'.$likeText.' <span>(<em>'.$reply['likes'].'</em> '.pluralize('like', $reply['likes'], true).')</span></a>';
+					'.$likeLink;
+				
 							
 				if($perms['canPostReply'] AND $topic['locked'] == 0){
 					echo ' <a href="#post-reply" class="quote-post">Quote</a>';

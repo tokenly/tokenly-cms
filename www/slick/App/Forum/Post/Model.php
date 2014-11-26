@@ -359,5 +359,14 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		return $numPages;
 	}
 	
+	public function getUserUpvoteScore($userId)
+	{
+		$count = $this->fetchSingle('SELECT SUM(score) as total FROM user_likes WHERE opUser = :userId', array(':userId' => $userId));
+		if(!$count){
+			return 0;
+		}
+		return $count['total'];
+	}
+
 	
 }
