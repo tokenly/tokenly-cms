@@ -44,7 +44,7 @@ class Slick_App_Dashboard_ForumBoard_Model extends Slick_Core_Model
 		$active->setValue(1);
 		$form->add($active);
 		
-		$description = new Slick_UI_Textarea('description');
+		$description = new Slick_UI_Markdown('description', 'markdown');
 		$description->setLabel('Description (use markdown)');
 		$form->add($description);
 		

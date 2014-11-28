@@ -15,7 +15,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		$subject->setLabel('Subject');
 		$form->add($subject);
 		
-		$message = new Slick_UI_Textarea('message', 'markdown');
+		$message = new Slick_UI_Markdown('message', 'markdown');
 		$message->addAttribute('required');
 		$message->setLabel('Message');
 		$form->add($message);

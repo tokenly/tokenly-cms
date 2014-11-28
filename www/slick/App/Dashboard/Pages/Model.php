@@ -50,9 +50,7 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 		
 		
 		if(!$getPage OR $getPage['formatType'] == 'markdown'){
-			$pagePad = $this->getInkpadUrl($pageId);
-			$content = new Slick_UI_Inkpad('content');
-			$content->setInkpad($pagePad);
+			$content = new Slick_UI_Markdown('content', 'markdown');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
@@ -95,25 +93,11 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 		$useData['url'] = genURL($useData['url']);
 		$useData['url'] = $this->checkURLExists($useData['url'], $data['siteId']);
 		
-		$getContent =false;
-		if(isset($_POST['content_inkpad'])){
-			$contentInkpad = new Slick_UI_Inkpad('content');
-			$contentInkpad->setInkpad($_POST['content_inkpad']);
-			$getContent = $contentInkpad->getValue();
-			if($getContent){
-				$useData['content'] = $getContent;
-			}
-		}			
 		
 		$add = $this->insert('pages', $useData);
 		if(!$add){
 			throw new Exception('Error adding page');
 		}
-		
-		if(isset($_POST['content_inkpad']) AND $getContent){
-			$meta = new Slick_App_Meta_Model;
-			$meta->updatePageMeta($add, 'inkpad-url', $_POST['content_inkpad']);
-		}		
 		
 		$this->updatePageIndex($add, $useData['url'], $useData['siteId']);
 		
@@ -189,26 +173,6 @@ class Slick_App_Dashboard_Pages_Model extends Slick_Core_Model
 		
 		return true;
 		
-	}
-
-	public function getInkpadUrl($pageId)
-	{
-		$meta = new Slick_App_Meta_Model;
-		if($pageId != 0){
-			$getUrl = $meta->getPageMeta($pageId, 'inkpad-url');
-			if($getUrl){
-				return $getUrl;
-			}
-		}
-
-		//generate new inkpad
-		$url = Slick_UI_Inkpad::getNewPad();
-
-		if($pageId != 0){
-			$meta->updatePageMeta($pageId, 'inkpad-url', $url);
-		}
-		
-		return $url;
 	}
 	
 	public function checkURLExists($url, $siteId, $ignore = 0, $count = 0)

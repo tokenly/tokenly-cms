@@ -5,7 +5,7 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 	{
 		$form = new Slick_UI_Form;
 		
-		$content = new Slick_UI_Textarea('content', 'markdown');
+		$content = new Slick_UI_Markdown('content', 'markdown');
 		$content->setLabel('Message');
 		$content->addAttribute('required');
 		$form->add($content);

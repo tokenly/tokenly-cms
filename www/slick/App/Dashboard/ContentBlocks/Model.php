@@ -37,9 +37,7 @@ class Slick_App_Dashboard_ContentBlocks_Model extends Slick_Core_Model
 		
 		
 		if(!$getBlock OR $getBlock['formatType'] == 'markdown'){
-			$pagePad = $this->getInkpadUrl($blockId);
-			$content = new Slick_UI_Inkpad('content');
-			$content->setInkpad($pagePad);
+			$content = new Slick_UI_Markdown('content', 'markdown');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
@@ -67,29 +65,12 @@ class Slick_App_Dashboard_ContentBlocks_Model extends Slick_Core_Model
 			}
 		}
 		
-		$getContent =false;
-		if(isset($_POST['content_inkpad'])){
-			$contentInkpad = new Slick_UI_Inkpad('content');
-			$contentInkpad->setInkpad($_POST['content_inkpad']);
-			$getContent = $contentInkpad->getValue();
-			if($getContent){
-				$useData['content'] = $getContent;
-			}
-		}			
-		
 		$add = $this->insert('content_blocks', $useData);
 		if(!$add){
 			throw new Exception('Error adding block');
 		}
-		
-		if(isset($_POST['content_inkpad']) AND $getContent){
-			$meta = new Slick_App_Meta_Model;
-			$meta->updateBlockMeta($add, 'inkpad-url', $_POST['content_inkpad']);
-		}		
-		
+			
 		return $add;
-		
-		
 	}
 		
 	public function editBlock($id, $data)
@@ -118,28 +99,6 @@ class Slick_App_Dashboard_ContentBlocks_Model extends Slick_Core_Model
 		return true;
 		
 	}
-
-	public function getInkpadUrl($blockId)
-	{
-		$meta = new Slick_App_Meta_Model;
-		if($blockId != 0){
-			$getUrl = $meta->getBlockMeta($blockId, 'inkpad-url');
-			if($getUrl){
-				return $getUrl;
-			}
-		}
-
-		//generate new inkpad
-		$url = Slick_UI_Inkpad::getNewPad();
-
-		if($blockId != 0){
-			$meta->updateBlockMeta($blockId, 'inkpad-url', $url);
-		}
-		
-		return $url;
-	}
-
-
 
 }
 

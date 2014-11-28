@@ -13,47 +13,18 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$form->setFileEnc();
 		
 		if(!$getPost OR $getPost['formatType'] == 'markdown'){
-			$inkUrlExcerpt = $this->getInkpadUrl($postId, 'inkpad-excerpt-url');
-			$excerpt = new Slick_UI_Inkpad('excerpt');
-			$excerpt->setInkpad($inkUrlExcerpt);
+			$excerpt = new Slick_UI_Markdown('excerpt', 'markdown');
 			$excerpt->setLabel('Excerpt');
 			
-			$inkUrl = $this->getInkpadUrl($postId);
-			$content = new Slick_UI_Inkpad('content');
-			$content->setInkpad($inkUrl);
+			$content = new Slick_UI_Markdown('content', 'markdown');
 			$content->setLabel('Content');
-			
-			if($getPost){
-				$getExcerptPad = $excerpt->getValue();
-				$getContentPad = $content->getValue();
-				
-				if(md5($getExcerptPad) != md5($getPost['excerpt'])){
-					$excerpt->setLabel('Excerpt <span class="unsaved">[unsaved]</span>');
-				}
-				else{
-					$excerpt->setLabel('Excerpt <span class="saved">[saved]</span>');
-				}
-				
-				if(md5($getContentPad) != md5($getPost['content'])){
-					$content->setLabel('Content <span class="unsaved">[unsaved]</span>');
-				}
-				else{
-					$content->setLabel('Content <span class="saved">[saved]</span>');
-				}				
-			}
-					
-			//$form->add($excerpt);
-			//$form->add($content);	
 		}
 		else{
 			$excerpt = new Slick_UI_Textarea('excerpt', 'mini-editor');
 			$excerpt->setLabel('Excerpt');
-			//$form->add($excerpt);
-			
 
 			$content = new Slick_UI_Textarea('content', 'html-editor');
 			$content->setLabel('Content');
-			//$form->add($content);	
 		}		
 		
 		$title = new Slick_UI_Textbox('title');
@@ -62,6 +33,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$form->add($title);
 		
 		$form->add($content);
+		$form->add($excerpt);
 		
 		$url = new Slick_UI_Textbox('url');
 		$url->setLabel('URL');
@@ -125,9 +97,6 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$coverImage->setLabel('Cover Image ('.$app['meta']['coverWidth'].'x'.$app['meta']['coverHeight'].')');
 		$form->add($coverImage);
 
-		
-
-
 		$categories = new Slick_UI_CheckboxList('categories');
 		$categories->setLabel('Categories');
 		$categories->setLabelDir('R');
@@ -173,8 +142,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			}
 		}
 		
-		$form->add($excerpt);
-		
+	
 		$notes = new Slick_UI_Textarea('notes');
 		$notes->setLabel('Notes');
 		$form->add($notes);
@@ -575,24 +543,6 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 	}
 
 
-	public function getInkpadUrl($postId, $urlKey = 'inkpad-url')
-	{
-		if($postId != 0){
-			$getUrl = $this->getPostMetaVal($postId, $urlKey);
-			if($getUrl){
-				return $getUrl;
-			}
-		}
-
-		//generate new inkpad
-		$url = Slick_UI_Inkpad::getNewPad();
-
-		if($postId != 0){
-			$this->updatePostMeta($postId, $urlKey, $url);
-		}
-		
-		return $url;
-	}
 	
 	public function checkURLExists($url, $ignore = 0, $count = 0)
 	{

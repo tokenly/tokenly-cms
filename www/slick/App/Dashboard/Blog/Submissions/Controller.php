@@ -59,9 +59,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				case 'preview':
 					$output = $this->previewPost($output);
 					break;
-				case 'checkInkpad':
-					$output = $this->checkPostInkpad();
-					break;
 				case 'check-credits':
 					$output = $this->checkCreditPayment();
 					break;
@@ -454,28 +451,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 		}				
 		
-		
-		if($getPost['formatType'] == 'markdown'){
-			$getInkpad = $this->model->getPostMetaVal($getPost['postId'], 'inkpad-url');
-			$getExcerptInkpad = $this->model->getPostMetaVal($getPost['postId'], 'inkpad-excerpt-url');
-			$inkpad = new Slick_UI_Inkpad('inkpad');
-			if($getInkpad){
-				$inkpad->setInkpad($getInkpad);
-				$content = $inkpad->getValue();
-				if($content){
-					$getPost['content'] = $content;
-				}
-			}
-			if($getExcerptInkpad){
-				$inkpad->setInkpad($getExcerptInkpad);
-				$excerpt = $inkpad->getValue();
-				if($excerpt){
-					$getPost['excerpt'] = $excerpt;
-				}
-			}
-		}
-		
-		
 		$cats = array();
 		foreach($getCategories as $cat){
 			$getCat = $this->model->get('blog_categories', $cat['categoryId']);
@@ -498,67 +473,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		
 	}
 	
-	private function checkPostInkpad()
-	{
-		if(!isset($this->args[3])){
-			return array('view' => '404');
-		}
-		
-		$getPost = $this->model->get('blog_posts', $this->args[3]);
-		if(!$getPost){
-			return array('view' => '404');
-		}
-		
-		$tca = new Slick_App_LTBcoin_TCA_Model;
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		if(!$postTCA){
-			return array('view' => '403');
-		}
-		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-		foreach($getCategories as $cat){
-			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
-				return array('view' => '403');
-			}
-		}			
-		
-		ob_end_clean();
-		header('Content-Type: application/json');		
-		
-		$output = array('result' => null, 'error' => null);
-		$excerptPad = $this->model->getPostMetaVal($getPost['postId'], 'inkpad-excerpt-url');
-		$contentPad = $this->model->getPostMetaVal($getPost['postId'], 'inkpad-url');
-		
-		$inkpad = new Slick_UI_Inkpad('inkpad');
-		$inkpad2 = new Slick_UI_Inkpad('inkpad');
-		if(!$excerptPad OR !$contentPad){
-			$output['error'] = 'No Inkpad URL set';
-		}
-		else{
-			$inkpad->setInkpad($excerptPad);
-			$inkpad2->setInkpad($contentPad);
-			
-			$excerpt = $inkpad->getValue();
-			$content = $inkpad2->getValue();
-			if(!$excerpt OR !$content){
-				$output['error'] = 'Error getting pad data';
-			}
-			else{
-				$output['result'] = array('excerpt' => false, 'content' => false);
-				if(md5($excerpt) == md5($getPost['excerpt'])){
-					$output['result']['excerpt'] = true;
-				}
-				if(md5($content) == md5($getPost['content'])){
-					$output['result']['content'] = true;
-				}
-			}
-		}
-		
-		echo json_encode($output);
-		die();
-	}
 	
 	protected function checkCreditPayment()
 	{

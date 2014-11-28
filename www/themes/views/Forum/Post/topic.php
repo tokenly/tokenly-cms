@@ -432,13 +432,6 @@ if(!$user OR $perms['canPostReply']){
 		elseif(isset($form)){
 			echo $form->display();
 			
-			echo '<div class="markdown-preview">
-						<h4>Live Preview</h4>
-						<div class="markdown-preview-cont">
-						
-						</div>
-					</div>';
-					
 			echo '<p><em>Use <strong>markdown</strong> formatting for post. See <a href="#" class="markdown-trigger" target="_blank">formatting guide</a>
 						for more information.</em></p>
 					<div style="display: none;" id="markdown-guide">
@@ -460,7 +453,6 @@ if(!$user OR $perms['canPostReply']){
 }
 ?>
 
-<script type="text/javascript" src="<?= THEME_URL ?>/js/Markdown.Converter.js"></script>
 <script type="text/javascript">
 	$(document).ready(function(){
 		$('.quote-post').click(function(e){
@@ -483,13 +475,6 @@ if(!$user OR $perms['canPostReply']){
 			
 		});
 		
-		$('#markdown').on('input', function(e){
-			var thisVal = $(this).val();
-			var converter = new Markdown.Converter();
-			
-			getMarkdown = converter.makeHtml(thisVal);
-			$('.markdown-preview-cont').html(getMarkdown);
-		});
 		
 		$('.like-post').click(function(e){
 			e.preventDefault();

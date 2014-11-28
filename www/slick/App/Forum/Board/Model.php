@@ -27,7 +27,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		$title->addAttribute('required');
 		$form->add($title);
 		
-		$content = new Slick_UI_Textarea('content', 'markdown');
+		$content = new Slick_UI_Markdown('content', 'markdown');
 		$content->setLabel('Post Body');
 		$form->add($content);
 		

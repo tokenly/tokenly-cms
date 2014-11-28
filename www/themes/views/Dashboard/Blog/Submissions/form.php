@@ -153,34 +153,7 @@ if(isset($post) AND $post['published'] == 1){
 			}
 		});
 		<?php
-		}
-		if(isset($post) AND $post['formatType'] == 'markdown'){
-		?>
-		setInterval(function(){
-			
-			var url = '<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/checkInkpad/<?= $post['postId'] ?>';
-			$.get(url, function(data){
-				if(data.error != null){
-					console.log(data.error);
-					return false;
-				}
-				if(!data.result.content){
-					$('label[for="content"]').html('Content <span class="unsaved">[unsaved]</span>');
-				}
-				else{
-					$('label[for="content"]').html('Content <span class="saved">[saved]</span>');
-				}
-				
-				if(!data.result.excerpt){
-					$('label[for="excerpt"]').html('Excerpt <span class="unsaved">[unsaved]</span>');
-				}
-				else{
-					$('label[for="excerpt"]').html('Excerpt <span class="saved">[saved]</span>');
-				}				
-			});
-		}, 10000);
-		<?php
 		}//endif
-		?>		
+		?>
 	});
 </script>
