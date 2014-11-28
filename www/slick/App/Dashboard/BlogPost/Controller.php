@@ -58,7 +58,7 @@ class Slick_App_Dashboard_BlogPost_Controller extends Slick_App_ModControl
     private function showPosts()
     {
 		$output = array('view' => 'list');
-		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId']), array(), 'postId');
+		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'], 'trash' => 0), array(), 'postId');
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');

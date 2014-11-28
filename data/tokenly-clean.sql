@@ -319,6 +319,7 @@ CREATE TABLE `blog_posts` (
   `editedBy` int(11) unsigned DEFAULT '0',
   `status` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'draft',
   `notes` longtext COLLATE utf8_unicode_ci,
+  `trash` int(1) DEFAULT 0,
   PRIMARY KEY (`postId`),
   KEY `url` (`url`),
   KEY `userId` (`userId`),

@@ -542,5 +542,12 @@ function replaceNonSGML($string)
 		$gcd = gcd($num1,$num2);
 		return array($num1/$gcd,$num2/$gcd);
 	}
+	
+function currentSite()
+{
+	$model = new Slick_Core_Model;
+	$get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+	return $get;
+}
 
 ?>

@@ -2305,6 +2305,17 @@ a.purchase-credits.collapse{
 .text-center{
 	text-align: center;
 }
+
+.blog-trash-link{
+	float: left;
+	vertical-align: top;
+	margin-bottom: -20px;
+	z-index: 100000000;
+	position: relative;
+	font-size: 12px;
+	font-weight: 700;
+
+}
 /* Smaller than standard 960 (devices and browsers) */
 @media only screen and (max-width: 959px) {
 	.container{

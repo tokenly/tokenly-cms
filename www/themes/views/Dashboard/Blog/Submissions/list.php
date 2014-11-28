@@ -52,6 +52,9 @@ if($perms['canWritePost']){
 </div>
 <?= $this->displayBlock('dashboard-blog-submissions') ?>
 <div class="clear"></div>
+<?php
+if($trashMode == 0){
+?>
 <ul class="ltb-pop-stats">
 	<li><strong>Posts Submitted:</strong> <?= number_format($totalPosts) ?></li>
 	<li><strong>Posts Published:</strong> <?= number_format($totalPublished) ?></li>
@@ -61,8 +64,19 @@ if($perms['canWritePost']){
 <div class="clear"></div>
 <?=  $this->displayFlash('blog-message') ?>
 <?php
+	echo '<p class="blog-trash-link"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash">View Trash ('.$trashCount.')</a></p>';
+}else{
+	if($perms['canDeleteSelfPost']){
+		echo '<p class="pull-right"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/clear-trash" class="delete btn btn-large">Clear Trash</a></p>';
+	}
+	echo '<h3>Trash Bin</h3>';
+	echo  $this->displayFlash('blog-message');
+	echo '<p class="blog-trash-link"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'">Back to Submissions</a></p>';
+}
+?>
+<?php
 if(count($postList) == 0){
-	echo '<p>No posts added</p>';
+	echo '<div class="clear"></div><br><p>No posts found</p>';
 }
 else{
 	foreach($postList as $key => $val){
@@ -93,29 +107,47 @@ else{
 			</thead>
 			<tbody>';
 	foreach($postList as $post){
-		$editLink = '';
-		$deleteLink = '';
 		$titleLink = $post['title'];
-		if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
-			OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
-			if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
-				$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">Edit</a>';
-				$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">'.$post['title'].'</a>';
+		$actionLinks = '';
+		if($trashMode == 0){
+			$editLink = '';
+			$deleteLink = '';
+			$viewLink = '';
+			if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
+				OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
+				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
+					$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">Edit</a>';
+					$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">'.$post['title'].'</a>';
+				}
 			}
-		}
-		
-		if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
-			OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
-			if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
-				$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/'.$post['postId'].'" class="delete ">Delete</a>';
+			
+			if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
+				OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
+				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
+					$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash/'.$post['postId'].'" class="">Move to Trash</a>';
+				}
 			}
-		}
-		
-		if($post['published'] == 1){
-			$viewLink = '<a href="'.SITE_URL.'/'.$blogApp['url'].'/'.$postModule['url'].'/'.$post['url'].'" class="" target="_blank">View Post</a>';
+			
+			if($post['published'] == 1){
+				$viewLink = '<a href="'.SITE_URL.'/'.$blogApp['url'].'/'.$postModule['url'].'/'.$post['url'].'" class="" target="_blank">View Post</a>';
+			}
+			else{
+				$viewLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/preview/'.$post['postId'].'" class="" target="_blank">View Draft</a>';
+			}
+			$actionLinks = $viewLink.' '.$editLink.' '.$deleteLink;
 		}
 		else{
-			$viewLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/preview/'.$post['postId'].'" class="" target="_blank">View Draft</a>';
+			$restoreLink = '';
+			$deleteLink = '';
+			if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
+				OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
+				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
+					$restoreLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/restore/'.$post['postId'].'">Restore</a>';
+					$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/'.$post['postId'].'" class="delete ">Delete</a>';
+				}
+			}			
+			
+			$actionLinks = $restoreLink.' '.$deleteLink;
 		}
 		
 		echo '<tr>';
@@ -125,9 +157,7 @@ else{
 			  <td>'.number_format($post['commentCount']).'</td>
 			  <td>'.date('Y/m/d \<\b\r\> H:i', strtotime($post['publishDate'])).'</td>
 			  <td class="table-actions">
-				'.$viewLink.'
-				'.$editLink.'
-				'.$deleteLink.'
+				'.$actionLinks.'
 			  </td>';
 		echo '</tr>';
 		

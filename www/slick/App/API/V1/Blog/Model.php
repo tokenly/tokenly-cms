@@ -220,6 +220,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 FROM blog_posts p
 					 WHERE '.$andSites.'
 					 AND p.published = 1
+					 AND p.trash = 0
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
 					 '.$andUsers.'
@@ -234,6 +235,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 FROM blog_posts p
 					 WHERE '.$andSites.'
 					 AND p.published = 1
+					 AND p.trash = 0
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
 					 '.$andUsers.'

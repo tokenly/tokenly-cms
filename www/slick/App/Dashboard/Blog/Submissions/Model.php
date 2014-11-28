@@ -569,8 +569,27 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 
 		return $url;
-	}	
+	}
 	
+	public function getTrashItems($userId = 0)
+	{
+		$site = currentSite();
+		$where = array('trash' => 1, 'siteId' => $site['siteId']);
+		if($userId != 0){
+			$where['userId'] = $userId;
+		}
+		$get = $this->getAll('blog_posts', $where, array(), 'postId');	
+		return $get;
+	}
+	
+	public function countTrashItems($userId = 0)
+	{
+		$items = $this->getTrashItems($userId);
+		if(!is_array($items)){
+			return false;
+		}
+		return count($items);
+	}
 }
 
 ?>

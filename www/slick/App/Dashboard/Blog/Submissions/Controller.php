@@ -62,6 +62,20 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				case 'check-credits':
 					$output = $this->checkCreditPayment();
 					break;
+				case 'trash':
+					if(isset($this->args[3])){
+						$output = $this->trashPost();
+					}
+					else{
+						$output = $this->showPosts(1);
+					}
+					break;
+				case 'restore':
+					$output = $this->trashPost(true);
+					break;
+				case 'clear-trash':
+					$output = $this->clearTrash();
+					break;
 				default:
 					$output = $this->showPosts();
 					break;
@@ -84,10 +98,13 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
     *
     * @return Array
     */
-    private function showPosts()
+    private function showPosts($trash = 0)
     {
 		$output = array('view' => 'list');
-		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'], 'userId' => $this->data['user']['userId']), array(), 'postId');
+		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'],
+															 'userId' => $this->data['user']['userId'],
+															 'trash' => $trash), array(), 'postId');
+															
 		$output['totalPosts'] = 0;
 		$output['totalPublished'] = 0;
 		$output['totalViews'] = 0;
@@ -145,6 +162,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		}
 		$output['num_credits'] = intval($this->meta->getUserMeta($this->user['userId'], 'article-credits'));
 		$output['fee_asset'] = strtoupper($this->blogSettings['submission-fee-token']);
+		
+		$output['trashCount'] = $this->model->countTrashItems($this->user['userId']);
+		$output['trashMode'] = $trash;
 		
 		
 		return $output;
@@ -424,7 +444,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$delete = $this->model->delete('blog_posts', $this->args[3]);
 		Slick_Util_Session::flash('blog-message', $getPost['title'].' deleted successfully', 'success');
 		
-		$this->redirect($this->site.$this->moduleUrl);
+		$this->redirect($this->site.$this->moduleUrl.'/trash');
 		return true;
 	}
 	
@@ -617,4 +637,96 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		die();
 	}
 	
+	private function trashPost($restore = false)
+	{
+		if(!isset($this->args[3])){
+			$this->redirect($this->site.$this->moduleUrl);
+			return false;
+		}
+		
+		$getPost = $this->model->get('blog_posts', $this->args[3]);
+		if(!$getPost){
+			$this->redirect($this->site.$this->moduleUrl);
+			return false;
+		}
+		
+		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canDeleteSelfPost'])
+		OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canDeleteOtherPost'])){
+			return array('view' => '403');
+		}
+
+		if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
+			return array('view' => '403');
+		}
+		
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		if(!$postTCA){
+			return array('view' => '403');
+		}
+		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+		foreach($getCategories as $cat){
+			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+			if(!$catTCA){
+				return array('view' => '403');
+			}
+		}			
+		
+		if($restore){
+			$restorePost = $this->model->edit('blog_posts', $this->args[3], array('trash' => 0));
+			Slick_Util_Session::flash('blog-message', $getPost['title'].' restored from trash', 'success');
+			$this->redirect($this->site.$this->moduleUrl.'/trash');
+		}
+		else{
+			$delete = $this->model->edit('blog_posts', $this->args[3], array('trash' => 1));
+			Slick_Util_Session::flash('blog-message', $getPost['title'].' moved to trash', 'success');
+			$this->redirect($this->site.$this->moduleUrl);
+		}
+		return true;
+	}		
+		
+	private function clearTrash()
+	{
+
+		$trashPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'],
+															 'userId' => $this->user['userId'], 
+															 'trash' => 1));
+															 
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');															 
+		
+		foreach($trashPosts as $getPost){
+			if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canDeleteSelfPost'])
+			OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canDeleteOtherPost'])){
+				return array('view' => '403');
+			}
+
+			if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
+				return array('view' => '403');
+			}
+			
+			$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+			if(!$postTCA){
+				return array('view' => '403');
+			}
+			$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+			foreach($getCategories as $cat){
+				$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+				if(!$catTCA){
+					return array('view' => '403');
+				}
+			}			
+			
+			$delete = $this->model->delete('blog_posts', $getPost['postId']);
+		}
+		
+		Slick_Util_Session::flash('blog-message', 'Trash bin emptied!', 'success');
+		$this->redirect($this->site.$this->moduleUrl.'/trash');
+	
+		return true;
+	}			
+
 }

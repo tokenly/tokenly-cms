@@ -16,6 +16,7 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 									 FROM blog_posts
 									 WHERE siteId = :siteId
 									 AND published = 1
+									 AND trash = 0
 									 AND publishDate <= "'.timestamp().'"
 									 ORDER BY publishDate DESC
 									 LIMIT '.$start.', '.$limit,
@@ -91,6 +92,7 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 									 WHERE p.siteId = :siteId
 									 AND c.categoryId IN('.join(',', $catList).')
 									 AND p.published = 1
+									 AND trash = 0
 									 AND p.publishDate <= "'.timestamp().'"
 									 GROUP BY p.postId
 									 ORDER BY p.publishDate DESC
