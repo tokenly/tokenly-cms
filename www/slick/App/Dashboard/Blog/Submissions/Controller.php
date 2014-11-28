@@ -219,6 +219,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$data['status'] = 'draft';
 				}
 			}			
+			if($data['autogen-excerpt'] == 0){
+				$data['excerpt'] = shortenMsg($data['content'], 500);
+			}			
 			try{
 				$add = $this->model->addPost($data, $this->data);
 			}
@@ -344,6 +347,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$data['status'] = 'draft';
 				}
 			}
+			if($data['autogen-excerpt'] == 0){
+				$data['excerpt'] = shortenMsg($data['content'], 500);
+			}
 			try{
 				$edit = $this->model->editPost($this->args[3], $data, $this->data);
 			}
@@ -368,6 +374,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		/*else{
 			$getPost['status'] = 'draft';
 		}*/
+		
 		
 		$output['form']->setValues($getPost);
 		$output['form']->field('publishDate')->setValue(date('Y/m/d H:i', strtotime($getPost['publishDate'])));

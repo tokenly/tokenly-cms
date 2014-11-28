@@ -33,6 +33,13 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$form->add($title);
 		
 		$form->add($content);
+		
+		$autoGen = new Slick_UI_Checkbox('autogen-excerpt');
+		$autoGen->setBool(1);
+		$autoGen->setValue(1);
+		$autoGen->setLabel('Create custom post excerpt');
+		$form->add($autoGen);
+		
 		$form->add($excerpt);
 		
 		$url = new Slick_UI_Textbox('url');

@@ -34,10 +34,23 @@ if(isset($post) AND $post['published'] == 1){
 	<?= $form->open() ?>
 	<?=  $this->displayFlash('blog-message') ?>
 	<div class="ltb-data-tab" id="blog-content" style="">
+		<?php
+		$excpStyle = 'display: none;';
+		if(isset($post) AND trim($post['excerpt']) != ''){
+			$generateExcerpt = shortenMsg($post['content'], 500);
+			if($generateExcerpt != $post['excerpt']){
+				$excpStyle = '';
+				$form->field('autogen-excerpt')->setChecked(1);
+			}
+		}
+		?>
 		<?= $form->field('title')->display() ?>
+		<?= $form->field('formatType')->display() ?>		
 		<?= $form->field('content')->display() ?>
-		<?= $form->field('excerpt')->display() ?>
-		<?= $form->field('formatType')->display() ?>
+		<?= $form->field('autogen-excerpt')->display() ?>
+		<div id="excerpt-cont" style="<?= $excpStyle ?>">
+			<?= $form->field('excerpt')->display() ?>
+		</div>
 	</div>
 	<div class="ltb-data-tab" id="status-cat" style="display: none;">
 		<?= $form->field('status')->display() ?>
@@ -138,6 +151,14 @@ if(isset($post) AND $post['published'] == 1){
 			$('.' + type).find('.ltb-data-tab#' + tab).show();
 			$(this).parent().parent().find('.tab').removeClass('active');
 			$(this).addClass('active');
+		});
+		$('#autogen-excerpt').click(function(e){
+			if($(this).is(':checked')){
+				$('#excerpt-cont').slideDown();
+			}
+			else{
+				$('#excerpt-cont').slideUp();
+			}
 		});
 		<?php
 		if(isset($post) AND $post['formatType'] == 'wysiwyg'){
