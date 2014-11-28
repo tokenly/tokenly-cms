@@ -56,7 +56,11 @@ class Slick_UI_Markdown extends Slick_UI_FormObject
 		ob_start();
 		?>
 			<div class="<?= $this->name ?>-preview markdown-preview">
-				<h4><?=$this->previewTitle ?></h4>
+				<?php
+				if($this->previewTitle != ''){
+					echo '<h4>'.$this->previewTitle.' - '.$this->label_raw.'</h4>';
+				}
+				?>
 				<div class="<?= $this->name ?>-preview-cont markdown-preview-cont"><?= $this->getHTMLValue() ?></div>
 			</div>
 			<script type="text/javascript" src="<?= $sitePath ?>/resources/Markdown.Converter.js"></script>

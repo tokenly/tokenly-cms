@@ -37,7 +37,7 @@ if(isset($post) AND $post['published'] == 1){
 		<?php
 		$excpStyle = 'display: none;';
 		if(isset($post) AND trim($post['excerpt']) != ''){
-			$generateExcerpt = shortenMsg($post['content'], 500);
+			$generateExcerpt = shortenMsg(strip_tags($post['content']), 500);
 			if($generateExcerpt != $post['excerpt']){
 				$excpStyle = '';
 				$form->field('autogen-excerpt')->setChecked(1);

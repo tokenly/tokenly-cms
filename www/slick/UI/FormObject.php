@@ -4,6 +4,7 @@ class Slick_UI_FormObject extends Slick_UI_Object
 	protected $name = '';
 	protected $value = '';
 	protected $label = '';
+	protected $label_raw = '';
 	
 	function __construct()
 	{
@@ -55,12 +56,18 @@ class Slick_UI_FormObject extends Slick_UI_Object
 		}
 		
 		$this->label = $label->display($text);
+		$this->label_raw = $text;
 		
 	}
 	
 	public function getLabel()
 	{
 		return $this->label;
+	}
+	
+	public function getRawLabel()
+	{
+		return $this->label_raw;
 	}
 		
 
