@@ -217,6 +217,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 
 	public function addPost($data, $appData)
 	{
+		//check required fields
 		$req = array('title' => true, 'url' => false, 'siteId' => true, 'status' => true,
 					 'content' => false, 'userId' => true, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'formatType' => false,
 					 'notes' => false);
@@ -235,6 +236,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			}
 		}
 		
+		//setup URL and prep sql data
 		if(trim($useData['url']) == ''){
 			$useData['url'] = $useData['title'];
 		}
@@ -242,26 +244,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$useData['url'] = $this->checkURLExists($useData['url']);
 		$useData['postDate'] = timestamp();
 		$useData['editTime'] = $useData['postDate'];
-		
-		$getExcerpt = false;
-		if(isset($_POST['excerpt_inkpad'])){
-			$excerptInkpad = new Slick_UI_Inkpad('excerpt');
-			$excerptInkpad->setInkpad($_POST['excerpt_inkpad']);
-			$getExcerpt = $excerptInkpad->getValue();
-			if($getExcerpt){
-				$useData['excerpt'] = $getExcerpt;
-			}
-		}
-		
-		$getContent =false;
-		if(isset($_POST['content_inkpad'])){
-			$contentInkpad = new Slick_UI_Inkpad('content');
-			$contentInkpad->setInkpad($_POST['content_inkpad']);
-			$getContent = $contentInkpad->getValue();
-			if($getContent){
-				$useData['content'] = $getContent;
-			}
-		}		
+			
 		
 		//legacy status stuff, get rid of later
 		$useData['published'] = 0;
@@ -279,6 +262,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		//unset($useData['status']);
 		
+		//temporary editor stuff
 		if($appData['perms']['canChangeEditor'] AND isset($data['editedBy'])){
 			$useData['editedBy'] = intval($data['editedBy']);
 		}
@@ -287,25 +271,32 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$useData['editedBy'] = $appData['user']['userId'];
 		}		
 		
+		//perform insertion
 		$add = $this->insert('blog_posts', $useData);
 		if(!$add){
 			throw new Exception('Error adding post');
 		}
 		
-		if(isset($_POST['excerpt_inkpad']) AND $getExcerpt){
-			$this->updatePostMeta($add, 'inkpad-excerpt-url', $_POST['excerpt_inkpad']);
-		}		
-		if(isset($_POST['content_inkpad']) AND $getContent){
-			$this->updatePostMeta($add, 'inkpad-url', $_POST['content_inkpad']);
+		//insert first version
+		$versionData = array('type' => 'blog-post', 'itemId' => $add, 'userId' => $appData['user']['userId'],
+							 'content' => json_encode(array('content' => $useData['content'], 'excerpt' => $useData['excerpt'])),
+							 'versionDate' => $useData['postDate'], 'num' => 1, 'formatType' => $useData['formatType']);
+		$addVersion = $this->insert('content_versions', $versionData);
+		if($addVersion){
+			$this->edit('blog_posts', $add, array('version' => $addVersion));
 		}
-
+		
+		//setup categories
 		if(isset($data['categories'])){
 			$this->updatePostCategories($add, $data['categories']);
 		}
 		
+		//setup images
 		$this->updatePostImage($add);
 		$this->updatePostImage($add, 'coverImage');
 		
+		
+		//check if publishing right away
 		if($useData['published'] == 1){
 			$blogApp = $this->get('apps', 'blog', array(), 'slug');
 			$postApp = $this->get('modules', 'blog-post', array(), 'slug');
@@ -317,6 +308,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$this->notifyEditorsOnReady($add, $appData);
 		}
 		
+		//setup any custom meta fields used
 		foreach($data as $key => $val){
 			if(is_array($val) OR trim($val) == ''){
 				continue;
@@ -334,8 +326,6 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 
 		return $add;
-		
-		
 	}
 
 	
@@ -402,7 +392,10 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		
 	public function editPost($id, $data, $appData)
 	{
+		//get previous copy of post
 		$getPost = $this->get('blog_posts', $id);
+		
+		//check required fields
 		$req = array('title' => true, 'url' => false, 'siteId' => true, 
 					'content' => false, 'publishDate' => true, 'excerpt' => false, 'featured' => false, 'userId' => false, 'status' => true, 'formatType' => false,
 					'notes' => false);
@@ -428,10 +421,12 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$useData['url'] = genURL($useData['url']);
 		$useData['url'] = $this->checkURLExists($useData['url'], $id);
 		
+
 		if(!$useData['userId']){
 			unset($useData['userId']);
 		}
 		
+		//check if formating is switching from markdown to HTML view
 		if($getPost['formatType'] == 'markdown' AND $useData['formatType'] != 'markdown'){
 			//convert from markdown to html editor
 			$useData['content'] = markdown($useData['content']);
@@ -466,19 +461,44 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$useData['editedBy'] = $appData['user']['userId'];
 		}
 
-		
+		//check for new version
+		if($getPost['content'] != $useData['content'] OR $getPost['excerpt'] != $useData['excerpt']){
+			$versionContent = array('content' => $useData['content'], 'excerpt' => $useData['excerpt']);
+			$versionNum = $this->getNextVersionNum($id);
+			$changeNum = 0;
+			$getPrevVersion = $this->get('content_versions', $getPost['version']);
+			if($getPrevVersion){
+				$prevContent = json_decode($getPrevVersion['content'], true);
+				$compare = $this->comparePostChanges($versionContent, $prevContent);
+				if($compare){
+					$changeNum = $compare['num'];
+				}
+			}
+			$newVersion = $this->insert('content_versions', array('type' => 'blog-post', 'itemId' => $id, 'userId' => $appData['user']['userId'],
+															'content' => json_encode($versionContent), 'formatType' => $useData['formatType'],
+															'versionDate' => $useData['editTime'], 'num' => $versionNum, 'changes' => $changeNum));
+			if($newVersion){
+				$useData['version'] = $newVersion;
+			}
+		}
+
+		//apply main edit
 		$edit = $this->edit('blog_posts', $id, $useData);
 		if(!$edit){
 			throw new Exception('Error editing post');
 		}
-
+		
+		//update categories
 		if(isset($data['categories'])){
 			$this->updatePostCategories($id, $data['categories']);
 		}
 		
+		//update images
 		$this->updatePostImage($id);
 		$this->updatePostImage($id, 'coverImage');
 		
+		
+		//check if published. if so, run some extra tasks
 		if($useData['published'] == 1){
 			$blogApp = $this->get('apps', 'blog', array(), 'slug');
 			$postApp = $this->get('modules', 'blog-post', array(), 'slug');
@@ -490,6 +510,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$this->notifyEditorsOnReady($id, $appData);
 		}
 		
+		//update any custom meta fields that might be present
 		foreach($data as $key => $val){
 			$fieldId = intval(str_replace('meta_', '', $key));
 			$getField = $this->get('blog_postMetaTypes', $fieldId);
@@ -589,6 +610,119 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			return false;
 		}
 		return count($items);
+	}
+	
+	public function getVersionNum($postId)
+	{
+		$get = $this->fetchSingle('SELECT num
+								   FROM content_versions
+								   WHERE type = "blog-post" AND itemId = :id
+								   ORDER BY num DESC
+								   LIMIT 1', array(':id' => $postId));
+		if(!$get){
+			return 1;
+		}
+		return $get['num'];
+	}
+	
+	public function getNextVersionNum($postId)
+	{
+
+		return $this->getVersionNum($postId) + 1;
+	}
+	
+	public function getPostVersion($postId, $version = 0)
+	{
+		if($version == 0){
+			$version = $this->getVersionNum($postId);
+		}
+		$get = $this->fetchSingle('SELECT * FROM content_versions
+								   WHERE type = "blog-post" AND itemId = :id
+								   AND num = :num',
+								   array(':id' => $postId, ':num' => $version));
+		if($get){
+			$get['content'] = json_decode($get['content'], true);
+		}
+		return $get;
+	}
+	
+	public function getVersions($postId)
+	{
+		$profModel = new Slick_App_Profile_User_Model;
+		$get = $this->getAll('content_versions', array('type' => 'blog-post', 'itemId' => $postId), array(), 'num', 'asc');
+		foreach($get as &$row){
+			$row['content'] = json_decode($row['content'], true);
+			$row['user'] = $profModel->getUserProfile($row['userId']);
+		}
+		return $get;
+	}
+	
+	public function comparePostChanges($new, $old)
+	{
+		$fields = array('content', 'excerpt');
+		$lines = array();
+		$oldLines = array();
+		
+		$numChanges = 0;
+		foreach($fields as $field){
+			if(isset($new[$field])){
+				$newLines[$field] = explode("\n", $new[$field]);
+			}
+			if(isset($old[$field])){
+				$oldLines[$field] = explode("\n", $old[$field]);
+			}
+			
+			$oldCount = count($oldLines[$field]);
+			$newCount = count($newLines[$field]);
+			$maxLines = $oldCount;
+			if($newCount > $oldCount){
+				$maxLines = $newCount;
+			}
+			
+			$lines[$field] = array();
+			for($i = 0; $i < $maxLines; $i++){
+				$getOld = '';
+				$getNew = '';
+				if(isset($oldLines[$field][$i])){
+					$getOld = $oldLines[$field][$i];
+				}
+				if(isset($newLines[$field][$i])){
+					$getNew = $newLines[$field][$i];
+				}
+				if(trim($getOld) != trim($getNew)){
+					$lines[$field][$i] = array('old' => $getOld, 'new' => $getNew);
+					$numChanges++;
+				}
+			}			
+		}
+		
+		return array('lines' => $lines, 'num' => $numChanges);
+	}
+	
+	public function comparePostVersions($postId, $v1, $v2)
+	{
+		$getVersions = $this->getVersions($postId);
+		$getV1 = false;
+		$getV2 = false;
+		foreach($getVersions as $version){
+			if($version['num'] == $v1){
+				$getV1 = $version;
+			}
+			if($version['num'] == $v2){
+				$getV2 = $version;
+			}
+		}
+		
+		if(!$getV1 OR !$getV2){
+			return false;
+		}
+		
+		$compare = $this->comparePostChanges($getV1['content'], $getV2['content']);
+		$compare['v1_user'] = $getV1['user'];
+		$compare['v2_user'] = $getV2['user'];
+		
+		return $compare;
+		
 	}
 }
 

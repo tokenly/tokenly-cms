@@ -19,6 +19,21 @@
 -- Table structure for table `app_meta`
 --
 
+DROP TABLE IF EXISTS `content_versions`;
+CREATE TABLE `content_versions` (
+  `versionId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `type` varchar(25) COLLATE utf8_unicode_ci NOT NULL,
+  `itemId` int(11) unsigned NOT NULL,
+  `userId` int(11) unsigned DEFAULT '0',
+  `content` longtext COLLATE utf8_unicode_ci,
+  `formatType` varchar(25) COLLATE utf8_unicode_ci DEFAULT 'markdown',
+  `num` INT(11) DEFAULT 1,
+  `changes` INT(11) DEFAULT 0,
+  `versionDate` datetime DEFAULT NULL,
+  PRIMARY KEY (`versionId`),
+  KEY `type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 DROP TABLE IF EXISTS `app_meta`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -320,6 +335,7 @@ CREATE TABLE `blog_posts` (
   `status` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'draft',
   `notes` longtext COLLATE utf8_unicode_ci,
   `trash` int(1) DEFAULT 0,
+  `version` INT(11) DEFAULT 0,
   PRIMARY KEY (`postId`),
   KEY `url` (`url`),
   KEY `userId` (`userId`),

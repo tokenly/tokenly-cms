@@ -76,6 +76,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				case 'clear-trash':
 					$output = $this->clearTrash();
 					break;
+				case 'compare':
+					$output = $this->comparePostVersions();
+					break;
 				default:
 					$output = $this->showPosts();
 					break;
@@ -272,17 +275,15 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		
 	}
 	
-
-	
-	private function editPost()
+	protected function accessPost()
 	{
 		if(!isset($this->args[3])){
-			return array('view' => '404');
-		}
+			throw new Exception('404');
+		}		
 		
 		$getPost = $this->model->get('blog_posts', $this->args[3]);
 		if(!$getPost){
-			return array('view' => '404');
+			throw new Exception('404');
 		}
 
 		$tca = new Slick_App_LTBcoin_TCA_Model;
@@ -293,22 +294,22 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		
 		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
 		OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canEditOtherPost'])){
-			return array('view' => '403');
+			throw new Exception('403');
 		}
 		
 		if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
-			return array('view' => '403');
+			throw new Exception('403');
 		}
 		
 		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 		if(!$postTCA){
-			return array('view' => '403');
+			throw new Exception('403');
 		}
 		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
 		foreach($getCategories as $cat){
 			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
 			if(!$catTCA){
-				return array('view' => '403');
+				throw new Exception('403');
 			}
 		}	
 		
@@ -316,8 +317,20 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$getPost['author'] = $this->model->get('users', $getPost['userId']);
 		$getPost['editor'] = $this->model->get('users', $getPost['editedBy']);
 		
+		return $getPost;
+	}
+	
+	protected function editPost()
+	{
+		try{
+			$getPost = $this->accessPost();
+		}
+		catch(Exception $e){
+			return array('view' => $e->getMessage());
+		}
+		
 		$output = array('view' => 'form');
-		$output['form'] = $this->model->getPostForm($this->args[3], $this->data['site']['siteId']);
+		$output['form'] = $this->model->getPostForm($getPost['postId'], $this->data['site']['siteId']);
 		$output['formType'] = 'Edit';
 		$output['post'] = $getPost;
 		
@@ -381,7 +394,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			if($edit){
 				Slick_Util_Session::flash('blog-message', 'Post edited successfully!', 'success');
 			}
-			$this->redirect($_SERVER['REDIRECT_URL']);
+			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
 			return true;
 		}
 		//$getPost['status'] = '';
@@ -396,9 +409,49 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		}*/
 		
 		
+		//get version list and #
+		$output['versions'] = $this->model->getVersions($getPost['postId']);
+		$output['current_version'] = $this->model->getVersionNum($getPost['postId']);
+		$output['old_version'] = false;
+		
+		if(isset($this->args[4])){
+			foreach($output['versions'] as $version){
+				if($version['num'] == $this->args[4]){
+					$oldVersion = $this->model->getPostVersion($getPost['postId'], $version['num']);
+					if($oldVersion AND $oldVersion['versionId'] != $getPost['version']){
+						if(isset($this->args[5]) AND $this->args[5] == 'delete'){
+							if(($getPost['userId'] == $this->data['user']['userId'] AND $this->data['perms']['canDeleteSelfPostVersion'])
+								OR
+							 ($getPost['userId'] != $this->data['user']['userId'] AND $this->data['perms']['canDeleteOtherPostVersion'])){
+								$killVersion = $this->model->delete('content_versions', $oldVersion['versionId']);
+								Slick_Util_Session::flash('blog-message', 'Version #'.$oldVersion['num'].' removed', 'success');
+								$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
+								die();
+							}
+						}
+						$output['post']['content'] = $oldVersion['content']['content'];
+						$output['post']['excerpt'] = $oldVersion['content']['excerpt'];
+						$output['old_version'] = $oldVersion;
+						$getPost['content'] = $output['post']['content'];
+						$getPost['excerpt'] = $output['post']['excerpt'];
+						$output['post']['formatType'] = $oldVersion['formatType'];
+						$getPost['formatType'] = $oldVersion['formatType'];
+						if($oldVersion['formatType'] == 'wysiwyg'){
+							$output['form']->field('content')->setLivePreview(false);
+							$output['form']->field('content')->setID('html-editor');
+							$output['form']->field('excerpt')->setLivePreview(false);
+							$output['form']->field('excerpt')->setID('mini-editor');							
+						}
+					}
+					break;
+				}
+			}
+		}		
+		
 		$output['form']->setValues($getPost);
 		$output['form']->field('publishDate')->setValue(date('Y/m/d H:i', strtotime($getPost['publishDate'])));
 		
+
 		return $output;
 		
 	}
@@ -461,6 +514,14 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			$this->redirect($this->site.$this->moduleUrl);
 			return false;
 		}
+		
+		if(isset($this->args[4])){
+			$oldVersion = $this->model->getPostVersion($getPost['postId'], $this->args[4]);
+			if($oldVersion){
+				$getPost['content'] = $oldVersion['content']['content'];
+				$getPost['excerpt'] = $oldVersion['content']['excerpt'];
+			}
+		}	
 		
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
@@ -727,6 +788,36 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$this->redirect($this->site.$this->moduleUrl.'/trash');
 	
 		return true;
-	}			
+	}		
+	
+	public function comparePostVersions()
+	{
+		try{
+			$getPost = $this->accessPost();
+		}
+		catch(Exception $e){
+			return array('view' => $e->getMessage());
+		}
+		
+		$v1 = false;
+		$v2 = false;
+		if(isset($this->args[4])){
+			$v1 = intval($this->args[4]);
+		}
+		if(isset($this->args[4])){
+			$v2 = intval($this->args[5]);
+		}
+		
+		$compare = $this->model->comparePostVersions($getPost['postId'], $v1, $v2);
+		$compare['v1_user'] = array('userId' => $compare['v1_user']['userId'], 'username' => $compare['v1_user']['username'], 'slug' => $compare['v1_user']['slug']);
+		$compare['v2_user'] = array('userId' => $compare['v2_user']['userId'], 'username' => $compare['v2_user']['username'], 'slug' => $compare['v2_user']['slug']);
+		
+		ob_end_clean();
+		header('Content-Type: application/json');
+		$output = $compare;
+		
+		echo json_encode($output);
+		die();
+	}	
 
 }

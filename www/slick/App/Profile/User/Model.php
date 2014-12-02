@@ -3,8 +3,12 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 {
 	public static $profiles = array();
 	
-	public function getUserProfile($id, $siteId)
+	public function getUserProfile($id, $siteId = 0)
 	{
+		//depreciate use of passing $siteId everywhere..
+		$getSite = currentSite();
+		$siteId = $getSite['siteId'];
+		
 		if(isset(self::$profiles[$id])){
 			return self::$profiles[$id];
 		}
@@ -32,7 +36,7 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		$output['showEmail'] = $meta->getUserMeta($get['userId'], 'showEmail');
 		$output['avatar'] = $meta->getUserMeta($get['userId'], 'avatar');
 		
-		$getSite = $this->get('sites', $siteId);
+		
 		if(trim($output['avatar']) == ''){
 			$output['avatar'] = 'http://www.gravatar.com/avatar/'.md5(strtolower($get['email'])).'?d='.urlencode($getSite['url'].'/files/avatars/default.jpg');
 			//$output['avatar'] = 'default.jpg';
