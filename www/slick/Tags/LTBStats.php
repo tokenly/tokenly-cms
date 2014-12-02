@@ -339,13 +339,20 @@ class Slick_Tags_LTBStats
 					<li><em>Forum post:</em> <?= $appMeta['pop-forum-post-weight'] ?></li>
 					<li><em>Unique page view:</em> <?= $appMeta['pop-view-weight'] ?></li>
 					<li><em>Magic word:</em> <?= $appMeta['pop-listen-weight'] ?></li>
-					<li><em>Post "like" received:</em> <?= $appMeta['pop-like-weight'] ?></li>
+					<li><em>Post "like" received:</em> 0.05 - 5 *</li>
 					<li><em>Active Referral:</em> <?= $appMeta['pop-referral-weight'] ?></li>
-					<li><strong>Note:</strong> article comments, forum posts and page views have daily diminishing returns.
+					<li><strong>Note:</strong> Article comments, forum posts and page views have daily diminishing returns.
+												<br>
+												Additionally, "likes" are diminished on a per-user-per-day basis (e.g liking the same user more than once in the same day)
 												<br>
 												Example: 1 forum post a day will get you 10 points each time, but 2 forum posts will only get you 15 points.<br>
 							<a href="https://docs.google.com/document/d/1L7HmE8IupFiSrfqk9BgNa4Zg9XogqtScyQjTw0k2xCc" target="_blank">See here</a>
 							 for more information.</li>
+					<li>
+						* Each "like" on a post holds a different weight depending on how much LTBcoin each user holds in their wallet.<br>
+						For instance, you will receive more points if a user with more LTBc than you likes one of your posts (up to a maximum of 5 points).<br>
+						<a href="http://letstalkbitcoin.com/forum/post/ltbcoin-update-weighted-likes-article-submission-fees" target="_blank">More details here</a>.
+					</li>
 				</ul>
 			</li>
 			<li>
