@@ -14,7 +14,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$this->catModule = $this->model->get('modules', 'blog-category', array(), 'slug');        
 		$this->blogApp = $this->model->get('apps', 'blog', array(), 'slug');
 		$this->blogSettings = $this->meta->appMeta($this->blogApp['appId']);
-        
+        $this->postModel = new Slick_App_Blog_Post_Model;
     }
     
     function __install($moduleId)
@@ -297,7 +297,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			throw new Exception('403');
 		}
 		
-		if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
+		if($getPost['published'] == 1 AND !$this->data['perms']['canEditAfterPublished']){
 			throw new Exception('403');
 		}
 		
@@ -344,7 +344,12 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$this->data['post'] = $getPost;
 		
 		if(!$this->data['perms']['canPublishPost']){
-			$output['form']->field('status')->removeOption('published');
+			if($getPost['published'] == 1){
+				$output['form']->field('status')->addAttribute('disabled');
+			}
+			else{
+				$output['form']->field('status')->removeOption('published');
+			}
 			$output['form']->remove('featured');
 		}
 		if(!$this->data['perms']['canChangeEditor']){
@@ -357,7 +362,18 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			$output['form']->remove('userId');
 		}
 		
-		if(posted()){
+		//$getPost['status'] = '';
+		if($getPost['published'] == 1){
+			$getPost['status'] = 'published';
+		}
+		elseif($getPost['ready'] == 1){
+			$getPost['status'] = 'ready';
+		}
+		/*else{
+			$getPost['status'] = 'draft';
+		}*/
+		
+		if(posted() AND !isset($_POST['no_edit'])){
 			$data = $output['form']->grabData();
 			if(isset($data['publishDate'])){
 				$data['publishDate'] = date('Y-m-d H:i:s', strtotime($data['publishDate']));
@@ -368,9 +384,18 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 			//$data['userId'] = $this->user['userId'];
 			if(!$this->data['perms']['canPublishPost']){
-				if(isset($data['status']) AND $data['status'] == 'published'){
-					$data['status'] = 'draft';
+				if($getPost['published'] == 0){
+					if(isset($data['status']) AND $data['status'] == 'published'){
+						$data['status'] = 'draft';
+					}
 				}
+				else{
+					$data['status'] = 'published';
+				}
+				if(!isset($data['status'])){
+					$data['status'] = $getPost['status'];
+				}
+
 				if(isset($data['featured'])){
 					unset($data['featured']);
 				}
@@ -396,18 +421,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
 			return true;
-		}
-		//$getPost['status'] = '';
-		if($getPost['published'] == 1){
-			$getPost['status'] = 'published';
-		}
-		elseif($getPost['ready'] == 1){
-			$getPost['status'] = 'ready';
-		}
-		/*else{
-			$getPost['status'] = 'draft';
-		}*/
-		
+		}	
 		
 		//get version list and #
 		$output['versions'] = $this->model->getVersions($getPost['postId']);
@@ -448,12 +462,214 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 		}		
 		
+		//private editorial discussion
+		$output['comment_form'] = $this->postModel->getCommentForm();
+		$output['private_comments'] = $this->postModel->getPostComments($getPost['postId'], 1);
+		$output['comment_list_hash'] = $this->model->getCommentListHash($getPost['postId']);
+		if(isset($this->args[4]) AND $this->args[4] == 'comments'){
+			if(isset($this->args[5])){
+				switch($this->args[5]){
+					case 'post':
+						$json = $this->postPrivateComment();
+						break;
+					case 'edit':
+						$json = $this->editPrivateComment();
+						break;
+					case 'delete':
+						$json = $this->deletePrivateComment();
+						break;
+					case 'check':
+						$json = $this->checkCommentList();
+						break;
+					case 'get':
+					default:
+						$json = $this->getPrivateComments();
+						break;
+				}
+				
+				ob_end_clean();
+				header('Content-Type: application/json');
+				echo json_encode($json);
+				die();
+			}
+		}
+		
+		//setup form values
 		$output['form']->setValues($getPost);
 		$output['form']->field('publishDate')->setValue(date('Y/m/d H:i', strtotime($getPost['publishDate'])));
 		
-
 		return $output;
 		
+	}
+	
+	protected function postPrivateComment()
+	{
+		$output = array('error' => null);
+		
+		if(!posted()){
+			http_response_code(400);
+			$output['error'] = 'Invalid request method';
+			return $output;
+		}
+		
+		if(!$this->data['perms']['canPostComment']){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission for this';
+			return $output;
+		}
+		
+		if(!isset($_POST['message'])){
+			http_response_code(400);
+			$output['error'] = 'Message required';
+			return $output;
+		}
+		
+		$data = array();
+		$data['postId'] = $this->data['post']['postId'];
+		$data['userId'] = $this->data['user']['userId'];
+		$data['message'] = strip_tags($_POST['message']);
+		
+		try{
+			$postComment = $this->postModel->postComment($data, $this->data, 1);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$output['error'] = $e->getMessage();
+			return $output;
+		}
+		
+		$output['result'] = 'success';
+		$postComment['formatDate'] = formatDate($postComment['commentDate']);
+		$postComment['html_content'] = markdown($postComment['message']);
+		$postComment['encoded'] = base64_encode($postComment['message']);
+		$profModel = new Slick_App_Profile_User_Model;
+		$authProf = $profModel->getUserProfile($postComment['userId']);
+		$postComment['author'] = array('username' => $authProf['username'], 'slug' => $authProf['slug'], 'avatar' => $authProf['avatar']);
+		$output['comment'] = $postComment;
+		$output['new_hash'] = $this->model->getCommentListHash($this->data['post']['postId']);
+		
+		return $output;
+		
+	}
+	
+	protected function deletePrivateComment()
+	{
+		$output = array('error' => null);
+		
+		if(!posted()){
+			http_response_code(400);
+			$output['error'] = 'Invalid request method';
+			return $output;
+		}	
+		
+		if(!isset($_POST['commentId'])){
+			http_response_code(400);
+			$output['error'] = 'Comment ID required';
+			return $output;
+		}
+		
+		$comment = $this->model->get('blog_comments', $_POST['commentId']);
+		if(!$comment){
+			http_response_code(400);
+			$output['error'] = 'Invalid comment ID';
+			return $output;
+		}
+		
+		if(($comment['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canDeleteSelfComment'])
+			OR ($comment['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canDeleteOtherComment'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission for this';
+			return $output;
+		}			
+		
+		$delete = $this->model->delete('blog_comments', $comment['commentId']);
+		$output['result'] = 'success';
+	
+		return $output;
+	}
+	
+	protected function editPrivateComment()
+	{
+		$output = array('error' => null);
+		
+		if(!posted()){
+			http_response_code(400);
+			$output['error'] = 'Invalid request method';
+			return $output;
+		}	
+		
+		if(!isset($_POST['commentId'])){
+			http_response_code(400);
+			$output['error'] = 'Comment ID required';
+			return $output;
+		}
+		
+		if(!isset($_POST['message'])){
+			http_response_code(400);
+			$output['error'] = 'Message';
+			return $output;
+		}
+		
+		$comment = $this->model->get('blog_comments', $_POST['commentId']);
+		if(!$comment){
+			http_response_code(400);
+			$output['error'] = 'Invalid comment ID';
+			return $output;
+		}
+		
+		if(($comment['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfComment'])
+			OR ($comment['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canEditOtherComment'])){
+			http_response_code(403);
+			$output['error'] = 'You do not have permission for this';
+			return $output;
+		}
+		
+		$data = array();
+		$data['message'] = strip_tags($_POST['message']);
+		$data['editTime'] = timestamp();
+		
+		$edit = $this->model->edit('blog_comments', $comment['commentId'], $data);
+
+		$output['result'] = 'success';
+		$comment['formatDate'] = formatDate($comment['commentDate']);
+		$comment['formatEditDate'] = formatDate($data['editTime']);
+		$comment['html_content'] = markdown($data['message']);
+		$comment['encoded'] = base64_encode($data['message']);
+		$profModel = new Slick_App_Profile_User_Model;
+		$authProf = $profModel->getUserProfile($comment['userId']);
+		$comment['author'] = array('username' => $authProf['username'], 'slug' => $authProf['slug'], 'avatar' => $authProf['avatar']);
+		$output['comment'] = $comment;
+		$output['new_hash'] = $this->model->getCommentListHash($this->data['post']['postId']);
+		
+		return $output;
+	}
+	
+	protected function checkCommentList()
+	{
+		$hash = $this->model->getCommentListHash($this->data['post']['postId']);
+		return array('hash' => $hash);
+	}
+	
+	protected function getPrivateComments()
+	{
+		$comments = $this->postModel->getPostComments($this->data['post']['postId'], 1);
+		foreach($comments as &$comment){
+			$comment['author'] = array('username' => $comment['author']['username'],
+									   'slug' => $comment['author']['slug'],
+									   'avatar' => $comment['author']['avatar']);
+			$comment['html_content'] = markdown($comment['message']);
+			$comment['encoded'] = base64_encode($comment['message']);
+			$comment['formatDate'] = formatDate($comment['commentDate']);
+			$comment['formatEditDate'] = formatDate($comment['editTime']);
+			unset($comment['buried']);
+			unset($comment['editorial']);
+			unset($comment['postId']);
+			
+		}
+		$output['comments'] = $comments;
+		$output['new_hash'] = $this->model->getCommentListHash($this->data['post']['postId']);
+		
+		return $output;
 	}
 
 	

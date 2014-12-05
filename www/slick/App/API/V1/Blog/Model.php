@@ -482,7 +482,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		$post = $model->postComment($data, $appData);
 		
 		if($post){
-			$output = $model->getComment($post, $data['site']['siteId']);
+			$output = $model->getComment($post);
 			unset($output['author']['pubProf']);
 			unset($output['author']['showEmail']);
 			return $output;

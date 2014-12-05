@@ -173,7 +173,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		
 		/* -- native site comments code --
-		$getComment = $model->getComment($this->args[4], $this->args['data']['site']['siteId']);
+		$getComment = $model->getComment($this->args[4]);
 		if(!$getComment OR $getComment['postId'] != $getPost['postId']){
 			http_response_code(400);
 			$output['error'] = 'Comment not found';
@@ -573,7 +573,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		/*
 		--native comment system code--
-		$getComments = $model->getPostComments($getPost['postId'], $this->args['data']['site']['siteId']);
+		$getComments = $model->getPostComments($getPost['postId']);
 		foreach($getComments as $k => $row){
 			$author = $row['author'];
 			if(is_array($author)){

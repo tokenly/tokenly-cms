@@ -1,6 +1,11 @@
 <?php
 class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 {
+	
+	function __construct()
+	{
+		parent::__construct();
+	}
 
 	public function getPostForm($postId = 0, $siteId, $andUseMeta = true)
 	{
@@ -723,6 +728,14 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		
 		return $compare;
 		
+	}
+	
+	public function getCommentListHash($postId)
+	{
+		$get = $this->fetchAll('SELECT commentId as id, editTime as edit FROM blog_comments WHERE postId = :id AND buried = 0 AND editorial = 1',
+								array(':id' => $postId), 0, true);
+		$encode = json_encode($get);
+		return hash('sha256', $encode);
 	}
 }
 

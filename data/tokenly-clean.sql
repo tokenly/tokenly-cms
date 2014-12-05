@@ -196,6 +196,7 @@ CREATE TABLE `blog_comments` (
   `commentDate` datetime DEFAULT NULL,
   `buried` int(2) DEFAULT '0',
   `editTime` datetime DEFAULT NULL,
+  `editorial` int(1) DEFAULT '0',
   PRIMARY KEY (`commentId`),
   KEY `userId` (`userId`),
   KEY `postId` (`postId`),

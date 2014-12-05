@@ -94,6 +94,7 @@ else{
 			$postList[$key]['status'] = '<span class="text-default">Draft</span>';
 		}
 	}
+
 	echo '<table class="admin-table mobile-table data-table submissions-table">
 			<thead>
 				<tr>
@@ -115,7 +116,7 @@ else{
 			$viewLink = '';
 			if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
 				OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
-				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
+				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canEditAfterPublished'])){
 					$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">Edit</a>';
 					$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">'.$post['title'].'</a>';
 				}
@@ -123,7 +124,7 @@ else{
 			
 			if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
 				OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
-				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canPublishPost'])){
+				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canEditAfterPublished'])){
 					$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash/'.$post['postId'].'" class="">Move to Trash</a>';
 				}
 			}

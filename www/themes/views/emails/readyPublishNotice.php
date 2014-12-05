@@ -10,6 +10,6 @@ if($checkTCA){
 
 $message = 'A blog post by '.$culprit.' has 
 			been marked as ready for publishing, please review (or pass along to the appropriate person): 
-			<a href="'.$data['site']['url'].'/dashboard/blog-post/edit/'.$data['post']['postId'].'" target="_blank">'.$data['post']['title'].'</a>';
+			<a href="'.$data['site']['url'].'/dashboard/submissions/edit/'.$data['post']['postId'].'" target="_blank">'.$data['post']['title'].'</a>';
 
 echo $message;

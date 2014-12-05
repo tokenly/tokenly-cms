@@ -36,16 +36,19 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 	{
 		$form = new Slick_UI_Form;
 		
-		$message = new Slick_UI_Textarea('message', 'markdown');
+		$message = new Slick_UI_Markdown('message', 'markdown');
 		$message->setLabel('Message');
 		$form->add($message);
 		
 		return $form;
 	}
 	
-	public function getPostComments($postId, $siteId)
+	public function getPostComments($postId, $editorial = 0)
 	{
-		$getComments = $this->getAll('blog_comments', array('postId' => $postId, 'buried' => 0), array(), 'commentId', 'asc');
+		$getSite = currentSite();
+		$siteId = $getSite['siteId'];
+		
+		$getComments = $this->getAll('blog_comments', array('postId' => $postId, 'buried' => 0, 'editorial' => $editorial), array(), 'commentId', 'asc');
 		$profModel = new Slick_App_Profile_User_Model;
 		foreach($getComments as $key => $comment){
 			if($comment['buried'] == 1){
@@ -61,8 +64,11 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		
 	}
 	
-	public function getComment($commentId, $siteId)
+	public function getComment($commentId)
 	{
+		$getSite = currentSite();
+		$siteId = $getSite['siteId'];
+		
 		$getComment = $this->get('blog_comments', $commentId);
 		if(!$getComment){
 			return false;
@@ -79,7 +85,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		return $getComment;
 	}
 	
-	public function postComment($data, $appData)
+	public function postComment($data, $appData, $editorial = 0)
 	{
 		if(!isset($data['message']) AND trim($data['message']) == ''){
 			throw new Exception('Message required');
@@ -87,6 +93,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		$useData = array();
 		$useData['userId'] = $data['userId'];
 		$useData['postId'] = $data['postId'];
+		$useData['editorial'] = $editorial;
 		$useData['message'] = strip_tags($data['message']);
 		$useData['commentDate'] = timestamp();
 		$post = $this->insert('blog_comments', $useData);
@@ -94,18 +101,61 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 			throw new Exception('Error posting comment');
 		}
 		
-		mention($useData['message'], '%username% has mentioned you in a 
-				<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['post']['url'].'#comment-'.$post.'">blog comment.</a>',
-				$useData['userId'], $post, 'blog-reply');
+		//only use @mentions when not private editorial comments
+		if($editorial == 0){
+			mention($useData['message'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['post']['url'].'#comment-'.$post.'">blog comment.</a>',
+					$useData['userId'], $post, 'blog-reply');
+		}
 		
 		$notifyData = $appData;
 		$notifyData['postId'] = $post;
 		if($appData['user']['userId'] != $appData['post']['userId']){
-			Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
+			if($editorial == 1){
+				$meta = new Slick_App_Meta_Model;
+				$getDiscussions = $meta->getUserMeta($appData['user']['userId'], 'editorial_discussions');
+				if($getDiscussions){
+					$discussList = explode(',', $getDiscussions);
+				}
+				else{
+					$discussList = array();
+				}
+				if(!in_array($appData['post']['postId'], $discussList)){
+					$discussList[] = $appData['post']['postId'];
+					$meta->updateUserMeta($appData['user']['userId'], 'editorial_discussions', join(',', $discussList));
+				}
+				
+				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogPrivateCommentNotice', $post, 'new-editor-reply', false, $notifyData);
+			}
+			else{
+				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
+			}
 		}
 		
-		return $post;
+		$noticeList = $this->getEditorialDiscussionUsers($appData['post']['postId']);
+		foreach($noticeList as $extraNotice){
+			if($extraNotice != $appData['user']['userId'] AND $extraNotice != $appData['post']['userId']){
+				Slick_App_Meta_Model::notifyUser($extraNotice, 'emails.blogOtherPrivateCommentNotice', $post, 'new-editor-reply', false, $notifyData);
+			}
+		}		
 		
+		$useData['commentId'] = $post;
+		
+		return $useData;
+		
+	}
+	
+	public function getEditorialDiscussionUsers($postId)
+	{
+		$getRows = $this->fetchAll('SELECT userId, metaValue as value FROM user_meta WHERE metaKey = "editorial_discussions"');
+		$output = array();
+		foreach($getRows as $user){
+			$exp = explode(',', $user['value']);
+			if(in_array($postId, $exp)){
+				$output[] = $user['userId'];
+			}
+		}
+		return $output;
 	}
 	
 	public function getPostMeta($postId, $fullData = false, $private = false)

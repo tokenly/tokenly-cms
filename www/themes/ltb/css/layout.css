@@ -579,7 +579,7 @@ ul.disc li{
 .comment-avatar img{
 	max-width: 100%;
 }
-.comment-list li{
+.comment-list > li{
 	display: block;
 	clear: both;
 	list-style-type: none;
@@ -604,6 +604,7 @@ ul.disc li{
 }
 .comment-content{
 	font-size: 12px;
+	margin-left: 60px;
 }
 .comment-author a, .comment-author a:visited{
 	font-weight: 700;
@@ -2310,7 +2311,7 @@ a.purchase-credits.collapse{
 	float: left;
 	vertical-align: top;
 	margin-bottom: -20px;
-	z-index: 100000000;
+	z-index: 10000;
 	position: relative;
 	font-size: 12px;
 	font-weight: 700;
@@ -2375,6 +2376,15 @@ a.purchase-credits.collapse{
 .version-compare-table tr{
 	border-top: solid 5px #fff;
 	border-bottom: solid 5px #fff;
+}
+
+.ltb-data-tab#discussion textarea{
+	height: 100px;
+}
+
+.tab.new-comments{
+	color: #000!important;
+	font-style: italic;
 }
 
 /* Smaller than standard 960 (devices and browsers) */

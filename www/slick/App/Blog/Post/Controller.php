@@ -71,7 +71,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		$output['post'] = $getPost;
 		$output['view'] = 'post';
 		$output['title'] = $getPost['title'];
-		$output['comments'] = $this->model->getPostComments($getPost['postId'], $this->data['site']['siteId']);
+		$output['comments'] = $this->model->getPostComments($getPost['postId']);
 		$output['commentError'] = '';
 		$output['disableComments'] = false;
 		$output['user'] = Slick_App_Account_Home_Model::userInfo();

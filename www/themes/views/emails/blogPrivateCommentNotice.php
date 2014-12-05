@@ -9,5 +9,5 @@ if($checkTCA){
 }
 
 echo '
-	'.$culprit.' posted a comment on your blog post: 
-	<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$data['post']['url'].'#comment-'.$data['postId'].'">'.$data['post']['title'].'</a>.';
+'.$culprit.' posted a comment on your blog post: 
+	<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/edit/'.$data['post']['postId'].'#comment-'.$data['postId'].'">'.$data['post']['title'].'</a>.';
