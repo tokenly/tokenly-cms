@@ -8,6 +8,7 @@ class Slick_Tags_LTBStats
 	{
 		$this->model = new Slick_App_Meta_Model;
 		$this->site = $this->model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$this->accountModel = new Slick_App_Account_Home_Model;
 		
 	}
 	
@@ -504,6 +505,14 @@ class Slick_Tags_LTBStats
 		$report['info'] = json_decode($report['info'], true);
 		$totalNegative = 0;
 		
+		$checkAuth = false;
+		if(isset($_SESSION['accountAuth'])){
+			$checkAuth = $this->accountModel->checkSession($_SESSION['accountAuth']);
+			if($checkAuth){
+				$checkAuth = $this->model->get('users', $checkAuth['userId']);
+			}			
+		}
+		
 		$metrics = array();
 		$useMetrics = array('posts', 'comments', 'threads', 'likes', 'views', 'magic-words', 'referrals');
 		$meta = new Slick_App_Meta_Model;
@@ -531,13 +540,9 @@ class Slick_Tags_LTBStats
 				$checkPubProf = $meta->getUserMeta($getRowUser['userId'], 'pubProf');
 				if(intval($checkPubProf) !== 1){
 					$row['displayname'] = '<em>anonymous</em>';
-					if(isset($_SESSION['accountAuth'])){
-						$checkAuth = $this->model->get('users', $_SESSION['accountAuth'], array(), 'auth');
-						if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
-							$row['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
-						}
+					if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
+						$row['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
 					}
-					
 				}
 				else{
 					$row['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank">'.$row['username'].'</a>';
@@ -994,6 +999,14 @@ class Slick_Tags_LTBStats
 		aasort($userList, 'score');
 		$userList = array_reverse($userList);
 		
+		$checkAuth = false;
+		if(isset($_SESSION['accountAuth'])){
+			$checkAuth = $this->accountModel->checkSession($_SESSION['accountAuth']);
+			if($checkAuth){
+				$checkAuth = $this->model->get('users', $checkAuth['userId']);
+			}
+		}
+		
 		$meta = new Slick_App_Meta_Model;
 		foreach($userList as $key => $row){
 			$userList[$key]['displayname'] = $row['username'];
@@ -1001,12 +1014,9 @@ class Slick_Tags_LTBStats
 			if($getRowUser){
 				$checkPubProf = $meta->getUserMeta($getRowUser['userId'], 'pubProf');
 				if(intval($checkPubProf) !== 1){
-					$userList[$key]['displayname'] = '<em>anonymous</em>';
-					if(isset($_SESSION['accountAuth'])){
-						$checkAuth = $this->model->get('users', $_SESSION['accountAuth'], array(), 'auth');
-						if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
-							$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
-						}
+					$userList[$key]['displayname'] = '<em>anonymous</em>';	
+					if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
+						$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
 					}
 				}
 				else{

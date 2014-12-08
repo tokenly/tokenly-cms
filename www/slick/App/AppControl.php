@@ -85,7 +85,8 @@ class Slick_App_AppControl extends Slick_Core_Controller
     {
 		$model = new Slick_Core_Model;
 		$tca = new Slick_App_LTBcoin_TCA_Model;
-		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$accountModel = new Slick_App_Account_Home_Model;
+		$getSite = currentSite();
 		$controller = new Slick_Core_Controller;
 		
 		if(!isset($_SESSION['accountAuth'])){
@@ -96,7 +97,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
 			return false;
 		}
 		
-		$get = $model->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+		$get = $accountModel->checkSession($_SESSION['accountAuth']);
 		if(!$get){
 			unset($_SESSION['accountAuth']);
 			if($redirect){
@@ -140,8 +141,6 @@ class Slick_App_AppControl extends Slick_Core_Controller
 		}
 		
 		return false;
-		
-		
 	}
 	
 	public function __install($appId)

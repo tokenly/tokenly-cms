@@ -124,8 +124,8 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 			return false;
 		}
 		
-		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-
+		$getSite = currentSite();
+		
 		$groupList = array();
 		foreach($getUser['groups'] as $group){
 			$groupList[] = $group['groupId'];
@@ -133,7 +133,10 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 
 
 		$access = array();
-		$getPerms = $model->fetchAll('SELECT * FROM group_access WHERE groupId IN('.join(',', $groupList).')');
+		$getPerms = array();
+		if(count($groupList) > 0){
+			$getPerms = $model->fetchAll('SELECT * FROM group_access WHERE groupId IN('.join(',', $groupList).')');
+		}
 										
 		foreach($getPerms as $perm){
 			$access[] = $perm['moduleId'];

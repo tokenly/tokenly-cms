@@ -70,8 +70,9 @@ class Slick_App_Dashboard_BlogCategory_Model extends Slick_Core_Model
 	public function getCategories($siteId, $parentId = 0, $menuMode = 0)
 	{
 		$thisUser = false;
+		$accountModel = new Slick_App_Account_Home_Model;
 		if(isset($_SESSION['accountAuth'])){
-			$getUser = $this->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
 			if($getUser){
 				$thisUser = $getUser['userId'];
 			}

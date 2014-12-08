@@ -99,10 +99,11 @@ class Slick_App_View extends Slick_Core_View
 		}
 		
 		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$accountModel = new Slick_App_Account_Home_Model;
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
 		if(isset($_SESSION['accountAuth'])){
-			$getUser = $tca->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
 			if($getUser){
 				$userId = $getUser['userId'];
 			}
@@ -279,8 +280,9 @@ class Slick_App_View extends Slick_Core_View
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
+		$accountModel = new Slick_App_Account_Home_Model;
 		if(isset($_SESSION['accountAuth'])){
-			$getUser = $tca->get('users', $_SESSION['accountAuth'], array('userId'), 'auth');
+			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
 			if($getUser){
 				$userId = $getUser['userId'];
 			}

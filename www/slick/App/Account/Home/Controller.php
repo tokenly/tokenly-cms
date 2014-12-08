@@ -84,7 +84,12 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 			else{
 				$output['view'] = 'account-home';
 				$output['template'] = 'admin';
-				$output['user'] = $this->model->get('users', $_SESSION['accountAuth'], array('username', 'email', 'lastAuth', 'auth', 'regDate'), 'auth');
+				$getSesh = $this->model->checkSession($_SESSION['accountAuth']);
+				$output['user'] = false;
+				if($getSesh){
+					$output['user'] = $this->model->get('users', $getSesh['userId'], array('username', 'email', 'lastAuth', 'regDate'));
+					$output['user']['auth'] = $getSesh['auth'];
+				}
 			}
 		}
 		

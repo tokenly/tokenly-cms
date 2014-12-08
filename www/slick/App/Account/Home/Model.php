@@ -205,30 +205,45 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		if(!$get){
 			return false;
 		}
-		$token = hash('sha256', $get['username'].$get['spice'].time().mt_rand(0,1000));
-		
-		$update = $this->edit('users', $userId, array('auth' => $token, 'lastAuth' => timestamp()));
+		$token = hash('sha256', $get['username'].$get['spice'].$_SERVER['REMOTE_ADDR'].time().mt_rand(0,1000));
+		$makeSession = $this->makeSession($userId, $token);
+		if(!$makeSession){
+			return false;
+		}
+		$update = $this->edit('users', $userId, array('lastAuth' => timestamp()));
 		if(!$update){
 			return false;
 		}
-		
 		if(!isset($this->api) OR $this->api != true){
 			$_SESSION['accountAuth'] = $token;
 		}
-		
-		$this->updateLastActive($userId);
-				
+		Slick_App_Account_Home_Model::updateLastActive($userId);
 		return $token;
 	}
 
-	public static function updateLastActive($playerId)
+	public static function updateLastActive($userId)
 	{
-		$model = new Slick_Core_Model;
-		$update = $model->edit('users', $playerId, array('lastActive' => timestamp()));
-		if(!$update){
+		$model = new Slick_App_Account_Home_Model;
+		$auth = false;
+		if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
+			$auth = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
+		}
+		elseif(isset($_SESSION['accountAuth'])){
+			$auth = $_SESSION['accountAuth'];
+		}
+		if(!$auth){
 			return false;
 		}
-		return true;
+		$getSesh = $model->checkSession($auth);
+		if($getSesh){
+			$time = timestamp();
+			$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
+			if($update){
+				$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public function checkAuth($data)
@@ -335,23 +350,26 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public static function userInfo()
 	{
-		$model = new Slick_Core_Model;
+		$model = new Slick_App_Account_Home_Model;
 		if(!isset($_SESSION['accountAuth'])){
 			if(isset($_COOKIE['rememberAuth'])){
 				Slick_App_Account_Home_Controller::logRemembered();
 			}
 			return false;
 		}
-		$get = $model->get('users', $_SESSION['accountAuth'], array('userId', 'username', 'email', 'slug',
-																		  'regDate', 'auth', 'lastAuth', 'lastActive'), 'auth');
-																
+		
+		$get = $model->checkSession($_SESSION['accountAuth']);
+												
 		if(!$get){
 			return false;
 		}
 		
+		$user = $model->get('users', $get['userId'], array('userId', 'username', 'email', 'slug', 'regDate', 'lastAuth', 'lastActive'));
+		$user['auth'] = $get['auth'];
+		
 		$activeTime = strtotime($get['lastActive']);
 		$timeDiff = time() - $activeTime;
-		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$getSite = currentSite();
 		/*if($timeDiff > 7200){
 			$controller = new Slick_Core_Controller;
 			$model->edit('users', $get['userId'], array('auth' => ''));
@@ -365,30 +383,29 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}*/
 		
 		$meta = $model->getAll('user_meta', array('userId' => $get['userId']));
-		$get['meta'] = array();
+		$user['meta'] = array();
 		foreach($meta as $row){
-			$get['meta'][$row['metaKey']] = $row['metaValue'];
+			$user['meta'][$row['metaKey']] = $row['metaValue'];
 		}
 		
 		$getRef = $model->get('user_referrals', $get['userId'], array('affiliateId'), 'userId');
-		$get['affiliate'] = false;
+		$user['affiliate'] = false;
 		if($getRef){
 			$getAffiliate = $model->get('users', $getRef['affiliateId'], array('userId', 'username', 'slug'), 'userId');
 			if($getAffiliate){
-				$get['affiliate'] = $getAffiliate;
+				$user['affiliate'] = $getAffiliate;
 			}
 		} 
 		
-		$get['groups'] = $model->fetchAll('SELECT g.name, g.groupId	
+		$user['groups'] = $model->fetchAll('SELECT g.name, g.groupId	
 										   FROM group_users u
 										   LEFT JOIN groups g ON g.groupId = u.groupId
 										   LEFT JOIN group_sites s ON s.groupId = g.groupId
 										   WHERE u.userId = :id AND s.siteId = :siteId', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
 		
-
-		$model->edit('users', $get['userId'], array('lastActive' => timestamp()), 'userId');
+		Slick_App_Account_Home_Model::updateLastActive($get['userId']);
 		
-		return $get;
+		return $user;
 		
 	}
 	
@@ -422,10 +439,11 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	{
 		$model = new Slick_App_Profile_User_Model;
 
-		$getUsers = $model->fetchAll('SELECT userId FROM users
-									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200');
+		$getUsers = $model->fetchAll('SELECT userId FROM user_sessions
+									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200
+									GROUP BY userId');
 		
-		$site = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$site = currentSite();
 		
 		foreach($getUsers as $key => $user){
 			$user = $model->getUserProfile($user['userId'], $site['siteId']);
@@ -482,6 +500,66 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 
 		return $slug;
-	}		
-
+	}
+	
+	public function findSession($userId, $ip)
+	{
+		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE userId = :id AND IP = :IP ORDER BY sessionId DESC LIMIT 1',
+								array(':id' => $userId, ':IP' => $ip));
+		if(!$get){
+			return false;
+		}
+		return $get;
+	}
+	
+	public function checkSession($auth, $useCache = false)
+	{
+		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE auth = :auth ORDER BY sessionId DESC LIMIT 1',
+									array(':auth' => $auth), 0, $useCache);
+		if($get){
+			return $get;
+		}
+		return false;
+	}
+	
+	public function clearSession($auth)
+	{
+		$getSesh = $this->checkSession($auth);
+		if(!$getSesh){
+			return false;
+		}
+		return $this->delete('user_sessions', $getSesh['sessionId']);
+	}
+	
+	public function countSessions($userId = 0)
+	{
+		if($userId > 0){
+			return $this->count('user_sessions', 'userId', $userId);
+		}
+		return $this->count('user_sessions');
+	}
+	
+	public function getSessions($userId = 0)
+	{
+		$wheres = array();
+		if($userId > 0){
+			$wheres['userId'] = $userId;
+		}
+		return $this->getAll('user_sessions', $wheres, array(), 'sessionId');
+	}
+	
+	public function makeSession($userId, $token)
+	{
+		$check = $this->checkSession($token);
+		if($check){
+			return false;
+		}
+		$time = timestamp();
+		$insert = $this->insert('user_sessions', array('userId' => $userId, 'auth' => $token, 'IP' => $_SERVER['REMOTE_ADDR'],
+													   'authTime' => $time, 'lastActive' => $time));
+		if(!$insert){
+			return false;
+		}
+		return true;
+	}
 }

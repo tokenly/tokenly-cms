@@ -1,16 +1,13 @@
 <?php
 class Slick_App_Dashboard_Home_Controller extends Slick_App_ModControl
 {
-    public $data = array();
-    public $args = array();
-    
+
     function __construct()
     {
         parent::__construct();
         
         $this->model = new Slick_App_Dashboard_Home_Model;
-        
-        
+
     }
     
     public function init()
@@ -25,8 +22,6 @@ class Slick_App_Dashboard_Home_Controller extends Slick_App_ModControl
 			}
 		}
 		else{
-		//	debug($_SESSION);
-			//die();
 			$this->redirect($this->site);
 			return true;
 		}

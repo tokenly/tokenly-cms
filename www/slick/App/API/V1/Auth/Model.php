@@ -16,8 +16,7 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 			throw new Exception('Not logged in');
 		}
 
-		
-		$get = $model->get('users', $data['authKey'], array('userId', 'lastActive'), 'auth');
+		$get = $model->checkSession($data['authKey']);
 		if(!$get){
 			http_response_code(401);
 			$model->logout($data);
@@ -27,7 +26,6 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 		$profModel = new Slick_App_Profile_User_Model;
 		$getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
 		
-
 		$activeTime = strtotime($get['lastActive']);
 		$diff = time() - $activeTime;
 		if($diff > 7200){ //2 hours
@@ -39,9 +37,7 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 		
 		$model->updateLastActive($get['userId']);
 		
-		
 		return $getProf;	
-		
 	}
 	
 	public function logout($data)
@@ -50,18 +46,13 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 			throw new Exception('Not logged in');
 		}
 		else{
-
-			$user = $this->get('users', $data['authKey'], array('userId', 'username', 'email', 'lastAuth', 'auth', 'regDate'), 'auth');
-			if($user){
-				$this->edit('users', $user['userId'], array('auth' => ''));
-			}
+			$this->clearSession($data['authKey']);
 			unset($_SESSION['accountAuth']);
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');
 			}
 		}
 		return true;
-		
 	}
 
 }
