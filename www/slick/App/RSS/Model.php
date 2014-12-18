@@ -3,6 +3,8 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 {
 	public function getBlogFeed($data)
 	{
+		$startTime = microtime(true);
+		
 		include(SITE_PATH.'/resources/rss/FeedWriter.php');
 
 		$model = new Slick_App_API_V1_Blog_Model;
@@ -134,7 +136,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 			$feed->addItem($item);
 			
 		}
-		
+
 		$feed->generateFeed();
 	}
 	

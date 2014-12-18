@@ -50,13 +50,14 @@ class Slick_App_RSS_Feed_Controller extends Slick_App_ModControl
 	private function blogFeed()
 	{
 		ob_end_clean();
+		
 		header('Content-type: application/xml');
 		$data = $_REQUEST;
 		unset($data['params']);
 		$data['site'] = $this->data['site'];
 
 		$this->model->getBlogFeed($data);
-		
+
 		die();
 	}
 	

@@ -13,11 +13,9 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		if(isset($data['limit'])){
 			$limit = intval($data['limit']);
 		}
-		
-
+	
 		$origLimit = $limit;
 		//$limit += $getExtra;
-
 
 		if(isset($data['page'])){
 			$page = intval($data['page']);
@@ -44,12 +42,9 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			$expCats = explode(',', $data['categories']);
 			$catList= array();
 			foreach($expCats as $expCat){
-				$getCat = $this->get('blog_categories', $expCat);
-				if(!$getCat){
-					continue;
-				}
-				$catList[] = $getCat['categoryId'];
-				$catList = array_merge($catList, $this->getChildCategories($getCat['categoryId']));
+				$expCat = intval($expCat);
+				$catList[] = $expCat;
+				$catList = array_merge($catList, $this->getChildCategories($expCat));
 			}
 			$catList = array_unique($catList);
 			if(count($catList) > 0){
@@ -60,6 +55,8 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				throw new Exception('Categories not found');
 			}
 		}
+		
+	
 		
 		$siteList = array($data['site']['siteId']);
 		if(isset($data['sites'])){
@@ -82,6 +79,8 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				}
 			}
 		}
+		
+			
 		
 		$andUsers = '';
 		if(isset($data['users'])){
@@ -124,6 +123,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				}
 			}
 		}
+		
 		
 		$getPostFields = 'p.postId, p.siteId, p.title, p.url, p.content, p.userId, p.publishDate, p.editTime as modifiedDate, p.image, p.excerpt, p.views, p.featured, p.coverImage, p.commentCount, p.commentCheck, p.formatType ';
 		$minimizeData = false;
@@ -244,6 +244,8 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 LIMIT '.$start.', '.$limit;
 		}
 		
+		
+		
 		$getPosts = $this->fetchAll($sql);
 
 
@@ -252,24 +254,30 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$isRSS = false;
 		if(!isset($data['isRSS'])){
 			$disqus = new Slick_API_Disqus;
+		}
+		else{
+			$isRSS = true;
 		}
 		$origExtra = $getExtra;
 		if(!isset($data['user'])){
 			$data['user'] = false;
 		}
+		
+		$getPosts = $this->addAllPostMeta($getPosts);
 		foreach($getPosts as $key => $post){
 			if(isset($filled[$post['postId']])){
 				continue;
 			}
-			
 			
 			$postTCA = $tca->checkItemAccess($data['user'], $postModule['moduleId'], $post['postId'], 'blog-post');
 			if(!$postTCA){
 				unset($getPosts[$key]);
 				continue;
 			}
+			
 			
 			if(!$minimizeData){
 				if(!isset($data['noProfiles']) OR (isset($data['noProfiles']) AND !$data['noProfiles'])){
@@ -282,20 +290,22 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					}
 				}
 			}
-			
-			
-			if(!isset($data['noCategories']) OR (isset($data['noCategories']) AND !$data['noCategories'])){
-				$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
-				$cats = array();
-				foreach($getCats as $cat){
-					$getCat = $this->get('blog_categories', $cat['categoryId']);
-					if($getCat['image'] != ''){
-						$getCat['image'] = $data['site']['url'].'/files/blogs/'.$getCat['image'];
+		
+			if(!$isRSS){
+				if(!isset($data['noCategories']) OR (isset($data['noCategories']) AND !$data['noCategories'])){
+					$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']), array('categoryId'));
+					$cats = array();
+					foreach($getCats as $cat){
+						$getCat = $this->get('blog_categories', $cat['categoryId']);
+						if($getCat['image'] != ''){
+							$getCat['image'] = $data['site']['url'].'/files/blogs/'.$getCat['image'];
+						}
+						$cats[] = $getCat;
 					}
-					$cats[] = $getCat;
+					$getPosts[$key]['categories'] = $cats;
 				}
-				$getPosts[$key]['categories'] = $cats;
 			}
+			
 			
 			$pageIndex = Slick_App_Controller::$pageIndex;
 			$getIndex = extract_row($pageIndex, array('itemId' => $post['postId'], 'moduleId' => 28));
@@ -324,7 +334,6 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					$this->edit('blog_posts', $post['postId'], array('commentCheck' => timestamp(), 'commentCount' => $commentThread['thread']['posts']));
 				}				
 			}
-		
 			
 			if(isset($post['image']) AND trim($post['image']) != ''){
 				$getPosts[$key]['image'] = $data['site']['url'].'/files/blogs/'.$post['image'];
@@ -337,12 +346,6 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			}
 			else{
 				$getPosts[$key]['coverImage'] = null;
-			}
-			$getMeta = $postModel->getPostMeta($post['postId']);
-			foreach($getMeta as $mkey => $val){
-				if(!isset($getPosts[$key][$mkey])){
-					$getPosts[$key][$mkey] = $val;
-				}
 			}
 			
 			if(!isset($getPosts[$key]['audio-url']) AND isset($getPosts[$key]['soundcloud-id'])){
@@ -371,8 +374,48 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				}
 			}
 		}
-
 		return $getPosts;
+	}
+	
+	public function addAllPostMeta($posts, $andPrivate = false)
+	{
+		$idList = array();
+		foreach($posts as $post){
+			$idList[] = $post['postId'];
+		}
+		$site = currentSite();
+		$postMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $site['siteId']), array('metaTypeId', 'slug', 'rank', 'isPublic'));
+		
+		$getMeta = $this->fetchAll('SELECT postId, value, metaTypeId
+									FROM blog_postMeta
+									WHERE postId IN('.join(',', $idList).')');
+		$postMeta = array();
+		foreach($getMeta as $meta){
+			foreach($postMetaTypes as $type){
+				if($type['metaTypeId'] == $meta['metaTypeId']){
+					if(!$andPrivate AND $type['isPublic'] == 0){
+						continue 2;
+					}
+					$meta['slug'] = $type['slug'];
+					$meta['rank'] = $type['rank'];
+					if(!isset($postMeta[$meta['postId']])){
+						$postMeta[$meta['postId']] = array();
+					}
+					$postMeta[$meta['postId']][] = $meta;
+					continue 2;
+				}
+			}
+		}
+		foreach($posts as &$post){
+			if(!isset($postMeta[$post['postId']])){
+				continue;
+			}
+			$metaList = $postMeta[$post['postId']];
+			foreach($metaList as $item){
+				$post[$item['slug']] = $item['value'];
+			}
+		}
+		return $posts;
 	}
 	
 	public function addComment($data, $appData)

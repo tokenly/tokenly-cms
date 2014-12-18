@@ -1,7 +1,8 @@
 <?php
 class Slick_App_Blog_Post_Model extends Slick_Core_Model
 {
-
+	public static $postMetaTypes = false;
+	
 	public function getPost($url, $siteId)
 	{
 		$get = $this->fetchSingle('SELECT * FROM blog_posts WHERE url = :url AND siteId = :siteId',
@@ -160,22 +161,39 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 	
 	public function getPostMeta($postId, $fullData = false, $private = false)
 	{
-		$andPrivate = '';
-		if(!$private){
-			$andPrivate = ' AND t.isPublic = 1 ';
+		if(!self::$postMetaTypes){
+			$site = currentSite();
+			self::$postMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $site['siteId']), array(), 'rank' ,'asc');
 		}
-		$getMeta = $this->fetchAll('SELECT m.value, t.slug, t.metaTypeId
-									FROM blog_postMeta m
-									LEFT JOIN blog_postMetaTypes t ON t.metaTypeId = m.metaTypeId
-									WHERE m.postId = :id AND m.value != ""
-									'.$andPrivate.'
-									ORDER BY t.rank ASC', array(':id' => $postId));
+		$types = self::$postMetaTypes;
+
+		//return array();
+		$getMeta = $this->getAll('blog_postMeta', array('postId' => $postId), array('value', 'metaTypeId'));
+
+		$metaList = array();
+		foreach($getMeta as $meta){
+			foreach($types as $type){
+				if($type['metaTypeId'] == $meta['metaTypeId']){
+					if(!$private AND $type['isPublic'] == 0){
+						continue;
+					}
+					$meta['rank'] = $type['rank'];
+					$meta['slug'] = $type['slug'];
+					$metaList[] = $meta;
+					continue;
+				}
+			}
+		}
+		aasort($metaList, 'rank');
 		if($fullData){
-			return $getMeta;
+			return $metaList;
 		}
 		
 		$output = array();
-		foreach($getMeta as $meta){
+		foreach($metaList as $meta){
+			if(trim($meta['value']) == ''){
+				continue;
+			}
 			$output[$meta['slug']] = $meta['value'];
 		}
 		
