@@ -40,13 +40,35 @@ class Tokenly_Install extends Slick_Core_Model
 		$getSites = $this->getAll('sites');
 		$getUsers = $this->getAll('users');
 		
-		if(count($getSites) > 0 AND count($getUsers) > 0){
+		$useAdmin = false;
+		foreach($getUsers as $user){
+			if($user['slug'] == 'admin'){
+				$useAdmin = $user;
+			}
+		}
+		
+		$useSite = false;
+		if($useAdmin){
+			foreach($getSites as $site){
+				if($site['isDefault'] == 1){
+					$useSite = $site;
+				}
+			}
+		}
+		
+		if(!$useAdmin AND count($getSites) > 0 AND count($getUsers) > 1){
 			throw new Exception('Looks like the system is installed already!');
 		}
 		
-		//might have been a screwup.. clean up just in case
-		$this->sendQuery('DELETE FROM sites');
-		$this->sendQuery('DELETE FROM users');
+		if(!$useAdmin){
+			//might have been a screwup.. clean up just in case
+			$this->sendQuery('DELETE FROM sites');
+			$this->sendQuery('DELETE FROM users');
+		}
+		else{
+			$this->sendQuery('DELETE FROM site_apps');
+			$this->sendQuery('DELETE FROM group_sites');
+		}
 		
 		$forms = $this->installForm();
 		$siteData = $forms['site']->grabData();
@@ -92,7 +114,15 @@ class Tokenly_Install extends Slick_Core_Model
 		}
 		
 		//create site
-		$addSite = $this->insert('sites', array('siteId' => 1, 'name' => $siteData['name'], 'domain' => $siteData['domain'], 'url' => $siteData['url'], 'isDefault' => 1, 'themeId' => 1));
+		if($useSite){
+			$addSite = $this->edit('sites', $useSite['siteId'], array('name' => $siteData['name'], 'domain' => $siteData['domain'], 'url' => $siteData['url'], 'isDefault' => 1, 'themeId' => 1));
+			if($addSite){
+				$addSite = $useSite['siteId'];
+			}
+		}
+		else{
+			$addSite = $this->insert('sites', array('siteId' => 1, 'name' => $siteData['name'], 'domain' => $siteData['domain'], 'url' => $siteData['url'], 'isDefault' => 1, 'themeId' => 1));
+		}
 		if(!$addSite){
 			throw new Exception('Error adding to sites table');
 		}
@@ -103,8 +133,22 @@ class Tokenly_Install extends Slick_Core_Model
 		}
 		
 		//create root group and default group
-		$addRoot = $this->insert('groups', array('name' => 'Root Admin', 'slug' => 'root-admin', 'siteId' => $addSite));
-		$addDefault = $this->insert('groups', array('name' => 'Default', 'slug' => 'default', 'siteId' => $addSite, 'isDefault' => 1));
+		$getRoot = $this->get('groups', 'root-admin', array(), 'slug');
+		$getDefault = $this->get('groups', 'default', array(), 'slug');
+		
+		if($getRoot){
+			$addRoot = $getRoot['groupId'];
+		}
+		else{
+			$addRoot = $this->insert('groups', array('name' => 'Root Admin', 'slug' => 'root-admin', 'siteId' => $addSite));
+		}
+		
+		if($getDefault){
+			$addDefault = $getDefault['groupId'];
+		}
+		else{
+			$addDefault = $this->insert('groups', array('name' => 'Default', 'slug' => 'default', 'siteId' => $addSite, 'isDefault' => 1));
+		}
 		
 		if(!$addRoot OR !$addDefault){
 			throw new Exception('Error generating user groups');
@@ -115,14 +159,16 @@ class Tokenly_Install extends Slick_Core_Model
 		$this->insert('group_sites', array('groupId' => $addDefault, 'siteId' => $addSite));
 		
 		//add root access to everything
-		$getModules = $this->getAll('modules');
-		$getPerms = $this->getAll('app_perms');
-		foreach($getModules as $module){
-			$this->insert('group_access', array('moduleId' => $module['moduleId'], 'groupId' => $addRoot));
-		}
-		foreach($getPerms as $perm){
-			if($perm['permKey'] != 'isTroll'){
-				$this->insert('group_perms', array('permId' => $perm['permId'], 'groupId' => $addRoot));
+		if(!$getRoot){
+			$getModules = $this->getAll('modules');
+			$getPerms = $this->getAll('app_perms');
+			foreach($getModules as $module){
+				$this->insert('group_access', array('moduleId' => $module['moduleId'], 'groupId' => $addRoot));
+			}
+			foreach($getPerms as $perm){
+				if($perm['permKey'] != 'isTroll'){
+					$this->insert('group_perms', array('permId' => $perm['permId'], 'groupId' => $addRoot));
+				}
 			}
 		}
 		
@@ -137,20 +183,27 @@ class Tokenly_Install extends Slick_Core_Model
 		$useData['email'] = trim($userData['email']);
 		$useData['activated'] = 1;
 		
-		$addUser = $this->insert('users', $useData);
+		if($useAdmin){
+			$addUser = $this->edit('users', $useAdmin['userId'], $useData);
+		}
+		else{
+			$addUser = $this->insert('users', $useData);
+		}
 		if(!$addUser){
 			throw new Exception('Error registering account');
 		}
 		
-		//add to root group
-		$addToRoot = $this->insert('group_users', array('groupId' => $addRoot, 'userId' => $addUser));
-		if(!$addToRoot){
-			throw new Exception('Error adding new user to root group');
-		}
-		//add to default group
-		$addToDefault = $this->insert('group_users', array('groupId' => $addDefault, 'userId' => $addUser));
-		if(!$addToDefault){
-			throw new Exception('Error adding new user to default group');
+		if(!$useAdmin){
+			//add to root group
+			$addToRoot = $this->insert('group_users', array('groupId' => $addRoot, 'userId' => $addUser));
+			if(!$addToRoot){
+				throw new Exception('Error adding new user to root group');
+			}
+			//add to default group
+			$addToDefault = $this->insert('group_users', array('groupId' => $addDefault, 'userId' => $addUser));
+			if(!$addToDefault){
+				throw new Exception('Error adding new user to default group');
+			}
 		}
 		
 		return true;
