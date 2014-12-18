@@ -107,6 +107,11 @@ if(isset($post) AND $post['published'] == 1){
 				<li><strong>Editor:</strong> <?= $editorName ?></li>
 				<li><strong>Views:</strong> <?= number_format($post['views']) ?></li>
 				<li><strong>Comments:</strong> <?= number_format($post['commentCount']) ?></li>
+				<?php
+				if(isset($perms['canUseMagicWords']) AND $perms['canUseMagicWords']){
+					echo '<li><strong>Magic Words:</strong> '.number_format($magic_word_count).'</li>';
+				}
+				?>
 			</ul>			
 			<?php
 		}

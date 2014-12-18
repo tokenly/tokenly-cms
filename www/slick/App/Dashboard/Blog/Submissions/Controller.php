@@ -334,12 +334,20 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$output['formType'] = 'Edit';
 		$output['post'] = $getPost;
 		
-		if(isset($this->data['perms']['canUseMagicWords']) AND !$this->data['perms']['canUseMagicWords']){
-			$getField = $this->model->get('blog_postMetaTypes', 'magic-word', array(), 'slug');
-			if($getField){
-				$output['form']->remove('meta_'.$getField['metaTypeId']);
+		if(isset($this->data['perms']['canUseMagicWords'])){
+			if(!$this->data['perms']['canUseMagicWords']){
+				$getField = $this->model->get('blog_postMetaTypes', 'magic-word', array(), 'slug');
+				if($getField){
+					$output['form']->remove('meta_'.$getField['metaTypeId']);
+				}
 			}
-		}		
+			else{
+				$getWords = $this->model->getAll('pop_words', array('itemId' => $getPost['postId'],
+																	'moduleId' => $this->postModule['moduleId']),
+																array('submitId'));
+				$output['magic_word_count'] = count($getWords);
+			}
+		}
 		
 		$this->data['post'] = $getPost;
 		
