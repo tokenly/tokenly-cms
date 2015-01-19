@@ -155,7 +155,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			$modifiedSince = date('Y-m-d H:i:s', $modTime);
 		}
 		if($modifiedSince !== false){
-			$andWhen .= ' AND editTime >= "'.$modifiedSince.'" ';
+			$andWhen .= ' AND p.editTime >= "'.$modifiedSince.'" ';
 		}
 		
 		$postedBefore = false;
@@ -181,7 +181,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		}
 
 		if($postedBefore !== false){
-			$andWhen .= ' AND publishDate <= "'.$postedBefore.'" ';
+			$andWhen .= ' AND p.publishDate <= "'.$postedBefore.'" ';
 		}
 		
 		$andSites = '(';
@@ -226,7 +226,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 '.$andUsers.'
 					 '.$andMeta.'
 					 '.$andWhen.'
-					 GROUP BY postId
+					 GROUP BY p.postId
 					 ORDER BY p.publishDate DESC
 					 LIMIT '.$start.', '.$limit;
 		}
@@ -244,10 +244,8 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					 LIMIT '.$start.', '.$limit;
 		}
 		
-		
-		
-		$getPosts = $this->fetchAll($sql);
 
+		$getPosts = $this->fetchAll($sql);
 
 		$profModel = new Slick_App_Profile_User_Model;
 		$postModel = new Slick_App_Blog_Post_Model;
@@ -348,7 +346,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				$getPosts[$key]['coverImage'] = null;
 			}
 			
-			if(!isset($getPosts[$key]['audio-url']) AND isset($getPosts[$key]['soundcloud-id'])){
+			if(empty($getPosts[$key]['audio-url']) AND !empty($getPosts[$key]['soundcloud-id'])){
 				$streamsURL = 'http://api.soundcloud.com/tracks/'.$getPosts[$key]['soundcloud-id'].'/streams?client_id='.SOUNDCLOUD_ID;
 				$getStream = json_decode(file_get_contents($streamsURL), true);
 				/*if($getStream AND isset($getStream['http_mp3_128_url'])){
@@ -385,6 +383,10 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		}
 		$site = currentSite();
 		$postMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $site['siteId']), array('metaTypeId', 'slug', 'rank', 'isPublic'));
+		
+		if(count($idList) == 0){
+			return array();
+		}
 		
 		$getMeta = $this->fetchAll('SELECT postId, value, metaTypeId
 									FROM blog_postMeta

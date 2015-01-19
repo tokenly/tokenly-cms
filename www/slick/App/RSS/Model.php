@@ -53,8 +53,8 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 	
 		foreach($getPosts as $post){
 			
-			$post['content'] = strip_tags(replaceNonSGML($post['content']), '<a><p><br><strong><em><ul><ol><li><hr>');
-			$post['excerpt'] = strip_tags(replaceNonSGML($post['excerpt']), '<a><p><br><strong><em><ul><ol><li><hr>');
+			$post['content'] = strip_tags(replaceNonSGML($post['content']), '<a><p><br><strong><em><ul><ol><li><hr><h1><h2><h3><h4><h5><h6>');
+			$post['excerpt'] = strip_tags(replaceNonSGML($post['excerpt']), '<a><p><br><strong><em><ul><ol><li><hr><h1><h2><h3><h4><h5><h6>');
 			$post['title'] = replaceNonSGML($post['title']);
 			$post['title'] = preg_replace('/&[^;]+;/','',$post['title']);
 			
@@ -127,6 +127,8 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 					if(isset($audioLength)){
 						$item->setEncloser($audio, $audioLength, 'audio/mpeg');
 					}
+					var_dump($audioLength);
+		
 
 				}
 					
@@ -136,7 +138,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 			$feed->addItem($item);
 			
 		}
-
+		die();
 		$feed->generateFeed();
 	}
 	
