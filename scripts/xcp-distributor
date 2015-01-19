@@ -10,6 +10,8 @@ $model::$cacheMode = false;
 $btc = new Slick_API_Bitcoin(BTC_CONNECT);
 $xcp = new Slick_API_Bitcoin(XCP_CONNECT);
 
+
+
 while(true){
 	//get app settings
 	$getApp = $model->get('apps', 'ltbcoin', array(), 'slug');
@@ -90,16 +92,16 @@ while(true){
 				
 				//update received balances
 				$updateData = array('feeReceived' => $received, 'tokenReceived' => $tokenReceived, 'status' => 'receiving');
-				if($received > $row['fee']){
+				/*if($received > $row['fee']){
 					$updateData['fee'] = $received;
-				}
+				}*/
+				$updateData['fee'] = $row['fee'];
 				
 
 				//if full amount of tokens + fee are sent, set to sending status
 				if(floatval(convertFloat($received)) >= floatval(convertFloat($row['fee'])) AND $tokenReceived >= $row['total']){
 					$updateData['status'] = 'sending';
 				}
-			
 
 				$update = $model->edit('xcp_distribute', $row['distributeId'], $updateData);
 				if(!$update){
@@ -159,9 +161,9 @@ while(true){
 				
 				//figure out if extra fees were paid
 				$validAddresses = (count($row['addressList']) - $invalidAddresses);
-				$row['fee'] = $row['fee'] * SATOSHI_MOD;
-				$row['fee'] = $row['fee'] - ($distributeDust * $validAddresses);
-				$feePerAddress = $row['fee'] / $validAddresses;
+				$row['fee'] = round($row['fee'] * SATOSHI_MOD);
+				$row['fee'] = $row['fee'] - round(($distributeDust * $validAddresses));
+				$feePerAddress = round($row['fee'] / $validAddresses);
 				$perFee = $distributeFee;
 				if($feePerAddress > $perFee){
 					$perFee += ($feePerAddress - $perFee);
@@ -201,7 +203,11 @@ while(true){
 				
 				$distributeDust = $distributeDust / 2;
 				
-				$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust);
+				//get pubkey
+				$validateAddress = $btc->validateaddress($row['address']);
+				$pubkey = $validateAddress['pubkey'];
+				
+				$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust.' '.$pubkey);
 					
 				$txData = array();
 
@@ -330,5 +336,5 @@ while(true){
 				break;
 		}
 	}
-	sleep(300); //5 minutes
+	sleep(300);
 }
