@@ -15,11 +15,11 @@ class Slick_UI_Captcha extends Slick_UI_FormObject
 		switch($this->type){
 			case 'recaptcha':
 				$captcha = new Slick_API_Recaptcha;
-				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC);
+				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC, null,true);
 				break;
 			default:
 				$captcha = new Slick_API_Recaptcha;
-				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC);
+				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC, null,true);
 				break;
 		}
 		

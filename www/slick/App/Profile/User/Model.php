@@ -38,7 +38,7 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		
 		
 		if(trim($output['avatar']) == ''){
-			$output['avatar'] = 'http://www.gravatar.com/avatar/'.md5(strtolower($get['email'])).'?d='.urlencode($getSite['url'].'/files/avatars/default.jpg');
+			$output['avatar'] = 'https://www.gravatar.com/avatar/'.md5(strtolower($get['email'])).'?d='.urlencode($getSite['url'].'/files/avatars/default.jpg');
 			//$output['avatar'] = 'default.jpg';
 		}
 		

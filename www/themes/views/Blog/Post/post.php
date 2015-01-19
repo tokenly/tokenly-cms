@@ -186,9 +186,15 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 		$disqusSig = hash_hmac('sha1', $disqusMessage.' '.$time, DISQUS_SECRET);
 		$disqus_hmac = $disqusMessage.' '.$disqusSig.' '.$time;
 	}
+	
+	$postURL = SITE_URL.$_SERVER['REQUEST_URI'];
+	if(strtotime($post['publishDate']) < 1420872893){
+		$postURL = str_replace('https://', 'http://', $postURL);
+	}
     
     ?>
     <script type="text/javascript">
+		var disqus_url = '<?= $postURL ?>';
 		var disqus_config = function () {
 			// The generated payload which authenticates users with Disqus
 			<?php

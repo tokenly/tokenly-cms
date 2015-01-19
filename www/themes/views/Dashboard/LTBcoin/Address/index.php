@@ -6,18 +6,17 @@
 <p>
 	<strong>Why should I verify my bitcoin addresses?</strong>
 </p>
-<ul>
-	<li>
-		So that we know where to safely send your hard earned LTBcoin!
-	</li>
-	<li>
-		Whenever you send us a tip or interact with us in another way via your bitcoin address, we will
-		be able to link it directly to your account, allowing us to award you for your efforts!
-	</li>
-	<li>
-		Enable additional features on the site and provide you additional account data (quick access to token balances etc.)
-	</li>
-</ul>
+<p>
+	By verfiying your bitcoin address, we are able to track your balances, including any Counterparty tokens you might have (such as LTBCOIN).
+	This gives you access to additional features on the platform such as "Token Controlled Access" and the ability to quickly check your balances without having to open up your wallet.
+</p>
+<p>
+	Token Controlled Access (TCA) is a concept in which we can grant your account access to different pages or specific features and different
+	levels of permissions based on the amount of a specific token that you hold in your verified bitcoin addresses.
+	For example, if you happen to own at least 1 PODCAST token, you can gain permissions to post and publish your own podcasts!
+	Different access tokens can be obtained in a variety of ways, most often through fellow community members or from giveaways and crowdsales. 
+	For more information, see <a href="http://letstalkbitcoin.com/blog/post/tcv">here</a>.
+</p>
 <p>
 	<strong>Note:</strong> You do not need a verified address to receive weekly LTBcoin rewards.
 </p>

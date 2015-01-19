@@ -19,7 +19,7 @@
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/mobile-tables.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/jquery.fancybox.css">
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-	<link href='http://fonts.googleapis.com/css?family=PT+Sans+Narrow:700' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=PT+Sans+Narrow:700' rel='stylesheet' type='text/css'>
 	<?php
 	if(isset($canonical)){
 	?>
@@ -63,7 +63,7 @@
 			foreach($scPosts as $scKey => $scPost){
 				$scPost['title'] = '<a href="'.SITE_URL.'/blog/post/'.$scPost['url'].'" title="'.$scPost['title'].'" target="_blank">'.$scPost['title'].'</a>';
 				$scPosts[$scKey]['title'] = $scPost['title'];
-				$mediaPlayer[] = array('title' => $scPost['title'], 'url' => SITE_URL.'/blog/post/'.$scPost['url'], 'stream' => 'http://api.soundcloud.com/tracks/'.$scPost['soundcloud-id'].'/stream?client_id='.SOUNDCLOUD_ID);
+				$mediaPlayer[] = array('title' => $scPost['title'], 'url' => SITE_URL.'/blog/post/'.$scPost['url'], 'stream' => 'https://api.soundcloud.com/tracks/'.$scPost['soundcloud-id'].'/stream?client_id='.SOUNDCLOUD_ID);
 			}
 			
 			echo 'window.headerMedia = '.json_encode($mediaPlayer).';';
