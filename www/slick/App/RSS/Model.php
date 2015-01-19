@@ -138,7 +138,6 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 			$feed->addItem($item);
 			
 		}
-		die();
 		$feed->generateFeed();
 	}
 	
