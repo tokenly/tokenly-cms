@@ -228,8 +228,6 @@
 			* postTime (timestamp)
 			* editTime (timestamp)
 			* editedBy (int)
-			* author (array)
-				* see previous author field for reference.
 * **/threads/{ID}/{REPLYID} (get single reply)**
 	* **METHOD:** GET
 	* **Params:**
