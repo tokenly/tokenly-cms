@@ -184,7 +184,7 @@
 		* **thread-only** (bool) - set to true to return only thread data, no replies
 		* **replies-only** (bool) - set to true to return only replies, no main thread data		
 	* **Returns:**
-		* thread (array)
+		* thread
 			* topicId (int)
 			* boardId (int)
 			* userId (int)
