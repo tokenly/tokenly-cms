@@ -102,15 +102,23 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 			throw new Exception('Error posting comment');
 		}
 		
-		//only use @mentions when not private editorial comments
-		if($editorial == 0){
+		if($editorial == 1){
+			$whitelist = $this->getEditorialCommentWhitelist($data['postId']);
+			mention($useData['message'], '%username% has mentioned you in a 
+					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/edit/'.$appData['post']['postId'].'#comment-'.$post.'" target="_blank">editorial blog comment.</a>',
+					$useData['userId'], $post, 'blog-editor-reply', array(), $whitelist);					
+		}
+		else{
 			mention($useData['message'], '%username% has mentioned you in a 
 					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/'.$appData['post']['url'].'#comment-'.$post.'">blog comment.</a>',
-					$useData['userId'], $post, 'blog-reply');
+					$useData['userId'], $post, 'blog-reply');					
 		}
+
 		
 		$notifyData = $appData;
-		$notifyData['postId'] = $post;
+		$notifyData['commentId'] = $post;
+		$notifyData['post'] = $appData['post'];
+		$notifyData['user'] = $appData['user'];
 		if($appData['user']['userId'] != $appData['post']['userId']){
 			if($editorial == 1){
 				$meta = new Slick_App_Meta_Model;
@@ -126,7 +134,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 					$meta->updateUserMeta($appData['user']['userId'], 'editorial_discussions', join(',', $discussList));
 				}
 				
-				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogPrivateCommentNotice', $post, 'new-editor-reply', false, $notifyData);
+				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
 			}
 			else{
 				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
@@ -136,7 +144,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		$noticeList = $this->getEditorialDiscussionUsers($appData['post']['postId']);
 		foreach($noticeList as $extraNotice){
 			if($extraNotice != $appData['user']['userId'] AND $extraNotice != $appData['post']['userId']){
-				Slick_App_Meta_Model::notifyUser($extraNotice, 'emails.blogOtherPrivateCommentNotice', $post, 'new-editor-reply', false, $notifyData);
+				Slick_App_Meta_Model::notifyUser($extraNotice, 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
 			}
 		}		
 		
@@ -146,11 +154,72 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		
 	}
 	
+	public function getEditorialCommentWhitelist($postId)
+	{
+		$output = array();
+		$getPost = $this->get('blog_posts', $postId, array('postId', 'userId'));
+		
+		//add author to whitelist
+		$output[] = $getPost['userId'];
+		
+		//add contributors + discussion members to list
+		$discussionMembers = $this->getEditorialDiscussionUsers($postId);
+		foreach($discussionMembers as $member){
+			if(!in_array($member, $output)){
+				$output[] = $member;
+			}
+		}
+		
+		//add any relevant blog team members to list
+		$teamMembers = $this->getPostBlogTeam($postId);
+		foreach($teamMembers as $member){
+			if(!in_array($member['userId'], $output)){
+				$output[] = $member['userId'];
+			}
+		}
+	
+		return $output;
+	}
+	
+	public function getPostBlogTeam($postId)
+	{
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$getCats = $this->fetchAll('SELECT c.blogId
+									FROM blog_postCategories pc
+									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									LEFT JOIN blogs b ON b.blogId = c.blogId
+									WHERE pc.postId = :postId AND b.active = 1
+									GROUP BY c.categoryId', array(':postId' => $postId));
+		$output = array();
+		foreach($getCats as $cat){
+			$catTeam = $multiblog->getBlogUserRoles($cat['blogId'], true);
+			foreach($catTeam as $member){
+				if(!isset($output[$member['userId']])){
+					$output[$member['userId']] = $member;
+				}
+			}
+		}
+		
+		return $output;
+		
+	}
+	
 	public function getEditorialDiscussionUsers($postId)
 	{
-		$getRows = $this->fetchAll('SELECT userId, metaValue as value FROM user_meta WHERE metaKey = "editorial_discussions"');
 		$output = array();
+		
+		$submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
+		$getContribs = $submitModel->getPostContributors($postId);
+		foreach($getContribs as $contrib){
+			$output[] = $contrib['userId'];
+		}
+		
+		$getRows = $this->fetchAll('SELECT userId, metaValue as value FROM user_meta WHERE metaKey = "editorial_discussions"');
+		
 		foreach($getRows as $user){
+			if(in_array($user['userId'], $output)){
+				continue;
+			}
 			$exp = explode(',', $user['value']);
 			if(in_array($postId, $exp)){
 				$output[] = $user['userId'];

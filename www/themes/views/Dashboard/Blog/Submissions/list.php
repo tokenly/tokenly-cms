@@ -25,9 +25,6 @@ if($perms['canWritePost']){
 }//endif
 ?>
 <h2>My Article Submissions</h2>
-<p>
-	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>">Go Back</a>
-</p>
 <div class="clear"></div>
 <div class="purchase-credits-cont" style="display: none;">
 	<h3>Purchase Submission Credits</h3>
@@ -51,6 +48,7 @@ if($perms['canWritePost']){
 	<p><strong class="payment-status">Waiting for payment...</strong></p>
 </div>
 <?= $this->displayBlock('dashboard-blog-submissions') ?>
+<hr>
 <div class="clear"></div>
 <?php
 if($trashMode == 0){
@@ -58,6 +56,7 @@ if($trashMode == 0){
 <ul class="ltb-pop-stats">
 	<li><strong>Posts Submitted:</strong> <?= number_format($totalPosts) ?></li>
 	<li><strong>Posts Published:</strong> <?= number_format($totalPublished) ?></li>
+	<li><strong>Posts Contributed To:</strong> <?= number_format($totalContributed) ?></li>
 	<li><strong>Total Views:</strong> <?= number_format($totalViews) ?></li>
 	<li><strong>Total Comments:</strong> <?= number_format($totalComments) ?></li>
 </ul>
@@ -84,11 +83,11 @@ else{
 			$postList[$key]['status'] = '<span class="text-success">Published</span>';
 			$postList[$key]['postDate'] = $val['publishDate'];
 		}
-		elseif($val['ready'] == 1){
-			$postList[$key]['status'] = '<span class="text-pending">Ready</span>';
+		elseif($val['status'] == 'ready'){
+			$postList[$key]['status'] = '<span class="text-pending">Ready for Review</span>';
 		}
-		elseif($val['status'] == 'editing'){
-			$postList[$key]['status'] = '<span class="text-progress">Editing</span>';
+		elseif($val['published'] == 0 AND $val['status'] == 'published'){
+			$postList[$key]['status'] = '<span class="text-progress">Pending Approval</span>';
 		}
 		else{
 			$postList[$key]['status'] = '<span class="text-default">Draft</span>';
@@ -114,19 +113,25 @@ else{
 			$editLink = '';
 			$deleteLink = '';
 			$viewLink = '';
-			if(($user['userId'] == $post['userId'] AND $post['perms']['canEditSelfPost'])
-				OR ($user['userId'] != $post['userId'] AND $post['perms']['canEditOtherPost'])){
-				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canEditAfterPublished'])){
-					$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">Edit</a>';
-					$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">'.$post['title'].'</a>';
-				}
-			}
+
+			$editLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">Edit</a>';
+			$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'" class="">'.$post['title'].'</a>';
+		
 			
-			if(($user['userId'] == $post['userId'] AND $post['perms']['canDeleteSelfPost'])
-				OR ($user['userId'] != $post['userId'] AND $post['perms']['canDeleteOtherPost'])){
-				if($post['published'] == 0 OR ($post['published'] == 1 AND $post['perms']['canEditAfterPublished'])){
-					$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash/'.$post['postId'].'" class="">Move to Trash</a>';
-				}
+			$commentIcon = '';
+			if($post['new_comments']){
+				$commentIcon = '<i class="fa fa-comment text-success" title="New Editorial Comments"></i> ';
+			}
+			if($post['userId'] != $user['userId']){
+				$commentIcon .= ' <i class="fa fa-group text-pending" title="Contributor"></i> ';
+			}
+			$titleLink = $commentIcon.$titleLink;
+		
+			
+			$titleLink = $titleLink.'<br><small>Author: <a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'" target="_blank">'.$post['author']['username'].'</a></small>';
+			
+			if($user['userId'] == $post['userId']){
+				$deleteLink = '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash/'.$post['postId'].'" class="">Move to Trash</a>';
 			}
 			
 			if($post['published'] == 1){

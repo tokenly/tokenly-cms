@@ -40,11 +40,11 @@ if(trim($report['label']) != ''){
 				$mLabel = 'Total Active Referred Users';
 				break;
 			case 'blog-posts':
-				$mLabel = 'Published Blog Posts';
+				$mLabel = 'Users w/ Published Blog Posts';
 				break;
 			case 'poq':
 			case 'pov':
-				$mLabel = 'Published Blog Posts (PoV)';
+				$mLabel = 'Users w/ Published Blog Posts (PoV)';
 				break;
 		}
 		echo '<li><strong>'.$mLabel.':</strong> '.number_format($mTotal).'</li>';
@@ -85,14 +85,14 @@ foreach($report['info'] as &$row){
 			$totalComments = 0;
 			$totalWords = 0;
 			foreach($row['extra'] as $extraRow){
-				if(isset($extraRow['post']['views'])){
-					$totalViews += $extraRow['post']['views'];
+				if(isset($extraRow['views'])){
+					$totalViews += $extraRow['views'];
 				}
-				if(isset($extraRow['post']['comments'])){
-					$totalComments += $extraRow['post']['comments'];
+				if(isset($extraRow['comments'])){
+					$totalComments += $extraRow['comments'];
 				}
-				if(isset($extraRow['post']['wordSubmits'])){
-					$totalWords = $extraRow['post']['wordSubmits'];
+				if(isset($extraRow['wordSubmits'])){
+					$totalWords = $extraRow['wordSubmits'];
 				}
 			
 			}

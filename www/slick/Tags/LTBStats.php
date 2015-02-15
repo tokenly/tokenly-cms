@@ -38,11 +38,7 @@ class Slick_Tags_LTBStats
 			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
 			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
 			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
-			$balances = array_merge($balances, $balances2);
-			$balances = array_merge($balances, $balances3);
-			$balances = array_merge($balances, $balances4);
-			$balances = array_merge($balances, $balances5);
-			$balances = array_merge($balances, $balances6);
+			$balances = array_merge($balances, $balances2, $balances3, $balances4, $balances5, $balances6);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
 				if($balance['quantity'] == 0){
@@ -606,6 +602,10 @@ class Slick_Tags_LTBStats
 			case 'poq':
 			case 'pov':
 				$mLabel = 'Published Blog Posts (PoV)';
+				continue 2;
+				break;
+			case 'blog-edits':
+				$mLabel = 'Article Contributions';
 				break;
 		}
 		echo '<li><strong>'.$mLabel.':</strong> '.number_format($mTotal).'</li>';
@@ -677,8 +677,7 @@ class Slick_Tags_LTBStats
 					<th>Score</th>
 					<th>LTBc Earned</th>
 					<th>% of Total</th>
-					<th>Posts Written</th>
-					<th>Posts Edited</th>
+					<th>Posts Contributed To</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -687,7 +686,7 @@ class Slick_Tags_LTBStats
 				$num = 0;
 				foreach($report['info'] as $row){
 					$num++;
-					
+				
 				?>
 				<tr>
 					<td><?= $num ?></td>
@@ -695,14 +694,38 @@ class Slick_Tags_LTBStats
 					<td><?= number_format($row['score'], 2) ?></td>
 					<td><?= number_format(($perPoint * $row['score']), 2) ?></td>
 					<td><?= number_format($row['percent'], 4) ?></td>
-					<td><?= $row['info']['blog-posts'] ?></td>
 					<?php
-					if($row['info']['blog-edits'] == 0 AND $row['info']['blog-posts'] == 0){
-						//workaround for missing blog editing numbers
-						$row['info']['blog-edits'] = $row['score'] / 5;
+					$totalContribs = 0;
+					if(!isset($row['extra'][0]['contribs'])){
+						if($row['info']['blog-edits'] == 0 AND $row['info']['blog-posts'] == 0){
+							//workaround for missing blog editing numbers
+							$row['info']['blog-edits'] = $row['score'] / 5;
+						}
+						if($row['info']['blog-edits'] > $row['info']['blog-posts']){
+							$totalContribs += $row['info']['blog-edits'];
+						}
+						else{
+							$totalContribs += $row['info']['blog-posts'];
+						}
+
+					}
+					else{
+						foreach($row['extra'] as $extraPost){
+							if($extraPost['userId'] == $row['userId']){
+								$totalContribs++;
+							}
+							else{
+								foreach($extraPost['contribs'] as $contrib){
+									if($contrib['userId'] == $row['userId']){
+										$totalContribs++;
+										continue 2;
+									}
+								}
+							}
+						}
 					}
 					?>
-					<td><?= $row['info']['blog-edits'] ?></td>
+					<td><?= $totalContribs ?></td>
 				</tr>
 				<?php
 				}//endforeach
@@ -713,18 +736,47 @@ class Slick_Tags_LTBStats
 			elseif($report_type == 'pov'){
 				//debug($report);
 				$povList = array();
-				foreach($report['info'] as $row){
-					foreach($row['extra'] as $extra){
-						if(!isset($extra['post']['wordSubmits'])){
-							$extra['post']['wordSubmits'] = 0;
+				$site = currentSite();
+				$uniquePosts = array();
+				if(isset($report['info'][0]['extra'][0]['contribs'])){
+					foreach($report['info'] as $rep){
+						foreach($rep['extra'] as $extra){
+							$postId = $extra['postId'];
+							if(!in_array($postId, $uniquePosts)){
+								$uniquePosts[] = $postId;
+							}
+							if(!isset($povList[$postId])){
+								$povList[$postId] = $extra;
+								$povList[$postId]['post'] = $extra;
+								$povList[$postId]['score'] = $extra['total_score'];
+								$povList[$postId]['contributors'] = array();
+							}
+							$getAuthor = $this->model->get('users', $extra['userId'], array('userId', 'username', 'slug'));
+							$getAuthor['displayname'] = '<a href="'.$site['url'].'/profile/user/'.$getAuthor['slug'].'" target="_blank">'.$getAuthor['username'].'</a>';
+							$povList[$postId]['contributors'][$getAuthor['userId']] = $getAuthor['displayname'];
+							foreach($extra['contribs'] as $contrib){
+								if(!isset($povList[$postId]['contributors'][$contrib['userId']])){
+									$contribDisplay = '<a href="'.$site['url'].'/profile/user/'.$contrib['slug'].'" target="_blank">'.$contrib['username'].'</a>';
+									$povList[$postId]['contributors'][$contrib['userId']] = $contribDisplay;
+								}
+							}
 						}
-						$postId = $extra['post']['postId'];
-						if(!isset($povList[$postId])){
-							$povList[$postId] = $extra;
-							$povList[$postId]['contributors'] = array();
+					}
+				}
+				else{
+					foreach($report['info'] as $row){
+						foreach($row['extra'] as $extra){
+							if(!isset($extra['post']['wordSubmits'])){
+								$extra['post']['wordSubmits'] = 0;
+							}
+							$postId = $extra['post']['postId'];
+							if(!isset($povList[$postId])){
+								$povList[$postId] = $extra;
+								$povList[$postId]['contributors'] = array();
+							}
+							$povList[$postId]['contributors'][] = $row['displayname'];
+							
 						}
-						$povList[$postId]['contributors'][] = $row['displayname'];
-						
 					}
 				}
 				aasort($povList, 'score');

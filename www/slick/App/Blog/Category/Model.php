@@ -12,19 +12,34 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 			}
 		}
 		
-		$getPosts = $this->fetchAll('SELECT *
-									 FROM blog_posts
-									 WHERE siteId = :siteId
-									 AND published = 1
-									 AND trash = 0
-									 AND publishDate <= "'.timestamp().'"
-									 ORDER BY publishDate DESC
+		$getPosts = $this->fetchAll('SELECT p.postId, p.content, p.title, p.url, p.userId, p.siteId, p.postDate, p.publishDate, p.published,
+											p.image, p.excerpt, p.views, p.featured, p.coverImage, p.ready, p.commentCount, p.commentCheck,
+											p.formatType, p.editTime, p.editedBy, p.status, p.version
+									 FROM blog_posts p
+									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 WHERE p.siteId = :siteId
+									 AND p.status = "published"
+									 AND p.trash = 0
+									 AND p.publishDate <= "'.timestamp().'"
+									 AND pc.approved = 1
+									 AND b.active = 1
+									 GROUP BY p.postId
+									 ORDER BY p.publishDate DESC
 									 LIMIT '.$start.', '.$limit,
 									 array(':siteId' => $siteId));
 		
 		$profModel = new Slick_App_Profile_User_Model;
 		$postModel = new Slick_App_Blog_Post_Model;
+		$submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
+		
 		foreach($getPosts as $key => $post){
+			$checkApproved = $submitModel->checkPostApproved($post['postId']);
+			if(!$checkApproved){
+				unset($getPosts[$key]);
+				continue;
+			}
 			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $siteId);
 			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
 			$cats = array();
@@ -53,10 +68,17 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 	public function getHomePages($siteId, $limit = 10)
 	{
 		$count = $this->fetchSingle('SELECT COUNT(*) as total 
-									FROM blog_posts
-									WHERE siteId = :siteId
-									 AND published = 1
-									 AND publishDate <= "'.timestamp().'"',
+									 FROM blog_posts p
+									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 WHERE p.siteId = :siteId
+									 AND p.status = "published"
+									 AND p.trash = 0
+									 AND p.publishDate <= "'.timestamp().'"
+									 AND pc.approved = 1
+									 AND b.active = 1
+									 GROUP BY p.postId',
 									 array(':siteId' => $siteId));
 		if(!$count){
 			return false;
@@ -87,13 +109,17 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 		$catList = array_merge(array($categoryId), $childCats);
 
 		$getPosts = $this->fetchAll('SELECT p.*
-									FROM blog_postCategories c
-									LEFT JOIN blog_posts p ON p.postId = c.postId
+									FROM blog_postCategories pc
+									LEFT JOIN blog_posts p ON p.postId = pc.postId
+									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									LEFT JOIN blogs b ON b.blogId = c.blogId
 									 WHERE p.siteId = :siteId
-									 AND c.categoryId IN('.join(',', $catList).')
-									 AND p.published = 1
-									 AND trash = 0
+									 AND pc.categoryId IN('.join(',', $catList).')
+									 AND p.status = "published"
+									 AND p.trash = 0
 									 AND p.publishDate <= "'.timestamp().'"
+									 AND b.active = 1
+									 AND pc.approved = 1
 									 GROUP BY p.postId
 									 ORDER BY p.publishDate DESC
 									 LIMIT '.$useLimit,
@@ -143,12 +169,17 @@ class Slick_App_Blog_Category_Model extends Slick_Core_Model
 	public function getCategoryPages($categoryId, $siteId, $limit = 10)
 	{
 		$count = $this->fetchSingle('SELECT COUNT(*) as total 
-									FROM blog_postCategories c
-									LEFT JOIN blog_posts p ON p.postId = c.postId
+									FROM blog_postCategories pc
+									LEFT JOIN blog_posts p ON p.postId = pc.postId
+									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									LEFT JOIN blogs b ON b.blogId = c.blogId
 									 WHERE p.siteId = :siteId
-									 AND c.categoryId = :categoryId
-									 AND p.published = 1
+									 AND pc.categoryId = :categoryId
+									 AND p.status = "published"
+									 AND p.trash = 0
 									 AND p.publishDate <= "'.timestamp().'"
+									 AND b.active = 1
+									 AND pc.approved = 1
 									 ',
 									 array(':siteId' => $siteId, ':categoryId' => $categoryId));
 		if(!$count){

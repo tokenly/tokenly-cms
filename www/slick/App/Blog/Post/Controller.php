@@ -8,6 +8,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         $this->model = new Slick_App_Blog_Post_Model;
+        $this->submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
     }
     
     public function init()
@@ -35,7 +36,12 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 			$getPost = $this->model->getPost($this->itemId, $this->data['site']['siteId']);
 		}
 		
-		if(!$getPost OR $getPost['published'] == 0){
+		$checkApproved = false;
+		if($getPost){
+			$checkApproved = boolval($this->submitModel->checkPostApproved($getPost['postId']));
+		}
+		
+		if(!$getPost OR $getPost['status'] != 'published' OR !$checkApproved){
 			$output['view'] = '404';
 			return $output;
 		}

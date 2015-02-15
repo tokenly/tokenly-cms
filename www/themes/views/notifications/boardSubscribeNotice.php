@@ -11,7 +11,7 @@ if($checkTCA){
 $notification = $culprit.' posted in the board '.
 	'<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/board/'.$data['board']['slug'].'">'.$data['board']['name'].'</a> '.
 	'that you are subscribed to.  The topic was '.
-	'<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$data['topic']['url'].$data['page'].($data['postId'] ? '#post-'.$data['postId'] : '').'">'.$data['topic']['title'].'</a>';
+	'<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$data['topic']['url'].$data['page'].($data['postId'] ? '#post-'.$data['postId'] : '').'">'.$data['topic']['title'].'</a>';
 
 echo $notification;
 

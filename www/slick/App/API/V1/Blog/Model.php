@@ -219,7 +219,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			$sql = 'SELECT '.$getPostFields.'
 					 FROM blog_posts p
 					 WHERE '.$andSites.'
-					 AND p.published = 1
+					 AND p.status = "published"
 					 AND p.trash = 0
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
@@ -234,7 +234,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			$sql = 'SELECT '.$getPostFields.'
 					 FROM blog_posts p
 					 WHERE '.$andSites.'
-					 AND p.published = 1
+					 AND p.status = "published"
 					 AND p.trash = 0
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
@@ -249,6 +249,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 
 		$profModel = new Slick_App_Profile_User_Model;
 		$postModel = new Slick_App_Blog_Post_Model;
+		$submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
@@ -270,8 +271,9 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				continue;
 			}
 			
+			$checkApproved = $submitModel->checkPostApproved($post['postId']);
 			$postTCA = $tca->checkItemAccess($data['user'], $postModule['moduleId'], $post['postId'], 'blog-post');
-			if(!$postTCA){
+			if(!$postTCA OR !$checkApproved){
 				unset($getPosts[$key]);
 				continue;
 			}
@@ -348,7 +350,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			
 			if(empty($getPosts[$key]['audio-url']) AND !empty($getPosts[$key]['soundcloud-id'])){
 				$streamsURL = 'http://api.soundcloud.com/tracks/'.$getPosts[$key]['soundcloud-id'].'/streams?client_id='.SOUNDCLOUD_ID;
-				$getStream = json_decode(file_get_contents($streamsURL), true);
+				//$getStream = json_decode(file_get_contents($streamsURL), true);
 				/*if($getStream AND isset($getStream['http_mp3_128_url'])){
 					$getPosts[$key]['audio-url'] = $getStream['http_mp3_128_url'];
 				}

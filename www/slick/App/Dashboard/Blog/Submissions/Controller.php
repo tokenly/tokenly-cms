@@ -15,6 +15,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$this->blogApp = $this->model->get('apps', 'blog', array(), 'slug');
 		$this->blogSettings = $this->meta->appMeta($this->blogApp['appId']);
         $this->postModel = new Slick_App_Blog_Post_Model;
+        $this->invite = new Slick_App_Account_Invite_Model;
     }
     
     function __install($moduleId)
@@ -107,18 +108,32 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'],
 															 'userId' => $this->data['user']['userId'],
 															 'trash' => $trash), array(), 'postId');
+															 
+		$getContribPosts = $this->model->getUserContributedPosts($this->data);
+		$getPosts = array_merge($getPosts, $getContribPosts);
+															 
+		$viewedComments = $this->meta->getUserMeta($this->data['user']['userId'], 'viewed-editorial-comments');
+		if($viewedComments){
+			$viewedComments = explode(',', $viewedComments);
+		}															 
 															
 		$output['totalPosts'] = 0;
 		$output['totalPublished'] = 0;
 		$output['totalViews'] = 0;
 		$output['totalComments'] = 0;
+		$output['totalContributed'] = 0;
 		$disqus = new Slick_API_Disqus;
 		foreach($getPosts as $key => $row){
+			$row['published'] = $this->model->checkPostApproved($row['postId']);
+			$getPosts[$key]['published'] = $row['published'];
+			$getPosts[$key]['author'] = $this->model->get('users', $row['userId'], array('userId', 'username', 'slug'));
 			$postPerms = $this->tca->checkPerms($this->data['user'], $this->data['perms'], $this->postModule['moduleId'], $row['postId'], 'blog-post');
 			$getPosts[$key]['perms'] = $postPerms;
-			$output['totalPosts']++;
-			if($row['published'] == 1){
-				$output['totalPublished']++;
+			if($row['userId'] == $this->data['user']['userId']){
+				$output['totalPosts']++;
+				if($row['published'] == 1){
+					$output['totalPublished']++;
+				}
 			}
 			$output['totalViews']+=$row['views'];	
 			$pageIndex = Slick_App_Controller::$pageIndex;
@@ -143,6 +158,29 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				$output['totalComments'] += $row['commentCount'];
 			}
 			
+			$post['new_comments'] = false;
+			$getLastComment = $this->model->fetchSingle('SELECT commentId FROM blog_comments
+												  WHERE postId = :postId AND userId != :userId AND editorial = 1
+												  ORDER BY commentId DESC',
+												array(':postId' => $row['postId'], ':userId' => $this->data['user']['userId']));
+												
+			if($getLastComment){
+				$post['new_comments'] = true;
+				if($viewedComments){
+					foreach($viewedComments as $viewed){
+						$expViewed = explode(':', $viewed);
+						if($expViewed[0] == $row['postId']){
+							if($expViewed[1] == $getLastComment['commentId']){
+								$post['new_comments'] = false;
+							}
+						}
+					}
+				}
+			}
+			$getPosts[$key]['new_comments'] = $post['new_comments'];		
+			if($row['userId'] != $this->data['user']['userId']){
+				$output['totalContributed']++;
+			}
 		}
 		$output['postList'] = $getPosts;
 		
@@ -188,21 +226,15 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			$this->redirect($this->site.$this->moduleUrl);
 			die();
 		}
-		
-		$output['form'] = $this->model->getPostForm(0, $this->data['site']['siteId']);
+		$this->data['user']['perms'] = $this->data['perms'];
+		$output['form'] = $this->model->getPostForm(0, $this->data['site']['siteId'], true, $this->data['user']);
 		$output['formType'] = 'Submit';
 
 		if(!$this->data['perms']['canPublishPost']){
 			$output['form']->field('status')->removeOption('published');
 			$output['form']->remove('featured');
 		}
-		if(!$this->data['perms']['canSetEditStatus']){
-			$output['form']->field('status')->removeOption('editing');
-		}
-		if(!$this->data['perms']['canChangeEditor']){
-			$output['form']->remove('editedBy');
-		}		
-		
+
 		if(isset($this->data['perms']['canUseMagicWords']) AND !$this->data['perms']['canUseMagicWords']){
 			$getField = $this->model->get('blog_postMetaTypes', 'magic-word', array(), 'slug');
 			if($getField){
@@ -237,11 +269,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$data['status'] = 'draft';
 				}
 			}
-			if(!$this->data['perms']['canSetEditStatus']){
-				if(isset($data['status']) AND $data['status'] == 'editing'){
-					$data['status'] = 'draft';
-				}
-			}			
+		
 			if($data['autogen-excerpt'] == 0){
 				$data['excerpt'] = shortenMsg(strip_tags($data['content']), 500);
 			}			
@@ -282,40 +310,88 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		}		
 		
 		$getPost = $this->model->get('blog_posts', $this->args[3]);
-		if(!$getPost){
+		if(!$getPost OR $getPost['trash'] == 1){
 			throw new Exception('404');
 		}
+		$getPost['published'] = $this->model->checkPostApproved($getPost['postId']);
+
 
 		$tca = new Slick_App_LTBcoin_TCA_Model;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');	
-
 		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+		$foundRole = true;
+		$getPost['user_blog_role'] = false;
+		$getPost['pending_contrib'] = false;
+		$getPost['active_contrib'] = false;
 		
-		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
-		OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canEditOtherPost'])){
-			throw new Exception('403');
-		}
-		
-		if($getPost['published'] == 1 AND !$this->data['perms']['canEditAfterPublished']){
-			throw new Exception('403');
-		}
-		
-		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		if(!$postTCA){
-			throw new Exception('403');
-		}
-		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-		foreach($getCategories as $cat){
-			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
+		if(!$this->data['perms']['canManageAllBlogs']){
+			$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
+			if(!$postTCA){
 				throw new Exception('403');
 			}
-		}	
+			
+			$getRoles = $this->model->getAll('blog_roles', array('userId' => $this->data['user']['userId']));
+			$myBlogs = $this->model->getAll('blogs', array('userId' => $this->data['user']['userId']));
+			$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
+			$allowed_roles = array('admin', 'editor');
+			
+			if($getPost['userId'] != $this->data['user']['userId']){
+				$foundRole = false;
+				foreach($getCategories as $cat){
+					$cat = $this->model->get('blog_categories', $cat['categoryId']);
+					$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+					if(!$catTCA){
+						throw new Exception('403');
+					}
+					if(!$foundRole){
+						foreach($myBlogs as $myBlog){
+							if($myBlog['blogId'] == $cat['blogId'] AND $this->data['user']['userId'] == $myBlog['userId']){
+								$foundRole = true;
+							}
+						}
+						if(!$foundRole){
+							foreach($getRoles as $role){
+								if($role['blogId'] == $cat['blogId'] AND in_array($role['type'], $allowed_roles)){
+									$foundRole = true;
+								}
+							}
+						}
+					}
+				}
+				
+				$getContribs = $this->model->getPostContributors($getPost['postId'], false);
+				foreach($getContribs as $contrib){
+					if($contrib['userId'] == $this->data['user']['userId']){
+						$foundRole = true;
+						if($contrib['accepted'] == 0){
+							$getPost['pending_contrib'] = true;
+						}
+						else{
+							$getPost['active_contrib'] = true;
+						}
+					}
+				}
+				
+				if($foundRole){
+					$getPost['user_blog_role'] = true;
+				}
+			}
+			
+			if(($getPost['userId'] != $this->data['user']['userId'] AND !$foundRole AND !$this->data['perms']['canEditOtherPost'])
+				OR
+			   ($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
+			   ){
+				throw new Exception('403');
+			}
+			
+			if($getPost['published'] == 1 AND !$this->data['perms']['canEditAfterPublished']){
+				throw new Exception('403');
+			}
+		}
 		
 		$getPost['categories'] = $this->model->getPostFormCategories($getPost['postId']);
 		$getPost['author'] = $this->model->get('users', $getPost['userId']);
-		$getPost['editor'] = $this->model->get('users', $getPost['editedBy']);
 		
 		return $getPost;
 	}
@@ -330,9 +406,48 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		}
 		
 		$output = array('view' => 'form');
-		$output['form'] = $this->model->getPostForm($getPost['postId'], $this->data['site']['siteId']);
+		$this->data['user']['perms'] = $this->data['perms'];
+		$output['form'] = $this->model->getPostForm($getPost['postId'], $this->data['site']['siteId'], true, $this->data['user']);
 		$output['formType'] = 'Edit';
 		$output['post'] = $getPost;
+		$this->data['post'] = $getPost;
+		$output['unlock_post'] = true;
+		$contributor = $this->model->checkUserContributor($getPost['postId'], $this->data['user']['userId']);
+		$output['contributor'] = $contributor;
+		$output['contributor_list'] = $this->model->getPostContributors($getPost['postId'], false);
+		
+		if($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canManageAllBlogs']){
+			if(!$contributor OR $getPost['status'] == 'published'){
+				$output['form']->field('title')->addAttribute('disabled');
+				$output['form']->field('url')->addAttribute('disabled');
+				$output['form']->field('formatType')->addAttribute('disabled');
+				$output['form']->field('content')->addAttribute('disabled');
+				$output['form']->field('excerpt')->addAttribute('disabled');
+				$output['form']->field('autogen-excerpt')->addAttribute('disabled');
+				$output['form']->field('status')->addAttribute('disabled');
+				$output['form']->field('publishDate')->addAttribute('disabled');
+				$output['form']->field('notes')->addAttribute('disabled');
+				$output['form']->field('categories')->addAttribute('disabled');
+				$output['form']->field('coverImage')->addAttribute('disabled');
+				foreach($output['form']->fields as $fkey => $field){
+					if(strpos($fkey, 'meta_') === 0){
+						$output['form']->field($fkey)->addAttribute('disabled');
+					}
+				}
+				$output['unlock_post'] = false;
+			}
+			if($contributor){
+				//still disable some stuff for them
+				$output['form']->field('status')->addAttribute('disabled');
+				$output['form']->field('publishDate')->addAttribute('disabled');				
+				$output['form']->field('categories')->addAttribute('disabled');
+				foreach($output['form']->fields as $fkey => $field){
+					if(strpos($fkey, 'meta_') === 0){
+						$output['form']->field($fkey)->addAttribute('disabled');
+					}
+				}
+			}
+		}
 		
 		if(isset($this->data['perms']['canUseMagicWords'])){
 			if(!$this->data['perms']['canUseMagicWords']){
@@ -349,8 +464,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 		}
 		
-		$this->data['post'] = $getPost;
-		
 		if(!$this->data['perms']['canPublishPost']){
 			if($getPost['published'] == 1){
 				$output['form']->field('status')->addAttribute('disabled');
@@ -360,37 +473,56 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 			$output['form']->remove('featured');
 		}
-		if(!$this->data['perms']['canChangeEditor']){
-			$output['form']->remove('editedBy');
-		}
-		if(!$this->data['perms']['canSetEditStatus']){
-			$output['form']->field('status')->removeOption('editing');
-		}
+
+
 		if(!$this->data['perms']['canChangeAuthor']){
 			$output['form']->remove('userId');
 		}
 		
-		//$getPost['status'] = '';
 		if($getPost['published'] == 1){
 			$getPost['status'] = 'published';
 		}
 		elseif($getPost['ready'] == 1){
 			$getPost['status'] = 'ready';
 		}
-		/*else{
-			$getPost['status'] = 'draft';
-		}*/
 		
-		if(posted() AND !isset($_POST['no_edit'])){
+		//request/invite a contributor
+		if(posted()){
+			if(isset($_POST['request-contrib']) AND !$contributor){
+				return $this->requestContributor($output);
+			}
+			elseif(isset($_POST['invite-contrib']) AND ($this->data['user']['userId'] == $getPost['userId'] OR $this->data['perms']['canManageAllBlogs'])){
+				return $this->requestContributor($output, true);
+			}
+			elseif(isset($_POST['update-contribs']) AND ($this->data['user']['userId'] == $getPost['userId'] OR $this->data['perms']['canManageAllBlogs'])){
+				return $this->updateContributors($output);
+			}
+		}
+		//contributor controls
+		if(isset($this->args[4]) AND $this->args[4] == 'contributors'){
+			if(isset($this->args[5])){
+				switch($this->args[5]){
+					case 'delete':
+						return $this->deleteContributor($output);
+				}
+			}	
+		}	
+		
+		
+		if(posted() AND !isset($_POST['no_edit']) AND $output['unlock_post']){
 			$data = $output['form']->grabData();
 			if(isset($data['publishDate'])){
 				$data['publishDate'] = date('Y-m-d H:i:s', strtotime($data['publishDate']));
 			}
+			if($contributor AND !$this->data['perms']['canManageAllBlogs']){
+				$data['publishDate'] = $getPost['publishDate'];
+			}
+			
 			$data['siteId'] = $this->data['site']['siteId'];
 			if(!$this->data['perms']['canChangeAuthor']){
 				$data['userId'] = false;
 			}
-			//$data['userId'] = $this->user['userId'];
+
 			if(!$this->data['perms']['canPublishPost']){
 				if($getPost['published'] == 0){
 					if(isset($data['status']) AND $data['status'] == 'published'){
@@ -400,22 +532,16 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				else{
 					$data['status'] = 'published';
 				}
-				if(!isset($data['status'])){
-					$data['status'] = $getPost['status'];
-				}
+			}
+			
+			if(!isset($data['status']) OR ($contributor AND !$this->data['perms']['canManageAllBlogs'])){ //contributors cannot change status
+				$data['status'] = $getPost['status'];
+			}
 
-				if(isset($data['featured'])){
-					unset($data['featured']);
-				}
-			}
-			if(!$this->data['perms']['canSetEditStatus']){
-				if(isset($data['status']) AND $data['status'] == 'editing'){
-					$data['status'] = 'draft';
-				}
-			}
 			if($data['autogen-excerpt'] == 0){
 				$data['excerpt'] = shortenMsg(strip_tags($data['content']), 500);
 			}
+			$data['contributor'] = $contributor;
 			try{
 				$edit = $this->model->editPost($this->args[3], $data, $this->data);
 			}
@@ -473,6 +599,40 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		//private editorial discussion
 		$output['comment_form'] = $this->postModel->getCommentForm();
 		$output['private_comments'] = $this->postModel->getPostComments($getPost['postId'], 1);
+		if(count($output['private_comments']) > 0){
+			$meta = new Slick_App_Meta_Model;
+			$viewedComments = $meta->getUserMeta($this->data['user']['userId'], 'viewed-editorial-comments');
+			$getLastComment = $meta->fetchSingle('SELECT commentId FROM blog_comments
+												  WHERE postId = :postId AND userId != :userId AND editorial = 1
+												  ORDER BY commentId DESC',
+												array(':postId' => $getPost['postId'], ':userId' => $this->data['user']['userId']));			
+			if($viewedComments){
+				$viewedComments = explode(',', $viewedComments);
+			}
+			else{
+				$viewedComments = array();
+			}
+		
+			$updateViewed = true;
+			foreach($viewedComments as $k => $viewed){
+				$expViewed = explode(':', $viewed);
+				if($expViewed[0] == $getPost['postId']){
+					if($expViewed[1] == $getLastComment['commentId']){
+						$updateViewed = false;
+					}
+					else{
+						unset($viewedComments[$k]);
+						$updateViewed = true;
+						break;
+					}
+				}
+			}
+			if($updateViewed){
+				$viewedComments[] = $getPost['postId'].':'.$getLastComment['commentId'];
+				$meta->updateUserMeta($this->data['user']['userId'], 'viewed-editorial-comments', join(',',$viewedComments));
+			}
+		}
+
 		$output['comment_list_hash'] = $this->model->getCommentListHash($getPost['postId']);
 		if(isset($this->args[4]) AND $this->args[4] == 'comments'){
 			if(isset($this->args[5])){
@@ -502,13 +662,19 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 		}
 		
+		
 		//setup form values
+		$catOpts = $output['form']->field('categories')->getOptions();
+		foreach($getPost['categories'] as $catId){
+			$catOpts = $this->model->parseApprovedCategoryOptions($catOpts, $getPost['postId'], $catId);
+		}
+		$output['form']->field('categories')->setOptions($catOpts);
 		$output['form']->setValues($getPost);
 		$output['form']->field('publishDate')->setValue(date('Y/m/d H:i', strtotime($getPost['publishDate'])));
 		
 		return $output;
-		
 	}
+	
 	
 	protected function postPrivateComment()
 	{
@@ -935,8 +1101,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			return false;
 		}
 		
-		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canDeleteSelfPost'])
-		OR ($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canDeleteOtherPost'])){
+		if($getPost['userId'] != $this->data['user']['userId']){
 			return array('view' => '403');
 		}
 
@@ -1043,5 +1208,179 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		echo json_encode($output);
 		die();
 	}	
+	
+	public function requestContributor($output, $author_invite = false)
+	{
+		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+
+		if($author_invite){
+			$getUser = $this->model->get('users', trim($_POST['username']), array('userId', 'username', 'slug', 'email'), 'username');
+			if(!$getUser OR $getUser['userId'] == $output['post']['userId']){
+				Slick_Util_Session::flash('blog-message', 'User '.$_POST['username'].' not found (contributor request)', 'error');
+				$this->redirect($redirect_link);
+				die();
+			}
+		}
+			
+		$role = strip_tags($_POST['role']);
+		if(trim($role) == ''){
+			Slick_Util_Session::flash('blog-message', 'Must enter a contributor role', 'error');
+			$this->redirect($redirect_link);
+			die();
+		}
+		
+		$share = round(floatval($_POST['share']), 2);
+		
+		$contribs = $this->model->getPostContributors($output['post']['postId'], false);
+		$totalShare = $share;
+		foreach($contribs as $contrib){
+			if(!$author_invite){
+				if($this->data['user']['userId'] == $contrib['userId']){
+					Slick_Util_Session::flash('blog-message', 'You already have a pending contribution request', 'error');				
+					$this->redirect($redirect_link);
+					die();
+				}
+			}
+			else{
+				if($getUser['userId'] == $contrib['userId']){
+					Slick_Util_Session::flash('blog-message', 'User already pending contribution request', 'error');
+					$this->redirect($redirect_link);
+					die();
+				}
+			}
+			$totalShare += $contrib['share'];
+		}
+		
+		if($share < 0){
+			Slick_Util_Session::flash('blog-message', 'Reward share cannot be less than 0', 'error');
+			$this->redirect($redirect_link);
+			die();
+		}
+		
+		if($totalShare > 100){
+			Slick_Util_Session::flash('blog-message', 'Total reward share percentage cannot go over 100%', 'error');
+			$this->redirect($redirect_link);
+			die();
+		}
+		
+		if(!$author_invite){
+			$inviteData = array('userId' => $this->data['user']['userId'], 'acceptUser' => $output['post']['userId'], 'sendUser' => $this->data['user']['userId'],
+						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'request',
+						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
+						  'class' => 'Slick_App_Dashboard_Blog_Submissions_Model');	
+		}
+		else{
+			$inviteData = array('userId' => $getUser['userId'], 'acceptUser' => $getUser['userId'], 'sendUser' => $this->data['user']['userId'],
+						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'invite',
+						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
+						  'class' => 'Slick_App_Dashboard_Blog_Submissions_Model');	
+		}
+		
+		$invite = $this->invite->sendInvite($inviteData);
+		$contribData = array('postId' => $output['post']['postId'], 'inviteId' => $invite['inviteId'],
+							'role' => $role, 'share' => $share);
+		
+		$add_contrib = $this->model->insert('blog_contributors', $contribData);
+		Slick_Util_Session::flash('blog-message', 'Contributor request sent!', 'success');
+		$this->redirect($redirect_link);
+		die();
+	}
+	
+	public function deleteContributor($output)
+	{
+		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+		$getContrib = $this->model->get('blog_contributors', @$this->args[6]);
+		if(!$getContrib){
+			$output['view'] = '404';
+			return $output;
+		}
+		
+		if($getContrib['postId'] != $output['post']['postId']){
+			$output['view'] = '403';
+			return $output;
+		}
+		
+		$getInvite = $this->model->get('user_invites', $getContrib['inviteId']);
+		$getUser = $this->model->get('users', $getInvite['userId'], array('userId', 'username', 'slug'));
+		
+		if(($getInvite['accepted'] == 0 AND $output['post']['userId'] == $this->data['user']['userId'])
+			OR $this->data['perms']['canManageAllBlogs']
+			OR ($getInvite['userId'] == $this->data['user']['userId'])){
+			$delete = $this->model->delete('user_invites', $getContrib['inviteId']);
+			if($delete){
+				if($getInvite['accepted'] == 1){
+					$notifyData = array();
+					$notifyData['quitter'] = $getUser;
+					$notifyData['post'] = $output['post'];
+					$this->model->notifyContributors($output['post']['postId'], 'contributor_quit', $notifyData, 0);
+				}
+				Slick_Util_Session::flash('blog-message', $getUser['username'].' has been removed as a contributor.', 'success');
+				$this->redirect($redirect_link);
+				die();			
+			}
+		}
+		$output['view'] = '403';
+		return $output;
+	}
+	
+	public function updateContributors($output)
+	{
+		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+		
+		$changeRoles = false;
+		$changeShares = false;
+		
+		if($output['post']['userId'] == $this->data['user']['userId']){
+			$changeRoles = true;
+		}
+		
+		if($this->data['perms']['canManageAllBlogs']){
+			$changeRoles = true;
+			$changeShares = true;
+		}
+		
+		if(!$changeRoles AND !$changeShares){
+			$output['view'] = '403';
+			return $output;
+		}
+		
+		$updateList = array();
+		foreach($_POST as $k => $v){
+			$exp = explode('_', $k);
+			if(!isset($exp[1])){
+				continue;
+			}
+			$itemId = false;
+			if(($exp[0] == 'role' AND $changeRoles) OR ($exp[0] == 'share' AND $changeShares)){
+				$itemId = intval($exp[1]);
+				$getContrib = $this->model->get('blog_contributors', $itemId);
+				if(!$getContrib){
+					continue;
+				}
+			}
+			
+			if($itemId){
+				if(!isset($updateList[$itemId])){
+					$updateList[$itemId] = array();
+				}
+				$updateList[$itemId][$exp[0]] = $v;
+			}
+		}
+		
+		foreach($updateList as $itemId => $item){
+			if(isset($item['share'])){
+				$item['share'] = floatval($item['share']);
+			}
+			if(isset($item['role'])){
+				$item['role'] = strip_tags($item['role']);
+			}
+			$edit = $this->model->edit('blog_contributors', $itemId, $item);
+		}
+		
+		Slick_Util_Session::flash('blog-message', 'Contributor list updated!', 'success');
+		$this->redirect($redirect_link);	
+		die();
+	}
+	
 
 }

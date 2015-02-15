@@ -105,7 +105,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 					}
 					else{
 						$getAudio = get_headers($audio, 1);
-						//var_dump($getAudio);
+					
 						if($getAudio AND isset($getAudio['Content-Length'])){
 							if(is_array($getAudio['Content-Length'])){
 								$getAudio['Content-Length'] = $getAudio['Content-Length'][1];
@@ -127,7 +127,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 					if(isset($audioLength)){
 						$item->setEncloser($audio, $audioLength, 'audio/mpeg');
 					}
-					var_dump($audioLength);
+					
 		
 
 				}
@@ -152,17 +152,18 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		$sites->setLabelDir('R');
 		$getSites = $this->getAll('sites');
 		foreach($getSites as $site){
-			if($site['siteId'] == 2){
-				continue;//temp skip demo site
+			if($site['siteId'] > 1){
+				continue;//temp skip other sites
 			}			
 			$sites->addOption($site['siteId'], $site['name']);
 		}
 		$form->add($sites);
 		
-		$catModel = new Slick_App_Dashboard_BlogCategory_Model;
+		$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
+		
 		foreach($getSites as $site){
-			if($site['siteId'] == 2){
-				continue;//temp skip demo site
+			if($site['siteId'] > 1){
+				continue;//temp skip other sites
 			}
 			$getCats = $catModel->getCategoryFormList($site['siteId']);
 			if(count($getCats) <= 0){

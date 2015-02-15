@@ -226,6 +226,67 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 		return count($get);
 	}
 	
+	protected function setPublishedPosts($timeframe)
+	{
+		$submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
+		$getSite = currentSite();
+		
+		$sql = 'SELECT postId, userId, title, url, publishDate, views, commentCount FROM blog_posts WHERE status="published" AND siteId = :siteId ';
+		if(is_array($timeframe)){
+			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
+		}
+		$get = $this->fetchAll($sql, array(':siteId' => $getSite['siteId']));
+		foreach($get as $k => $row){
+			$row['contribs'] = $submitModel->getPostContributors($row['postId']);
+			$checkApproved = $submitModel->checkPostApproved($row['postId']);
+			if(!$checkApproved){
+				unset($get[$k]);
+				continue;
+			}
+			$get[$k] = $row;
+		}
+		$this->publishedPosts = $get;
+		return $get;
+	}
+	
+	public function getUserContributedPosts($userId, $timeframe = false)
+	{
+		if(!isset($this->publishedPosts)){
+			$this->setPublishedPosts($timeframe);
+		}
+		
+		$output = array('num' => 0, 'total' => 0, 'posts' => array());
+		$weight = $this->weights['publishScore'];
+		foreach($this->publishedPosts as $post){
+			if($post['userId'] == $userId){
+				//is an author
+				$leftover = 100;
+				foreach($post['contribs'] as $contrib){
+					$leftover -= $contrib['share'];
+				}
+				$output['num']++;
+				$post['role'] = 'Author';
+				$output['posts'][] = $post;
+				if($leftover > 0){
+					$output['total'] += $weight * ($leftover / 100);
+				}
+			}
+			else{
+				//search contributors
+				foreach($post['contribs'] as $contrib){
+					if($contrib['userId'] == $userId){
+						$output['num']++;
+						$output['total'] += $weight * ($contrib['share'] / 100);
+						$post['role'] = $contrib['role'];
+						$output['posts'][] = $post;
+					}
+				}
+			}
+		}
+		
+		return $output;
+	}
+	
 	/*
 	check if user is a new registrant
 	
@@ -322,18 +383,16 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 					$score = $num * $this->weights['referralScore'];
 					break;
 				case 'blog-posts':
-					$num = $this->getNumUserPublishedPosts($userId, $timeframe);
-					$score = ($num * $this->weights['publishScore']) * ($this->weights['writerCut'] / 100);
-					
-					$editorNum = $this->getNumUserEditedPosts($userId, $timeframe);
-					$score += ($editorNum * $this->weights['publishScore']) * ($this->weights['editorCut'] / 100);
-					$output['info']['blog-edits'] = $editorNum;
+					$getScore = $this->getUserContributedPosts($userId, $timeframe);
+					$num = $getScore['num'];
+					$score = $getScore['total'];					
+					$output['extra'] = $getScore['posts'];
 					break;
 				case 'pov':
 					$pov = $this->getUserPOV($userId, $timeframe);
-					$num = count($pov['scores']);
+					$num = $pov['num'];
 					$score = $pov['total'];
-					$output['extra'] = $pov['scores'];
+					$output['extra'] = $pov['posts'];
 					break;
 				
 			}
@@ -343,7 +402,7 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$output['negativeScore'] += $negate;
 			
 		}
-		
+
 		return $output;
 		
 	}
@@ -372,7 +431,6 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$score['percent'] = ($score['score'] / $totalScore) * 100;
 			$output[] = $score;
 		}
-		
 		
 		return array('totalPoints' => $totalScore, 'data' => $output);
 	}
@@ -558,71 +616,79 @@ class Slick_App_LTBcoin_POP_Model extends Slick_Core_Model
 			$this->postModel = new Slick_App_Blog_Post_Model;
 		}
 		
+		if(!isset($this->publishedPosts)){
+			$this->setPublishedPosts($timeframe);
+		}
 		$blogModule = $this->get('modules', 'blog-post', array(), 'slug');
-		
-		$sql = 'SELECT postId, userId, url, title, views, editedBy FROM blog_posts
-				WHERE (userId = :userId OR editedBy = :editedBy) AND published = 1';
-		if(is_array($timeframe)){
-			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
-		}				
-		
-		$get = $this->fetchAll($sql, array(':userId' => $userId, 'editedBy' => $userId));
 		$pageIndex = Slick_App_Controller::$pageIndex;
-		$getSite = $this->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-		$povScores = array();
-		foreach($get as $post){
+		$getSite = currentSite();
+		$popScores = array();
+		$output = array('num' => 0, 'posts' => array(), 'total' => 0);
+		foreach($this->publishedPosts as $k => $post){
 			
-			//get view count
-			$thisScore =  $post['views'] * $this->weights['viewScore'];
+			if(!isset($post['total_score'])){
+				//get view count
+				$thisScore =  $post['views'] * $this->weights['viewScore'];
+				
+				//get magic word count
+				$getWords = $this->fetchSingle('SELECT count(*) as total FROM pop_words WHERE moduleId = :blogModule AND itemId = :postId',
+											array('blogModule' => $blogModule['moduleId'], 'postId' => $post['postId']));
+				$post['wordSubmits'] = $getWords['total'];
+				$thisScore += intval($getWords['total']) * $this->weights['wordScore'];
+				
+				//get disqus comment count
+				$getIndex = extract_row($pageIndex, array('itemId' => $post['postId'], 'moduleId' => 28));
+				$postURL = $getSite['url'].'/blog/post/'.$post['url'];
+				if($getIndex AND count($getIndex) > 0){
+					$postURL = $getSite['url'].'/'.$getIndex[count($getIndex) - 1]['url'];
+				}
+				
+				$commentThread = $this->disqus->getThread($postURL, false);
+				$post['comments'] = $post['commentCount'];
+				if($commentThread){
+					$numReplies = $commentThread['thread']['posts'];
+					$thisScore += intval($numReplies) * $this->weights['commentScore'];
+					$post['comments'] = $numReplies;
+				}
+				
+				$post['total_score'] = $thisScore;	
+				$this->publishedPosts[$k] = $post;
+			}
 			
-			/*
-			$getMeta = $this->postModel->getPostMeta($post['postId']);
-			$post['meta'] = array();
-			foreach($getMeta as $mkey => $val){
-				if(!isset($getPosts[$key][$mkey])){
-					$post['meta'][$mkey] = $val;
+			$myScore = $post['total_score'];
+			$found = false;
+			if($post['userId'] == $userId){
+				//author, get leftover shares
+				$leftover = 100;
+				foreach($post['contribs'] as $contrib){
+					$leftover -= $contrib['share'];
+				}
+				$found = true;
+				if($leftover > 0){
+					$myScore = $myScore * ($leftover / 100);
+				}
+				$post['role'] = 'Author';
+				
+			}
+			else{
+				foreach($post['contribs'] as $contrib){
+					if($contrib['userId'] == $userId){
+						$found = true;
+						$myScore = $myScore * ($contrib['share'] / 100);
+						$post['role'] = $contrib['role'];
+					}
 				}
 			}
 			
-			if((isset($post['meta']['audio-url']) AND trim($post['meta']['audio-url']) != '')
-				OR (isset($post['meta']['soundcloud-id']) AND trim($post['meta']['soundcloud-id']) != '')){
-				//multiply by 4!
-				$thisScore = $thisScore * 4;
+			if($found){
+				$post['my_score'] = $myScore;
+				$output['posts'][] = $post;
+				$score += $myScore;
+				$output['num']++;
 			}
-			*/
-			
-			//get magic word count
-			$getWords = $this->fetchSingle('SELECT count(*) as total FROM pop_words WHERE moduleId = :blogModule AND itemId = :postId',
-										array('blogModule' => $blogModule['moduleId'], 'postId' => $post['postId']));
-			$post['wordSubmits'] = $getWords['total'];
-			$thisScore += intval($getWords['total']) * $this->weights['wordScore'];
-			
-			//get disqus comment count
-			$getIndex = extract_row($pageIndex, array('itemId' => $post['postId'], 'moduleId' => 28));
-			$postURL = $getSite['url'].'/blog/post/'.$post['url'];
-			if($getIndex AND count($getIndex) > 0){
-				$postURL = $getSite['url'].'/'.$getIndex[count($getIndex) - 1]['url'];
-			}
-			
-			$commentThread = $this->disqus->getThread($postURL, false);
-			if($commentThread){
-				$numReplies = $commentThread['thread']['posts'];
-				$thisScore += intval($numReplies) * $this->weights['commentScore'];
-				$post['comments'] = $numReplies;
-			}
-			
-			if($post['editedBy'] != 0 AND $post['userId'] == $userId AND $post['editedBy'] != $userId){
-				$thisScore = $thisScore * ($this->weights['writerCut'] / 100);
-			}
-			elseif($post['editedBy'] != 0 AND $post['userId'] != $userId AND $post['editedBy'] == $userId){
-				$thisScore = $thisScore * ($this->weights['editorCut'] / 100);
-			}
-			
-			$popScores[] = array('post' => $post, 'score' => $thisScore);
-			$score += $thisScore;
 		}
+		$output['total'] = $score;
+		return $output;
 		
-		
-		return array('scores' => @$popScores, 'total' => $score);
 	}
 }

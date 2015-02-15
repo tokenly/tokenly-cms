@@ -7,7 +7,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		parent::__construct();
 	}
 
-	public function getPostForm($postId = 0, $siteId, $andUseMeta = true)
+	public function getPostForm($postId = 0, $siteId, $andUseMeta = true, $user = array())
 	{
 		$getPost = false;
 		if($postId != 0){
@@ -57,21 +57,12 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$author->addOption($writer['userId'], $writer['username']);
 		}
 		$author->setLabel('Author');
-		$form->add($author);
-		
-		$editor = new Slick_UI_Select('editedBy');
-		$editor->addOption(0, '[nobody]');
-		foreach($getUsers as $writer){
-			$editor->addOption($writer['userId'], $writer['username']);
-		}
-		$editor->setLabel('Editor');
-		$form->add($editor);		
+		$form->add($author);	
 		
 		$status = new Slick_UI_Select('status');
 		$status->addOption('draft', 'Draft');
-		$status->addOption('ready', 'Ready for Publishing');
-		$status->addOption('editing', 'Editing/Processing');
-		$status->addOption('published', 'Published');
+		$status->addOption('ready', 'Ready for Review');
+		$status->addOption('published', 'Finished');
 		$status->setLabel('Post Status');
 		$form->add($status);
 		
@@ -109,14 +100,39 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$coverImage->setLabel('Cover Image ('.$app['meta']['coverWidth'].'x'.$app['meta']['coverHeight'].')');
 		$form->add($coverImage);
 
-		$categories = new Slick_UI_CheckboxList('categories');
-		$categories->setLabel('Categories');
-		$categories->setLabelDir('R');
-		$catModel = new Slick_App_Dashboard_BlogCategory_Model;
-		$getCats = $catModel->getCategoryFormList($siteId);
+		$categories = new Slick_UI_CascadingCheckboxList('categories');
+		$categories->setLabel('Requested Blog Categories *');
+		$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
+		$getCats = $catModel->getCategories($siteId, 0, true);
+		$blogCatList = array();
 		foreach($getCats as $cat){
-			$categories->addOption($cat['categoryId'], $cat['name']);
+			$getBlog = $this->get('blogs', $cat['blogId']);
+			if($getBlog['active'] == 0){
+				continue;
+			}
+			$getRoles = $multiblog->getBlogUserRoles($cat['blogId']);
+			if($cat['public'] == 0){
+				$has_access = false;
+				foreach($getRoles as $role){
+					if($role['userId'] == $user['userId'] AND in_array($role['type'], $accessRoles)){
+						$has_access = true;
+					}
+				}
+				if($getBlog['userId'] == $user['userId'] OR $user['perms']['canManageAllBlogs']){
+					$has_access = true;
+				}
+				if(!$has_access){
+					continue;
+				}
+			}
+			if(!isset($blogCatList[$cat['blogId']])){
+				$blogCatList[$cat['blogId']] = array('value' => 0, 'label' => $getBlog['name'], 'children' => array());
+			}
+			$blogCatList[$cat['blogId']]['children'][] = $cat;
 		}
+		$categories->setOptions($blogCatList);
 		$form->add($categories);
 		
 		if($andUseMeta){
@@ -164,28 +180,83 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		return $form;
 	}
 	
-	public function updatePostCategories($postId, $cats)
+	public function updatePostCategories($postId, $cats, $user)
 	{
-		$this->delete('blog_postCategories', $postId, 'postId');
 		if(!is_array($cats)){
-			$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $cats));
-			if(!$update){
-				return false;
-			}
-		}
-		else{
-			foreach($cats as $cat){
-				$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $cat));
-				if(!$update){
-					return false;
-				}
-			}
+			$cats = array($cats);
 		}
 		
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
+		$postCats = $this->fetchAll('SELECT c.*, pc.approved, pc.postCatId
+									   FROM blog_postCategories pc
+									   LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									   WHERE pc.postId = :postId',
+									  array(':postId' => $postId));
+									  
+		foreach($postCats as $cat){
+			if(!in_array($cat['categoryId'], $cats)){
+				$this->delete('blog_postCategories', $cat['postCatId']);
+			}
+		}
+
+		foreach($cats as $cat){
+			$cat = $this->get('blog_categories', $cat);
+			if(!$cat){
+				continue;
+			}
+			$getBlog = $this->get('blogs', $cat['blogId']);
+			$getRoles = $multiblog->getBlogUserRoles($cat['blogId']);
+			if($cat['public'] == 0){
+				$has_access = false;
+				foreach($getRoles as $role){
+					if($role['userId'] == $user['userId'] AND in_array($role['type'], $accessRoles)){
+						$has_access = true;
+					}
+				}
+				if($getBlog['userId'] == $user['userId'] OR $user['perms']['canManageAllBlogs']){
+					$has_access = true;
+				}
+				if(!$has_access){
+					continue;
+				}
+			}
+			
+			$existing = false;
+			foreach($postCats as $postCat){
+				if($postCat['categoryId'] == $cat['categoryId']){
+					$existing = true;
+					break;
+				}
+			}
+			
+			if(!$existing){
+				$approved = 0;
+				if($user['perms']['canManageAllBlogs'] OR $user['userId'] == $getBlog['userId']){
+					$approved = 1;
+				}
+				else{
+					foreach($getRoles as $role){
+						if($role['userId'] == $user['userId']){
+							switch($role['type']){
+								case 'admin':
+								case 'editor';
+								case 'independent-writer':
+									$approved = 1;
+									break;
+								default:
+									break;
+							}
+						}
+					}
+				}
+				
+				$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $cat['categoryId'], 'approved' => $approved));		
+			}
+		}
 		return true;
 	}
 	
-
 
 	public function updatePostImage($id, $type = 'image')
 	{
@@ -250,7 +321,6 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$useData['postDate'] = timestamp();
 		$useData['editTime'] = $useData['postDate'];
 			
-		
 		//legacy status stuff, get rid of later
 		$useData['published'] = 0;
 		$useData['ready'] = 0;
@@ -265,17 +335,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 				$useData['published'] = 1;
 				break;
 		}
-		//unset($useData['status']);
-		
-		//temporary editor stuff
-		if($appData['perms']['canChangeEditor'] AND isset($data['editedBy'])){
-			$useData['editedBy'] = intval($data['editedBy']);
-		}
-		elseif(($appData['perms']['canSetEditStatus'] OR $appData['perms']['canChangeEditor'])
-			AND ($useData['status'] == 'published' OR $useData['status'] == 'editing')){
-			$useData['editedBy'] = $appData['user']['userId'];
-		}		
-		
+
 		//perform insertion
 		$add = $this->insert('blog_posts', $useData);
 		if(!$add){
@@ -293,7 +353,8 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		
 		//setup categories
 		if(isset($data['categories'])){
-			$this->updatePostCategories($add, $data['categories']);
+			$appData['user']['perms'] = $appData['perms'];
+			$this->updatePostCategories($add, $data['categories'], $appData['user']);
 		}
 		
 		//setup images
@@ -309,8 +370,9 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 					<a href="'.$appData['site']['url'].'/'.$blogApp['url'].'/'.$postApp['url'].'/'.$useData['url'].'">blog post.</a>',
 					$useData['userId'], $add, 'blog-post-mention');
 		}
-		elseif($useData['ready'] == 1){
-			$this->notifyEditorsOnReady($add, $appData);
+		elseif($useData['status'] == 'ready'){
+			$useData['postId'] = $add;
+			$this->notifyEditorsOnReady($useData, $appData);
 		}
 		
 		//setup any custom meta fields used
@@ -334,64 +396,33 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 	}
 
 	
-	private function notifyEditorsOnReady($postId, $appData)
+	private function notifyEditorsOnReady($post, $appData)
 	{
-		$getPost = $this->get('blog_posts', $postId);
-		$blogApp = $this->get('apps', 'blog', array(), 'slug');
-		$postMod = $this->get('modules', 'blog-post', array(), 'slug');
-		if(!$getPost || !$blogApp){
-			return false;
-		}
-		
-		$getPerm = $this->getAll('app_perms', array('appId' => $blogApp['appId'], 'permKey' => 'canPublishPost'));
-		if(!$getPerm || count($getPerm) == 0){
-			return false;
-		}
-		$perm = $getPerm[0];
-		
-		$permGroups = $this->getAll('group_perms', array('permId' => $perm['permId']));
-		
-		$editors = array();
-		foreach($permGroups as $group){
-			$groupSites = $this->getAll('group_sites', array('groupId' => $group['groupId']));
-			$groupFound = false;
-			foreach($groupSites as $site){
-				if($site['siteId'] == $appData['site']['siteId']){
-					$groupFound = true;
-					break;
-				}
-			}
-			if(!$groupFound){
-				continue;
-			}
-			$groupUsers = $this->getAll('group_users', array('groupId' => $group['groupId']));
-			foreach($groupUsers as $user){
-				if(!in_array($user['userId'], $editors)){
-					$editors[] = $user['userId'];
-				}
-			}
-		}
-		
-		if(count($editors) == 0){
-			return false;
-		}
-		
-		$postSite = $this->get('sites', $getPost['siteId']);
-		$postUser = $this->get('users', $getPost['userId'], array('userId','username', 'email','slug'));
-		
-		foreach($editors as $editor){
-			if($editor == $getPost['userId']){
-				continue;
-			}
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$getBlogs = $this->fetchAll('SELECT b.*
+									 FROM blog_postCategories pc
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 WHERE pc.postId = :postId AND b.active = 1
+									 GROUP BY b.blogId', array(':postId' => $post['postId']));
+									 
+		$notifyData = array();
+		$notifyData['post'] = $post;
+		$notifyData['user'] = $appData['user'];
 
-			$notifyData = array();
-			$notifyData['site'] = $postSite;
-			$notifyData['user'] = $postUser;
-			$notifyData['post'] = $getPost;
-			$notifyData['editorId'] = $editor;
-			$notify = Slick_App_Meta_Model::notifyUser($editor, 'emails.readyPublishNotice', $postId, 'blog-post-ready', true, $notifyData);
+		foreach($getBlogs as $blog){
+			$getRoles = $multiblog->getBlogUserRoles($blog['blogId'], true);
+			foreach($getRoles as $role){
+				switch($role['type']){
+					case 'admin':
+					case 'owner':
+					case 'editor':
+						Slick_App_Meta_Model::notifyUser($role['userId'], 'emails.blog.ready_review', $post['postId'], 'blog-post-ready', true, $notifyData);
+						break;
+				}
+			}
 		}
-		return true;
+		return true; 
 	}
 	
 		
@@ -454,18 +485,16 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		//unset($useData['status']);
 		
+		if($useData['status'] != $getPost['status']){
+			$notifyData = array();
+			$notifyData['culprit'] = $appData['user'];
+			$notifyData['post'] = $getPost;
+			$notifyData['new_status'] = $useData['status'];
+			$this->notifyContributors($getPost['postId'], 'status_change', $notifyData, $appData['user']['userId']);
+		}
+		
 		$useData['editTime'] = timestamp();
 		
-		if($appData['perms']['canChangeEditor'] AND isset($data['editedBy'])){
-			$useData['editedBy'] = intval($data['editedBy']);
-		}
-		if($getPost['editedBy'] == 0
-			AND ($appData['perms']['canSetEditStatus'] OR $appData['perms']['canChangeEditor'])
-			AND (($getPost['status'] != 'published' OR $getPost['published'] == 0) AND $getPost['status'] != 'editing')
-			AND ($useData['status'] == 'published' OR $useData['status'] == 'editing')){
-			$useData['editedBy'] = $appData['user']['userId'];
-		}
-
 		//check for new version
 		if($getPost['content'] != $useData['content'] OR $getPost['excerpt'] != $useData['excerpt']){
 			$versionContent = array('content' => $useData['content'], 'excerpt' => $useData['excerpt']);
@@ -493,13 +522,16 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			throw new Exception('Error editing post');
 		}
 		
-		//update categories
+		//update categories (only allow for main admin or main author)
 		if(isset($data['categories'])){
-			$this->updatePostCategories($id, $data['categories']);
+			if($getPost['userId'] == $appData['user']['userId'] OR $appData['perms']['canManageAllBlogs']){
+				$appData['user']['perms'] = $appData['perms'];
+				$this->updatePostCategories($id, $data['categories'], $appData['user']);
+			}
 		}
 		
 		//update images
-		$this->updatePostImage($id);
+		//$this->updatePostImage($id); //disabled normal image
 		$this->updatePostImage($id, 'coverImage');
 		
 		
@@ -511,18 +543,20 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 					<a href="'.$appData['site']['url'].'/'.$blogApp['url'].'/'.$postApp['url'].'/'.$useData['url'].'">blog post.</a>',
 					$appData['post']['userId'], $id, 'blog-post-mention');
 		}
-		elseif($getPost['ready'] == 0 AND $useData['ready'] == 1){
-			$this->notifyEditorsOnReady($id, $appData);
+		elseif($getPost['status'] != 'ready' AND $useData['status'] == 'ready'){
+			$this->notifyEditorsOnReady($getPost, $appData);
 		}
 		
-		//update any custom meta fields that might be present
-		foreach($data as $key => $val){
-			$fieldId = intval(str_replace('meta_', '', $key));
-			$getField = $this->get('blog_postMetaTypes', $fieldId);
-			if(!$getField){
-				continue;
+		//update any custom meta fields that might be present (only allow for main admin or main author)
+		if($getPost['userId'] == $appData['user']['userId'] OR $appData['perms']['canManageAllBlogs']){
+			foreach($data as $key => $val){
+				$fieldId = intval(str_replace('meta_', '', $key));
+				$getField = $this->get('blog_postMetaTypes', $fieldId);
+				if(!$getField){
+					continue;
+				}
+				$update = $this->updatePostMeta($id, $getField['slug'], $val);
 			}
-			$update = $this->updatePostMeta($id, $getField['slug'], $val);
 		}
 
 		return true;
@@ -564,9 +598,12 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		return false;
 	}
 	
-	public function getPostFormCategories($postId)
+	public function getPostFormCategories($postId, $returnFull = false)
 	{
 		$get = $this->getAll('blog_postCategories', array('postId' => $postId));
+		if($returnFull){
+			return $get;
+		}
 		$output = array();
 		foreach($get as $row){
 			$output[] = $row['categoryId'];
@@ -737,6 +774,141 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$encode = json_encode($get);
 		return hash('sha256', $encode);
 	}
+	
+	public function complete_blog_contributor_request($invite)
+	{
+		$getPost = $this->get('blog_posts', $invite['itemId']);
+		if(!$getPost){
+			throw new Exception('Invalid blog post');
+		}
+		
+		$getRow = $this->get('blog_contributors', $invite['inviteId'], array(), 'inviteId');
+		if(!$getRow){
+			throw new Exception('Invalid blog contributor request');
+		}
+		
+		/*if($getPost['published'] == 1){
+			throw new Exception('This post is marked as finished and closed to new participants.');
+		}*/
+		
+		$contribs = $this->getPostContributors($getPost['postId']);
+		$contribs[] = array('userId' => $getPost['userId']); //add author to contrib list
+		foreach($contribs as $contrib){
+			Slick_App_Meta_Model::notifyUser($contrib['userId'], 'emails.invites.'.$invite['type'].'_complete', $invite['inviteId'], 'user-invite-complete', false, $invite);
+		}
+		
+		$site = currentSite();
+		$dashApp = $this->get('apps', 'dashboard', array(), 'slug');
+		$submitModule = $this->get('modules', 'blog-submissions', array(), 'slug');
+		$redirect = $site['url'].'/'.$dashApp['url'].'/'.$submitModule['url'].'/edit/'.$getPost['postId'];
+		return $redirect;
+	}
+	
+	public function getPostContributors($postId, $andAccepted = true)
+	{
+		$accept = '';
+		if($andAccepted){
+			$accept = ' AND i.accepted = 1';
+		}
+		$get = $this->fetchAll('SELECT u.userId, u.username, u.slug, c.role, c.share, c.inviteId, c.contributorId, i.accepted
+								FROM blog_contributors c
+								LEFT JOIN user_invites i ON c.inviteId = i.inviteId
+								LEFT JOIN users u ON i.userId = u.userId
+								WHERE c.postId = :postId '.$accept.'
+								ORDER BY c.share DESC', array(':postId' => $postId));
+								
+		
+		return $get;
+		
+	}
+	
+	public function checkUserContributor($postId, $userId)
+	{
+		$contribs = $this->getPostContributors($postId);
+		foreach($contribs as $contrib){
+			if($contrib['userId'] == $userId){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public function getUserContributedPosts($data)
+	{
+		$get = $this->fetchAll('SELECT p.postId, p.userId, p.url, p.title, p.status, p.views, p.commentCount, p.commentCheck,
+									   p.postDate, p.publishDate, p.excerpt, p.published, p.status, p.ready,
+									   p.siteId, p.version, p.editTime, p.editedBy, p.coverImage
+								FROM blog_contributors c
+								LEFT JOIN user_invites i ON i.inviteId = c.inviteId
+								LEFT JOIN blog_posts p ON p.postId = c.postId
+								WHERE i.userId = :userId AND p.trash = 0 AND p.siteId = :siteId AND i.accepted = 1
+								GROUP BY c.postId', array(':siteId' => $data['site']['siteId'], ':userId' => $data['user']['userId']));
+		
+		return $get;
+	}
+	
+	public function checkPostCategoryApproved($postId, $categoryId)
+	{
+		$getPostCat = $this->fetchSingle('SELECT approved from blog_postCategories
+												 WHERE categoryId = :categoryId AND postId = :postId',
+												 array(':categoryId' => $categoryId, ':postId' => $postId));
+												 
+		if($getPostCat AND $getPostCat['approved'] == 1){
+			return true;
+		}
+		return false;
+	}
+	
+	public function parseApprovedCategoryOptions($catOpts, $postId, $categoryId)
+	{
+		$postApproved = $this->checkPostCategoryApproved($postId, $categoryId);	
+		foreach($catOpts as $ck => $cv){
+			if($categoryId == $cv['value']){
+				if($postApproved){
+					$catOpts[$ck]['label'] = $cv['label'].' <i class="fa fa-thumbs-o-up text-success" title="Approved"></i>';
+				}
+				else{
+					$catOpts[$ck]['label'] = $cv['label'].' <span class="text-default">[pending]</span>';
+				}
+			}
+			if(isset($cv['children'])){
+				$catOpts[$ck]['children'] = $this->parseApprovedCategoryOptions($cv['children'], $postId, $categoryId);
+			}			
+		}
+		return $catOpts;
+	}
+	public static function checkPostApproved($postId)
+	{
+		$model = new Slick_Core_Model;
+		$check = $model->fetchSingle('SELECT count(*) as total
+									 FROM blog_postCategories pc
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 LEFT JOIN blog_posts p ON p.postId = pc.postId
+									 WHERE pc.approved = 1 AND pc.postId = :postId AND b.active = 1 AND p.status = "published"
+									 GROUP BY pc.categoryId', array(':postId' => $postId));
+		if($check AND $check['total'] > 0){
+			return 1;
+		}
+		return 0;
+	}
+	
+	public function notifyContributors($postId, $notification, $data, $skipUser = 0)
+	{
+		$getAuthor = $this->get('blog_posts', $postId, array('userId'));
+		Slick_Core_Model::$cacheMode = false;
+		$getContribs = $this->getPostContributors($postId);
+		Slick_Core_Model::$cacheMode = true;
+		$getContribs[] = $getAuthor;
+		foreach($getContribs as $contrib){
+			if($contrib['userId'] == $skipUser){
+				continue;
+			}
+			Slick_App_Meta_Model::notifyUser($contrib['userId'], 'emails.blog.'.$notification, $postId, 'blog-'.$notification, true, $data);
+		}
+		
+	}
+		
 }
 
 ?>

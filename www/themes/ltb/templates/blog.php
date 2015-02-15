@@ -1,16 +1,22 @@
 <?php
 include(THEME_PATH.'/inc/header.php');
-$catModel = new Slick_App_Dashboard_BlogCategory_Model;
+$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
 $categories = $catModel->getCategories($site['siteId'], 0, 1);
 $tca = new Slick_App_LTBcoin_TCA_Model;
 $catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+$splitCats = array();
 foreach($categories as $ck => $cv){
 	$checkCatTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $cv['categoryId'], 'blog-category');
 	if(!$checkCatTCA){
 		unset($categories[$ck]);
 		continue;
 	}
+	if(!isset($splitCats[$cv['blogId']])){
+		$splitCats[$cv['blogId']] = array('url' => '#', 'label' => '<strong>'.$cv['blog']['name'].'</strong>', 'children' => array(), 'no_link' => true);
+	}
+	$splitCats[$cv['blogId']]['children'][] = $cv;
 }
+
 $getCats = array_merge(array(array('url' => SITE_URL.'/blog', 'label' => 'All')), $categories);
 $getArchive = $catModel->getArchiveList($site['siteId']);
 ?>
@@ -28,7 +34,7 @@ $getArchive = $catModel->getArchiveList($site['siteId']);
 					<h3>Categories</h3>
 					<?php
 
-					echo $this->displayMenu($getCats, 1, '', $pageRequest['params']);
+					echo $this->displayMenu($splitCats, 1, '', $pageRequest['params']);
 					?>
 					<h3>Archive</h3>
 					<?php
@@ -49,7 +55,7 @@ $getArchive = $catModel->getArchiveList($site['siteId']);
 				<h3>Categories</h3>
 				<?php
 
-				echo $this->displayMenu($getCats, 1, '', $pageRequest['params']);
+				echo $this->displayMenu($splitCats, 1, '', $pageRequest['params']);
 				?>
 				<h3>Archive</h3>
 				<?php

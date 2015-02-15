@@ -641,8 +641,13 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		$model = new Slick_App_Blog_Post_Model;
+		$submitModel = new Slick_App_Dashboard_Blog_Submissions_Model;
 		$getPost = $model->getPost($this->args[2], $this->args['data']['site']['siteId']);
-		if(!$getPost){
+		$approved = false;
+		if($getPost){
+			$approved = $submitModel->checkPostApproved($getPost['postId']);
+		}
+		if(!$getPost OR !$approved){
 			http_response_code(400);
 			$output['error'] = 'Post not found';
 			return $output;
@@ -752,11 +757,17 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$model = new Slick_App_Dashboard_BlogCategory_Model;
+		$model = new Slick_App_Dashboard_Blog_Categories_Model;
 		$get = $this->model->get('blog_categories', $this->args[2]);
 		if(!$get){
 			$get = $this->model->get('blog_categories', $this->args[2], array(), 'slug');
 			if(!$get){
+				http_response_code(400);
+				$output['error'] = 'Category not found';
+				return $output;
+			}
+			$getBlog = $this->model->get('blogs', $get['blogId']);
+			if(!$getBlog OR $getBlog['active'] == 0){
 				http_response_code(400);
 				$output['error'] = 'Category not found';
 				return $output;
@@ -866,7 +877,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 	
 	private function getCategoryList()
 	{
-		$model = new Slick_App_Dashboard_BlogCategory_Model;
+		$model = new Slick_App_Dashboard_Blog_Categories_Model;
 		$getCats = $model->getCategories($this->args['data']['site']['siteId']);
 		
 		$output['categories'] = $getCats;
@@ -929,7 +940,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 	
 	private function getArchiveList()
 	{
-		$catModel = new Slick_App_Dashboard_BlogCategory_Model;
+		$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
 		$output = array();
 		
 		$getArchive = $catModel->getArchiveList($this->args['data']['site']['siteId']);

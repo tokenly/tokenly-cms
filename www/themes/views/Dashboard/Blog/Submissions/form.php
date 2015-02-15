@@ -1,7 +1,147 @@
-<h2><?= $formType ?> Article</h2>
 <?php
 if(isset($post)){
-	echo '<h3>'.$post['title'].'</h3>';
+?>
+<div class="pull-right blog-submit-actions">
+	<a href="#contributors" class="fancy contrib-trigger btn btn-large">Contributors</a>
+	<div id="contributors" style="display: none;">
+		<h3>Article Contributors</h3>
+		<p>
+			Make sure to save any content changes before attemping<br> to invite or change any contributors (page reloads).
+		</p>
+		<?php
+		
+		$contribList[] = array('username' => $post['author']['username'], 'slug' => $post['author']['slug'],
+							   'role' => 'Author', 'share' => '*');
+							   
+		$contribList = array_merge($contribList, $contributor_list);
+		
+		$changeRoles = false;
+		$changeShares = false;
+		
+		if(count($contribList) > 1){
+			if($user['userId'] == $post['userId']){
+				$changeRoles = true;
+			}
+			
+			if($perms['canManageAllBlogs']){
+				$changeRoles = true;
+				$changeShares = true;
+			}
+		}
+		
+		if($changeRoles OR $changeShares){
+			echo '<form action="" method="post">';
+		}
+		
+		echo '<table class="contrib-table">
+				<thead>
+					<tr>
+						<th>Username</th>
+						<th>Role</th>
+						<th>Reward Share</th>
+					</tr>
+				</thead>
+				<tbody>';
+		$authorTotal = 100;
+		foreach($contribList as $contrib){
+			
+			$contribUser = '<a href="'.SITE_URL.'/profile/user/'.$contrib['slug'].'" target="_blank">'.$contrib['username'].'</a>';
+			$contribShare = $contrib['share'];
+			$contribRole = $contrib['role'];
+			
+			if($contribShare != '*'){
+				$contribShare = convertFloat($contribShare).'%';
+				$authorTotal -= $contrib['share']; 
+			}
+			
+			$rowClass = '';
+			if(isset($contrib['accepted'])){
+				if($contrib['accepted'] == 0){
+					$rowClass = 'pending';
+					$contribUser .= ' [pending]';
+					$delText = 'Cancel Request';
+				}
+				else{
+					$delText = 'Remove Contributor';
+				}
+				
+				if($changeRoles){
+					$contribRole = '<input type="text" value="'.$contrib['role'].'" name="role_'.$contrib['contributorId'].'" required />';
+				}
+				if($changeShares){
+					$contribShare = '<input type="text" value="'.convertFloat($contrib['share']).'" name="share_'.$contrib['contributorId'].'" required />';
+				}				
+				
+				if(($user['userId'] == $post['userId'] AND $contrib['accepted'] == 0)
+				   OR $perms['canManageAllBlogs']
+				   OR ($user['userId'] == $contrib['userId'])){
+					$contribShare .= ' <a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$post['postId'].'/contributors/delete/'.$contrib['contributorId'].'" class="delete" title="'.$delText.'"><i class="fa fa-times-circle"></i></a>';
+				}
+			}
+			echo '<tr class="'.$rowClass.'">
+					<td>'.$contribUser.'</td>
+					<td>'.$contribRole.'</td>
+					<td>'.$contribShare.'</td>
+				  </tr>';
+		}
+		
+		echo '</tbody></table>';
+		
+		if($changeRoles OR $changeShares){
+			echo '<input type="hidden" name="update-contribs" value="1" />';
+			echo '<input type="submit" value="Update Contributors" /></form>';
+		}
+		
+		echo '<p><strong>Author Reward Share:</strong> '.convertFloat($authorTotal).'%</p>';
+		echo '<p><small>* original author receives whatever reward share percentage is left over.</small></p>';
+		
+		if($post['status'] == 'published'){
+			echo '<hr><p><em>Article finished, closed to new participants.</em></p>';
+		}
+		else{
+			if($post['userId'] == $user['userId'] OR $perms['canManageAllBlogs']){
+
+				?>
+				<hr>
+				<h4>Invite a Contributor</h4>
+				<form action="" method="post">
+					<label for="username">Username</label>
+					<input type="text" id="username" name="username" required />
+					<label for="role">Role</label>
+					<input type="text" id="role" name="role" value="Editor" required />
+					<label for="share">Proposed Reward Share (%)</label>
+					<input type="text" id="share" name="share" value="20" required />
+					<input type="submit" name="invite-contrib" value="Invite Contributor" />
+				</form>
+				<?php
+			}
+			elseif($post['user_blog_role'] AND !$contributor AND !$post['pending_contrib']){
+				?>
+				<hr>
+				<h4>Become a Contributor</h4>
+				<p>
+					Please review the article before requesting to become a contributor.
+				</p>
+				<form action="" method="post">
+					<label for="role">Role</label>
+					<input type="text" id="role" name="role" value="Editor" required />
+					<label for="share">Desired Reward Share (%)</label>
+					<input type="text" id="share" name="share" value="20" required  />
+					<input type="submit" name="request-contrib" value="Request Contributor Access" />
+				</form>
+				<?php
+			}
+		}
+		?>
+	</div>
+</div>
+<?php
+}//endif
+?>
+<h2><?= $formType ?> Article
+<?php
+if(isset($post)){
+	echo '<br><span class="text-default">'.$post['title'].'</span>';
 	
 	$oldPreview = '';
 	if($old_version AND $old_version['versionId'] != $post['version']){
@@ -9,8 +149,17 @@ if(isset($post)){
 	}
 }
 ?>
+</h2>
 <p>
-	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Go Back</a>
+	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Back to Submissions</a>
+	<?php
+	$model = new Slick_Core_Model;
+	$newsroom = $model->get('modules', 'blog-newsroom', array(), 'slug');
+	$checkNewsroom = Slick_App_AppControl::checkModuleAccess($newsroom['moduleId'], false);
+	if($checkNewsroom AND isset($post)){
+		echo '<br><a href="'.SITE_URL.'/'.$app['url'].'/'.$newsroom['url'].'">Back to Newsroom</a>';
+	}
+	?>
 </p>
 <?= $this->displayBlock('dashboard-blog-submission-form') ?>
 <div class="clear"></div>
@@ -38,6 +187,16 @@ if(isset($post) AND $post['published'] == 1){
 <div class="blog-form">
 	<?= $form->open() ?>
 	<?=  $this->displayFlash('blog-message') ?>
+	<?php
+	if(isset($post) AND !$unlock_post){
+		if($post['status'] == 'published'){
+			echo '<p><strong>This post is marked as complete and may only be modified by the original author.</strong></p>';
+		}
+		else{
+			echo '<p><strong>You must be accepted as a contributor before you can modify this post.</strong></p>';
+		}
+	}
+	?>
 	<div class="ltb-data-tab" id="blog-content" style="">
 		<?php
 		$excpStyle = 'display: none;';
@@ -55,6 +214,7 @@ if(isset($post) AND $post['published'] == 1){
 		}
 		?>
 		<?= $form->field('title')->display() ?>
+		<?= $form->field('url')->display() ?>
 		<?= $form->field('formatType')->display() ?>		
 		<?= $form->field('content')->display() ?>
 		<?= $form->field('autogen-excerpt')->display() ?>
@@ -91,20 +251,21 @@ if(isset($post) AND $post['published'] == 1){
 		?>
 		<?= $form->field('coverImage')->display() ?>
 		<?= $form->field('categories')->display() ?>
+		<p>
+			<small>
+				* Categories are automatically approved for users with self-publishing permissions (e.g editors and independent writers),<br>
+				all others must be approved by either a blog admin or an editor. <br>
+				Articles must be in at least one approved category in order to be considered "published".
+			</small>
+		</p>
 	</div>	
 	<div class="ltb-data-tab" id="meta-data" style="display: none;">
 		<?php
 		if(isset($post)){
-		
-			$editorName = 'No one';
-			if($post['editedBy'] != 0){
-				$editorName = '<a href="'.SITE_URL.'/profile/user/'.$post['editor']['slug'].'" target="_blank">'.$post['editor']['username'].'</a>';
-			}
 					
 			?>
 			<ul>
 				<li><strong>Author:</strong> <a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>" target="_blank"><?= $post['author']['username'] ?></a></li>
-				<li><strong>Editor:</strong> <?= $editorName ?></li>
 				<li><strong>Views:</strong> <?= number_format($post['views']) ?></li>
 				<li><strong>Comments:</strong> <?= number_format($post['commentCount']) ?></li>
 				<?php
@@ -220,7 +381,7 @@ if(isset($post) AND $post['published'] == 1){
 		<a name="comment-reply"></a>
 		<h4>Post Comment</h4>
 		<p>
-			<em>Note: notifications for @mentions are disabled for private article comments.</em>
+			<em>Note: @mention notifications only apply to relevant users (post contributors, author and blog ACT members).</em>
 		</p>
 		<?= $comment_form->displayFields() ?>
 		<input type="hidden" id="comment-list-hash" value="<?= $comment_list_hash ?>" />
@@ -340,7 +501,11 @@ if(isset($post) AND $post['published'] == 1){
 	?>
 	<div class="clear"></div>
 	<div class="pull-right">
-		<?= $form->displaySubmit() ?>
+		<?php
+		if(!isset($post) OR (isset($post) AND $unlock_post)){
+			echo $form->displaySubmit();
+		}
+		?>
 	</div>	
 	<?php
 	if(!isset($post) AND !$perms['canBypassSubmitFee']){

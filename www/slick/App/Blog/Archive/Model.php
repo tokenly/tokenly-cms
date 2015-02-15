@@ -50,13 +50,23 @@ class Slick_App_Blog_Archive_Model extends Slick_Core_Model
 			$range = 'publishDate >= "'.$year.'-01-01" AND publishDate < "'.($year + 1).'-01-01"';
 		}
 		
-		$getPosts = $this->fetchAll('SELECT *
-									 FROM blog_posts
-									 WHERE siteId = :siteId
-									 AND published = 1
+		$getPosts = $this->fetchAll('SELECT p.postId, p.content, p.title, p.url, p.userId, p.siteId, p.postDate, p.publishDate, p.published,
+											p.image, p.excerpt, p.views, p.featured, p.coverImage, p.ready, p.commentCount, p.commentCheck,
+											p.formatType, p.editTime, p.editedBy, p.status, p.version
+									 FROM blog_posts p
+									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 WHERE p.siteId = :siteId
+									 AND p.status = "published"
+									 AND p.trash = 0
+									 AND p.publishDate <= "'.timestamp().'"
 									 AND '.$range.'
-									 ORDER BY publishDate DESC
-									 LIMIT '.$start.', '.$limit,
+									 AND pc.approved = 1
+									 AND b.active = 1
+									 GROUP BY p.postId
+									 ORDER BY p.publishDate DESC
+									LIMIT '.$start.', '.$limit,
 									 array(':siteId' => $siteId));
 		
 		$profModel = new Slick_App_Profile_User_Model;
@@ -126,10 +136,19 @@ class Slick_App_Blog_Archive_Model extends Slick_Core_Model
 		}
 
 		$count = $this->fetchSingle('SELECT COUNT(*) as total 
-									FROM blog_posts
-									WHERE siteId = :siteId
-									 AND published = 1
-									 AND '.$range,
+									 FROM blog_posts p
+									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 WHERE p.siteId = :siteId
+									 AND p.status = "published"
+									 AND p.trash = 0
+									 AND p.publishDate <= "'.timestamp().'"
+									 AND '.$range.'
+									 AND pc.approved = 1
+									 AND b.active = 1
+									 GROUP BY p.postId
+									 ORDER BY p.publishDate DESC',
 									 array(':siteId' => $siteId));
 
 		if(!$count){
