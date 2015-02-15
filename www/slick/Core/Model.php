@@ -10,12 +10,14 @@ class Slick_Core_Model
 	public static $cacheMode = true;
 	public static $queryLog = array();
 	public static $indexes = array();
+	public static $logMode = false;
 
 	function __construct()
 	{
 		if(!self::$db){
-			$this->db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
-			$this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+			self::$db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
+			self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+			$this->db = self::$db;
 			$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
 											FROM   information_schema.STATISTICS
 											WHERE  TABLE_SCHEMA = DATABASE()');
@@ -24,7 +26,9 @@ class Slick_Core_Model
 					self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];
 				}
 			}
-			
+		}
+		else{
+			$this->db = self::$db;
 		}
 	}
 	/**
@@ -33,13 +37,15 @@ class Slick_Core_Model
 	*/
 	public function sendQuery($sql, $values = array())
 	{
-		$logKey = md5($sql);
-		if(!isset(self::$queryLog[$logKey])){
-			self::$queryLog[$logKey] = array('sql' => $sql, 'count' => 0, 'values' => array() );
+		if(self::$logMode){
+			$logKey = md5($sql);
+			if(!isset(self::$queryLog[$logKey])){
+				self::$queryLog[$logKey] = array('sql' => $sql, 'count' => 0, 'values' => array(), 'exec-times' => array());
+			}			
+			self::$queryLog[$logKey]['values'][] = $values;
+			self::$queryLog[$logKey]['count']++;
+			$micro = microtime(true);
 		}
-		self::$queryLog[$logKey]['values'][] = $values;
-		self::$queryLog[$logKey]['count']++;
-		
 		$query = $this->db->prepare($sql);
 		if(!$query){
 			self::$failedQueries++;
@@ -48,13 +54,14 @@ class Slick_Core_Model
 		$execute = $query->execute($values);
 		if(!$execute){
 			$this->error = $query->errorInfo();
-			
 			self::$failedQueries++;
-			
 			return false;
 		}
-
-		self::$numQueries++;
+		if(self::$logMode){
+			$endmicro = microtime(true);
+			self::$queryLog[$logKey]['exec-times'][] = $endmicro - $micro;
+			self::$numQueries++;
+		}
 		
 		return $query;
 

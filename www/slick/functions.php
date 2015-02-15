@@ -25,7 +25,10 @@ function shortenMsg($msg, $length, $end = '...'){
 */
 function formatDate($date)
 {
-	return date(DATE_FORMAT, strtotime($date));
+	if(!is_int($date)){
+		$date = strtotime($date);
+	}
+	return date(DATE_FORMAT, $date);
 
 }
 
@@ -251,7 +254,7 @@ function get_object_vars_all($obj) {
   return $values;
 }
 
-function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData = array())
+function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData = array(), $whitelist = false)
 {
 	$match = preg_match_all('/\B\@([\w\-]+)/', $str, $matches);
 	$model = new Slick_Core_Model;
@@ -267,6 +270,10 @@ function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData =
 
 		$getUser = $model->get('users', $user, array('userId', 'username'), 'slug');
 		if($getUser AND $getUser['userId'] != $userId){
+			if($whitelist AND !in_array($getUser['userId'], $whitelist)){
+				continue;
+			}
+
 			$replace = $thisUser['username'];
 			$checkTCA = $tca->checkItemAccess($getUser['userId'], $profileModule['moduleId'], $thisUser['userId'], 'user-profile');
 			if($checkTCA){
@@ -276,12 +283,10 @@ function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData =
 			$message = str_replace('%username%', $replace, $message);
 			$notify = Slick_App_Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type, false, $notifyData);
 			if($notify){
-			
 				$success = true;
 			}
 		}
 	}
-
 	if($success){
 		return true;
 	}
@@ -447,23 +452,44 @@ function isExternalLink($link)
 	return false;
 }
 
-function extract_row($data, $vals, $returnEmpty = false)
+function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false)
 {
+	
+	if($cache_key){
+		$rowLock = md5(json_encode($vals).intval($returnEmpty).$cache_key);
+		if(isset(Slick_App_Meta_Model::$metaCache[$rowLock])){
+			return Slick_App_Meta_Model::$metaCache[$rowLock];
+		}
+	}
+	
 	$output = array();
-	foreach($data as $row){
+	foreach($data as $dk => $row){
 		$found = true;
 		foreach($vals as $key => $val){
 			if(!isset($row[$key]) OR $row[$key] != $val){
 				$found = false;
+				break;
 			}
 		}
 		if($found){
+			if($cache_key){
+				unset($data[$dk]);
+			}
 			$output[] = $row;
 		}
 	}
+		
 	if(!$returnEmpty AND count($output) == 0){
+		if($cache_key){
+			Slick_App_Meta_Model::$metaCache[$rowLock] = false;
+		}
 		return false;
 	}
+	
+	if($cache_key){
+		Slick_App_Meta_Model::$metaCache[$rowLock] = $output;
+	}	
+	
 	return $output;
 }
 
@@ -548,6 +574,21 @@ function currentSite()
 	$model = new Slick_Core_Model;
 	$get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	return $get;
+}
+
+function linkify_username($username)
+{
+	$slug = genURL($username);
+	$model = new Slick_Core_Model;
+	$get = $model->get('users', $slug, array('username', 'slug'), 'slug');
+	if(!$get){
+		return $username;
+	}
+	$profApp = $model->get('apps', 'profile', array(), 'slug');
+	$userModule = $model->get('modules', 'user-profile', array(), 'slug');
+	$site = currentSite();
+	$url = $site['url'].'/'.$profApp['url'].'/'.$userModule['url'].'/'.$get['slug'];
+	return '<a href="'.$url.'" target="_blank">'.$get['username'].'</a>';
 }
 
 ?>

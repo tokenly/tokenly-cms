@@ -230,7 +230,14 @@ class Slick_App_View extends Slick_Core_View
 				}
 				//debug($item['url']);
 				
-				$output .= '<li  class="'.$itemClass.'"><a href="'.$item['url'].'" '.$target.'>'.$item['label'].'</a>';
+				if(isset($item['no_link']) AND $item['no_link']){
+					$output .= '<li  class="'.$itemClass.'">'.$item['label'];
+				}
+				else{
+					$output .= '<li  class="'.$itemClass.'"><a href="'.$item['url'].'" '.$target.'>'.$item['label'].'</a>';
+				}
+				
+				
 	
 				if(isset($item['children']) AND $children == 1){
 					

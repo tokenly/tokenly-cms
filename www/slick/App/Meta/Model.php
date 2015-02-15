@@ -3,6 +3,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 {
 	public static $appMeta = array();
 	public static $userMeta = array();
+	public static $metaCache = array();
 	
 	public function updateUserMeta($userId, $key, $value)
 	{

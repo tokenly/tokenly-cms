@@ -154,11 +154,17 @@ class Slick_API_Bitcoin {
 		// final checks and return
 		if (!$this->notification) {
 			// check
-			if ($response['id'] != $currentId) {
 
+			if (@$response['id'] != $currentId) {
+				if(isset($response['data'])){
+					throw new Exception($response['data']);
+				}
 				throw new Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
 			}
 			if (isset($response['error']) AND !is_null($response['error'])) {
+				if(isset($response['data'])){
+					throw new Exception($response['data']);
+				}				
 				throw new Exception('Request error: '.$response['error']['message']);
 			}
 			
