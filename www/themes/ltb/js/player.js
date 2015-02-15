@@ -42,7 +42,8 @@ $(document).ready(function(){
 		  noSolution: '.jp-no-solution',
 	 },
 	 errorAlerts: false,
-	 warningAlerts: false
+	 warningAlerts: false,
+	 preload: 'none'
 	});
 	
 	$('.jp-play').click(function(e){

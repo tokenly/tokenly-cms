@@ -82,7 +82,7 @@ class Slick_UI_CheckboxList extends Slick_UI_FormObject
 	
 	public function getOptions()
 	{
-		return $this->options();
+		return $this->options;
 	}
 	
 	public function setOptions($options = array())

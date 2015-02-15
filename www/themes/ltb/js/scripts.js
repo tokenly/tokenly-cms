@@ -4,7 +4,7 @@ $(document).ready(function(){
 	$('.mobile-table').mobilizeTables();
 	
 	
-	$('.content').delegate('.delete', 'click', function(e){
+	$('body').delegate('.delete', 'click', function(e){
 		var check = confirm('Are you sure you want to delete?');
 		if(!check || check == null){
 			e.preventDefault();

@@ -7,19 +7,24 @@ class Slick_UI_Captcha extends Slick_UI_FormObject
 	{
 		parent::__construct();
 		$this->type = $type;
+		
 	}
 	
-	public function display($elemWrap)
+	public function display($elemWrap = '')
 	{
 		$output = '';
 		switch($this->type){
 			case 'recaptcha':
-				$captcha = new Slick_API_Recaptcha;
-				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC, null,true);
-				break;
 			default:
-				$captcha = new Slick_API_Recaptcha;
-				$output = $captcha->recaptcha_get_html(RECAPTCHA_PUBLIC, null,true);
+				ob_start();
+				?>
+				  <div class="g-recaptcha" data-sitekey="<?= CAPTCHA_PUB ?>"></div>
+				  <script type="text/javascript"
+					  src="https://www.google.com/recaptcha/api.js?hl=en">
+				  </script>
+				<?php
+				$output = ob_get_contents();
+				ob_end_clean();
 				break;
 		}
 		
