@@ -31,3 +31,6 @@ define('AWS_ACCESS_KEY', '');
 define('AWS_SECRET_KEY', '');
 define('AWS_CONFIG_PATH', SITE_PATH.'/resources/aws/Aws/Common/Resources/aws-config.php');
 define('AWS_DEFAULT_BUCKET', '');
+
+define('STOPFORUMSPAM_KEY', '');
+define('STOPFORUMSPAM_API', 'http://api.stopforumspam.org/api');
