@@ -16,7 +16,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 		$output['user'] = Slick_App_Account_Home_Model::userInfo();
 	
 		if(!$output['user']){
-			$this->redirect('/');
+			$this->redirect($this->data['site']['url']);
 			return false;
 		}
 		

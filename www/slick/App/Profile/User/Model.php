@@ -67,6 +67,18 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		
 	}
 	
+	public function getUserAvatar($userId)
+	{
+		$getUser = $this->get('users', $userId, array('userId', 'username', 'slug', 'email'));
+		$site = currentSite();
+		$meta = new Slick_App_Meta_Model;
+		$avatar = $meta->getUserMeta($userId, 'avatar');
+		if(trim($avatar) == ''){
+			$avatar = 'https://www.gravatar.com/avatar/'.md5(strtolower($getUser['email'])).'?d='.urlencode($site['url'].'/files/avatars/default.jpg');
+		}
+		return $avatar;
+	}
+	
 	public function getUsersWithProfile($fieldId)
 	{
 		$get = $this->getAll('user_profileVals', array('fieldId' => $fieldId));

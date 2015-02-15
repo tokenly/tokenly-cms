@@ -18,15 +18,15 @@ if($registerForm){
 	<p>Register a free account using the form below!</p>
 	<?php
 	if($registerMessage != ''){
-		echo '<p class="error"><strong>'.$registerMessage.'</p>';
+		echo '<p class="error">'.$registerMessage.'</p>';
 	}
 	?>
 	<?= $registerForm->open() ?>
 	<?= $registerForm->displayFields() ?>
-	<?php
-	require_once(SITE_PATH.'/resources/recaptchalib.php');
-	echo recaptcha_get_html(CAPTCHA_PUB, null, true)
-	?>
+  <div class="g-recaptcha" data-sitekey="<?= CAPTCHA_PUB ?>"></div>
+  <script type="text/javascript"
+	  src="https://www.google.com/recaptcha/api.js?hl=en">
+  </script>
 	<input type="submit" value="Register Now" />
 	<?= $registerForm->close() ?>
 </div>

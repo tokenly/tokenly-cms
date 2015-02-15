@@ -1,9 +1,17 @@
 <?php
 class Slick_App_Account_Home_Model extends Slick_Core_Model
 {
+	public static $activity_updated = false;
+	
 	public function getLoginForm()
 	{
 		$form = new Slick_UI_Form;
+		
+		$hny = new Slick_UI_Textbox('user-mail');
+		$hny->addClass('hny');
+		$hny->addAttribute('autocomplete', 'off');
+		$hny->setLabel('Email Address', 'hny');
+		$form->add($hny);		
 		
 		$username = new Slick_UI_Textbox('username');
 		$username->addAttribute('required');
@@ -53,6 +61,16 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$email->setLabel('Email *');
 		$email->addAttribute('required');
 		$form->add($email);	
+		
+		$hny = new Slick_UI_Textbox('website');
+		$hny->addClass('hny');
+		$hny->setLabel('Your Website:', 'hny');
+		$form->add($hny);
+		
+		$challenge = new Slick_UI_Textbox('challenge');
+		$challenge->setLabel('Question: Who created the very first version of Bitcoin?');
+		$challenge->addAttribute('required');
+		$form->add($challenge);
 
 		$hidden = new Slick_UI_Hidden('submit-type');
 		$hidden->setValue('register');
@@ -65,15 +83,24 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	public function registerAccount($data, $noAuth = false)
 	{
 		if(!isset($data['isAPI'])){
-			require_once(SITE_PATH.'/resources/recaptchalib.php');
-				$resp = recaptcha_check_answer (CAPTCHA_PRIV,
-												$_SERVER["REMOTE_ADDR"],
-												$_POST["recaptcha_challenge_field"],
-												$_POST["recaptcha_response_field"]);
-
-				if(!$resp->is_valid) {
-					throw new Exception('Captcha invalid!');
-				}
+			require_once(SITE_PATH.'/resources/recaptchalib2.php');
+			$recaptcha = new Recaptcha(CAPTCHA_PRIV);
+			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], $_POST['g-recaptcha-response']);
+			if($resp == null OR !$resp->success){
+				throw new Exception('Captcha invalid!');
+			}
+			if(!isset($data['challenge']) OR trim($data['challenge']) == ''){
+				throw new Exception('Please answer the challenge question');
+			}
+			$possible_answers = array('satoshi', 'satoshi nakamoto', 'nakamoto');
+			if(!in_array(trim(strtolower($data['challenge'])), $possible_answers)){
+				throw new Exception('Incorrect answer');
+			}
+		}
+		else{
+			if(!isset($data['site_referral'])){
+				$data['site_referral'] = 'api';
+			}
 		}
 	
 		$req = array('username' => true, 'password' => true, 'email' => true);
@@ -108,6 +135,24 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			throw new Exception('Invalid email address');
 		}
 		
+		//check honeypot, mark as spammer if true
+		$spammer = false;
+		if(isset($data['website']) AND $data['website'] != ''){
+			$spammer = true;
+		}
+		else{
+			//check stopforumspam API
+			$getSpam = @file_get_contents(STOPFORUMSPAM_API.'?email='.$data['email'].'&f=json');
+			if($getSpam){
+				$checkSpam = json_decode($getSpam, true);
+				$spamLimit = 1;
+				if(isset($checkSpam['email'])){
+					if($checkSpam['email']['frequency'] >= $spamLimit){
+						$spammer = true;
+					}
+				}
+			}
+		}
 		
 		$useData = array('username' => $data['username'], 'password' => $data['password']);
 		if(isset($data['email'])){
@@ -163,6 +208,13 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			$this->insert('group_users', array('userId' => $add, 'groupId' => $group['groupId']));
 		}
 		
+		if($spammer){
+			$getTrollGroup = $this->get('groups', 'forum-troll', array(), 'slug');
+			if($getTrollGroup){
+				$this->insert('group_users', array('userId' => $add, 'groupId' => $getTrollGroup['groupId']));
+			}
+		}
+		
 		$meta = new Slick_App_Meta_Model;
 		if(!$noAuth){
 			$meta->updateUserMeta($add, 'IP_ADDRESS', $_SERVER['REMOTE_ADDR']);
@@ -176,6 +228,9 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		
 		if(isset($data['site_referral'])){
 			$meta->updateUserMeta($add, 'site_referral', trim(htmlentities(strip_tags($data['site_referral']))));
+		}
+		elseif($spammer){
+			$meta->updateUserMeta($add, 'site_referral', 'spammer');
 		}
 		
 		if(isset($_SESSION['affiliate-ref'])){
@@ -223,27 +278,31 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 
 	public static function updateLastActive($userId)
 	{
-		$model = new Slick_App_Account_Home_Model;
-		$auth = false;
-		if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
-			$auth = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
-		}
-		elseif(isset($_SESSION['accountAuth'])){
-			$auth = $_SESSION['accountAuth'];
-		}
-		if(!$auth){
+		if(!self::$activity_updated){
+			$model = new Slick_App_Account_Home_Model;
+			$auth = false;
+			if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
+				$auth = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
+			}
+			elseif(isset($_SESSION['accountAuth'])){
+				$auth = $_SESSION['accountAuth'];
+			}
+			if(!$auth){
+				return false;
+			}
+			$getSesh = $model->checkSession($auth);
+			if($getSesh){
+				$time = timestamp();
+				$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
+				if($update){
+					$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
+					self::$activity_updated = true;
+					return true;
+				}
+			}
 			return false;
 		}
-		$getSesh = $model->checkSession($auth);
-		if($getSesh){
-			$time = timestamp();
-			$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
-			if($update){
-				$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
-				return true;
-			}
-		}
-		return false;
+		return true;
 	}
 	
 	public function checkAuth($data)
@@ -267,7 +326,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 		
 		$get = $this->get('users', $data['username'], array(), 'username');
-		if(!$get){
+		if(!$get OR (isset($data['user-mail']) AND $data['user-mail'] != '')){ //checks if false username and also checks honeypot field (email)
 			http_response_code(401);
 			throw new Exception('Invalid credentials');
 		}
