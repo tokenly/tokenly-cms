@@ -148,14 +148,12 @@
 			* lockedBy (int)
 			* editedBy (int)
 			* replies (int)
-			* author (array)
+			* author
 				* userId (int)
 				* username (string)
 				* slug (string)
-				* email (string)
 				* regDate (timestamp)
 				* lastActive (timestamp)
-				* lastAuth (timestamp)
 				* profile (array)
 					* (array)
 						* fieldId (int)
@@ -209,10 +207,8 @@
 			* author (array)
 				* userId (int)
 				* username (string)
-				* email (string)
 				* regDate (timestamp)
 				* lastActive (timestamp)
-				* lastAuth (timestamp)
 				* profile (array)
 					* (array)
 						* fieldId (int)
@@ -243,7 +239,7 @@
 			* postTime (timestamp)
 			* editTime (timestamp)
 			* editedBy (timestamp)
-			* author (array)
+			* author
 				* (user profile data)
 * **/threads (create thread)**
 	* **Method:** POST
