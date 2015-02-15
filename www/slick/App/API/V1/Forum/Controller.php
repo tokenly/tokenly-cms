@@ -537,6 +537,10 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		if(!isset($data['no-profiles']) OR (intval($data['no-profiles']) === 0 AND $data['no-profiles'] != 'true')){
 			$profile = new Slick_App_Profile_User_Model;
 			$getPost['author'] = $profile->getUserProfile($getPost['userId'], $data['site']['siteId']);
+			unset($getPost['author']['email']);
+			unset($getPost['author']['lastAuth']);
+			unset($getPost['author']['pubProf']);
+			unset($getPost['author']['showEmail']);
 		}
 		//strip HTML
 		if(isset($data['strip-html']) AND (intval($data['strip-html']) === 1 OR $data['strip-html'] == 'true')){

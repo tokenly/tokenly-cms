@@ -38,7 +38,11 @@ if($user AND $topic['locked'] == 0){
     }//endif
 ?>
 <h1><?= $topic['title'] ?></h1>
-
+<?php
+if(isset($replyMessage) AND $replyMessage != ''){
+	echo '<p class="error">'.$replyMessage.'</p>';
+}
+?>
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/board/<?= $board['slug'] ?>" class="board-back-link">Back to <?= $board['name'] ?></a>
 </p>
@@ -406,6 +410,11 @@ if(count($replies) == 0){
 <?php
 if(!$user OR $perms['canPostReply']){
 ?>
+	<?php
+	if(isset($replyMessage) AND $replyMessage != ''){
+		echo '<p class="error">'.$replyMessage.'</p>';
+	}
+	?>
 	<a name="post-reply"></a>
 	<?php
 	if($user){

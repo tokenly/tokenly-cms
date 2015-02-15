@@ -176,6 +176,18 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['reportedPosts'] = false;
 		if($this->data['user']){
 			$output['form'] = $this->model->getReplyForm();
+			$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+			$checkCaptcha = false;
+			if(isset($this->data['app']['meta']['min-posts-captcha'])){
+				$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
+				if($postCount <= $minPosts){
+					$captcha = new Slick_UI_Captcha();
+					$output['form']->add($captcha);
+					$checkCaptcha = true;
+				}
+			}
+			
+			
 			$meta = new Slick_App_Meta_Model;
 			$output['reportedPosts'] = $meta->getUserMeta($this->data['user']['userId'], 'reportedPosts');
 			if($output['reportedPosts']){
@@ -217,6 +229,17 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 
 		$form = $this->model->getReplyForm();
+		$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+		$checkCaptcha = false;
+		if(isset($this->data['app']['meta']['min-posts-captcha'])){
+			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
+			if($postCount <= $minPosts){
+				$captcha = new Slick_UI_Captcha();
+				$form->add($captcha);
+				$checkCaptcha = true;
+			}
+		}		
+		
 		$data = $form->grabData();
 		
 		if($this->topic['locked'] != 0){
@@ -228,6 +251,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$data['userId'] = $this->data['user']['userId'];
 		try{
 			$this->data['topic'] = $this->topic;
+			$data['check_captcha'] = $checkCaptcha;
 			$post = $this->model->postReply($data, $this->data);
 		}
 		catch(Exception $e){

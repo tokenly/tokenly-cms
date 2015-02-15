@@ -152,6 +152,8 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 					$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId']);
 					unset($thread['author']['pubProf']);
 					unset($thread['author']['showEmail']);
+					unset($thread['author']['email']);
+					unset($thread['author']['lastAuth']);
 				}
 				$thread['mostRecent'] = null;
 				$getRecent = $this->fetchSingle('SELECT postId, userId, content, postTime, editTime, editedBy FROM forum_posts WHERE topicId = :topicId AND buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1',
@@ -161,7 +163,9 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 					if(!$noProfiles){
 						$thread['mostRecent']['author'] = $profile->getUserProfile($getRecent['userId'], $data['site']['siteId']);
 						unset($thread['mostRecent']['author']['pubProf']);
-						unset($thread['mostRecent']['author']['showEmail']);			
+						unset($thread['mostRecent']['author']['showEmail']);				
+						unset($thread['mostRecent']['author']['email']);			
+						unset($thread['mostRecent']['author']['lastAuth']);			
 					}		
 				}
 			}			
@@ -452,6 +456,8 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 			$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId']);
 			unset($thread['author']['pubProb']);
 			unset($thread['author']['showEmail']);
+			unset($thread['author']['email']);
+			unset($thread['author']['lastAuth']);
 		}
 		//HTML stripping
 		if(isset($data['strip-html']) AND (intval($data['strip-html']) === 1 OR $data['strip-html'] == 'true')){
@@ -532,6 +538,8 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				$post['author'] = $profile->getUserProfile($post['userId'], $data['site']['siteId']);
 				unset($post['author']['pubProf']);
 				unset($post['author']['showEmail']);
+				unset($post['author']['email']);
+				unset($post['author']['lastAuth']);
 			}
 			//HTML stripping
 			if(isset($data['strip-html']) AND (intval($data['strip-html']) === 1 OR $data['strip-html'] == 'true')){

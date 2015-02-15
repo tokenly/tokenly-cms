@@ -32,6 +32,23 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 			}
 		}
 		
+		if(isset($data['check_captcha']) AND $data['check_captcha']){
+			require_once(SITE_PATH.'/resources/recaptchalib2.php');
+			$recaptcha = new Recaptcha(CAPTCHA_PRIV);
+			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], @$_POST['g-recaptcha-response']);
+			if($resp == null OR !$resp->success){
+				throw new Exception('Captcha invalid!');
+			}		
+		}
+		
+		$regDate = strtotime($appData['user']['regDate']);
+		$regThreshold = 60*60*1;
+		$time = time();
+		if(($time - $regDate) < $regThreshold){
+			$numHours = round($regThreshold / 3600);
+			throw new exception('Your account must be active for at least <strong>'.$numHours.' '.pluralize('hour', $numHours, true).'</strong> before you may post in the forums.');
+		}
+		
 		if(trim($useData['content']) == ''){
 			throw new exception('Message required');
 		}

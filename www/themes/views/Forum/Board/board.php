@@ -145,7 +145,7 @@ if($isAll){
 		<h4>Sticky Posts</h4>
 	<?php
 		$table = $this->generateTable($stickies, array('fields' => array('link' => 'Discussion', 'started' => 'Created',
-																	   'numReplies' => 'Replies', 'views' => 'Views', 'lastPost' => 'Most Recent'),
+																	   'numReplies' => 'Replies', 'views' => 'Readers', 'lastPost' => 'Most Recent'),
 													'class' => 'topics-table mobile-table'));
 		
 		echo $table->display();
@@ -161,7 +161,7 @@ if($isAll){
 
 		
 		$table = $this->generateTable($topics, array('fields' => array('link' => 'Discussion', 'started' => 'Created',
-																	   'numReplies' => 'Replies', 'views' => 'Views', 'lastPost' => 'Most Recent'),
+																	   'numReplies' => 'Replies', 'views' => 'Readers', 'lastPost' => 'Most Recent'),
 													'class' => 'topics-table mobile-table'));
 		
 		echo $table->display();

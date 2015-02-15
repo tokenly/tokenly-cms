@@ -107,10 +107,22 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		$output['title'] = 'New Topic - '.$this->board['name'];
 		$output['message'] = '';
 		
+		$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+		$checkCaptcha = false;
+		if(isset($this->data['app']['meta']['min-posts-captcha'])){
+			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
+			if($postCount <= $minPosts){
+				$captcha = new Slick_UI_Captcha();
+				$output['form']->add($captcha);
+				$checkCaptcha = true;
+			}
+		}
+		
 		if(posted()){
 			$data = $output['form']->grabData();
 			$data['userId'] = $this->data['user']['userId'];
 			$data['boardId'] = $output['board']['boardId'];
+			$data['check_captcha'] = $checkCaptcha;
 			
 			try{
 				$post = $this->model->postTopic($data, $this->data);
