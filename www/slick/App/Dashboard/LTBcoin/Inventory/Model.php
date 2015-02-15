@@ -138,6 +138,9 @@ class Slick_App_Dashboard_LTBcoin_Inventory_Model extends Slick_Core_Model
 			catch(Exception $e){
 				return false;
 			}
+			if(!isset($asset[0])){
+				return false;
+			}
 			$asset = $asset[0];
 			$isDivisible = 0;
 			if($asset['divisible']){
