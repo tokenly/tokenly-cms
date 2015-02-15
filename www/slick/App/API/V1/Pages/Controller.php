@@ -7,12 +7,22 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 	{
 		parent::__construct();
 		$this->model = new Slick_App_Page_View_Model;
+		$this->tca = new Slick_App_LTBcoin_TCA_Model;
+		$this->pageModule = $this->model->get('modules', 'page-view', array(), 'slug');
+
 	}
 
 	public function init($args = array())
 	{
 		$output = array();
 		$this->args = $args;
+		try{
+			$this->user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+		}
+		catch(Exception $e){
+			$this->user = false;
+		}				
+				
 		if(isset($args[1])){
 			switch($args[1]){
 				case 'menus':
@@ -35,6 +45,15 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 		$output = array();
 		$getPages = $this->model->getAll('pages', array('siteId' => $this->args['data']['site']['siteId'], 'active' => 1), 
 												  array('pageId', 'name', 'url', 'template', 'description'));
+												 
+		foreach($getPages as $k => $page){
+			$checkTCA = $this->tca->checkItemAccess($this->user, $this->pageModule['moduleId'], $page['pageId'], 'page');
+			if(!$checkTCA){
+				unset($getPages[$k]);
+				continue;
+			}
+		}
+		
 		$output['pages'] = $getPages;
 		return $output;
 	}
@@ -57,8 +76,10 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 				return $output;
 			}
 		}
+		
+		$checkTCA = $this->tca->checkItemAccess($this->user, $this->pageModule['moduleId'], $getPage['pageId'], 'page');
 	
-		if($getPage['siteId'] != $this->args['data']['site']['siteId']){
+		if(!$checkTCA OR $getPage['siteId'] != $this->args['data']['site']['siteId']){
 			http_response_code(404);
 			$output['error'] = 'Page not found';
 			return $output;
