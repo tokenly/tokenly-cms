@@ -787,15 +787,14 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			throw new Exception('Invalid blog contributor request');
 		}
 		
-		/*if($getPost['published'] == 1){
-			throw new Exception('This post is marked as finished and closed to new participants.');
-		}*/
-		
 		$contribs = $this->getPostContributors($getPost['postId']);
 		$contribs[] = array('userId' => $getPost['userId']); //add author to contrib list
 		foreach($contribs as $contrib){
 			Slick_App_Meta_Model::notifyUser($contrib['userId'], 'emails.invites.'.$invite['type'].'_complete', $invite['inviteId'], 'user-invite-complete', false, $invite);
 		}
+		
+		//send acceptance notification to user
+		Slick_App_Meta_Model::notifyUser($invite['sendUser'], 'emails.invites.'.$invite['type'].'_accept', $invite['inviteId'], 'user-invite-accept', false, $invite);
 		
 		$site = currentSite();
 		$dashApp = $this->get('apps', 'dashboard', array(), 'slug');
