@@ -149,12 +149,9 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 									ORDER BY dashGroup ASC, rank ASC');
 		$menu = array();
 		foreach($getMenu as $item){
-			$itemTCA = $tca->checkItemAccess($getUser['userId'], $item['moduleId'], 0, '');
-			if(!$itemTCA){
-				continue;
-			}
 			if($item['checkAccess'] == 1){
-				if(!in_array($item['moduleId'], $access)){
+				$itemTCA = $tca->checkItemAccess($getUser['userId'], $item['moduleId'], 0, '', false);
+				if(!in_array($item['moduleId'], $access) AND !$itemTCA){
 					continue;
 				}
 			}
@@ -168,7 +165,6 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_Core_Model
 			}
 			$menu[$item['dashGroup']][] = array('label' => $item['label'], 'url' => $getSite['url'].'/'.$moduleUrl.$item['params']);
 		}
-
 		return $menu;
 	}
 
