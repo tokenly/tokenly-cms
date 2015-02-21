@@ -117,7 +117,7 @@ foreach($blogs as $blog){
 			if($post['is_contributor']){
 				$commentIcon .= ' <i class="fa fa-user text-pending" title="Contributing"></i> ';
 			}
-			if(isset($post['contributors'][0])){
+			elseif(isset($post['contributors'][0])){
 				$commentIcon .= ' <i class="fa fa-group text-progress" title="Has Contributors"></i> ';
 			}		
 			

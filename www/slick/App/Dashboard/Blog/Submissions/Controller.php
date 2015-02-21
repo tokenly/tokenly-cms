@@ -338,6 +338,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			
 			if($getPost['userId'] != $this->data['user']['userId']){
 				$foundRole = false;
+				$foundBlogRole = false;
 				foreach($getCategories as $cat){
 					$cat = $this->model->get('blog_categories', $cat['categoryId']);
 					$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
@@ -348,12 +349,14 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 						foreach($myBlogs as $myBlog){
 							if($myBlog['blogId'] == $cat['blogId'] AND $this->data['user']['userId'] == $myBlog['userId']){
 								$foundRole = true;
+								$foundBlogRole = true;
 							}
 						}
 						if(!$foundRole){
 							foreach($getRoles as $role){
 								if($role['blogId'] == $cat['blogId'] AND in_array($role['type'], $allowed_roles)){
 									$foundRole = true;
+									$foundBlogRole = true;
 								}
 							}
 						}
@@ -372,8 +375,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 						}
 					}
 				}
+				$getPost['contributors'] = $getContribs;
 				
-				if($foundRole){
+				if($foundBlogRole){
 					$getPost['user_blog_role'] = true;
 				}
 			}
@@ -415,9 +419,9 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$contributor = $this->model->checkUserContributor($getPost['postId'], $this->data['user']['userId']);
 		$output['contributor'] = $contributor;
 		$output['contributor_list'] = $this->model->getPostContributors($getPost['postId'], false);
-		
+
 		if($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canManageAllBlogs']){
-			if(!$contributor OR $getPost['status'] == 'published'){
+			if((!$contributor OR $getPost['status'] == 'published') AND !$getPost['user_blog_role']){
 				$output['form']->field('title')->addAttribute('disabled');
 				$output['form']->field('url')->addAttribute('disabled');
 				$output['form']->field('formatType')->addAttribute('disabled');
@@ -434,6 +438,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 						$output['form']->field($fkey)->addAttribute('disabled');
 					}
 				}
+				
 				$output['unlock_post'] = false;
 			}
 			if($contributor){
@@ -465,7 +470,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		}
 		
 		if(!$this->data['perms']['canPublishPost']){
-			if($getPost['published'] == 1){
+			if($getPost['status'] == 'published'){
 				$output['form']->field('status')->addAttribute('disabled');
 			}
 			else{

@@ -78,7 +78,6 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$featured->setValue(1);
 		$form->add($featured);*/
 
-
 		$pubTime = new Slick_UI_Textbox('publishDate', 'datetimepicker');
 		$pubTime->setLabel('Publish Date/Time');
 		$form->add($pubTime);

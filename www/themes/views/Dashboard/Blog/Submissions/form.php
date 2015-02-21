@@ -190,7 +190,7 @@ if(isset($post) AND $post['published'] == 1){
 	<?php
 	if(isset($post) AND !$unlock_post){
 		if($post['status'] == 'published'){
-			echo '<p><strong>This post is marked as complete and may only be modified by the original author.</strong></p>';
+			echo '<p><strong>This post is marked as complete and may only be modified by the original author or a relevant ACT member.</strong></p>';
 		}
 		else{
 			echo '<p><strong>You must be accepted as a contributor before you can modify this post.</strong></p>';
