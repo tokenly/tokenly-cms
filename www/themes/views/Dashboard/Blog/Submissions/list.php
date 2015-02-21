@@ -123,7 +123,7 @@ else{
 				$commentIcon = '<i class="fa fa-comment text-success" title="New Editorial Comments"></i> ';
 			}
 			if($post['userId'] != $user['userId']){
-				$commentIcon .= ' <i class="fa fa-group text-pending" title="Contributor"></i> ';
+				$commentIcon .= ' <i class="fa fa-user text-pending" title="Contributibg"></i> ';
 			}
 			$titleLink = $commentIcon.$titleLink;
 		
