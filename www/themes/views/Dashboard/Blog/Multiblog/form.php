@@ -80,13 +80,6 @@ if(isset($blogRoles)){
 		}
 		
 		echo '</tbody></table>';
-		
-		$table = $this->generateTable($blogRoles, array('fields' => array('username' => 'Username', 'type' => 'Role'),
-														'actions' => array(array('data' => 'userId', 'text' => 'Remove',
-														 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/remove-role/'.$getBlog['blogId'].'/',
-														 'class' => 'delete')),
-														 'options' => array(array('field' => 'username', 'params' => array('functionWrap' => 'linkify_username')))));
-		//echo $table->display();
 	}
 	echo '<br>';
 	echo $roleForm->display();	

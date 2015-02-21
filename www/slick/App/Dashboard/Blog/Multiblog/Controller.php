@@ -52,7 +52,7 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
 		$wheres = array('siteId' => $this->data['site']['siteId']);		
 		$output['blogList'] = $this->model->getAll('blogs', $wheres);
 		foreach($output['blogList'] as &$blog){
-			$roles = $this->model->getBlogUserRoles($blog['blogId']);;
+			$roles = $this->model->getBlogUserRoles($blog['blogId']);
 			$roleList = array();
 			foreach($roles as $role){
 				if($role['userId'] == 0){
