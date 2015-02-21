@@ -55,7 +55,7 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 		}
 		
 		if(!self::$contribs){
-			self::$contribs = $this->fetchAll('SELECT u.userId, u.username, u.slug, c.role, c.share, c.inviteId, c.contributorId, i.accepted
+			self::$contribs = $this->fetchAll('SELECT u.userId, u.username, u.slug, c.role, c.share, c.inviteId, c.contributorId, i.accepted, c.postId
 												FROM blog_contributors c
 												LEFT JOIN user_invites i ON c.inviteId = i.inviteId
 												LEFT JOIN users u ON i.userId = u.userId
@@ -223,7 +223,6 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 				$output[$blogId][] = $blogPost;
 			}
 		}
-
 		return $output;
 	}
 	
