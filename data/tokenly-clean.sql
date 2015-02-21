@@ -393,14 +393,15 @@ DROP TABLE IF EXISTS `blog_roles`;
 CREATE TABLE `blog_roles` (
   `userRoleId` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `blogId` int(11) unsigned NOT NULL,
-  `userId` int(11) unsigned NOT NULL,
+  `userId` int(11) unsigned DEFAULT 0,
   `type` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
+  `token` VARCHAR(100),
   PRIMARY KEY (`userRoleId`),
   KEY `blogId` (`blogId`),
   KEY `userId` (`userId`),
-  CONSTRAINT `blog_roles_ibfk_1` FOREIGN KEY (`blogId`) REFERENCES `blogs` (`blogId`) ON DELETE CASCADE,
-  CONSTRAINT `blog_roles_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
+  KEY `token` (`token`),
+  CONSTRAINT `blog_roles_ibfk_1` FOREIGN KEY (`blogId`) REFERENCES `blogs` (`blogId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1794,6 +1795,7 @@ CREATE TABLE `token_access` (
   `stackOp` varchar(10) COLLATE utf8_unicode_ci DEFAULT 'AND',
   `stackOrder` int(11) DEFAULT '0',
   `overrideable` int(1) DEFAULT '0',
+  `reference` VARCHAR(100),
   PRIMARY KEY (`accessId`),
   KEY `userId` (`userId`),
   KEY `moduleId` (`moduleId`),

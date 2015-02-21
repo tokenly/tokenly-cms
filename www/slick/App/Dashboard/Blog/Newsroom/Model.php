@@ -14,6 +14,7 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 	{
 		parent::__construct();
 		$this->site = currentSite();
+		$this->multiblogs = new Slick_App_Dashboard_Blog_Multiblog_Model;
 		if(!self::$posts){
 			self::$posts = $this->fetchAll('SELECT p.postId, p.title, p.url, p.userId, p.siteId, p.postDate,
 												p.publishDate, p.image, p.coverImage, p.views, p.commentCount,
@@ -29,11 +30,17 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 		}
 		
 		if(!self::$roles){
-			self::$roles = $this->fetchAll('SELECT r.*
-											FROM blog_roles r
-											LEFT JOIN blogs b ON b.blogId = r.blogId
-											WHERE b.active = 1 AND b.siteId = :siteId',
-											array(':siteId' => $this->site['siteId']));
+			self::$roles = array();
+			foreach(self::$blogs as $blog){
+				$getRoles = $this->multiblogs->getBlogUserRoles($blog['blogId']);
+				foreach($getRoles as $role){
+					if($role['userId'] == 0){
+						continue;
+					}
+					$role['blogId'] = $blog['blogId'];
+					self::$roles[] = $role;
+				}
+			}
 		}
 		
 		if(!self::$categories){
@@ -223,6 +230,7 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 				$output[$blogId][] = $blogPost;
 			}
 		}
+
 		return $output;
 	}
 	
@@ -231,7 +239,7 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 	{
 		$model = new Slick_App_Dashboard_Blog_Multiblog_Model;
 		$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
-		$myRoles = $this->getAll('blog_roles', array('userId' => $data['user']['userId']));
+		$myRoles = extract_row(self::$roles, array('userId' => $data['user']['userId']), true, 'blog_roles');
 		$allowed_roles = array('admin', 'editor');
 		$getBlogs = $this->getAll('blogs', array('siteId' => $data['site']['siteId'], 'active' => 1));
 		foreach($getBlogs as $k => &$blog){
@@ -334,7 +342,9 @@ class Slick_App_Dashboard_Blog_Newsroom_Model extends Slick_Core_Model
 	
 	public function getBlogTeam($blog)
 	{
-		$getRoles = $this->getAll('blog_roles', array('blogId' => $blog['blogId']), array(), 'type', 'ASC');
+		$multiblogs = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$getRoles = $multiblogs->getBlogUserRoles($blog['blogId']);
+		//$getRoles = $this->getAll('blog_roles', array('blogId' => $blog['blogId']), array(), 'type', 'ASC');
 
 		$output = array();
 		if($blog['userId'] != 0){

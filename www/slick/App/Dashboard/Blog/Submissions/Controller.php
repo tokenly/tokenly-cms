@@ -331,38 +331,10 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				throw new Exception('403');
 			}
 			
-			$getRoles = $this->model->getAll('blog_roles', array('userId' => $this->data['user']['userId']));
-			$myBlogs = $this->model->getAll('blogs', array('userId' => $this->data['user']['userId']));
-			$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-			$allowed_roles = array('admin', 'editor');
-			
 			if($getPost['userId'] != $this->data['user']['userId']){
-				$foundRole = false;
-				$foundBlogRole = false;
-				foreach($getCategories as $cat){
-					$cat = $this->model->get('blog_categories', $cat['categoryId']);
-					$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-					if(!$catTCA){
-						throw new Exception('403');
-					}
-					if(!$foundRole){
-						foreach($myBlogs as $myBlog){
-							if($myBlog['blogId'] == $cat['blogId'] AND $this->data['user']['userId'] == $myBlog['userId']){
-								$foundRole = true;
-								$foundBlogRole = true;
-							}
-						}
-						if(!$foundRole){
-							foreach($getRoles as $role){
-								if($role['blogId'] == $cat['blogId'] AND in_array($role['type'], $allowed_roles)){
-									$foundRole = true;
-									$foundBlogRole = true;
-								}
-							}
-						}
-					}
-				}
-				
+				$foundBlogRole = $this->model->checkPostBlogRole($getPost['postId'], $this->data['user']['userId']);
+				$foundRole = $foundBlogRole;
+
 				$getContribs = $this->model->getPostContributors($getPost['postId'], false);
 				foreach($getContribs as $contrib){
 					if($contrib['userId'] == $this->data['user']['userId']){
@@ -389,7 +361,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				throw new Exception('403');
 			}
 			
-			if($getPost['published'] == 1 AND !$this->data['perms']['canEditAfterPublished']){
+			if($getPost['status'] == 'published' AND !$this->data['perms']['canEditAfterPublished']){
 				throw new Exception('403');
 			}
 		}
@@ -421,16 +393,20 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$output['contributor_list'] = $this->model->getPostContributors($getPost['postId'], false);
 
 		if($getPost['userId'] != $this->data['user']['userId'] AND !$this->data['perms']['canManageAllBlogs']){
-			if((!$contributor OR $getPost['status'] == 'published') AND !$getPost['user_blog_role']){
-				$output['form']->field('title')->addAttribute('disabled');
-				$output['form']->field('url')->addAttribute('disabled');
-				$output['form']->field('formatType')->addAttribute('disabled');
-				$output['form']->field('content')->addAttribute('disabled');
-				$output['form']->field('excerpt')->addAttribute('disabled');
-				$output['form']->field('autogen-excerpt')->addAttribute('disabled');
+			if((!$contributor OR $getPost['status'] == 'published')){
+				if(!$contributor OR !$getPost['user_blog_role']){
+					$output['form']->field('title')->addAttribute('disabled');
+					$output['form']->field('url')->addAttribute('disabled');
+					$output['form']->field('formatType')->addAttribute('disabled');
+					$output['form']->field('content')->addAttribute('disabled');
+					$output['form']->field('excerpt')->addAttribute('disabled');
+					$output['form']->field('autogen-excerpt')->addAttribute('disabled');
+					$output['form']->field('notes')->addAttribute('disabled');
+					$output['unlock_post'] = false;
+				}
+
 				$output['form']->field('status')->addAttribute('disabled');
 				$output['form']->field('publishDate')->addAttribute('disabled');
-				$output['form']->field('notes')->addAttribute('disabled');
 				$output['form']->field('categories')->addAttribute('disabled');
 				$output['form']->field('coverImage')->addAttribute('disabled');
 				foreach($output['form']->fields as $fkey => $field){
@@ -438,8 +414,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 						$output['form']->field($fkey)->addAttribute('disabled');
 					}
 				}
-				
-				$output['unlock_post'] = false;
 			}
 			if($contributor){
 				//still disable some stuff for them

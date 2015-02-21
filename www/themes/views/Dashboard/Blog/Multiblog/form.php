@@ -40,12 +40,53 @@ if(isset($blogRoles)){
 		echo '<p>No roles added yet</p>';
 	}
 	else{
+		echo '<table class="admin-table">
+				<thead>
+					<tr>
+						<th></th>
+						<th></th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>';
+		
+		foreach($blogRoles as $role){
+			?>
+			<tr>
+				<td>
+					<?php
+					if($role['userId'] == 0 AND $role['token'] != ''){
+						echo '<strong>'.$role['token'].'</strong>';
+					}
+					else{
+						echo linkify_username($role['username']);
+						if($role['token'] != ''){
+							echo ' ['.$role['token'].']';
+						}
+					}
+					?>
+				
+				</td>
+				<td><?= $role['type'] ?></td>
+				<td>
+					<?php
+					if($role['userId'] == 0 OR $role['token'] == ''){
+						echo '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/remove-role/'.$getBlog['blogId'].'/'.$role['userRoleId'].'" class="delete">Remove</a>';
+					}
+					?>
+				</td>
+			</tr>
+			<?php
+		}
+		
+		echo '</tbody></table>';
+		
 		$table = $this->generateTable($blogRoles, array('fields' => array('username' => 'Username', 'type' => 'Role'),
 														'actions' => array(array('data' => 'userId', 'text' => 'Remove',
 														 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/remove-role/'.$getBlog['blogId'].'/',
 														 'class' => 'delete')),
 														 'options' => array(array('field' => 'username', 'params' => array('functionWrap' => 'linkify_username')))));
-		echo $table->display();
+		//echo $table->display();
 	}
 	echo '<br>';
 	echo $roleForm->display();	

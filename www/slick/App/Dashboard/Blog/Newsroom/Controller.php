@@ -46,6 +46,12 @@ class Slick_App_Dashboard_Blog_Newsroom_Controller extends Slick_App_ModControl
 	{
 		$getPost = $this->model->get('blog_posts', $_POST['update-categories']);
 		if($getPost){
+			//checks if this user is allowed to update categories for this post
+			$checkAccess = $this->submitModel->checkPostBlogRole($getPost['postId'], $this->data['user']['userId']);
+			if(!$checkAccess AND !$this->data['perms']['canManageAllBlogs']){
+				$output['view'] = '403';
+				return $output;
+			}
 			$catList = array();
 			$rejectList = array();
 			foreach($_POST as $k => $v){

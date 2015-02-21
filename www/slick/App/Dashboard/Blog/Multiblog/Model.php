@@ -148,19 +148,64 @@ class Slick_App_Dashboard_Blog_Multiblog_Model extends Slick_Core_Model
 
 	public function getBlogUserRoles($blogId, $includeOwner = false)
 	{
-		$sql = 'SELECT u.userId, u.username, u.email, u.slug, r.type
+		$sql = 'SELECT r.userRoleId, u.userId, u.username, u.email, u.slug, r.type, r.token
 				FROM blog_roles r
 				LEFT JOIN users u ON r.userId = u.userId
 				WHERE r.blogId = :blogId
-				ORDER BY u.username ASC';
+				ORDER BY r.type ASC, r.userId ASC';
 		$get = $this->fetchAll($sql, array(':blogId' => $blogId));
+		$scout = new Slick_App_Dashboard_LTBcoin_AssetScout_Model;
+		
+		$roleList = array();
+		$usedUsers = array();
+		foreach($get as $k => $row){
+			$subList = false;
+			if($row['userId'] == 0 AND $row['token'] != ''){
+				//get all users that hold some of this token
+				try{
+					$getTokenUsers = $scout->scoutAsset(array('asset' => $row['token']));
+					
+				}
+				catch(Exception $e){
+					$getTokenUsers = false;
+				}
+				if(!$getTokenUsers){
+					continue;
+				}
+				foreach($getTokenUsers['list'] as $tokenUser){
+					if(in_array($tokenUser['userId'], $usedUsers)){
+						continue;
+					}
+					$usedUsers[] = $tokenUser['userId'];
+					$tokenUser['type'] = $row['type'];
+					$tokenUser['token_user'] = true;
+					$tokenUser['token'] = $row['token'];
+					$subList[] = $tokenUser;
+				}
+			}
+			else{
+				if(in_array($row['userId'], $usedUsers)){
+					continue;
+				}
+				$usedUsers[] = $row['userId'];				
+				$row['token_user'] = false;
+			}
+			$roleList[] = $row;
+			if($subList){
+				foreach($subList as $sub){
+					$roleList[] = $sub;
+				}
+			}
+		}
+		
 		if($includeOwner){
 			$getBlog = $this->get('blogs', $blogId);
 			$getUser = $this->get('users', $getBlog['userId'], array('userId', 'username', 'slug'));
 			$getUser['type'] = 'owner';
-			$get[] = $getUser;
+			$getUser['token'] = '';
+			$roleList[] = $getUser;
 		}
-		return $get;
+		return $roleList;
 	}
 
 	public function getBlogRoleForm()
@@ -169,7 +214,7 @@ class Slick_App_Dashboard_Blog_Multiblog_Model extends Slick_Core_Model
 		
 		$id = new Slick_UI_Textbox('roleUserId');
 		$id->setLabel('Add New Role');
-		$id->addAttribute('placeholder', 'Username or User ID');
+		$id->addAttribute('placeholder', 'Username, User ID or token:MYTOKEN');
 		$form->add($id);
 		
 		$type = new Slick_UI_Select('roleType');
@@ -185,49 +230,94 @@ class Slick_App_Dashboard_Blog_Multiblog_Model extends Slick_Core_Model
 		return $form;
 	}
 	
-	public function addBlogRole($blogId, $userId, $type)
+	public function addBlogRole($blogId, $userId, $type, $user)
 	{
 		
 		$userId = trim($userId);
-		$get = $this->get('users', $userId, array(), 'username');
-		if(!$get){
-			$get = $this->get('users', intval($userId));
-			if(!$get){
-				throw new Exception('User not found');
+		$isUser = false;
+		$expUserId = explode(':', $userId);
+		$roleData = array('blogId' => $blogId, 'type' => $type, 'created_at' => timestamp());
+		if(isset($expUserId[1]) AND $expUserId[0] == 'token'){
+			$getRole = $this->getAll('blog_roles', array('token' => $expUserId[1], 'blogId' => $blogId));
+			if(count($getRole) > 0){
+				throw new Exception('Token already assigned a role!');
 			}
+			
+			//add a tokenized role instead of single user
+			$inventory = new Slick_App_Dashboard_LTBcoin_Inventory_Model;
+			$getAsset = $inventory->getAssetData($expUserId[1]);
+			if(!$getAsset){
+				throw new Exception('Invalid token name');
+			}
+			$roleData['token'] = $getAsset['asset'];
 		}
-		$userId = $get['userId'];
-		
-		$getRole = $this->getAll('blog_roles', array('userId' => $userId, 'blogId' => $blogId));
-		
-		if(count($getRole) > 0){
-			throw new Exception('User already assigned a role!');
+		else{
+			$get = $this->get('users', $userId, array(), 'username');
+			if(!$get){
+				$get = $this->get('users', intval($userId));
+				if(!$get){
+					throw new Exception('User not found');
+				}
+			}
+			$getRole = $this->getAll('blog_roles', array('userId' => $get['userId'], 'blogId' => $blogId));
+			if(count($getRole) > 0){
+				throw new Exception('User already assigned a role!');
+			}
+			$roleData['userId'] = $get['userId'];
+			$isUser = true;
 		}
-		
-		$add =  $this->insert('blog_roles', array('userId' => $get['userId'], 'blogId' => $blogId, 'type' => $type, 'created_at' => timestamp()));
+			
+		$add =  $this->insert('blog_roles', $roleData);
 		if(!$add){
 			throw new Exception('Error adding user role');
 		}
 		
-		if($type == 'editor'){
-			$editorGroup = $this->get('groups', 'blog-editor', array(), 'slug');
-			if($editorGroup){
-				$userEditor = $this->fetchSingle('SELECT * FROM group_users WHERE userId = :userId AND groupId = :groupId',
-												 array(':userId' => $get['userId'], ':groupId' => $editorGroup['groupId']));
-				if(!$userEditor){
-					$this->insert('group_users', array('userId' => $get['userId'], 'groupId' => $editorGroup['groupId']));
+		if(!$isUser){
+			//tokenized role, add in TCA rules
+			$newsroom = $this->get('modules', 'blog-newsroom', array(), 'slug');
+			$categories = $this->get('modules', 'blog-categories', array(), 'slug');
+			$multiblogs = $this->get('modules', 'multi-blogs', array(), 'slug');
+			$tca_data = array('userId' => $user['userId'], 'moduleId' => $newsroom['moduleId'],
+							'itemId' => 0, 'itemType' => '', 'permId' => 0, 'asset' => $getAsset['asset'],
+							'amount' => 0, 'op' => '>', 'stackOp' => 'OR', 'stackOrder' => 0, 'overrideable' => 1,
+							'reference' => 'blog-role:'.$add);
+							
+			
+			if($type == 'editor'){
+				$newsroom_tca = $this->insert('token_access', $tca_data);
+			}
+			elseif($type == 'admin'){
+				$newsroom_tca = $this->insert('token_access', $tca_data);
+				
+				$tca_data['moduleId'] = $categories['moduleId'];
+				$categories_tca = $this->insert('token_access', $tca_data);
+				
+				$tca_data['moduleId'] = $multiblogs['moduleId'];
+				$multiblogs_tca = $this->insert('token_access', $tca_data);														    															    
+			}
+
+		}
+		else{
+			if($type == 'editor'){
+				$editorGroup = $this->get('groups', 'blog-editor', array(), 'slug');
+				if($editorGroup){
+					$userEditor = $this->fetchSingle('SELECT * FROM group_users WHERE userId = :userId AND groupId = :groupId',
+													 array(':userId' => $get['userId'], ':groupId' => $editorGroup['groupId']));
+					if(!$userEditor){
+						$this->insert('group_users', array('userId' => $get['userId'], 'groupId' => $editorGroup['groupId']));
+					}
 				}
 			}
-		}
-		elseif($type == 'admin'){
-			$ownerGroup = $this->get('groups', 'blog-owner', array(), 'slug');
-			if($ownerGroup){
-				$userOwner = $this->fetchSingle('SELECT * FROM group_users WHERE userId = :userId AND groupId = :groupId',
-												 array(':userId' => $get['userId'], ':groupId' => $ownerGroup['groupId']));
-				if(!$userOwner){
-					$this->insert('group_users', array('userId' => $get['userId'], 'groupId' => $ownerGroup['groupId']));
-				}
-			}			
+			elseif($type == 'admin'){
+				$ownerGroup = $this->get('groups', 'blog-owner', array(), 'slug');
+				if($ownerGroup){
+					$userOwner = $this->fetchSingle('SELECT * FROM group_users WHERE userId = :userId AND groupId = :groupId',
+													 array(':userId' => $get['userId'], ':groupId' => $ownerGroup['groupId']));
+					if(!$userOwner){
+						$this->insert('group_users', array('userId' => $get['userId'], 'groupId' => $ownerGroup['groupId']));
+					}
+				}			
+			}
 		}
 		
 		return $add;

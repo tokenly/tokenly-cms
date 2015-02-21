@@ -906,6 +906,26 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		
 	}
+	
+	public function checkPostBlogRole($postId, $userId)
+	{
+		$multiblogs = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$getCatBlogs = $this->fetchAll('SELECT c.blogId
+									FROM blog_postCategories pc 
+									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									WHERE pc.postId = :postId
+									GROUP BY c.blogId', array(':postId' => $postId));
+		$allowed_roles = array('admin', 'editor', 'owner');
+		foreach($getCatBlogs as $blog){
+			$getRoles = $multiblogs->getBlogUserRoles($blog['blogId'], true);
+			foreach($getRoles as $role){
+				if($role['userId'] == $userId AND in_array($role['type'], $allowed_roles)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 		
 }
 

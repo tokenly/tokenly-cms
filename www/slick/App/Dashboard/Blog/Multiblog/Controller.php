@@ -49,13 +49,15 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
     private function showBlogs()
     {
 		$output = array('view' => 'list');
-		
 		$wheres = array('siteId' => $this->data['site']['siteId']);		
 		$output['blogList'] = $this->model->getAll('blogs', $wheres);
 		foreach($output['blogList'] as &$blog){
-			$roles = $this->model->getBlogUserRoles($blog['blogId']);
+			$roles = $this->model->getBlogUserRoles($blog['blogId']);;
 			$roleList = array();
 			foreach($roles as $role){
+				if($role['userId'] == 0){
+					continue;
+				}		
 				if(!isset($roleList[$role['type']])){
 					$roleList[$role['type']] = array();
 				}
@@ -148,7 +150,7 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
 		if(posted()){
 			if(isset($_POST['roleUserId']) AND isset($_POST['roleType'])){
 				try{
-					$add = $this->model->addBlogRole($getBlog['blogId'], $_POST['roleUserId'], $_POST['roleType']);
+					$add = $this->model->addBlogRole($getBlog['blogId'], $_POST['roleUserId'], $_POST['roleType'], $this->data['user']);
 				}
 				catch(Exception $e){
 					$add = false;
@@ -211,17 +213,29 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
 	}
 	
 	private function removeBlogRole()
-	{
+	{		
 		if(!isset($this->args[3]) OR !isset($this->args[4])){
 			$this->redirect($this->site.$this->moduleUrl);
 			return false;
 		}
 		
 		$getBlog = $this->model->get('blogs', $this->args[3]);
-		$getUser = $this->model->get('users', $this->args[4]);
-		if(!$getBlog OR !$getUser){
+		$getBlogRole = $this->model->get('blog_roles', $this->args[4]);
+		if(!$getBlog OR !$getBlogRole){
 			$this->redirect($this->site.'/'.$this->moduleUrl);
 			return false;
+		}
+		
+		
+		$getUser = false;
+		if($getBlogRole['userId'] != 0){
+			$getUser = $this->model->get('users', $getBlogRole['userId']);
+		}
+		
+		$inventory = new Slick_App_Dashboard_LTBcoin_Inventory_Model;		
+		$getToken = false;
+		if($getBlogRole['token'] != ''){
+			$getToken = $inventory->getAssetData($getBlogRole['token']);
 		}
 		
 		$output['blogRoles'] = $this->model->getBlogUserRoles($getBlog['blogId']);
@@ -236,46 +250,46 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
 			$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 			return false;
 		}				
-		
-		$blogRole = $this->model->getAll('blog_roles', array('userId' => $getUser['userId'], 'blogId' => $getBlog['blogId']));
-		if(!$blogRole OR count($blogRole) == 0){
-			$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
-			return false;
-		}
-		
-		$delete = $this->model->delete('blog_roles', $blogRole[0]['userRoleId']);
+			
+		$delete = $this->model->delete('blog_roles', $getBlogRole['userRoleId']);
 		
 		if($delete){
-			$other_roles = $this->model->getAll('blog_roles', array('userId' => $getUser['userId']));
-			$foundEditor = false;
-			$foundOwner = false;
-			foreach($other_roles as $role){
-				if($role['roleId'] != $blogRole['roleId']){
-					if($role['type'] == 'editor'){
-						$foundEditor = true;
-					}
-					elseif($role['type'] == 'admin'){
-						$foundOwner = true;
+			if($getBlogRole['userId'] == 0 AND $getBlogRole['token'] != ''){
+				//token entry, remove TCA rules
+				$this->model->delete('token_access', 'blog-role:'.$getBlogRole['userRoleId'], 'reference');
+			}
+			elseif($getUser){
+				$other_roles = $this->model->getAll('blog_roles', array('userId' => $getUser['userId']));
+				$foundEditor = false;
+				$foundOwner = false;
+				foreach($other_roles as $role){
+					if($role['userRoleId'] != $getBlogRole['userRoleId']){
+						if($role['type'] == 'editor'){
+							$foundEditor = true;
+						}
+						elseif($role['type'] == 'admin'){
+							$foundOwner = true;
+						}
 					}
 				}
-			}
-			
-			if(!$foundEditor){
-				$editorGroup = $this->model->get('groups', 'blog-editor', array(), 'slug');
-				if($editorGroup){
-					$findGroups = $this->model->getAll('group_users', array('groupId' => $editorGroup['groupId'], 'userId' => $getUser['userId']));
-					foreach($findGroups as $group){
-						$this->model->delete('group_users', $group['groupUserId']);
+				
+				if(!$foundEditor){
+					$editorGroup = $this->model->get('groups', 'blog-editor', array(), 'slug');
+					if($editorGroup){
+						$findGroups = $this->model->getAll('group_users', array('groupId' => $editorGroup['groupId'], 'userId' => $getUser['userId']));
+						foreach($findGroups as $group){
+							$this->model->delete('group_users', $group['groupUserId']);
+						}
 					}
 				}
-			}
-			
-			if(!$foundOwner){
-				$ownerGroup = $this->model->get('groups', 'blog-owner', array(), 'slug');
-				if($ownerGroup){
-					$findGroups = $this->model->getAll('group_users', array('groupId' => $ownerGroup['groupId'], 'userId' => $getUser['userId']));
-					foreach($findGroups as $group){
-						$this->model->delete('group_users', $group['groupUserId']);
+				
+				if(!$foundOwner){
+					$ownerGroup = $this->model->get('groups', 'blog-owner', array(), 'slug');
+					if($ownerGroup){
+						$findGroups = $this->model->getAll('group_users', array('groupId' => $ownerGroup['groupId'], 'userId' => $getUser['userId']));
+						foreach($findGroups as $group){
+							$this->model->delete('group_users', $group['groupUserId']);
+						}
 					}
 				}
 			}
@@ -283,6 +297,7 @@ class Slick_App_Dashboard_Blog_Multiblog_Controller extends Slick_App_ModControl
 		}
 		
 		$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
+		return true;
 	}
 	
 
