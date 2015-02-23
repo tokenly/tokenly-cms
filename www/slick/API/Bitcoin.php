@@ -56,6 +56,10 @@ class Slick_API_Bitcoin {
 	 */
 	private $notification = false;
 	
+	public $modify_request = true;
+	
+	protected static $utxoset = false;
+	
 	/**
 	 * Takes the connection parameters
 	 *
@@ -122,7 +126,10 @@ class Slick_API_Bitcoin {
 						'id' => $currentId
 						);
 		$request = json_encode($request);
-		$request = str_replace(array('[{', '}]'), array('{', '}'), $request);
+		if($this->modify_request){
+			$request = str_replace(array('[{', '}]'), array('{', '}'), $request);
+		}
+	
 		
 		$this->debug && $this->debug.='***** Request *****'."\n".$request."\n".'***** End Of request *****'."\n\n";
 		
@@ -174,6 +181,79 @@ class Slick_API_Bitcoin {
 			return true;
 		}
 	}
+	
+
+	public function sendfromaddress($address, $amount, $to, $fee = 0.00001)
+	{
+		$unspent = $this->listunspent();
+		$outputsFound = array();
+		$totalFound = 0;
+		foreach($unspent as $utxo){
+			if($utxo['address'] == $address){
+				$outputsFound[] = $utxo;
+				$totalFound += $utxo['amount'];
+			}
+		}
+		
+		if(count($outputsFound) == 0){
+			throw new Exception('No valid unspent outputs found for this address');
+		}
+
+		if($totalFound < ($amount + $fee)){
+			throw new Exception('Insufficient funds at this address (need '.(($amount + $fee) - $totalFound).')');
+		}
+		
+		$rawInputs = array();
+		foreach($outputsFound as $utxo){
+			$item = array('txid' => $utxo['txid'], 'vout' => $utxo['vout']);
+			$rawInputs[] = $item;
+		}
+
+	
+		$rawAddresses = array($to => $amount);
+		$leftover = $totalFound - $amount;
+		$change = $leftover - $fee;
+		if($change > 0){
+			$rawAddresses[$address] = $change;
+		}
+		
+		$this->modify_request = false;
+		$createRaw = $this->createrawtransaction($rawInputs, $rawAddresses);
+		
+		$signData = array();
+		foreach($outputsFound as $utxo){
+			$item = array('txid' => $utxo['txid'], 'vout' => $utxo['vout'], 'scriptPubKey' => $utxo['scriptPubKey']);
+			$signData[] = $item;
+		}
+		
+		$signRaw = $this->signrawtransaction($createRaw, $signData);
+		$this->modify_request = true;
+		
+		return $this->sendrawtransaction($signRaw['hex']);
+		
+	}
+	
+	public function getaddressbalance($address)
+	{
+		if(!self::$utxoset){
+			$this->updateutxoset();
+		}
+		$unspent = self::$utxoset;
+		$balance = 0;
+		foreach($unspent as $utxo){
+			if($utxo['address'] == $address){
+				$balance += $utxo['amount'];
+			}
+		}
+		return $balance;
+	}	
+	
+	public function updateutxoset()
+	{
+		self::$utxoset = $this->listunspent();
+		return self::$utxoset;
+	}
+	
 }
 ?>
 

@@ -591,4 +591,10 @@ function linkify_username($username)
 	return '<a href="'.$url.'" target="_blank">'.$get['username'].'</a>';
 }
 
+function dd($var)
+{
+	debug($var);
+	die();
+}
+
 ?>

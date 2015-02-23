@@ -15,6 +15,9 @@ define('SATOSHI_MOD', 100000000); //100 million satoshis = 1 BTC
 define('XCP_BASE_FEE', 10000); //in satoshis.. default base fee to use on transactions
 define('XCP_FEE_MOD', (10860 * 2)); //default dust input size x2 for counterparty transactions
 
+define('XCP_FUEL_ACCOUNT', 'XCP_DUST_FUEL'); //account on your bitcoind wallet to hold random dust funds for various purposes
+define('XCP_DEFAULT_FUEL', 0.0001); //default amount of "fuel" to use, for things such as the payment collector
+
 define('BTC_USER', ''); //bitcoind RPC user
 define('BTC_PASS', ''); //bitcoind RPC password
 define('BTC_IP', ''); //bitcoind IP:port

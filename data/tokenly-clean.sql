@@ -1255,6 +1255,7 @@ CREATE TABLE `payment_order` (
   `orderTime` datetime DEFAULT NULL,
   `orderType` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `completeTime` datetime DEFAULT NULL,
+  `collected` INT(11) unsigned DEFAULT 0,
   PRIMARY KEY (`orderId`),
   KEY `address` (`address`),
   KEY `account` (`account`),
@@ -1270,6 +1271,45 @@ CREATE TABLE `payment_order` (
 LOCK TABLES `payment_order` WRITE;
 /*!40000 ALTER TABLE `payment_order` DISABLE KEYS */;
 /*!40000 ALTER TABLE `payment_order` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payment_collections`
+--
+
+DROP TABLE IF EXISTS `payment_collections`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `payment_collections` (
+  `collectionId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `userId` int(11) unsigned DEFAULT '0',
+  `type` varchar(100) NOT NULL,
+  `source` varchar(100) NOT NULL,
+  `destination` varchar(100) NOT NULL,
+  `amount` decimal(20,8) DEFAULT '0.00000000',
+  `asset` varchar(100) DEFAULT 'BTC',
+  `txId` varchar(255) DEFAULT NULL,
+  `itemId` int(11) unsigned DEFAULT '0',
+  `info` longtext,
+  `collectionDate` datetime DEFAULT NULL,
+  PRIMARY KEY (`collectionId`),
+  KEY `userId` (`userId`),
+  KEY `type` (`type`),
+  KEY `source` (`source`),
+  KEY `destination` (`destination`),
+  KEY `asset` (`asset`),
+  KEY `txId` (`txId`),
+  KEY `itemId` (`itemId`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payment_collections`
+--
+
+LOCK TABLES `payment_order` WRITE;
+/*!40000 ALTER TABLE `payment_collections` DISABLE KEYS */;
+/*!40000 ALTER TABLE `payment_collections` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
