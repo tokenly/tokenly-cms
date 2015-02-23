@@ -109,7 +109,14 @@ class Slick_App_Dashboard_Store_Collector_Model extends Slick_Core_Model
 			
 		}
 		
-		return $output;
+		$newOutput = array();
+		foreach($output as $k => $row){
+			if($row['amount'] > 0){
+				$newOutput[] = $row;
+			}
+		}
+		
+		return $newOutput;
 	}
 	
 	protected function getSponsorPayments()
@@ -280,10 +287,8 @@ class Slick_App_Dashboard_Store_Collector_Model extends Slick_Core_Model
 						break;
 				}
 				
-				if($collect){
-					if($amnt < 0){
-						$amnt = 0;
-					}
+				if($collect AND $amnt > 0){
+
 					//record this transaction, mark order/entry or whatever as collected
 					$collectData = array('userId' => $appData['user']['userId'], 'type' => 'collect-'.$data['type'],
 										 'source' => $address, 'destination' => $data['address'], 'amount' => $amnt,
@@ -383,6 +388,7 @@ class Slick_App_Dashboard_Store_Collector_Model extends Slick_Core_Model
 			try{
 				$balance = $this->btc->getaddressbalance($address);
 				$diff = $total_cost - $balance;
+		
 				//top off address
 				if($diff > 0){
 					if(isset($amounts['BTC'])){
@@ -390,6 +396,10 @@ class Slick_App_Dashboard_Store_Collector_Model extends Slick_Core_Model
 						unset($amounts['BTC']);
 					}
 					
+					if($diff < $cost){
+						$diff = $cost;
+					}							
+				
 					$sendDiff = $this->btc->sendfrom(XCP_FUEL_ACCOUNT, $address, $diff);
 					sleep(2);
 					

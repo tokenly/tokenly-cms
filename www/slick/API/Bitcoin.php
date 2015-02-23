@@ -192,6 +192,9 @@ class Slick_API_Bitcoin {
 			if($utxo['address'] == $address){
 				$outputsFound[] = $utxo;
 				$totalFound += $utxo['amount'];
+				if($totalFound >= $amount){
+					break;
+				}
 			}
 		}
 		

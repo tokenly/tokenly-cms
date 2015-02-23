@@ -61,6 +61,4 @@ class Slick_App_Dashboard_Store_Collector_Controller extends Slick_App_ModContro
 		}
 		return $output;
 	}
-	
-	
 }
