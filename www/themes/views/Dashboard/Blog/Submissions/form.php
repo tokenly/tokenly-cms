@@ -156,7 +156,7 @@ if(isset($post)){
 	$model = new Slick_Core_Model;
 	$newsroom = $model->get('modules', 'newsroom', array(), 'slug');
 	$checkNewsroom = Slick_App_AppControl::checkModuleAccess($newsroom['moduleId'], false);
-	if($checkNewsroom AND isset($post) AND $post['user_blog_role']){
+	if($checkNewsroom AND isset($post)){
 		echo '<br><a href="'.SITE_URL.'/'.$app['url'].'/'.$newsroom['url'].'">Back to Newsroom</a>';
 	}
 	?>
