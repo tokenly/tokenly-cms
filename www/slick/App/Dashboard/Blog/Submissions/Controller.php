@@ -402,28 +402,23 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$output['form']->field('excerpt')->addAttribute('disabled');
 					$output['form']->field('autogen-excerpt')->addAttribute('disabled');
 					$output['form']->field('notes')->addAttribute('disabled');
+					$output['form']->field('coverImage')->addAttribute('disabled');
+					$output['form']->field('status')->addAttribute('disabled');
+					$output['form']->field('publishDate')->addAttribute('disabled');					
 					$output['unlock_post'] = false;
 				}
 
-				$output['form']->field('status')->addAttribute('disabled');
-				$output['form']->field('publishDate')->addAttribute('disabled');
-				$output['form']->field('categories')->addAttribute('disabled');
-				$output['form']->field('coverImage')->addAttribute('disabled');
-				foreach($output['form']->fields as $fkey => $field){
-					if(strpos($fkey, 'meta_') === 0){
-						$output['form']->field($fkey)->addAttribute('disabled');
-					}
-				}
 			}
-			if($contributor){
-				//still disable some stuff for them
+			//still disable some stuff for them
+			if(!$getPost['user_blog_role']){
 				$output['form']->field('status')->addAttribute('disabled');
-				$output['form']->field('publishDate')->addAttribute('disabled');				
-				$output['form']->field('categories')->addAttribute('disabled');
-				foreach($output['form']->fields as $fkey => $field){
-					if(strpos($fkey, 'meta_') === 0){
-						$output['form']->field($fkey)->addAttribute('disabled');
-					}
+				$output['form']->field('publishDate')->addAttribute('disabled');	
+				$output['form']->field('coverImage')->addAttribute('disabled');
+			}		
+			$output['form']->field('categories')->addAttribute('disabled');
+			foreach($output['form']->fields as $fkey => $field){
+				if(strpos($fkey, 'meta_') === 0){
+					$output['form']->field($fkey)->addAttribute('disabled');
 				}
 			}
 		}
@@ -452,7 +447,6 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 			$output['form']->remove('featured');
 		}
-
 
 		if(!$this->data['perms']['canChangeAuthor']){
 			$output['form']->remove('userId');
@@ -493,10 +487,11 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			if(isset($data['publishDate'])){
 				$data['publishDate'] = date('Y-m-d H:i:s', strtotime($data['publishDate']));
 			}
-			if($contributor AND !$this->data['perms']['canManageAllBlogs']){
+			if($getPost['userId'] != $this->data['user']['userId'] AND !$getPost['user_blog_role']){
 				$data['publishDate'] = $getPost['publishDate'];
+				$data['status'] = $getPost['status'];
 			}
-			
+
 			$data['siteId'] = $this->data['site']['siteId'];
 			if(!$this->data['perms']['canChangeAuthor']){
 				$data['userId'] = false;
@@ -512,10 +507,10 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$data['status'] = 'published';
 				}
 			}
-			
-			if(!isset($data['status']) OR ($contributor AND !$this->data['perms']['canManageAllBlogs'])){ //contributors cannot change status
+
+			if(!isset($data['status'])){ 
 				$data['status'] = $getPost['status'];
-			}
+			}	
 
 			if($data['autogen-excerpt'] == 0){
 				$data['excerpt'] = shortenMsg(strip_tags($data['content']), 500);

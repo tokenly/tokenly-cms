@@ -79,6 +79,9 @@ class Slick_Core_Model
 			}		
 		}
 		$query = $this->sendQuery($sql, $values);
+		if(!$query){
+			return false;
+		}		
 		if($obj == 0){
 			$fetch = $query->fetch(PDO::FETCH_ASSOC);
 		}
@@ -103,6 +106,9 @@ class Slick_Core_Model
 			}	
 		}
 		$query = $this->sendQuery($sql, $values);
+		if(!$query){
+			return array();
+		}
 		if($obj == 0){
 			$fetch = $query->fetchAll(PDO::FETCH_ASSOC);
 		}

@@ -85,7 +85,13 @@ foreach($blogs as $blog){
 			
 			$titleLink = $post['title'];
 			$titleLink = '<a href="'.SITE_URL.'/'.$app['url'].'/submissions/edit/'.$post['postId'].'" class="">'.$post['title'].'</a><br>
-						  <small>Author: <a href="'.SITE_URL.'/profile/user/'.$post['user_slug'].'" target="_blank">'.$post['username'].'</a></small>';
+						  <small>Author: <a href="'.SITE_URL.'/profile/user/'.$post['user_slug'].'" target="_blank">'.$post['username'].'</a>';
+						  
+			foreach($post['contributors'] as $postContrib){
+				$titleLink .= '<br>'.$postContrib['role'].': <a href="'.SITE_URL.'/profile/user/'.$postContrib['slug'].'" target="_blank">'.$postContrib['username'].'</a> ';
+			}
+			
+			$titleLink .= '</small>';
 			
 			$status_text = $post['table_status'][$blog['blogId']];
 			switch($post['table_status'][$blog['blogId']]){

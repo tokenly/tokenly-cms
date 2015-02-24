@@ -319,6 +319,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$useData['url'] = $this->checkURLExists($useData['url']);
 		$useData['postDate'] = timestamp();
 		$useData['editTime'] = $useData['postDate'];
+		$useData['editedBy'] = $appData['user']['userId'];
 			
 		//legacy status stuff, get rid of later
 		$useData['published'] = 0;
@@ -492,7 +493,17 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			$this->notifyContributors($getPost['postId'], 'status_change', $notifyData, $appData['user']['userId']);
 		}
 		
+		if($useData['publishDate'] != $getPost['publishDate']){
+			$notifyData = array();
+			$notifyData['culprit'] = $appData['user'];
+			$notifyData['post'] = $getPost;
+			$notifyData['new_date'] = $useData['publishDate'];
+			$this->notifyContributors($getPost['postId'], 'publish_date_change', $notifyData, $appData['user']['userId']);
+		}
+		
+		
 		$useData['editTime'] = timestamp();
+		$useData['editedBy'] = $appData['user']['userId'];
 		
 		//check for new version
 		if($getPost['content'] != $useData['content'] OR $getPost['excerpt'] != $useData['excerpt']){
@@ -534,15 +545,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$this->updatePostImage($id, 'coverImage');
 		
 		
-		//check if published. if so, run some extra tasks
-		if($useData['published'] == 1){
-			$blogApp = $this->get('apps', 'blog', array(), 'slug');
-			$postApp = $this->get('modules', 'blog-post', array(), 'slug');
-			mention($useData['content'], '%username% has mentioned you in a 
-					<a href="'.$appData['site']['url'].'/'.$blogApp['url'].'/'.$postApp['url'].'/'.$useData['url'].'">blog post.</a>',
-					$appData['post']['userId'], $id, 'blog-post-mention');
-		}
-		elseif($getPost['status'] != 'ready' AND $useData['status'] == 'ready'){
+		if($getPost['status'] != 'ready' AND $useData['status'] == 'ready'){
 			$this->notifyEditorsOnReady($getPost, $appData);
 		}
 		
