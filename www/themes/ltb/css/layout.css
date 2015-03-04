@@ -2595,6 +2595,10 @@ a.purchase-credits.collapse{
 	margin: 0 auto;
 }
 
+.ltb-top-ad img{
+	max-width: 100%;
+}
+
 .body-default .main{
 	top: 140px;
 }
@@ -2776,9 +2780,6 @@ a.purchase-credits.collapse{
 		border-right: none;
 	}
 	
-	.ltb-top-ad img{
-		max-width: 100%;
-	}
 	
 	.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
 		width: 500px;
@@ -2807,9 +2808,6 @@ a.purchase-credits.collapse{
 		text-align: center;
 		top: 25px;
 		height: 51px;
-	}
-	.ltb-top-ad img{
-		max-width: 100%;
 	}
 	
 	.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
