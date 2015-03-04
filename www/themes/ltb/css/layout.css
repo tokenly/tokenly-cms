@@ -2585,8 +2585,37 @@ a.purchase-credits.collapse{
 	margin: 5px 2px;
 }
 
+.ltb-top-ad{
+	width: 728px;
+	height: 90px;
+	background: #fff;
+	top: 125px;
+	righT: 0px;
+	position: relative;
+	margin: 0 auto;
+}
+
+.body-default .main{
+	top: 140px;
+}
+
+.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
+	position: absolute;
+	right: 0px;
+}
+
+.body-forum .main{
+	top: 170px;
+}
+
+.body-blog .main, .body-admin .main{
+	top: 180px;
+}
+
 /* Smaller than standard 960 (devices and browsers) */
 @media only screen and (max-width: 959px) {
+
+
 	.container{
 		width: 768px;
 	}
@@ -2746,6 +2775,20 @@ a.purchase-credits.collapse{
 		border-left: none;
 		border-right: none;
 	}
+	
+	.ltb-top-ad img{
+		max-width: 100%;
+	}
+	
+	.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
+		width: 500px;
+		top: 151px;
+		height: 62px;
+	}
+	
+	.body-admin .ltb-top-ad{
+		top: 114px;
+	}
 }
 
 
@@ -2757,6 +2800,33 @@ a.purchase-credits.collapse{
 
 /* All Mobile Sizes (devices and browser) */
 @media only screen and (max-width: 767px) {
+
+
+	.ltb-top-ad{
+		width: 90%;
+		text-align: center;
+		top: 25px;
+		height: 51px;
+	}
+	.ltb-top-ad img{
+		max-width: 100%;
+	}
+	
+	.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
+		width: 90%;
+		top: 25px;
+		height: 51px;
+	}	
+	
+	.body-default .main{
+		top: 30px;
+	}
+	
+	.body-blog .main, .body-forum .main{
+		top: 83px;
+	}
+	
+
 
 	.header-social{
 		top: 3px;
@@ -2859,7 +2929,7 @@ a.purchase-credits.collapse{
 		position: relative;
 	}
 	.main{
-		top: 30px;;
+		top: 6px;
 	}
 	.mobile-nav{
 		background: #fff;
@@ -3031,7 +3101,13 @@ a.purchase-credits.collapse{
 		display: block;
 		float: none;
 		width: auto;
-	}        
+	}       
+	
+	
+	.body-admin .main{
+		top: 80px;
+	}
+	 
 }
 
 /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
@@ -3043,6 +3119,16 @@ a.purchase-credits.collapse{
 /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
 @media only screen and (max-width: 479px) {
 	
+	.ltb-top-ad{
+		height: 36px;
+	}
+	
+	.body-forum .ltb-top-ad, .body-blog .ltb-top-ad, .body-admin .ltb-top-ad{
+		width: 90%;
+		top: 34px;
+		height: 36px;
+	}		
+	
 	.header .media-player-cont{
 		display: none;
 	}
@@ -3050,7 +3136,7 @@ a.purchase-credits.collapse{
 	.container{
 		width: 320px;
 	}
-	
+
 	h1{
 		font-size: 36px;
 	}

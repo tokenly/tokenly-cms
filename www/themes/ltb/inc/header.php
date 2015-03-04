@@ -74,18 +74,8 @@
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/scripts.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/player.js"></script>
 	<?= $scripts ?>
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-	  ga('create', 'UA-22288117-8', 'letstalkbitcoin.com');
-	  ga('send', 'pageview');
-
-	</script>
 </head>
-<body>
+<body class="body-<?= $template ?>">
 	<div class="header">
 		<div class="header-wrap">
 			<div class="container">
@@ -253,3 +243,6 @@
 			?>
 		</div>
 	</div>	<!-- mobile-nav -->
+	<div class="container">
+		<div class="ltb-top-ad"><a href="https://letstalkbitcoin.com/blog/category/episodes" class="blank"><img src="<?= THEME_URL ?>/images/ltbbanner-3.png" alt="" /></a></div>
+	</div>
