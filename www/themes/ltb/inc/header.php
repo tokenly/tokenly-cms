@@ -12,7 +12,6 @@
 	}
 	?>
 	<meta name="description" content="<?= $metaDescription ?>">
-	<meta name="author" content="Adam B. Levine">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<?php
 	if($template == 'blog' AND isset($post)){
