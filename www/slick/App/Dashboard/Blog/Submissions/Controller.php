@@ -368,6 +368,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		
 		$getPost['categories'] = $this->model->getPostFormCategories($getPost['postId']);
 		$getPost['author'] = $this->model->get('users', $getPost['userId']);
+		$getPost['word_count'] = $this->model->getContentWordCount($getPost['content'], $getPost['formatType']);
 		
 		return $getPost;
 	}
@@ -551,6 +552,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 						}
 						$output['post']['content'] = $oldVersion['content']['content'];
 						$output['post']['excerpt'] = $oldVersion['content']['excerpt'];
+						$output['post']['word_count'] = $this->model->getContentWordCount($oldVersion['content']['content'], $oldVersion['formatType']);
 						$output['old_version'] = $oldVersion;
 						$getPost['content'] = $output['post']['content'];
 						$getPost['excerpt'] = $output['post']['excerpt'];

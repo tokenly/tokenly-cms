@@ -936,6 +936,17 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		return false;
 	}
+	
+	public function getContentWordCount($content, $type = 'markdown')
+	{
+		switch($type){
+			case 'markdown':
+				$content = markdown($content);
+				break;
+		}
+		$content = strip_tags($content);
+		return str_word_count($content);
+	}
 		
 }
 

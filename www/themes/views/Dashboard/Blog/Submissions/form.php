@@ -266,6 +266,7 @@ if(isset($post) AND $post['published'] == 1){
 			?>
 			<ul>
 				<li><strong>Author:</strong> <a href="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>" target="_blank"><?= $post['author']['username'] ?></a></li>
+				<li><strong>Word Count:</strong> <?= number_format($post['word_count']) ?></li>
 				<li><strong>Views:</strong> <?= number_format($post['views']) ?></li>
 				<li><strong>Comments:</strong> <?= number_format($post['commentCount']) ?></li>
 				<?php
