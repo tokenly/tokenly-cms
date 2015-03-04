@@ -179,6 +179,34 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		return $form;
 	}
 	
+	public function checkCategoryAccess($categoryId, $userId)
+	{
+		$cat = $this->get('blog_categories', $categoryId);
+		if(!$cat){
+			return false;
+		}
+		$getBlog = $this->get('blogs', $cat['blogId']);
+		if($getBlog['active'] == 0){
+			return false;
+		}
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;
+		$getRoles = $multiblog->getBlogUserRoles($getBlog['blogId'], true);
+		if($cat['public'] == 0){
+			$found = false;
+			foreach($getRoles as $role){
+				if($role['userId'] == $userId){
+					$found = true;
+				}
+			}
+			if(!$found){
+				return false;
+			}
+		}
+		$cat['blog'] = $getBlog;
+		$cat['roles'] = $getRoles;
+		return $cat;
+	}
+	
 	public function updatePostCategories($postId, $cats, $user)
 	{
 		if(!is_array($cats)){
@@ -195,35 +223,22 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 									  
 		foreach($postCats as $cat){
 			if(!in_array($cat['categoryId'], $cats)){
-				$this->delete('blog_postCategories', $cat['postCatId']);
+				$catAccess = $this->checkCategoryAccess($cat['categoryId'], $user['userId']);
+				if($catAccess OR $user['perms']['canManageAllBlogs']){ //only remove if they also have access to the category (to prevent accidental removal)
+					$this->delete('blog_postCategories', $cat['postCatId']);
+				}
 			}
 		}
 
 		foreach($cats as $cat){
-			$cat = $this->get('blog_categories', $cat);
-			if(!$cat){
+			$catAccess = $this->checkCategoryAccess($cat, $user['userId']);
+			if(!$catAccess AND !$user['perms']['canManageAllBlogs']){
 				continue;
-			}
-			$getBlog = $this->get('blogs', $cat['blogId']);
-			$getRoles = $multiblog->getBlogUserRoles($cat['blogId']);
-			if($cat['public'] == 0){
-				$has_access = false;
-				foreach($getRoles as $role){
-					if($role['userId'] == $user['userId'] AND in_array($role['type'], $accessRoles)){
-						$has_access = true;
-					}
-				}
-				if($getBlog['userId'] == $user['userId'] OR $user['perms']['canManageAllBlogs']){
-					$has_access = true;
-				}
-				if(!$has_access){
-					continue;
-				}
 			}
 			
 			$existing = false;
 			foreach($postCats as $postCat){
-				if($postCat['categoryId'] == $cat['categoryId']){
+				if($postCat['categoryId'] == $catAccess['categoryId']){
 					$existing = true;
 					break;
 				}
@@ -231,11 +246,11 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			
 			if(!$existing){
 				$approved = 0;
-				if($user['perms']['canManageAllBlogs'] OR $user['userId'] == $getBlog['userId']){
+				if($user['perms']['canManageAllBlogs'] OR $user['userId'] == $catAccess['blog']['userId']){
 					$approved = 1;
 				}
 				else{
-					foreach($getRoles as $role){
+					foreach($catAccess['roles'] as $role){
 						if($role['userId'] == $user['userId']){
 							switch($role['type']){
 								case 'admin':
@@ -249,8 +264,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 						}
 					}
 				}
-				
-				$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $cat['categoryId'], 'approved' => $approved));		
+				$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $catAccess['categoryId'], 'approved' => $approved));		
 			}
 		}
 		return true;
@@ -532,35 +546,28 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 			throw new Exception('Error editing post');
 		}
 		
-		//update categories (only allow for main admin or main author)
+		//update categories
 		if(isset($data['categories'])){
-			if($getPost['userId'] == $appData['user']['userId'] OR $appData['perms']['canManageAllBlogs']){
-				$appData['user']['perms'] = $appData['perms'];
-				$this->updatePostCategories($id, $data['categories'], $appData['user']);
-			}
+			$appData['user']['perms'] = $appData['perms'];
+			$this->updatePostCategories($id, $data['categories'], $appData['user']);
 		}
 		
 		//update images
 		//$this->updatePostImage($id); //disabled normal image
 		$this->updatePostImage($id, 'coverImage');
 		
-		
 		if($getPost['status'] != 'ready' AND $useData['status'] == 'ready'){
 			$this->notifyEditorsOnReady($getPost, $appData);
 		}
-		
-		//update any custom meta fields that might be present (only allow for main admin or main author)
-		if($getPost['userId'] == $appData['user']['userId'] OR $appData['perms']['canManageAllBlogs']){
-			foreach($data as $key => $val){
-				$fieldId = intval(str_replace('meta_', '', $key));
-				$getField = $this->get('blog_postMetaTypes', $fieldId);
-				if(!$getField){
-					continue;
-				}
-				$update = $this->updatePostMeta($id, $getField['slug'], $val);
+			
+		foreach($data as $key => $val){
+			$fieldId = intval(str_replace('meta_', '', $key));
+			$getField = $this->get('blog_postMetaTypes', $fieldId);
+			if(!$getField){
+				continue;
 			}
+			$update = $this->updatePostMeta($id, $getField['slug'], $val);
 		}
-
 		return true;
 	}
 	

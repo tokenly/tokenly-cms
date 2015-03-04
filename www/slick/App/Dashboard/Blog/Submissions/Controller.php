@@ -404,23 +404,23 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 					$output['form']->field('notes')->addAttribute('disabled');
 					$output['form']->field('coverImage')->addAttribute('disabled');
 					$output['form']->field('status')->addAttribute('disabled');
-					$output['form']->field('publishDate')->addAttribute('disabled');					
+					$output['form']->field('publishDate')->addAttribute('disabled');	
+					$output['form']->field('categories')->addAttribute('disabled');		
+					foreach($output['form']->fields as $fkey => $field){
+						if(strpos($fkey, 'meta_') === 0){
+							$output['form']->field($fkey)->addAttribute('disabled');
+						}
+					}							
 					$output['unlock_post'] = false;
 				}
-
 			}
 			//still disable some stuff for them
 			if(!$getPost['user_blog_role']){
 				$output['form']->field('status')->addAttribute('disabled');
 				$output['form']->field('publishDate')->addAttribute('disabled');	
 				$output['form']->field('coverImage')->addAttribute('disabled');
+				$output['form']->field('categories')->addAttribute('disabled');
 			}		
-			$output['form']->field('categories')->addAttribute('disabled');
-			foreach($output['form']->fields as $fkey => $field){
-				if(strpos($fkey, 'meta_') === 0){
-					$output['form']->field($fkey)->addAttribute('disabled');
-				}
-			}
 		}
 		
 		if(isset($this->data['perms']['canUseMagicWords'])){
@@ -509,6 +509,11 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 				$data['excerpt'] = shortenMsg(strip_tags($data['content']), 500);
 			}
 			$data['contributor'] = $contributor;
+			
+			if(!$getPost['user_blog_role'] AND !$this->data['perms']['canManageAllBlogs']){
+				unset($data['categories']);
+			}
+			
 			try{
 				$edit = $this->model->editPost($this->args[3], $data, $this->data);
 			}
