@@ -451,14 +451,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		if(!$this->data['perms']['canChangeAuthor']){
 			$output['form']->remove('userId');
 		}
-		
-		if($getPost['published'] == 1){
-			$getPost['status'] = 'published';
-		}
-		elseif($getPost['ready'] == 1){
-			$getPost['status'] = 'ready';
-		}
-		
+			
 		//request/invite a contributor
 		if(posted()){
 			if(isset($_POST['request-contrib']) AND !$contributor){
@@ -487,7 +480,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			if(isset($data['publishDate'])){
 				$data['publishDate'] = date('Y-m-d H:i:s', strtotime($data['publishDate']));
 			}
-			if($getPost['userId'] != $this->data['user']['userId'] AND !$getPost['user_blog_role']){
+			if($getPost['userId'] != $this->data['user']['userId'] AND !$getPost['user_blog_role'] AND !$this->data['perms']['canManageAllBlogs']){
 				$data['publishDate'] = $getPost['publishDate'];
 				$data['status'] = $getPost['status'];
 			}
