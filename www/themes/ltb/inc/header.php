@@ -47,6 +47,13 @@
 			<meta property="twitter:description" content="<?= strip_tags($post['twitter-summary']) ?>" />
 		<?php
 		}//endif
+		$authorName = $post['author']['username'];
+		if(isset($post['author']['profile']['real-name']) AND trim($post['author']['profile']['real-name']['value']) != ''){
+			$authorName =  $post['author']['profile']['real-name']['value'];
+		}
+		?>
+			<meta property="article:author" content="<?= $authorName ?>" />
+		<?php
 	}
 	?>
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/base.css">
