@@ -14,6 +14,41 @@
 	<meta name="description" content="<?= $metaDescription ?>">
 	<meta name="author" content="Adam B. Levine">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<?php
+	if($template == 'blog' AND isset($post)){
+		$post_url = $site['url'].'/'.$app['url'].'/'.$module['url'].'/'.$post['url'];
+		if(isset($canonical)){
+			$post_url = $canonical;
+		}
+		//extra social media fields for Open Graph
+		?>
+		<meta property="og:site_name" content="Let's Talk Bitcoin" />
+		<meta property="og:title" content="<?= $title ?>" />
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content="<?= $post_url ?>" />
+		<?php
+		if($post['coverImage'] != ''){
+			?>
+			<meta property="og:image" content="https://letstalkbitcoin.com/files/blogs/<?= $post['coverImage'] ?>" />
+			<?php
+		}
+		$og_desc = strip_tags($post['excerpt']);
+		if($post['formatType'] == 'markdown'){
+			$og_desc = strip_tags(markdown($post['excerpt']));
+		}
+		if(isset($post['social-summary']) AND trim($post['social-summary']) != ''){
+			$og_desc = strip_tags($post['social-summary']);
+		}
+		?>
+		<meta property="og:description" content="<?= $og_desc ?>" />
+		<?php
+		if(isset($post['twitter-summary']) AND trim($post['twitter-summary']) != ''){
+		?>
+			<meta property="twitter:description" content="<?= strip_tags($post['twitter-summary']) ?>" />
+		<?php
+		}//endif
+	}
+	?>
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/base.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/layout.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/mobile-tables.css">
