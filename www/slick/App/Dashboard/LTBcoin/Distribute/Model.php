@@ -64,7 +64,12 @@ class Slick_App_Dashboard_LTBcoin_Distribute_Model extends Slick_Core_Model
 		
 		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
 		$data['asset'] = trim(strtoupper($data['asset']));
-		$getAsset = $xcp->get_asset_info(array('assets' => array($data['asset'])));
+		try{
+			$getAsset = $xcp->get_asset_info(array('assets' => array($data['asset'])));
+		}
+		catch(Exception $e){
+			throw new Exception('Error obtaining asset info');
+		}
 		
 		if(!$getAsset){
 			throw new Exception('Asset ['.$data['asset'].'] does not exist');
