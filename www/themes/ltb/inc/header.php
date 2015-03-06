@@ -293,5 +293,7 @@
 		</div>
 	</div>	<!-- mobile-nav -->
 	<div class="container">
-		<div class="ltb-top-ad"><a href="https://letstalkbitcoin.com/blog/category/episodes" class="blank"><img src="<?= THEME_URL ?>/images/ltb-default-banner.jpg" alt="" /></a></div>
+		<div class="ltb-top-ad">
+			<?= $this->displayBlock('top-ad') ?>
+		</div>
 	</div>

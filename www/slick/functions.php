@@ -62,9 +62,7 @@ function pluralize($str, $itemCount, $andZero = false)
 	if($itemCount > 1 OR ($andZero AND $itemCount == 0)){
 		$str = $str.'s';
 	}
-	
 	return $str;
-	
 }
 
 
@@ -595,6 +593,30 @@ function dd($var)
 {
 	debug($var);
 	die();
+}
+
+/**
+ * generates a quick link to an app/module. format: "app_slug.module_slug"
+ * 
+ * */
+function route($route, $path = ''){
+	$full_path = '';
+	$site = currentSite();
+	$model = new Slick_Core_Model;
+	$expRoute = explode('.', $route);
+	$getApp = $model->get('apps', $expRoute[0], array(), 'slug');
+	if(!$getApp){
+		return false;
+	}
+	$full_path = $getApp['url'];
+	if(isset($expRoute[1])){
+		$getModule = $model->get('modules', $expRoute[1], array(), 'slug');
+		if($getModule){
+			$full_path .= '/'.$getModule['url'];
+		}
+	}
+	$full_path .= $path;
+	return $site['url'].'/'.$full_path;
 }
 
 ?>

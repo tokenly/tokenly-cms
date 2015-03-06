@@ -202,7 +202,7 @@ class Slick_App_View extends Slick_Core_View
 	 *  Menu can be an ID or slug to grab from menu table, or can be array of custom 
 	 * 
 	 * */
-	public  function displayMenu($menu, $children = 1, $class = '', $urlParam = '')
+	public function displayMenu($menu, $children = 1, $class = '', $urlParam = '')
 	{
 		if(!is_array($menu)){
 			$getMenu = $this->getMenu($menu);
@@ -322,7 +322,18 @@ class Slick_App_View extends Slick_Core_View
 		}
 		return '<p class="'.$class.'">'.$getFlash.'</p>';
 	}
-
+	
+	public static function displayTag($tag, $params = array())
+	{
+		$model = new Slick_Core_Model;
+		$getTag = $model->get('page_tags', $tag, array(), 'tag');
+		if(!$getTag){
+			return false;
+		}
+		$class = new $getTag['class']($params);
+		$class->params = $params;
+		return $class->display();
+	}
 }
 
 
