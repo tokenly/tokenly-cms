@@ -29,6 +29,17 @@ class Slick_Tags_TrackingURL
 		}
 		$tracker = route('ad.tracking-links', '/'.$getLink['urlId']);
 		$output = '<a href="'.$tracker.'" target="_blank" rel="nofollow" class="tracking-link">'.$output.'</a>';
+		
+		//attempt to record an impression
+		if(!isset($_SESSION['viewed_ad_impressions'])){
+			$_SESSION['viewed_ad_impressions'] = array();
+		}
+		if(!in_array($getLink['urlId'], $_SESSION['viewed_ad_impressions'])){
+			$new_impressions = intval($getLink['impressions']) + 1;
+			$this->model->edit('tracking_urls', $getLink['urlId'], array('impressions' => $new_impressions));
+			$_SESSION['viewed_ad_impressions'][] = $getLink['urlId'];
+		}
+		
 		return $output;
 	}
 	
