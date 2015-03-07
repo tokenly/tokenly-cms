@@ -34,7 +34,7 @@ class Slick_Tags_TrackingURL
 		if(!isset($_SESSION['viewed_ad_impressions'])){
 			$_SESSION['viewed_ad_impressions'] = array();
 		}
-		if(!in_array($getLink['urlId'], $_SESSION['viewed_ad_impressions'])){
+		if(!in_array($getLink['urlId'], $_SESSION['viewed_ad_impressions']) AND !botdetect()){
 			$new_impressions = intval($getLink['impressions']) + 1;
 			$this->model->edit('tracking_urls', $getLink['urlId'], array('impressions' => $new_impressions));
 			$_SESSION['viewed_ad_impressions'][] = $getLink['urlId'];

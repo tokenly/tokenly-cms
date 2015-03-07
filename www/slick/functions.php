@@ -599,7 +599,8 @@ function dd($var)
  * generates a quick link to an app/module. format: "app_slug.module_slug"
  * 
  * */
-function route($route, $path = ''){
+function route($route, $path = '')
+{
 	$full_path = '';
 	$site = currentSite();
 	$model = new Slick_Core_Model;
@@ -617,6 +618,14 @@ function route($route, $path = ''){
 	}
 	$full_path .= $path;
 	return $site['url'].'/'.$full_path;
+}
+
+function botdetect()
+{
+  if(isset($_SERVER['HTTP_USER_AGENT']) AND preg_match('/bot|crawl|slurp|spider/i', $_SERVER['HTTP_USER_AGENT'])){
+    return true;
+  }
+  return false;
 }
 
 ?>
