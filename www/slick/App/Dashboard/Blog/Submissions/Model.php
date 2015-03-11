@@ -106,31 +106,15 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
 		$getCats = $catModel->getCategories($siteId, 0, true);
 		$blogCatList = array();
+		$getCats = $this->checkCategoryListAccess($getCats, $user);
 		foreach($getCats as $cat){
 			$getBlog = $this->get('blogs', $cat['blogId']);
-			if($getBlog['active'] == 0){
-				continue;
-			}
-			$getRoles = $multiblog->getBlogUserRoles($cat['blogId']);
-			if($cat['public'] == 0){
-				$has_access = false;
-				foreach($getRoles as $role){
-					if($role['userId'] == $user['userId'] AND in_array($role['type'], $accessRoles)){
-						$has_access = true;
-					}
-				}
-				if($getBlog['userId'] == $user['userId'] OR $user['perms']['canManageAllBlogs']){
-					$has_access = true;
-				}
-				if(!$has_access){
-					continue;
-				}
-			}
 			if(!isset($blogCatList[$cat['blogId']])){
 				$blogCatList[$cat['blogId']] = array('value' => 0, 'label' => $getBlog['name'], 'children' => array());
 			}
 			$blogCatList[$cat['blogId']]['children'][] = $cat;
 		}
+
 		$categories->setOptions($blogCatList);
 		$form->add($categories);
 		
@@ -177,6 +161,40 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 		$form->setSubmitText('Save & Submit');
 		
 		return $form;
+	}
+	
+	public function checkCategoryListAccess($cats, $user)
+	{
+		$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
+		$multiblog = new Slick_App_Dashboard_Blog_Multiblog_Model;		
+		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
+		foreach($cats as $k => &$cat){
+			$getBlog = $this->get('blogs', $cat['blogId']);
+			if($getBlog['active'] == 0){
+				unset($cats[$k]);
+				continue;
+			}
+			$getRoles = $multiblog->getBlogUserRoles($cat['blogId']);
+			if($cat['public'] == 0){
+				$has_access = false;
+				foreach($getRoles as $role){
+					if($role['userId'] == $user['userId'] AND in_array($role['type'], $accessRoles)){
+						$has_access = true;
+					}
+				}
+				if($user['perms']['canManageAllBlogs']){
+					$has_access = true;
+				}
+				if(!$has_access){
+					unset($cats[$k]);
+					continue;
+				}
+			}
+			if(isset($cat['children'])){
+				$cat['children'] = $this->checkCategoryListAccess($cat['children'], $user);
+			}
+		}
+		return $cats;
 	}
 	
 	public function checkCategoryAccess($categoryId, $userId)

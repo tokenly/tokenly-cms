@@ -163,8 +163,11 @@ class Slick_App_Controller extends Slick_Core_Controller
         if(!isset($data['theme'])){
             $getTheme = $this->model->get('themes', $getSite['themeId']);
 			$data['theme'] = $getTheme['location'];
-
         }
+        
+        if(!isset($data['module'])){
+			$data['module'] = false;
+		}
         
         $this->view->load($data);
         

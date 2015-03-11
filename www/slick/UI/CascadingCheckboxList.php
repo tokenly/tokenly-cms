@@ -121,8 +121,8 @@ class Slick_UI_CascadingCheckboxList extends Slick_UI_CheckboxList
 		<?php
 		if(isset($item['children']) AND count($item['children']) > 0){
 		?>
-				<div class="category-expander"><i class="fa fa-plus-square"></i></div>
-				<div class="category-label"><?= $item['label'] ?></div>
+				<div class="category-expander" title="Click + icon to expand/collapse"><i class="fa fa-plus-square"></i></div>
+				<div class="category-label" title="Click + icon to expand/collapse"><?= $item['label'] ?></div>
 				<div class="category-children" style="display: none;">
 					<?php
 					foreach($item['children'] as $child){

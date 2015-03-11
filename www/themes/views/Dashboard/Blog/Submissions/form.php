@@ -155,7 +155,8 @@ if(isset($post)){
 	<?php
 	$model = new Slick_Core_Model;
 	$newsroom = $model->get('modules', 'newsroom', array(), 'slug');
-	$checkNewsroom = Slick_App_AppControl::checkModuleAccess($newsroom['moduleId'], false);
+	$checkNewsroom = Slick_App_AppControl::checkModuleAccess($newsroom['moduleId'], false, false);
+
 	if($checkNewsroom AND isset($post)){
 		echo '<br><a href="'.SITE_URL.'/'.$app['url'].'/'.$newsroom['url'].'">Back to Newsroom</a>';
 	}
@@ -781,5 +782,23 @@ if(isset($post) AND $post['published'] == 1){
 			<?php
 		}//end if(isset($post))
 		?>
+		
+		$('.blog-form').find('input[type="submit"]').click(function(e){
+			var catFound = false;
+			$('input[name="categories[]"]').each(function(){
+				if($(this).is(':checked')){
+					catFound = true;
+				}
+			});
+			
+			if(!catFound){
+				var check = confirm('You have not selected any article categories (required to get published), are you sure you want to submit?');
+				if(!check || check == null){
+					e.preventDefault();
+					return false;
+				}
+			}
+			
+		});
 	});
 </script>

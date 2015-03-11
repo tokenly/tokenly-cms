@@ -22,7 +22,7 @@ class Slick_Tags_HitCounter
 			$hits = intval($getStat['statValue']);
 		}
 		
-		if(!isset($_SESSION['has_hit_'.$prefix])){
+		if(!isset($_SESSION['has_hit_'.$prefix]) AND !botdetect()){
 			$newHits = $hits+1;
 			if($getStat){
 				$this->model->edit('stats', $getStat['statId'], array('statValue' => $newHits));

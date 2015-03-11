@@ -42,7 +42,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
 		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], 0, '');
-		
+
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
@@ -92,8 +92,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		$output['blogApp'] = $this->blogApp;
 		$output['template'] = 'admin';
         $output['perms'] = $this->data['perms'];
-       
-        
+        		
         return $output;
     }
     
@@ -201,7 +200,13 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 		else{
 			$output['credit_address'] = $getDeposit;
 		}
-		$output['num_credits'] = intval($this->meta->getUserMeta($this->user['userId'], 'article-credits'));
+		$output['num_credits'] = $this->meta->getUserMeta($this->user['userId'], 'article-credits');
+		if($output['num_credits'] === false){
+			//lets give them a free credit!
+			$this->meta->updateUserMeta($this->user['userId'], 'article-credits', 1);
+			$output['num_credits'] = 1;
+		}
+		$output['num_credits'] = intval($output['num_credits']);
 		$output['fee_asset'] = strtoupper($this->blogSettings['submission-fee-token']);
 		
 		$output['trashCount'] = $this->model->countTrashItems($this->user['userId']);
@@ -511,7 +516,7 @@ class Slick_App_Dashboard_Blog_Submissions_Controller extends Slick_App_ModContr
 			}
 			$data['contributor'] = $contributor;
 			
-			if(!$getPost['user_blog_role'] AND !$this->data['perms']['canManageAllBlogs']){
+			if($getPost['userId'] != $this->data['user']['userId'] AND !$getPost['user_blog_role'] AND !$this->data['perms']['canManageAllBlogs']){
 				unset($data['categories']);
 			}
 			

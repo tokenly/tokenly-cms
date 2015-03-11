@@ -359,6 +359,13 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				//}
 			}
 			
+			if(trim($getPosts[$key]['audio-url']) == ''){
+				$getPosts[$key]['audio-url'] = null;
+			}
+			if(trim($getPosts[$key]['soundcloud-id']) == ''){
+				$getPosts[$key]['soundcloud-id'] = null;
+			}
+			
 			if($post['formatType'] == 'markdown'){
 				$getPosts[$key]['excerpt'] = markdown($post['excerpt']);
 				if(isset($post['content'])){

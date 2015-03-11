@@ -81,7 +81,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
         return $output;
     }
     
-    public static function checkModuleAccess($moduleId, $redirect = true)
+    public static function checkModuleAccess($moduleId, $redirect = true, $andCheckTCA = true)
     {
 		$model = new Slick_Core_Model;
 		$tca = new Slick_App_LTBcoin_TCA_Model;
@@ -118,17 +118,20 @@ class Slick_App_AppControl extends Slick_Core_Controller
 				$access = 1;
 			}
 		}
-
+		
 		$defaultReturn = true;
 		if($redirect AND $access === 0){
 			$defaultReturn = false;
 		}
-		$checkTCA = $tca->checkItemAccess($get['userId'], $moduleId, 0, '', $defaultReturn);
-		if($checkTCA){
-			$access = 1;
-		}
-		if(!$checkTCA AND $access === 1){
-			$access = 0;
+		
+		if($andCheckTCA){
+			$checkTCA = $tca->checkItemAccess($get['userId'], $moduleId, 0, '', $defaultReturn);
+			if($checkTCA){
+				$access = 1;
+			}
+			if(!$checkTCA AND $access === 1){
+				$access = 0;
+			}
 		}
 
 		if($access === 1){
