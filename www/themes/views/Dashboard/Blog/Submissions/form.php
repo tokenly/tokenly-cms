@@ -171,15 +171,15 @@ if(isset($post) AND $post['published'] == 1){
 }
 ?>
 <ul class="ltb-stat-tabs blog-tabs" data-tab-type="blog-form">
-	<li><a href="#" class="tab active" data-tab="blog-content">Content</a></li>
-	<li><a href="#" class="tab" data-tab="status-cat">Status &amp; Category</a></li>
-	<li><a href="#" class="tab" data-tab="meta-data">Meta Data</a></li>
+	<li><a href="#" class="tab active" data-tab="blog-content">1. Content</a></li>
+	<li><a href="#" class="tab" data-tab="status-cat">2. Status &amp; Category</a></li>
+	<li><a href="#" class="tab" data-tab="meta-data">3. Meta Content</a></li>
 	<?php
 	if(isset($post)){
 	?>
-	<li><a href="#" class="tab" data-tab="discussion">Discussion</a></li>
+	<li><a href="#" class="tab" data-tab="discussion">Talk</a></li>
 	<li><a href="#" class="tab" data-tab="versions">Versions</a></li>
-	<li><a class="view-draft" href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/preview/<?= $post['postId'] ?><?= $oldPreview ?>" target="_blank">Preview Draft</a></li>
+	<li><a class="view-draft" href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/preview/<?= $post['postId'] ?><?= $oldPreview ?>" target="_blank">Preview</a></li>
 	<?php
 	}
 	?>
@@ -199,6 +199,14 @@ if(isset($post) AND $post['published'] == 1){
 	}
 	?>
 	<div class="ltb-data-tab" id="blog-content" style="">
+		<div class="pull-right">
+			<?php
+			if(!isset($post) OR (isset($post) AND $unlock_post)){
+				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="status-cat" value="Next" />';
+			}
+			?>
+		</div>					
+		<h4>Step 1: Content</h4>
 		<?php
 		$excpStyle = 'display: none;';
 		if(isset($post) AND trim($post['excerpt']) != ''){
@@ -222,8 +230,24 @@ if(isset($post) AND $post['published'] == 1){
 		<div id="excerpt-cont" style="<?= $excpStyle ?>">
 			<?= $form->field('excerpt')->display() ?>
 		</div>
+		<div class="clear"></div>
+		<div class="pull-right">
+			<?php
+			if(!isset($post) OR (isset($post) AND $unlock_post)){
+				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="status-cat" value="Next" />';
+			}
+			?>
+		</div>			
 	</div>
 	<div class="ltb-data-tab" id="status-cat" style="display: none;">
+		<div class="pull-right">
+			<?php
+			if(!isset($post) OR (isset($post) AND $unlock_post)){
+				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="meta-data" value="Next" />';
+			}
+			?>
+		</div>			
+		<h4>Step 2: Status & Category</h4>
 		<?= $form->field('status')->display() ?>
 		<?= $form->field('publishDate')->display() ?>
 		<?php
@@ -259,8 +283,17 @@ if(isset($post) AND $post['published'] == 1){
 				Articles must be in at least one approved category in order to be considered "published".
 			</small>
 		</p>
+		<div class="clear"></div>
+		<div class="pull-right">
+			<?php
+			if(!isset($post) OR (isset($post) AND $unlock_post)){
+				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="meta-data" value="Next" />';
+			}
+			?>
+		</div>	
 	</div>	
 	<div class="ltb-data-tab" id="meta-data" style="display: none;">
+		<h4>Final Step: Meta Content</h4>
 		<?php
 		if(isset($post)){
 					
@@ -293,6 +326,14 @@ if(isset($post) AND $post['published'] == 1){
 		}
 		?>
 		<?= $form->field('notes')->display() ?>
+		<div class="clear"></div>
+		<div class="pull-right">
+			<?php
+			if(!isset($post) OR (isset($post) AND $unlock_post)){
+				echo $form->displaySubmit();
+			}
+			?>
+		</div>	
 	</div>	
 	<?php
 	if(isset($post)){
@@ -502,13 +543,6 @@ if(isset($post) AND $post['published'] == 1){
 	}//endif
 	?>
 	<div class="clear"></div>
-	<div class="pull-right">
-		<?php
-		if(!isset($post) OR (isset($post) AND $unlock_post)){
-			echo $form->displaySubmit();
-		}
-		?>
-	</div>	
 	<?php
 	if(!isset($post) AND !$perms['canBypassSubmitFee']){
 		echo '<p><em>You have '.number_format($num_credits).' submission '.pluralize('credit', $num_credits, true).'</em></p>';
@@ -535,6 +569,14 @@ if(isset($post) AND $post['published'] == 1){
 			$('.' + type).find('.ltb-data-tab#' + tab).show();
 			$(this).parent().parent().find('.tab').removeClass('active');
 			$(this).addClass('active');
+		});
+		$('.tab-btn').click(function(e){
+			var tab = $(this).data('tab');
+			$('.blog-tabs').find('.tab').removeClass('active');
+			$('.blog-tabs').find('.tab[data-tab="' + tab + '"]').addClass('active');
+			$('.blog-form').find('.ltb-data-tab').hide();
+			$('.blog-form').find('.ltb-data-tab#' + tab).show();
+			$("html, body").animate({ scrollTop: 0 }, "slow");
 		});
 		$('#autogen-excerpt').click(function(e){
 			if($(this).is(':checked')){

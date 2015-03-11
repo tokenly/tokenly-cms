@@ -23,6 +23,10 @@ h1,h2,h3,h4,h5,h6{
 	letter-spacing: 2px;
 }
 
+td{
+	word-wrap:break-word;
+}
+
 .content h1{
 	color: #8a969c;
 }
@@ -346,7 +350,7 @@ td{
 	font-size: 12px;
 
 }
-input[type="submit"]{
+input[type="submit"], .content input[type="button"].Slick_UI_Button{
 	display: block;
 	margin-top: 25px;
 	font-weight: 700;
@@ -1968,6 +1972,7 @@ text-overflow:ellipsis;
 }
 .ltb-stat-tabs li a:hover,.ltb-stat-tabs li .active{
 	background: #F0F0F0;
+	color: #000;
 }
 .ltb-weekly-cont{
 	margin-top: 15px;
@@ -2180,6 +2185,9 @@ img.board-img{
 .public-pop-report-table, .submissions-table{
 	table-layout: auto;
 }
+
+
+
 .submissions-table tr:nth-child(2n+0){
 	background: #ededed;
 }
@@ -2294,7 +2302,10 @@ img.board-img{
 	font-weight: 700;
 	border-right: solid 1px #efefef;
 	text-decoration: none;
+
 }
+
+
 
 .blog-form{
 	margin-top: 20px;
@@ -2615,6 +2626,18 @@ a.purchase-credits.collapse{
 .body-blog .main, .body-admin .main{
 	top: 180px;
 }
+
+.url-field{
+	width: 200px;
+}
+
+.tracking-stats-table{
+	table-layout: fixed;
+	position: relative;
+	width: 100%;
+	word-break: break-word;
+}
+
 
 /* Smaller than standard 960 (devices and browsers) */
 @media only screen and (max-width: 959px) {
