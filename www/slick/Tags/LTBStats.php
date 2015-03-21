@@ -38,11 +38,8 @@ class Slick_Tags_LTBStats
 			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
 			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
 			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
-			$balances = array_merge($balances, $balances2);
-			$balances = array_merge($balances, $balances3);
-			$balances = array_merge($balances, $balances4);
-			$balances = array_merge($balances, $balances5);
-			$balances = array_merge($balances, $balances6);
+			$balances7 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 7000));
+			$balances = array_merge($balances, $balances2, $balances3, $balances4, $balances5, $balances6, $balances7);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
 				if($balance['quantity'] == 0){
@@ -928,7 +925,7 @@ class Slick_Tags_LTBStats
 									$user['metrics']['blog-posts'] = count($user['extra']);
 								}
 								foreach($user['extra'] as $extraRow){
-									if(isset($extraRpw['post']) AND $user['userId'] != $extraRow['post']['userId']){
+									if(isset($extraRow['post']) AND $user['userId'] != $extraRow['post']['userId']){
 										$numEdited++;
 									}
 									else{
