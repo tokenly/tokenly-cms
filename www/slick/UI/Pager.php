@@ -7,7 +7,7 @@ class Slick_UI_Pager extends Slick_UI_Object
 		
 	}
 	
-	public function display($numPages = 0, $url = '#', $curPage = 0, $seperator = '')
+	public function display($numPages = 0, $url = '#', $curPage = 0, $seperator = '', $append = '')
 	{
 		if($numPages == 1){
 			return '';
@@ -40,7 +40,7 @@ class Slick_UI_Pager extends Slick_UI_Object
 			}
 			else{
 			
-				$output .= '<a href="'.$url.$i.'"  '.$isCurr.'>'.$i.'</a> ';
+				$output .= '<a href="'.$url.$i.$append.'"  '.$isCurr.'>'.$i.'</a> ';
 			}
 			
 			if($i != $numPages){
