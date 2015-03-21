@@ -620,6 +620,63 @@ function route($route, $path = '')
 	return $site['url'].'/'.$full_path;
 }
 
+function app_enabled($slugs)
+{
+	$exp = explode('.', $slugs);
+	$model = new Slick_Core_Model;
+	$getApp = $model->get('apps', $exp[0], array(), 'slug');
+	if(!$getApp OR $getApp['active'] == 0){
+		return false;
+	}
+	if(isset($exp[1])){
+		$getModule = $model->getAll('modules', array('appId' => $getApp['appId'], 'slug' => $exp[1], 'active' => 1), array('moduleId'));
+		if(count($getModule) == 0){
+			return false;
+		}
+		return $getModule[0];
+	}
+	return $getApp;
+}
+
+function get_app($slugs)
+{
+	return app_enabled($slugs);
+}
+
+function app_class($slugs, $type = 'controller', $construct = true)
+{
+	$exp = explode('.', $slugs);
+	$model = new Slick_Core_Model;
+	$getApp = $model->get('apps', $exp[0], array(), 'slug');
+	if(!$getApp OR $getApp['active'] == 0){
+		return false;
+	}
+	$class_name = 'Slick_App_'.$getApp['location'].'_';
+	if(isset($exp[1])){
+		$getModule = $model->getAll('modules', array('appId' => $getApp['appId'], 'slug' => $exp[1], 'active' => 1), array('moduleId','slug','location'));
+		if(count($getModule) == 0){
+			return false;
+		}
+		$class_name .= $getModule[0]['location'];
+	}
+	$class_name .= '_'.ucfirst($type);
+	if(!$construct){
+		return $class_name;
+	}
+	return new $class_name();
+}
+
+function app_setting($slug, $setting)
+{
+	$model = new Slick_App_Meta_Model;
+	$getApp = $model->get('apps', $slug, array(), 'slug');
+	if(!$getApp OR $getApp['active'] == 0){
+		return false;
+	}
+	return $model->getAppMeta($getApp['appId'], $setting);
+}
+
+
 function botdetect()
 {
   if(isset($_SERVER['HTTP_USER_AGENT']) AND preg_match('/bot|crawl|slurp|spider/i', $_SERVER['HTTP_USER_AGENT'])){
@@ -627,5 +684,16 @@ function botdetect()
   }
   return false;
 }
+
+function is_match($pattern, $value) {
+    if($pattern == $value){
+		return true;
+	}
+    $pattern = preg_quote($pattern, '#');
+    $pattern = str_replace('\*', '.*', $pattern).'\z';
+    return (bool)preg_match('#^'.$pattern.'#', $value);
+}
+
+
 
 ?>
