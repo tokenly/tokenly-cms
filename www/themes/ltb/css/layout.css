@@ -3246,7 +3246,7 @@ a.purchase-credits.collapse{
 		padding-right: 15px;
 	}
 	.post-author-info{
-		display: none;
+		padding-top: 35px;
 	}
 	.op-author, .reply-author{
 		float: none;
