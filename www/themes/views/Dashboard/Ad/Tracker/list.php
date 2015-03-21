@@ -12,7 +12,7 @@ if(count($urls) == 0){
 }
 else{
 	?>
-	<table class="admin-table data-table mobile-table submissions-table tracking-table">
+	<table class="admin-table data-table mobile-table submissions-table tracking-stats-table">
 		<thead>
 			<tr>
 				<th>ID</th>

@@ -29,7 +29,7 @@ if(count($clicks) == 0){
 	echo '<p>No clicks yet!</p>';
 }
 else{
-	echo '<table class="admin-table data-table submissions-table">
+	echo '<table class="admin-table data-table submissions-table tracking-stats-table">
 			<thead>
 				<tr>
 					<th>IP/User</th>
@@ -47,7 +47,7 @@ else{
 		
 		echo '<tr>
 				<td>'.$click['IP'].$andUser.'</td>
-				<td>'.$click['request_url'].'</td>
+				<td class="url-field">'.$click['request_url'].'</td>
 				<td>'.date('Y/m/d \<\b\r\> H:i', strtotime($click['click_time'])).'</td>
 			  </tr>';
 	}
