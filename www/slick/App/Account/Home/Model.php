@@ -7,11 +7,11 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	{
 		$form = new Slick_UI_Form;
 		
-		$hny = new Slick_UI_Textbox('user-mail');
+		/*$hny = new Slick_UI_Textbox('user-mail');
 		$hny->addClass('hny');
 		$hny->addAttribute('autocomplete', 'off');
 		$hny->setLabel('Email Address', 'hny');
-		$form->add($hny);		
+		$form->add($hny);*/
 		
 		$username = new Slick_UI_Textbox('username');
 		$username->addAttribute('required');
@@ -326,7 +326,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 		
 		$get = $this->get('users', $data['username'], array(), 'username');
-		if(!$get OR (isset($data['user-mail']) AND $data['user-mail'] != '')){ //checks if false username and also checks honeypot field (email)
+		if(!$get){ 
 			http_response_code(401);
 			throw new Exception('Invalid credentials');
 		}
@@ -529,14 +529,6 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			$numReplies = $numReplies['total'];
 			$totalPosts += $numTopics + $numReplies;
 		}
-		
-		$blogApp = $model->get('apps', 'blog', array('appId'), 'slug');
-		if($blogApp){
-			$numComments = $model->count('blog_comments', 'userId', $userId);
-			$numPosts = $model->count('blog_posts', 'userId', $userId);
-			$totalPosts += $numComments + $numPosts;
-		}
-		
 		
 		return $totalPosts;
 	}

@@ -228,10 +228,12 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		return $output;
 	}
 	
-	public function getPostMeta($postId, $fullData = false, $private = false)
+	public function getPostMeta($postId, $fullData = false, $private = false, $site = false)
 	{
-		if(!self::$postMetaTypes){
+		if(!$site){
 			$site = currentSite();
+		}
+		if(!self::$postMetaTypes){
 			self::$postMetaTypes = $this->getAll('blog_postMetaTypes', array('siteId' => $site['siteId']), array(), 'rank' ,'asc');
 		}
 		$types = self::$postMetaTypes;
@@ -268,5 +270,109 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		
 		return $output;
 		
+	}
+	
+	public function getUserArticles($userId, $andContribs = false, $perPage = false, $page = 1)
+	{
+		$output = array('posts' => array(), 'written' => 0, 'contribs' => 0, 'count' => 0);
+		$submitModel = app_class('dashboard.blog-submissions', 'model');
+		$profModel = app_class('profile.user-profile', 'model');
+		
+		$getPosts = $this->getAll('blog_posts', array('userId' => $userId, 'trash' => 0, 'status' => 'published'));
+		$time = time();
+		$site = currentSite();
+		$usedPosts = array();
+		
+		foreach($getPosts as $k => $post){
+			$checkApproved = $submitModel->checkPostApproved($post['postId']);
+			if(!$checkApproved){
+				unset($getPosts[$k]);
+				continue;
+			}
+			$post['time'] = strtotime($post['publishDate']);
+			$diff = $post['time'] - $time;
+			if($diff > 0){
+				unset($getPosts[$k]);
+				continue;
+			}
+			$post['author'] = $profModel->getUserProfile($post['userId'], $site['siteId']);
+			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
+			$cats = array();
+			foreach($getCats as $cat){
+				$getCat = $this->get('blog_categories', $cat['categoryId']);
+				$cats[] = $getCat;
+			}
+			$post['categories'] = $cats;	
+			$post['role'] = 'Author';		
+			$getMeta = $this->getPostMeta($post['postId']);
+			foreach($getMeta as $mkey => $val){
+				if(!isset($post[$mkey])){
+					$post[$mkey] = $val;
+				}
+			}						
+			$output['count']++;
+			$output['written']++;
+			$output['posts'][] = $post;
+			$usedPosts[] = $post['postId'];
+		}
+		
+		if($andContribs){
+			$contribs = $submitModel->getUserContributedPosts(array('site' => $site, 'user' => array('userId' => $userId)));
+			foreach($contribs as $k => $post){
+				if(in_array($post['postId'], $usedPosts)){
+					unset($contribs[$k]);
+					continue;
+				}
+				$checkApproved = $submitModel->checkPostApproved($post['postId']);
+				if(!$checkApproved){
+					unset($contribs[$k]);
+					continue;
+				}
+				$post['time'] = strtotime($post['publishDate']);
+				$diff = $post['time'] - $time;
+				if($diff > 0){
+					unset($getPosts[$k]);
+					continue;
+				}
+				$post['author'] = $profModel->getUserProfile($post['userId'], $site['siteId']);
+				$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
+				$cats = array();
+				foreach($getCats as $cat){
+					$getCat = $this->get('blog_categories', $cat['categoryId']);
+					$cats[] = $getCat;
+				}
+				$post['categories'] = $cats;			
+				$getMeta = $this->getPostMeta($post['postId']);
+				foreach($getMeta as $mkey => $val){
+					if(!isset($post[$mkey])){
+						$post[$mkey] = $val;
+					}
+				}										
+				$output['count']++;
+				$output['contribs']++;
+				$output['posts'][] = $post;
+				$usedPosts[] = $post['postId'];
+			}
+		}
+		
+		aasort($output['posts'], 'time');
+		$output['posts'] = array_reverse($output['posts']);
+		
+		$output['num_pages'] = false;
+		if($perPage !== false){
+			$pager = new Slick_Util_Paging;
+			$pagePosts = $pager->pageArray($output['posts'], $perPage);
+			$output['num_pages'] = count($pagePosts);
+			
+			if(!isset($pagePosts[$page])){
+				$output['posts'] = array();
+			}
+			else{
+				$output['posts'] = $pagePosts[$page];
+			}
+		}
+				
+		
+		return $output;
 	}
 }

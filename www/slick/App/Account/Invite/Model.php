@@ -73,5 +73,6 @@ class Slick_App_Account_Invite_Model extends Slick_Core_Model
 		return $output;
 	}
 	
+	
 }
 

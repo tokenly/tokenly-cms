@@ -1971,7 +1971,7 @@ text-overflow:ellipsis;
 	border-right: none;
 }
 .ltb-stat-tabs li a:hover,.ltb-stat-tabs li .active{
-	background: #F0F0F0;
+	background: #D2D2D2;
 	color: #000;
 }
 .ltb-weekly-cont{
@@ -2045,20 +2045,13 @@ span.unsaved{
 	margin-bottom: 5px;	
 }
 
-.send-msg-btn{
-	font-style: normal;
-	font-weight: 700;
+.btn.send-msg-btn{
+	width: auto;
+	margin-bottom: 10px;
+	margin-top: 5px;
 	display: block;
-	margin: 5px 0px;
 	text-align: center;
-	border: solid 1px #eaeaea;
-	padding: 5px;
-	color: #2ba6cb;
-}
-.send-msg-btn:hover{
-	text-decoration: none;
-	color: #2ba6cb;
-	background: #F8F8F8;
+	font-size: 15px;
 }
 
 .post-permalink, .post-permalink a{
@@ -2294,7 +2287,7 @@ img.board-img{
 
 .data-table .no-sort { pointer-events: none!important; cursor: default!important; background: #3987AD!important; }
 
-.ltb-stat-tabs.blog-tabs li a{
+.ltb-stat-tabs li a{
 	display: block;
 	padding: 10px 15px;
 	font-size: 14px;
@@ -2638,6 +2631,19 @@ a.purchase-credits.collapse{
 	word-break: break-word;
 }
 
+.content .member-search input[type="textbox"]{
+	padding: 4px;
+	display: inline-block;
+	margin: 0px;
+}
+
+.content .member-search input[type="submit"]{
+	font-size: 12px;
+	display: inline-block;
+	margin: 0px;
+	padding: 5px 10px;
+}
+
 
 /* Smaller than standard 960 (devices and browsers) */
 @media only screen and (max-width: 959px) {
@@ -2815,6 +2821,38 @@ a.purchase-credits.collapse{
 	}
 }
 
+.profile-activity{
+	margin-top: 20px;
+	background: #fff;
+	padding: 20px;
+}
+
+.content .forum-activity-list{
+	margin: 0px;
+	padding: 0px;
+	display: block;
+}
+
+.content .forum-activity-list > li{
+	list-style-type: none;
+	display: block;
+	width: auto;
+	margin: 0px;
+	padding: 0px;
+	margin-bottom: 25px;
+	border-bottom: solid 2px #efefef;
+	padding: 10px;
+}
+
+.content .forum-activity-list > li:nth-child(2n+0){
+	background: #E8E8E8;
+}
+
+.pager .current{
+	text-decoration: none;
+	color: #000;
+	font-weight: 700;
+}
 
 /* Tablet Portrait size to standard 960 (devices and browsers) */
 @media only screen and (min-width: 768px) and (max-width: 959px) {

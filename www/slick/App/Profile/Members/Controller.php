@@ -29,12 +29,34 @@ class Slick_App_Profile_Members_Controller extends Slick_App_ModControl
 		
 		$start = ($page * $max) - $max;
 		
-		$totalUsers = $this->model->count('users');
 		
-		$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
-										FROM users
-										ORDER BY userId DESC
-										LIMIT '.$start.', '.$max);
+		
+		$output['query'] = '';
+		if(isset($_GET['q']) AND trim($_GET['q']) != ''){
+			$_GET['q'] = htmlentities($_GET['q']);
+			$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
+											FROM users
+											WHERE username LIKE :query OR slug LIKE :query2
+											ORDER BY lastActive DESC
+											LIMIT '.$start.', '.$max,
+											array(':query' => '%'.$_GET['q'].'%', ':query2' => '%'.$_GET['q'].'%'));
+			$output['query'] = $_GET['q'];
+			$totalUsers = $this->model->fetchSingle('SELECT count(*) as total FROM users
+													 WHERE username LIKE :query OR slug LIKE :query2',
+													 array(':query' => '%'.$_GET['q'].'%', ':query2' => '%'.$_GET['q'].'%'));
+			if($totalUsers){
+				$totalUsers = $totalUsers['total'];
+			}
+		}
+		else{
+			$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
+											FROM users
+											ORDER BY lastActive DESC
+											LIMIT '.$start.', '.$max);
+			$totalUsers = $this->model->count('users');											
+		}
+		
+
 		foreach($users as $key => $user){
 			$profile = $profModel->getUserProfile($user['userId'], $this->data['site']['siteId']);
 			if($profile['pubProf'] == 0){
@@ -46,9 +68,12 @@ class Slick_App_Profile_Members_Controller extends Slick_App_ModControl
 			
 		}
 		$output['numPages'] = ceil($totalUsers / $max);
-		
+		$output['usersFound'] = $totalUsers;
 		$output['members'] = $users;
-		$output['title'] = 'Members';
+		$output['title'] = 'Community Directory';
+		$output['numUsers'] = $this->model->count('users');
+		$output['numOnline'] = Slick_App_Account_Home_Model::getUsersOnline();
+		$output['mostOnline'] = Slick_App_Account_Home_Model::getMostOnline();		
 		
 		return $output;
 	}

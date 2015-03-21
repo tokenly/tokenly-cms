@@ -105,5 +105,92 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		
 	}
 	
+	public function getUserActivity($userId, $user)
+	{
+		$output = array();
+		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$output['forums'] = false;
+		if(app_enabled('forum')){
+			$postModel = app_class('forum.forum-post', 'model');
+			$forumPage = 1;
+			if(isset($_GET['page']) AND isset($_GET['t']) AND $_GET['t'] == 'forums'){
+				$forumPage = intval($_GET['page']);
+			}
+			$output['forums'] = $postModel->getUserPosts($userId, true, 10, $forumPage);
+			$postModule = get_app('forum.forum-post');
+			$boardModule = get_app('forum.forum-board');
+			foreach($output['forums']['posts'] as $k => $post){
+				$catTCA = $tca->checkItemAccess($user['userId'], $boardModule['moduleId'], $post['categoryId'], 'category');
+				$boardTCA = $tca->checkItemAccess($user['userId'], $boardModule['moduleId'], $post['boardId'], 'board');
+				$postTCA = $tca->checkItemAccess($user['userId'], $postModule['moduleId'], $post['topicId'], 'topic');
+				
+				if(!$catTCA OR !$boardTCA OR !$postTCA){
+					unset($output['forums']['posts'][$k]);
+					continue;
+				}
+			}
+		}
+		
+		$output['blog'] = false;
+		if(app_enabled('blog')){
+			$blogModel = app_class('blog.blog-post', 'model');
+			$blogPage = 1;
+			if(isset($_GET['page']) AND isset($_GET['t']) AND $_GET['t'] == 'blog'){
+				$blogPage = intval($_GET['page']);
+			}			
+			$output['blog'] = $blogModel->getUserArticles($userId, true, 10, $blogPage);
+			
+		}
+		
+		$output['tokenly'] = false;
+		if(app_enabled('ltbcoin')){
+			$stats = new Slick_Tags_LTBStats;
+			$popLeaders = $stats->getLeaderboardData('pop', false);
+			$contentLeaders = $stats->getLeaderboardData('content', false);
+			
+			$output['tokenly'] = array('pop' => 'N/A', 'content' => 'N/A', 'addresses' => array());
+			$num = 1;
+			foreach($popLeaders as $leader){
+				if($leader['userId'] == $userId){
+					$output['tokenly']['pop'] = $num;
+					break;
+				}
+				$num++;
+			}
+			$num = 1;
+			foreach($contentLeaders as $leader){
+				if($leader['userId'] == $userId){
+					$output['tokenly']['content'] = $num;
+					break;
+				}
+				$num++;
+			}			
+			
+			$output['tokenly']['addresses'] = $this->getAll('coin_addresses',
+															array('userId' => $userId, 'verified' => 1, 'public' => 1));
+			
+		}
+		
+		return $output;
+	}
+	
+	public function getProfileViews($userId, $update = false)
+	{
+		$meta = new Slick_App_Meta_Model;
+		$views = intval($meta->getUserMeta($userId, 'profile-views'));
+		
+		if($update){
+			if(!isset($_SESSION['viewed_profiles']) OR !in_array($userId, $_SESSION['viewed_profiles'])){
+				if(!isset($_SESSION['viewed_profiles'])){
+					$_SESSION['viewed_profiles'] = array();
+				}
+				$_SESSION['viewed_profiles'][] = $userId;
+			
+				$meta->updateUserMeta($userId, 'profile-views', ($views+1));
+			}
+		}
+		return $views;
+	}
+	
 	
 }

@@ -35,15 +35,19 @@ class Slick_App_Profile_User_Controller extends Slick_App_ModControl
 				return $output;
 			}
 		}
-		
+
+		$output['profile_views'] = $this->model->getProfileViews($getProfile['userId'], true);
 		$output['profile'] = $getProfile;
+		$output['activity'] = $this->model->getUserActivity($getProfile['userId'], $this->data['user']);
 		$output['view'] = 'profile';
-		$output['title'] = 'User Info';
+		$output['title'] = 'User Info - '.$getProfile['username'];
 		
 		return $output;
 		
 		
 	}
+	
+
 	
 	
 }

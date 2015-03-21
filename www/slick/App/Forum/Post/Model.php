@@ -384,6 +384,118 @@ class Slick_App_Forum_Post_Model extends Slick_Core_Model
 		}
 		return $count['total'];
 	}
+	
+	public function getUserPosts($userId, $andTopics = true, $perPage = false, $page = 1)
+	{
+		$output = array('count' => 0, 'replies' => 0, 'topics' => 0, 'likes' => 0, 'posts' => array());
+		
+		$perPage = app_setting('forum', 'postsPerPage');
+		$getPosts = $this->getAll('forum_posts', array('userId' => $userId, 'buried' => 0), array(), 'postId', 'desc');
+		$getTopics = $this->getAll('forum_topics', array('userId' => $userId, 'buried' => 0), array(), 'topicId', 'desc');
+										   
+		$output['topics'] = count($getTopics);		
+		$output['replies'] = count($getPosts);
+		$output['count'] += $output['replies'];
+		$output['count'] += $output['topics'];
+		$postIds = array();
+		$topicIds = array();
+		
+		foreach($getPosts as $post){
+			$postIds[] = $post['postId'];
+		}
+		foreach($getTopics as $topic){
+			$topicIds[] = $topic['topicId'];
+		}
+		
+		$likes_list = $this->fetchAll('SELECT *
+									   FROM user_likes
+									   WHERE ((type = "post" AND itemId IN('.join(',',$postIds).'))
+									   OR (type = "topic" AND itemId IN('.join(',',$topicIds).')))
+									   AND userId != :userId',
+									   array(':userId' => $userId));		
+									   
+		
+		foreach($getPosts as $post){		
+			$item = array();
+			$item['userId'] = $post['userId'];
+			$item['itemId'] = $post['postId'];
+			$item['type'] = 'reply';
+			$item['content'] = $post['content'];
+			$item['date'] = $post['postTime'];
+			$item['time'] = strtotime($post['postTime']);
+			$item['topicId'] = $post['topicId'];
+			
+			$getLikes = extract_row($likes_list, array('itemId' => $item['itemId'], 'type' => 'post'), true);
+			$output['likes'] += count($getLikes);
+			$item['likes'] = $getLikes;			
+						
+			$output['posts'][] = $item;
+		}
+		
+		foreach($getTopics as $post){
+			$item = array();
+			$item['userId'] = $post['userId'];
+			$item['itemId'] = $post['topicId'];
+			$item['topicId'] = $post['topicId'];
+			$item['type'] = 'topic';
+			$item['content'] = $post['content'];
+			$item['date'] = $post['postTime'];
+			$item['time'] = strtotime($post['postTime']);
+
+			$getLikes = extract_row($likes_list, array('itemId' => $item['itemId'], 'type' => 'topic'), true);
+			$output['likes'] += count($getLikes);
+			$item['likes'] = $getLikes;						
+			
+			$output['posts'][] = $item;
+		}
+				
+		aasort($output['posts'], 'time');
+		$output['posts'] = array_reverse($output['posts']);
+		
+		$output['num_pages'] = false;
+		if($perPage !== false){
+			$pager = new Slick_Util_Paging;
+			$pagePosts = $pager->pageArray($output['posts'], $perPage);
+			$output['num_pages'] = count($pagePosts);
+			
+			if(!isset($pagePosts[$page])){
+				$output['posts'] = array();
+			}
+			else{
+				$output['posts'] = $pagePosts[$page];
+			}
+		}
+		
+		
+		foreach($output['posts'] as &$item){
+			$getTopic = $this->get('forum_topics', $item['topicId']);
+			$getBoard = $this->get('forum_boards', $getTopic['boardId']);
+			$getCategory = $this->get('forum_categories', $getBoard['categoryId']);
+			if($item['type'] == 'reply'){
+				$pageNum = $this->getPostPage($item['itemId'], $perPage);
+				$item['ref_title'] = 'Re: '.$getTopic['title'];
+				$item['ref_url'] = $getTopic['url'];
+				if($pageNum > 1){
+					$item['ref_url'] .= '?page='.$pageNum;
+				}
+				$item['ref_url'] .= '#post-'.$item['itemId'];
+			}
+			else{
+				$item['ref_title'] = $getTopic['title'];
+				$item['ref_url'] = $getTopic['url'];
+			}
+			
+			$item['board_title'] = $getBoard['name'];
+			$item['board_url'] = $getBoard['slug'];
+			$item['boardId'] = $getBoard['boardId'];
+			$item['categoryId'] = $getCategory['categoryId'];
+			$item['category_title'] = $getCategory['name'];
+			$item['category_slug'] = $getCategory['slug'];
+
+		}
+		
+		return $output;
+	}
 
 	
 }

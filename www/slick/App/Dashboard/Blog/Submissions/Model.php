@@ -863,7 +863,7 @@ class Slick_App_Dashboard_Blog_Submissions_Model extends Slick_Core_Model
 	{
 		$get = $this->fetchAll('SELECT p.postId, p.userId, p.url, p.title, p.status, p.views, p.commentCount, p.commentCheck,
 									   p.postDate, p.publishDate, p.excerpt, p.published, p.status, p.ready,
-									   p.siteId, p.version, p.editTime, p.editedBy, p.coverImage
+									   p.siteId, p.version, p.editTime, p.editedBy, p.coverImage, p.formatType, c.role
 								FROM blog_contributors c
 								LEFT JOIN user_invites i ON i.inviteId = c.inviteId
 								LEFT JOIN blog_posts p ON p.postId = c.postId
