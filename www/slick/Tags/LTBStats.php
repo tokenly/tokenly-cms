@@ -38,7 +38,11 @@ class Slick_Tags_LTBStats
 			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
 			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
 			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
-			$balances = array_merge($balances, $balances2, $balances3, $balances4, $balances5, $balances6);
+			$balances = array_merge($balances, $balances2);
+			$balances = array_merge($balances, $balances3);
+			$balances = array_merge($balances, $balances4);
+			$balances = array_merge($balances, $balances5);
+			$balances = array_merge($balances, $balances6);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
 				if($balance['quantity'] == 0){
@@ -924,7 +928,7 @@ class Slick_Tags_LTBStats
 									$user['metrics']['blog-posts'] = count($user['extra']);
 								}
 								foreach($user['extra'] as $extraRow){
-									if($user['userId'] != $extraRow['post']['userId']){
+									if(isset($extraRpw['post']) AND $user['userId'] != $extraRow['post']['userId']){
 										$numEdited++;
 									}
 									else{
@@ -979,22 +983,40 @@ class Slick_Tags_LTBStats
 		return $output;
 	}
 	
-	public function getLeaderboardData($type = 'content')
+	public function getLeaderboardData($type = 'content', $processAdditional = true)
 	{
 		if(isset(self::$reportData[$type])){
 			return self::$reportData[$type];
 		}
 		$model = new Slick_App_LTBcoin_POP_Model;
 		if($type == 'content'){
-			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%[poq:%" OR label LIKE "%[pov:%"');
+			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%[poq:%" OR label LIKE "%[pov:%" ORDER BY reportId DESC');
 		}
 		else{
-			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%['.$type.':%"');
+			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%['.$type.':%" ORDER BY reportId DESC');
 		}
+		
+		$meta = new Slick_App_Meta_Model;
+		$tokenlyApp = get_app('ltbcoin');
+		$lastReportHash = $meta->getAppMeta($tokenlyApp['appId'], 'leaderboard-hash-'.$type);
+		$thisHash = false;
+		if(isset($getPop[0])){
+			$thisHash = md5($getPop[0]['reportId']);
+		}
+		if($lastReportHash == $thisHash){
+			$leaderData = $meta->getAppMeta($tokenlyApp['appId'], 'leaderboard-data-'.$type, 0, true);
+			$uncompress = gzuncompress($leaderData);
+			$getLeaderboard = json_decode($uncompress, true);
+			self::$reportData[$type] = $getLeaderboard;
+			return $getLeaderboard;
+		}
+		
 		$userList = array();
 		foreach($getPop as &$row){
 			$row['info'] = json_decode($row['info'], true);
-			$row['extraInfo'] = json_decode($row['extraInfo'], true);
+			if($processAdditional){
+				$row['extraInfo'] = json_decode($row['extraInfo'], true);
+			}
 			
 			//get distribution data
 			preg_match_all('/\[(.+?)\]/',$row['label'],$matches);
@@ -1013,8 +1035,10 @@ class Slick_Tags_LTBStats
 						continue;
 					}
 					else{
-						$getDist['addressList'] = json_decode($getDist['addressList'], true);
-						$getDist['txInfo'] = json_decode($getDist['txInfo'], true);
+						if($processAdditional){
+							$getDist['addressList'] = json_decode($getDist['addressList'], true);
+							$getDist['txInfo'] = json_decode($getDist['txInfo'], true);
+						}
 					}
 				}
 			}		
@@ -1035,15 +1059,17 @@ class Slick_Tags_LTBStats
 				}
 				$userList[$userId]['score'] += $item['score'];
 				$userList[$userId]['coin'] += $item['score'] * $perPoint;
-				if(isset($item['extra']) AND is_array($item['extra'])){
-					$userList[$userId]['extra'] = array_merge($userList[$userId]['extra'], $item['extra']);
-				}
-				foreach($item['info'] as $metric => $count){
-					if(!isset($userList[$userId]['metrics'][$metric])){
-						$userList[$userId]['metrics'][$metric] = $count;
+				if($processAdditional){
+					if(isset($item['extra']) AND is_array($item['extra'])){
+						$userList[$userId]['extra'] = array_merge($userList[$userId]['extra'], $item['extra']);
 					}
-					else{
-						$userList[$userId]['metrics'][$metric] += $count;
+					foreach($item['info'] as $metric => $count){
+						if(!isset($userList[$userId]['metrics'][$metric])){
+							$userList[$userId]['metrics'][$metric] = $count;
+						}
+						else{
+							$userList[$userId]['metrics'][$metric] += $count;
+						}
 					}
 				}
 			}
@@ -1059,22 +1085,28 @@ class Slick_Tags_LTBStats
 			}
 		}
 		
-		$meta = new Slick_App_Meta_Model;
-		foreach($userList as $key => $row){
-			$userList[$key]['displayname'] = $row['username'];
-			$getRowUser = $this->model->get('users', $row['username'], array('userId', 'username', 'slug'), 'username');
-			if($getRowUser){
-				$checkPubProf = $meta->getUserMeta($getRowUser['userId'], 'pubProf');
-				if(intval($checkPubProf) !== 1){
-					$userList[$key]['displayname'] = '<em>anonymous</em>';	
-					if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
-						$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
+		if($processAdditional){
+			foreach($userList as $key => $row){
+				$userList[$key]['displayname'] = $row['username'];
+				$getRowUser = $this->model->get('users', $row['username'], array('userId', 'username', 'slug'), 'username');
+				if($getRowUser){
+					$checkPubProf = $meta->getUserMeta($getRowUser['userId'], 'pubProf');
+					if(intval($checkPubProf) !== 1){
+						$userList[$key]['displayname'] = '<em>anonymous</em>';	
+						if($checkAuth AND $checkAuth['userId'] == $getRowUser['userId']){
+							$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank" title="Your profile is set to private, your username is not publicly displayed on this list, only while you are logged in."><strong>'.$row['username'].' *</strong></a>';
+						}
 					}
-				}
-				else{
-					$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank">'.$row['username'].'</a>';
-				}
-			}					
+					else{
+						$userList[$key]['displayname'] = '<a href="'.$this->site['url'].'/profile/user/'.$getRowUser['slug'].'" target="_blank">'.$row['username'].'</a>';
+					}
+				}					
+			}
+			
+			//save full report to meta in BLOB format
+			$compressed = gzcompress(json_encode($userList), 9);
+			$meta->updateAppMeta($tokenlyApp['appId'], 'leaderboard-data-'.$type, $compressed, '', 0, '', true);
+			$meta->updateAppMeta($tokenlyApp['appId'], 'leaderboard-hash-'.$type, $thisHash);
 		}
 		
 		self::$reportData[$type] = $userList;
