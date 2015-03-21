@@ -5,7 +5,7 @@
 	and reward you for your time! 
 </p>
 <p>
-	Each word can only be redeemed one time per listener, and they're only good for four days from the release of the 
+	Each word can only be redeemed one time per listener, and they're only good for seven days from the release of the 
 	episode it was obtained from.
 </p>
 </p>
