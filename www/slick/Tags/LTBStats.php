@@ -38,7 +38,7 @@ class Slick_Tags_LTBStats
 			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
 			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
 			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
-			$balances7 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 7000));
+			$balances7 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 6000));
 			$balances = array_merge($balances, $balances2, $balances3, $balances4, $balances5, $balances6, $balances7);
 			$uniqueBalances = array();
 			foreach($balances as $balance){
