@@ -31,6 +31,7 @@ CREATE TABLE `app_meta` (
   `type` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'textbox',
   `options` longtext COLLATE utf8_unicode_ci,
   `isSetting` int(2) DEFAULT '0',
+  `valueBlob` LONGBLOB,
   PRIMARY KEY (`appMetaId`),
   KEY `appId` (`appId`),
   KEY `metaKey` (`metaKey`),

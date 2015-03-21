@@ -141,7 +141,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		return $output;
 	}
 	
-	public function getAppMeta($appId, $key, $fullData = 0)
+	public function getAppMeta($appId, $key, $fullData = 0, $blob = false)
 	{
 		if($fullData == 0 AND isset(self::$appMeta[$appId][$key])){
 			return self::$appMeta[$appId][$key];
@@ -166,21 +166,30 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			return $get;
 		}
 		
+		if($blob){
+			self::$appMeta[$appId][$key] = $get['valueBlob'];
+			return $get['valueBlob'];
+		}
+		
 		self::$appMeta[$appId][$key] = $get['metaValue'];
 		
 		return $get['metaValue'];
 		
 	}
 	
-	public function updateAppMeta($appId, $key, $value, $label = '', $isSetting = 0, $type = '')
+	public function updateAppMeta($appId, $key, $value, $label = '', $isSetting = 0, $type = '', $blob = false)
 	{
 		$get = $this->getAppMeta($appId, $key, 1);
+		$valueType = 'metaValue';
+		if($blob){
+			$valueType = 'valueBlob';
+		}		
 		if(!$get){
 			//create new row
 			if(trim($type) == ''){
 				$type = 'textbox';
 			}
-			$update = $this->insert('app_meta', array('appId' => $appId, 'metaKey' => $key, 'metaValue' => $value, 'type' => $type,
+			$update = $this->insert('app_meta', array('appId' => $appId, 'metaKey' => $key, $valueType => $value, 'type' => $type,
 														'label' => $label, 'isSetting' => $isSetting));
 		}
 		else{
@@ -190,7 +199,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			if(trim($type) == ''){
 				$type = $get['type'];
 			}
-			$update = $this->edit('app_meta', $get['appMetaId'], array('metaValue' => $value, 'type' => $type,
+			$update = $this->edit('app_meta', $get['appMetaId'], array($valueType => $value, 'type' => $type,
 								  'label' => $label, 'isSetting' => $isSetting));
 		}
 		
