@@ -245,9 +245,22 @@ class Slick_App_Dashboard_LTBcoin_Address_Model extends Slick_Core_Model
 		$getMessage = $this->getSecretMessage($address);
 		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
 		
+		$inputMessage = trim($_POST['message']);
+		if(strpos($inputMessage, '-----BEGIN BITCOIN SIGNATURE-----') !== false){
+			//pgp style signed message format, extract the actual signature from it
+			$expMsg = explode("\n", $inputMessage);
+			foreach($expMsg as $k => $line){
+				if($line == '-----END BITCOIN SIGNATURE-----'){
+					if(isset($expMsg[$k-1])){
+						$inputMessage = trim($expMsg[$k-1]);
+					}
+				}
+			}
+		}
+		
 		$result = false;
 		try{
-			$checkMessage = $btc->verifymessage($address['address'], $_POST['message'], $getMessage);
+			$checkMessage = $btc->verifymessage($address['address'], $inputMessage, $getMessage);
 			if($checkMessage){
 				$result = true;
 			}
