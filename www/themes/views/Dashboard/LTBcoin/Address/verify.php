@@ -43,7 +43,7 @@
 	<div class="secret-message">
 		<input type="text" readonly onclick="this.select()" value="<?= $secretMessage ?>" />
 	</div>
-	<textarea id="messageSig" style="height: 50px;" placeholder="Enter signature" ></textarea>
+	<textarea id="messageSig" style="height: 130px;" placeholder="Enter signature" ></textarea>
 	<input type="button" id="submitSig" value="Verify" />
 	<div class="sig-status"></div>
 
