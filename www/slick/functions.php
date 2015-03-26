@@ -727,6 +727,12 @@ function is_match($pattern, $value) {
     return (bool)preg_match('#^'.$pattern.'#', $value);
 }
 
-
+function has_key($var, $key)
+{
+	if(!is_array($var) OR !isset($var[$key]) OR $var[$key] === false OR trim($var[$key]) == ''){
+		return false;
+	}
+	return true;
+}
 
 ?>

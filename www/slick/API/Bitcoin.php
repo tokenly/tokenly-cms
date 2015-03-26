@@ -257,6 +257,53 @@ class Slick_API_Bitcoin {
 		return self::$utxoset;
 	}
 	
+	public function getaddresstxlist($address, $level = 0)
+	{
+		//gets a full list of transactions involving this address, using blockchain.info
+		$output = array();
+		$limit = 50;
+		$offset = 0;
+		if($level > 0){
+			$offset = $level * $limit;
+		}
+		$url = 'https://blockchain.info/address/'.$address.'?format=json&limit='.$limit.'&offset='.$offset;
+		$get = @file_get_contents($url);
+		$decode = json_decode($get, true);
+		if($decode AND isset($decode['txs']) AND count($decode['txs']) > 0){
+			$tx_count = $decode['n_tx'];
+			$pages = ceil($tx_count / $limit);
+			
+			foreach($decode['txs'] as $tx){
+				$item = array();
+				$item['txId'] = $tx['hash'];
+				$item['time'] = $tx['time'];
+				$item['block'] = $tx['block_height'];
+				$item['amount'] = 0;
+				foreach($tx['inputs'] as $input){
+					if($input['prev_out']['addr'] == $address){
+						$item['amount'] -= $input['prev_out']['value'];
+					}
+				}
+				foreach($tx['out'] as $out){
+					if($out['addr'] == $address){
+						$item['amount'] += $out['value'];
+					}
+				}
+				$output[] = $item;
+			}
+			
+			if($level == 0){
+				$level_tx = array();
+				for($i = 1; $i <= $pages; $i++){
+					$level_tx = array_merge($level_tx, $this->getaddresstxlist($address, $i));
+				}
+				$output = array_merge($output, $level_tx);
+				aasort($output, 'block');
+				$output = array_values($output);
+			}
+		}
+		return $output;
+	}
 }
 ?>
 
