@@ -2,7 +2,7 @@
 ini_set('display_errors', 1); //toggle PHP debugging
 define('SITE_BASE', '/var/www/html'); //base path to installation, typically one level up from web root
 define('SITE_PATH', SITE_BASE.'/www'); //web root
-define('FRAMEWORK_PATH', SITE_PATH.'/slick');
+define('FRAMEWORK_PATH', SITE_BASE.'/slick');
 define('SITE_NAME', ''); //default system name (not important)
 define('SITE_DOMAIN', ''); //default system domain (without http://)
 

@@ -5,13 +5,13 @@
 </div>
 <div class="home-posts-cont">
 	<?php
-		$tca = new Slick_App_LTBcoin_TCA_Model;
+		$tca = new Slick_App_Tokenly_TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$title = 'Recent Posts';
 		$catModel = new Slick_App_Blog_Category_Model;
-		$settings = new Slick_App_Dashboard_Settings_Model;
+		$settings = new Slick_App_CMS_Settings_Model;
 		$meta = new Slick_App_Meta_Model;
 		$blogApp = $meta->get('apps', 'blog', array(), 'slug');
 		$blogMeta = $meta->appMeta($blogApp['appId']);

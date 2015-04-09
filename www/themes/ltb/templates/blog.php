@@ -1,8 +1,8 @@
 <?php
 include(THEME_PATH.'/inc/header.php');
-$catModel = new Slick_App_Dashboard_Blog_Categories_Model;
+$catModel = new Slick_App_Blog_Categories_Model;
 $categories = $catModel->getCategories($site['siteId'], 0, 1);
-$tca = new Slick_App_LTBcoin_TCA_Model;
+$tca = new Slick_App_Tokenly_TCA_Model;
 $catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 $splitCats = array();
 foreach($categories as $ck => $cv){

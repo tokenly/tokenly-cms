@@ -10,6 +10,7 @@
 	if(!isset($metaDescription)){
 		$metaDescription = "Let's Talk Bitcoin is a twice weekly show about the ideas, people and projects building the new digital economy and the future of money.";
 	}
+	
 	?>
 	<meta name="description" content="<?= $metaDescription ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -67,7 +68,7 @@
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/layout.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/mobile-tables.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/jquery.fancybox.css">
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.css">
 	<link href='https://fonts.googleapis.com/css?family=PT+Sans+Narrow:700' rel='stylesheet' type='text/css'>
 	<?php
 	if(isset($canonical)){

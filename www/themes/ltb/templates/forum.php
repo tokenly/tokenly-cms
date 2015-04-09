@@ -13,10 +13,10 @@ if(isset($board)){
 $catList = '';
 $model = new Slick_App_Forum_Board_Model;
 $boardModule = $model->get('modules', 'forum-board', array(), 'slug');
-$tca = new Slick_App_LTBcoin_TCA_Model;
+$tca = new Slick_App_Tokenly_TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
 $meta = new Slick_App_Meta_Model;
-$tokenApp = $model->get('apps', 'ltbcoin', array(), 'slug'); 
+$tokenApp = $model->get('apps', 'tokenly', array(), 'slug'); 
 $tokenSettings = $meta->appMeta($tokenApp['appId']); 
 foreach($getCats as $cat){
 	$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $cat['categoryId'], 'category');

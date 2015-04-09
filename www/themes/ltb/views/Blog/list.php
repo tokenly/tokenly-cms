@@ -25,7 +25,7 @@ if(isset($category)){
 		<?php
 	}
 }
-$tca = new Slick_App_LTBcoin_TCA_Model;
+$tca = new Slick_App_Tokenly_TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 $postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 $catModule = $tca->get('modules', 'blog-category', array(), 'slug');
@@ -38,7 +38,7 @@ if($module){
 	$extraUrl = '/'.$module['url'];
 }
 
-$settings = new Slick_App_Dashboard_Settings_Model;
+$settings = new Slick_App_CMS_Settings_Model;
 $maxChars = $settings->getSetting('blog-excerptChars');
 if(!$maxChars){
 	$maxChars = 250;

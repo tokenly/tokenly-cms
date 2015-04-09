@@ -7,7 +7,40 @@ $numMessages = $msgModel->getNumUnreadMessages($user['userId']);
 $menuStr = '';
 foreach($menu as $heading => $items){
 	if(trim($heading) != ''){
-		$menuStr .= '<li><h3>'.$heading.'</h3><ul>';
+		$headIcon = '';
+		switch($heading){
+			case 'Account':
+				$headIcon = 'user';
+				break;
+			case 'Accountant':
+				$headIcon = 'book';
+				break;
+			case 'Ad Manager':
+				$headIcon = 'pie-chart';
+				break;
+			case 'Blog':
+				$headIcon = 'edit';
+				break;
+			case 'CMS':
+				$headIcon = 'gears';
+				break;
+			case 'Forum':
+				$headIcon = 'comments';
+				break;
+			case 'RSS':
+				$headIcon = 'rss';
+				break;
+			case 'Store':
+				$headIcon = 'shopping-cart';
+				break;
+			case 'Tokenly':
+				$headIcon = 'bitcoin';
+				break;
+		}
+		if($headIcon != ''){
+			$headIcon = '<i class="fa fa-'.$headIcon.'"></i> ';
+		}
+		$menuStr .= '<li><h3>'.$headIcon.$heading.'</h3><ul>';
 	}
 	else{
 		$menuStr .=  '<li><h3>Menu</h3>';
