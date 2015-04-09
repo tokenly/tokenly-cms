@@ -272,16 +272,16 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			}
 		}
 		
-		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$getSite = currentSite();
 		
 		//attempt to find a message template, if not, assume custom message
 		$messageFile = str_replace('.', '/', trim($message));
-		$getFile = is_file(SITE_PATH.'/themes/views/'.$messageFile.'.php');
+		$getFile = is_file(FRAMEWORK_PATH.'/App/views/'.$messageFile.'.php');
 		$messageOutput = $message;
 		$notificationMessageOutput = $messageOutput;
 		if($getFile){
 			ob_start();
-			include(SITE_PATH.'/themes/views/'.$messageFile.'.php');
+			include(FRAMEWORK_PATH.'/App/views/'.$messageFile.'.php');
 			$messageOutput = ob_get_contents();
 			ob_end_clean();
 
@@ -291,9 +291,9 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			if ($message_paths[0] == 'emails') {
 				$message_paths[0] = 'notifications';
 				$notificationMessageFile = implode('/', $message_paths);
-				if (is_file(SITE_PATH.'/themes/views/'.$notificationMessageFile.'.php')) {
+				if (is_file(FRAMEWORK_PATH.'/App/views/'.$notificationMessageFile.'.php')) {
 					ob_start();
-					include(SITE_PATH.'/themes/views/'.$notificationMessageFile.'.php');
+					include(FRAMEWORK_PATH.'/App/views/'.$notificationMessageFile.'.php');
 					$notificationMessageOutput = ob_get_contents();
 					ob_end_clean();
 				}
@@ -307,10 +307,10 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 
 			if(filter_var($getUser['email'], FILTER_VALIDATE_EMAIL)){
 				$template = '[MESSAGE]';
-				$getTemplate = is_file(SITE_PATH.'/themes/views/emails/template.php');
+				$getTemplate = is_file(FRAMEWORK_PATH.'/App/views/emails/template.php');
 				if($getTemplate){
 					ob_start();
-					include(SITE_PATH.'/themes/views/emails/template.php');
+					include(FRAMEWORK_PATH.'/App/views/emails/template.php');
 					$template = ob_get_contents();
 					ob_end_clean();
 				}
