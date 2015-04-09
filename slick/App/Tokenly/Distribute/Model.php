@@ -91,7 +91,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		}
 		
 		
-		$getApp = $this->get('apps', 'ltbcoin', array(), 'slug');
+		$getApp = $this->get('apps', 'tokenly', array(), 'slug');
 		$appSettings = $this->getAll('app_meta', array('appId' => $getApp['appId'], 'isSetting' => 1)); 
 		$getAll = $this->getAll('xcp_distribute', array('complete' => 0));
 		//default values
@@ -254,8 +254,6 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		$fee = (count($addressList) * $distributeFee);
 		$fee += (count($addressList) * $distributeDust);
 		$fee = round($fee / SATOSHI_MOD, 8);
-
-		
 		$useData = array('addressList' => json_encode($addressList), 'address' => $getAddress, 'account' => $xcpAccount,
 						'initDate' => $time, 'asset' => $data['asset'], 'status' => 'processing', 'userId' => $data['userId'], 'fee' => $fee,
 						'valueType' => $data['valueType']);

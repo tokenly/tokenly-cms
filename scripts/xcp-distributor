@@ -1,11 +1,10 @@
 #!/usr/bin/php5
 <?php
-$_SERVER['HTTP_HOST'] = ''; //set this to domain name of site
-ini_set('display_errors', 1); //toggle PHP debugging
+ini_set('display_errors', 1);
 require_once('../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
 
-$model = new Slick_App_Dashboard_LTBcoin_Distribute_Model;
+$model = new Slick_App_Tokenly_Distribute_Model;
 $model::$cacheMode = false;
 $btc = new Slick_API_Bitcoin(BTC_CONNECT);
 $xcp = new Slick_API_Bitcoin(XCP_CONNECT);
@@ -14,7 +13,7 @@ $xcp = new Slick_API_Bitcoin(XCP_CONNECT);
 
 while(true){
 	//get app settings
-	$getApp = $model->get('apps', 'ltbcoin', array(), 'slug');
+	$getApp = $model->get('apps', 'tokenly', array(), 'slug');
 	$appSettings = $model->getAll('app_meta', array('appId' => $getApp['appId'], 'isSetting' => 1)); 
 	$getAll = $model->getAll('xcp_distribute', array('complete' => 0));
 	$distributeFee = XCP_BASE_FEE;
@@ -24,13 +23,13 @@ while(true){
 	foreach($appSettings as $setting){
 		switch($setting['metaKey']){
 			case 'distribute-fee':
-				$distributeFee = (int)(floatval($setting['metaValue']) * SATOSHI_MOD);
+				$distributeFee = round(floatval($setting['metaValue']) * SATOSHI_MOD);
 				break;
 			case 'distribute-dust':
-				$distributeDust = (int)(floatval($setting['metaValue']) * SATOSHI_MOD);
+				$distributeDust = round(floatval($setting['metaValue']) * SATOSHI_MOD);
 				break;
 			case 'distribute-cut':
-				$distributeCut = (int)(floatval($setting['metaValue']) * SATOSHI_MOD);
+				$distributeCut = round(floatval($setting['metaValue']) * SATOSHI_MOD);
 				break;
 			case 'distribute-decimals':
 				$distributeDecimals = intval($setting['metaValue']);
@@ -43,298 +42,315 @@ while(true){
 	
 	
 	foreach($getAll as $key => $row){
-		$row['addressList'] = json_decode($row['addressList'], true);
-		$row['total'] = 0;
-		foreach($row['addressList'] as $val){
-			$row['total'] += $val;
-		}
-		$row['txInfo'] = json_decode($row['txInfo'], true);
-		
-		switch($row['status']){
-			case 'processing':
-			case 'receiving':
-				
-				//check fee
-				$btcTransactions = $btc->listtransactions($row['account']);
-				$received = 0;
-				$confirmed = 0;
-				foreach($btcTransactions as $tx){
-					if($tx['category'] == 'receive'){
-						if($tx['amount'] == 0.000078){
-							continue; //most likely a counterparty transaction.. ignore
-						}
-						$received += $tx['amount'];
-						if($tx['confirmations'] > 0){
-							$confirmed += $tx['amount'];
+		try{
+			$row['addressList'] = json_decode($row['addressList'], true);
+			$row['total'] = 0;
+			foreach($row['addressList'] as $val){
+				$row['total'] += $val;
+			}
+			$row['txInfo'] = json_decode($row['txInfo'], true);
+			
+			switch($row['status']){
+				case 'processing':
+				case 'receiving':
+					
+					//check fee
+					$btcTransactions = $btc->listtransactions($row['account']);
+					$received = 0;
+					$confirmed = 0;
+					foreach($btcTransactions as $tx){
+						if($tx['category'] == 'receive'){
+							if($tx['amount'] == 0.000078){
+								continue; //most likely a counterparty transaction.. ignore
+							}
+							$received += $tx['amount'];
+							if($tx['confirmations'] > 0){
+								$confirmed += $tx['amount'];
+							}
 						}
 					}
-				}
-
-				//check tokens
-				$balances = $xcp->get_balances(array('filters'=> array('field' => 'address', 'op' => '==', 'value' => $row['address'])));
-				
-				$tokenReceived = 0;
-				foreach($balances as $balance){
-					if($balance['asset'] == $row['asset']){
-						$tokenReceived += $balance['quantity'];
+					if($received > $row['fee']){
+						$received = $row['fee'];
 					}
-				}
-				
-				if($row['divisible'] == 1){
-					$tokenReceived = $tokenReceived / SATOSHI_MOD;
-					$row['total'] = $row['total'] / SATOSHI_MOD;
-				}
 
-				
-				if(($received <= $row['feeReceived'] AND $tokenReceived <= $row['tokenReceived'])){
-					continue;
-				}
-				
-				//update received balances
-				$updateData = array('feeReceived' => $received, 'tokenReceived' => $tokenReceived, 'status' => 'receiving');
-				/*if($received > $row['fee']){
-					$updateData['fee'] = $received;
-				}*/
-				$updateData['fee'] = $row['fee'];
-				
+					//check tokens
+					$balances = $xcp->get_balances(array('filters'=> array('field' => 'address', 'op' => '==', 'value' => $row['address'])));
+					
+					$tokenReceived = 0;
+					foreach($balances as $balance){
+						if($balance['asset'] == $row['asset']){
+							$tokenReceived += $balance['quantity'];
+						}
+					}
+					
+					if($row['divisible'] == 1){
+						$tokenReceived = $tokenReceived;
+					}
 
-				//if full amount of tokens + fee are sent, set to sending status
-				if(floatval(convertFloat($received)) >= floatval(convertFloat($row['fee'])) AND $tokenReceived >= $row['total']){
-					$updateData['status'] = 'sending';
-				}
+					
+					if(($received <= $row['feeReceived'] AND $tokenReceived <= (round($row['tokenReceived'] * SATOSHI_MOD)))){
+						continue;
+					}
+					
+					//update received balances
+					$updateData = array('feeReceived' => $received, 'tokenReceived' => round($tokenReceived / SATOSHI_MOD, 8), 'status' => 'receiving');
+					$updateData['fee'] = $row['fee'];
+					
 
-				$update = $model->edit('xcp_distribute', $row['distributeId'], $updateData);
-				if(!$update){
-					echo 'Failed updating distribution: '.$row['address']."\n";
-					continue;
-				}
-				echo 'Distribution updated ['.$row['address'].'] - BTC: '.$received.' '.$row['asset'].' '.$tokenReceived.' - '.timestamp()."\n";
-				
-				break;
-			case 'sending':
-				//verify addresses are valid
-				$addressList = array();
-				$totalSending = 0;
-				$validate = new Slick_API_BTCValidate;
-				$invalidAddresses = 0;
-				$successTx = array();
-				foreach($row['addressList'] as $addr => $amnt){
-					if($validate->checkAddress($addr)){
-						if(is_array($row['txInfo'])){
-							foreach($row['txInfo'] as $txInfo){
-								if(isset($txInfo['result']['code']) AND $txInfo['result']['code'] == 200 AND $txInfo['details'][1] == $addr){
-									//continue 2; //already been sent, skip this one
-									$successTx[] = $addr;
+					//if full amount of tokens + fee are sent, set to sending status
+					if(floatval(convertFloat($received)) >= floatval(convertFloat($row['fee'])) AND $tokenReceived >= $row['total']){
+						$updateData['status'] = 'sending';
+					}
+
+					$update = $model->edit('xcp_distribute', $row['distributeId'], $updateData);
+					if(!$update){
+						echo 'Failed updating distribution: '.$row['address']."\n";
+						continue;
+					}
+					
+					$showTokenReceived = $tokenReceived;
+					if($row['divisible'] == 1){
+						$showTokenReceived = round($tokenReceived / SATOSHI_MOD, 8);
+					}
+					
+					echo 'Distribution #'.$row['distributeId'].' updated ['.$row['address'].'] - BTC: '.$received.' '.$row['asset'].' '.$showTokenReceived.' - '.timestamp()."\n";
+					
+					break;
+				case 'sending':
+					//verify addresses are valid
+					$addressList = array();
+					$totalSending = 0;
+					$validate = new Slick_API_BTCValidate;
+					$invalidAddresses = 0;
+					$successTx = array();
+					foreach($row['addressList'] as $addr => $amnt){
+						if($validate->checkAddress($addr)){
+							if(is_array($row['txInfo'])){
+								foreach($row['txInfo'] as $txInfo){
+									if(isset($txInfo['result']['code']) AND $txInfo['result']['code'] == 200 AND $txInfo['details'][1] == $addr){
+										//continue 2; //already been sent, skip this one
+										$successTx[] = $addr;
+									}
+								}
+							}
+							$addressList[$addr] = $amnt;
+							$totalSending += $amnt;
+						}
+						else{
+							$invalidAddresses++;
+						}
+					}
+					
+					$batchAddresses = array();
+					if($row['currentBatch'] == 1){
+						$batchStart = 0;
+					}
+					else{
+						$batchStart = ($batchSize * $row['currentBatch']) - $batchSize;
+					}
+					$batchEnd = ($batchStart + $batchSize) - 1;
+					$bNum = 0;
+					$batchSending = 0;
+					foreach($addressList as $addr => $amnt){
+						if($bNum < $batchStart || $bNum > $batchEnd){
+							$bNum++;
+							continue;
+						}
+						$batchAddresses[$addr] = $amnt;
+						if(!in_array($addr, $successTx)){
+							$batchSending += $amnt;
+						}
+						$bNum++;
+					}
+					//figure out if extra fees were paid
+					$validAddresses = (count($row['addressList']) - $invalidAddresses);
+					$row['fee'] = round($row['fee'] * SATOSHI_MOD);
+					$row['fee'] = $row['fee'] - round(($distributeDust * $validAddresses));
+					$feePerAddress = round($row['fee'] / $validAddresses);
+					$perFee = $distributeFee;
+					if($feePerAddress > $perFee){
+						$perFee += ($feePerAddress - $perFee);
+					}
+					//$perFee = $perFee * SATOSHI_MOD;
+					
+					//build the CSV
+					$csv = array();
+					foreach($batchAddresses as $addr => $amnt){
+						if(in_array($addr, $successTx)){
+							continue; //skip allready successful tx
+						}
+						if($amnt <= 0){
+							continue;
+						}
+						$csvRow = array($row['address'], $addr, $row['asset'], (int)$amnt, (int)(round($perFee)));
+						foreach($csvRow as &$v){
+							$v = '"'.$v.'"';
+						}
+						$csv[] = join(',', $csvRow);
+					}
+
+					$csvOutput = join("\n", $csv);
+					$csvPath = SITE_BASE.'/data/distributions/'.$row['asset'].'-'.date('Y-m-d-H-i-s').'-batch-'.$row['currentBatch'].'_'.$row['distributeId'].'.csv';
+					$saveCsv = file_put_contents($csvPath, $csvOutput);
+					if(!$saveCsv){
+						echo 'Failed saving distribution .CSV ['.$row['address'].']'."\n";
+						continue;
+					}
+					
+					try{
+						$btc->walletpassphrase(XCP_WALLET, 600);
+					}
+					catch(Exception $e){
+						//probably already unlocked..
+						//echo 'Wallet locking failed ['.$row['address'].'] - '.$e->getMessage();
+						//$btc->walletlock();
+						//continue;
+					}
+					
+					$distributeDust = $distributeDust / 2;
+					
+					//get pubkey
+					$validateAddress = $btc->validateaddress($row['address']);
+					$pubkey = $validateAddress['pubkey'];
+					
+					$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust.' '.$pubkey);
+						
+					$txData = array();
+
+					if(is_array($row['txInfo'])){
+						foreach($row['txInfo'] as $tk => $tv){
+							if(isset($tv['result']['code']) AND $tv['result']['code'] == 200){
+								$txData[] = $tv;
+							}
+						}
+					}
+					
+					$parseSend = preg_replace('/Row ([\d]+)\: /', '~:', $sendmany);
+					$parseSend = explode('~:', $parseSend);
+					
+					foreach($parseSend as $sk => $sent){
+						if(trim($sent) == ''){
+							unset($parseSend[$sk]);
+							continue;
+						}
+						$expSent = explode("\n", $sent);
+						foreach($expSent as &$s){
+							$decode = json_decode(str_replace('\'', '"', $s), true);
+							if(!$decode){
+								if(strpos($s, 'Transaction') !== false){
+									$s = array('txId' => str_replace('Transaction ', '', $s), 'code' => 200);
+									
+								}
+							}
+							else{
+								$s = $decode;
+							}
+							
+						}
+						$thisTx = array('details' => $expSent[0], 'result' => $expSent[1]);
+						$txData[] = $thisTx;
+						
+					}
+					
+					$btc->walletlock();
+					
+					if(count($txData) == 0){
+						echo 'Empty tx data.. ['.$row['address']."] \n";
+						continue;
+					}
+					
+					
+					$complete = 1;
+					$status = $row['status'];
+					$failedTx = 0;
+					$numComplete = 0;
+					foreach($txData as $tx){
+						if(isset($tx['result']['code']) AND $tx['result']['code'] != 200){
+							$failedTx++;
+						}
+						else{
+							if(!isset($tx['result']['code'])){
+								$failedTx++;
+							}
+							elseif($tx['result']['code'] == 200){
+								$numComplete++;
+								if(!in_array($tx['details'][1], $successTx)){
+									$successTx[] = $tx['details'][1];
 								}
 							}
 						}
-						$addressList[$addr] = $amnt;
-						$totalSending += $amnt;
 					}
-					else{
-						$invalidAddresses++;
-					}
-				}
-				
-				$batchAddresses = array();
-				if($row['currentBatch'] == 1){
-					$batchStart = 0;
-				}
-				else{
-					$batchStart = ($batchSize * $row['currentBatch']) - $batchSize;
-				}
-				$batchEnd = ($batchStart + $batchSize) - 1;
-				$bNum = 0;
-				$batchSending = 0;
-				foreach($addressList as $addr => $amnt){
-					if($bNum < $batchStart || $bNum > $batchEnd){
-						$bNum++;
-						continue;
-					}
-					$batchAddresses[$addr] = $amnt;
-					if(!in_array($addr, $successTx)){
-						$batchSending += $amnt;
-					}
-					$bNum++;
-				}
-				
-				
-				//figure out if extra fees were paid
-				$validAddresses = (count($row['addressList']) - $invalidAddresses);
-				$row['fee'] = round($row['fee'] * SATOSHI_MOD);
-				$row['fee'] = $row['fee'] - round(($distributeDust * $validAddresses));
-				$feePerAddress = round($row['fee'] / $validAddresses);
-				$perFee = $distributeFee;
-				if($feePerAddress > $perFee){
-					$perFee += ($feePerAddress - $perFee);
-				}
-				//$perFee = $perFee * SATOSHI_MOD;
-				
-				//build the CSV
-				$csv = array();
-				foreach($batchAddresses as $addr => $amnt){
-					if(in_array($addr, $successTx)){
-						continue; //skip allready successful tx
-					}
-					$csvRow = array($row['address'], $addr, $row['asset'], (int)$amnt, (int)(round($perFee)));
-					foreach($csvRow as &$v){
-						$v = '"'.$v.'"';
-					}
-					$csv[] = join(',', $csvRow);
-				}
-				
-				$csvOutput = join("\n", $csv);
-				$csvPath = SITE_BASE.'/data/distributions/'.$row['asset'].'-'.date('Y-m-d-H-i-s').'-batch-'.$row['currentBatch'].'_'.$row['distributeId'].'.csv';
-				$saveCsv = file_put_contents($csvPath, $csvOutput);
-				if(!$saveCsv){
-					echo 'Failed saving distribution .CSV ['.$row['address'].']'."\n";
-					continue;
-				}
-				
-				try{
-					$btc->walletpassphrase(XCP_WALLET, 60);
-				}
-				catch(Exception $e){
-					//probably already unlocked..
-					//echo 'Wallet locking failed ['.$row['address'].'] - '.$e->getMessage();
-					//$btc->walletlock();
-					//continue;
-				}
-				
-				$distributeDust = $distributeDust / 2;
-				
-				//get pubkey
-				$validateAddress = $btc->validateaddress($row['address']);
-				$pubkey = $validateAddress['pubkey'];
-				
-				$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust.' '.$pubkey);
 					
-				$txData = array();
+					if($numComplete < $validAddresses){
+						$complete = 0;
+					}
+					
+					$updateVals = array('txInfo' => json_encode($txData));
 
-				if(is_array($row['txInfo'])){
-					foreach($row['txInfo'] as $tk => $tv){
-						if(isset($tv['result']['code']) AND $tv['result']['code'] == 200){
-							$txData[] = $tv;
+					if($complete === 1 AND $failedTx === 0){
+						$status = 'complete';
+						$updateVals['completeDate'] = timestamp();
+						$updateVals['complete'] = 1;
+						echo 'Distribution complete ['.$row['address'].'] - '.timestamp()."\n";
+						
+						//notify creator
+						if($row['userId'] != 0){
+							$_SERVER['HTTP_HOST'] = SITE_DOMAIN;
+							$message = 'Your distribution of '.$row['asset'].' has been completed. <a href="/dashboard/xcp-distribute/tx/'.$row['address'].'" target="_blank">Click here to view details</a>';
+							$notify = Slick_App_Meta_Model::notifyUser($row['userId'], $message, $row['distributeId'], 'distribute-complete');
 						}
-					}
-				}
-				
-				$parseSend = preg_replace('/Row ([\d]+)\: /', '~:', $sendmany);
-				$parseSend = explode('~:', $parseSend);
-				
-				foreach($parseSend as $sk => $sent){
-					if(trim($sent) == ''){
-						unset($parseSend[$sk]);
-						continue;
-					}
-					$expSent = explode("\n", $sent);
-					foreach($expSent as &$s){
-						$decode = json_decode(str_replace('\'', '"', $s), true);
-						if(!$decode){
-							if(strpos($s, 'Transaction') !== false){
-								$s = array('txId' => str_replace('Transaction ', '', $s), 'code' => 200);
-								
+						//notify users
+						foreach($addressList as $addr => $amnt){
+							$lookup = $model->lookupAddress($addr);
+							if($lookup){
+								foreach($lookup['users'] as $xcpuser){
+									if($row['divisible'] == 1){
+										$amnt = $amnt / SATOSHI_MOD;
+									}
+									$message = 'You have received a distribution of '.$amnt.' '.$row['asset'].' to '.$addr;
+									if(trim($row['name']) != ''){
+										$message .= ' - '.$row['name'];
+									}
+									$notify = Slick_App_Meta_Model::notifyUser($xcpuser['userId'], $message, $row['distributeId'], 'distribute-notify');
+								}
 							}
-						}
-						else{
-							$s = $decode;
 						}
 						
 					}
-					$thisTx = array('details' => $expSent[0], 'result' => $expSent[1]);
-					$txData[] = $thisTx;
-					
-				}
-				
-				$btc->walletlock();
-				
-				if(count($txData) == 0){
-					echo 'Empty tx data.. ['.$row['address']."] \n";
-					continue;
-				}
-				
-				
-				$complete = 1;
-				$status = $row['status'];
-				$failedTx = 0;
-				$numComplete = 0;
-				foreach($txData as $tx){
-					if(isset($tx['result']['code']) AND $tx['result']['code'] != 200){
-						$failedTx++;
-					}
 					else{
-						if(!isset($tx['result']['code'])){
-							$failedTx++;
-						}
-						elseif($tx['result']['code'] == 200){
-							$numComplete++;
-							if(!in_array($tx['details'][1], $successTx)){
-								$successTx[] = $tx['details'][1];
+						$batchSuccess = true;
+						foreach($batchAddresses as $addr => $amnt){
+							if(!in_array($addr, $successTx)){
+								echo $addr."\n";
+								$batchSuccess = false;
 							}
 						}
-					}
-				}
-				
-				if($numComplete < $validAddresses){
-					$complete = 0;
-				}
-				
-				$updateVals = array('txInfo' => json_encode($txData));
-
-				if($complete === 1 AND $failedTx === 0){
-					$status = 'complete';
-					$updateVals['completeDate'] = timestamp();
-					$updateVals['complete'] = 1;
-					echo 'Distribution complete ['.$row['address'].'] - '.timestamp()."\n";
-					
-					//notify creator
-					if($row['userId'] != 0){
-						$_SERVER['HTTP_HOST'] = SITE_DOMAIN;
-						$message = 'Your distribution of '.$row['asset'].' has been completed. <a href="/dashboard/xcp-distribute/tx/'.$row['address'].'" target="_blank">Click here to view details</a>';
-						$notify = Slick_App_Meta_Model::notifyUser($row['userId'], $message, $row['distributeId'], 'distribute-complete');
-					}
-					//notify users
-					foreach($addressList as $addr => $amnt){
-						$lookup = $model->lookupAddress($addr);
-						if($lookup){
-							foreach($lookup['users'] as $xcpuser){
-								if($row['divisible'] == 1){
-									$amnt = $amnt / SATOSHI_MOD;
-								}
-								$message = 'You have received a distribution of '.$amnt.' '.$row['asset'].' to '.$addr;
-								if(trim($row['name']) != ''){
-									$message .= ' - '.$row['name'];
-								}
-								$notify = Slick_App_Meta_Model::notifyUser($xcpuser['userId'], $message, $row['distributeId'], 'distribute-notify');
-							}
-						}
+						if($batchSuccess){
+							$updateVals['currentBatch'] = intval($row['currentBatch']) + 1;
+						}					
+						echo 'Distribution in process ['.$row['address'].'] (failed tx: '.$failedTx.") \n";
 					}
 					
-				}
-				else{
-					$batchSuccess = true;
-					foreach($batchAddresses as $addr => $amnt){
-						if(!in_array($addr, $successTx)){
-							echo $addr."\n";
-							$batchSuccess = false;
-						}
+					$updateVals['status'] = $status;
+					
+					$updateTx = $model->edit('xcp_distribute', $row['distributeId'], $updateVals);
+					if(!$updateTx){
+						echo 'Failed updating distribution tx info ['.$row['address']."] \n";
 					}
-					if($batchSuccess){
-						$updateVals['currentBatch'] = intval($row['currentBatch']) + 1;
-					}					
-					echo 'Distribution in process ['.$row['address'].'] (failed tx: '.$failedTx.") \n";
-				}
-				
-				$updateVals['status'] = $status;
-				
-				$updateTx = $model->edit('xcp_distribute', $row['distributeId'], $updateVals);
-				if(!$updateTx){
-					echo 'Failed updating distribution tx info ['.$row['address']."] \n";
-				}
-				break;
-			case 'hold':
-				break;
+					
+					if(isset($failedTx) AND $failedTx > 0){
+						sleep(600);
+					}
+					
+					break;
+				case 'hold':
+					break;
+			}
+		}
+		catch(Exception $e){
+			echo 'Distribution error ('.$row['distributeId'].'): '.$e->getMessage()."\n";
+			sleep(600); //sleep for a bit, most likely just need to wait a block
 		}
 	}
-	sleep(300);
+	sleep(180);
 }
