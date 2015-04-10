@@ -209,7 +209,7 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 
 			
 			$item = array();
-			$item[] = formatDate($blockInfo['block_time']);
+			$item[] = date('Y/m/d H:i:s', $blockInfo['block_time']);
 			$item[] = $tx['address'];
 			$item[] = $tx['asset'];
 			if($tx['divisible']){
