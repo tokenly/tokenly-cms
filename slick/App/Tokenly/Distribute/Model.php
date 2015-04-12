@@ -89,8 +89,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 				$totalToSend = $totalToSend * SATOSHI_MOD;
 			}
 		}
-		
-		
+
 		$getApp = $this->get('apps', 'tokenly', array(), 'slug');
 		$appSettings = $this->getAll('app_meta', array('appId' => $getApp['appId'], 'isSetting' => 1)); 
 		$getAll = $this->getAll('xcp_distribute', array('complete' => 0));
@@ -155,21 +154,13 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 				}
 				else{
 					$percent = floatval($expRow[1]) / 100;
-					$csvAmount = $totalToSend * $percent;
-					if($getAsset['divisible']){
-						$csvAmount = round(round($csvAmount, $distributeDecimals, PHP_ROUND_HALF_DOWN) * SATOSHI_MOD);
-					}
-					else{
-						$csvAmount = round($csvAmount, 0, PHP_ROUND_HALF_DOWN);
-					}
+					$csvAmount = round($totalToSend * $percent);
 				}
-				
-				
 				if(!isset($addressList[$check])){
-					$addressList[$check] = (int)$csvAmount;
+					$addressList[$check] = $csvAmount;
 				}
 				else{
-					$addressList[$check] += (int)$csvAmount;
+					$addressList[$check] += $csvAmount;
 				}
 			}
 		}
@@ -231,13 +222,13 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		}
 		
 		if($totalSending > $getAsset['supply']){
+
 			if($getAsset['divisible']){
 				$newSupply = (($totalSending - $getAsset['supply']) / SATOSHI_MOD);
 			}
 			else{
 				$newSupply = ($totalSending - $getAsset['supply']);
 			}
-			
 			throw new Exception('Invalid total amount (not enough supply). If needed, issue at least '.$newSupply.' more tokens');
 		}
 		
