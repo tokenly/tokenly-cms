@@ -60,6 +60,7 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 		}
 		
 		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
 		$txList = array();
 		foreach($validList as $addr){
 			
@@ -194,9 +195,9 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 		foreach($txList as $tx){
 			
 			if(!isset($blockInfos[$tx['block']])){
-				$blockInfo = $xcp->get_block_info(array('block_index' => $tx['block']));
 				try{
-					
+					$blockHash = $btc->getblockhash($tx['block']);
+					$blockInfo = $btc->getblock($blockHash);
 				}
 				catch(Exception $e){
 					throw new Exception('Error getting block info for index '.$tx['block']);
@@ -209,7 +210,7 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 
 			
 			$item = array();
-			$item[] = date('Y/m/d H:i:s', $blockInfo['block_time']);
+			$item[] = date('Y/m/d H:i:s', $blockInfo['time']);
 			$item[] = $tx['address'];
 			$item[] = $tx['asset'];
 			if($tx['divisible']){
