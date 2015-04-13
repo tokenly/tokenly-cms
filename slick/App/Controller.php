@@ -19,6 +19,16 @@ class Slick_App_Controller extends Slick_Core_Controller
 	
 	public function init()
 	{
+		if(!$this->model->db){
+			$backup_view = SITE_PATH.'/themes/db-dead.php';
+			if(file_exists($backup_view)){
+				include($backup_view);
+			}
+			else{
+				echo 'Could not connect to database';
+			}
+			die();
+		}
         //first, check what site we are on
         $getSite = currentSite();
         if(!$getSite){

@@ -15,16 +15,21 @@ class Slick_Core_Model
 	function __construct()
 	{
 		if(!self::$db){
-			self::$db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
-			self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-			$this->db = self::$db;
-			$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
-											FROM   information_schema.STATISTICS
-											WHERE  TABLE_SCHEMA = DATABASE()');
-			foreach($getIndexList as $index){
-				if($index['INDEX_NAME'] == 'PRIMARY'){
-					self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];
+			try{
+				self::$db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
+				self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+				$this->db = self::$db;
+				$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
+												FROM   information_schema.STATISTICS
+												WHERE  TABLE_SCHEMA = DATABASE()');
+				foreach($getIndexList as $index){
+					if($index['INDEX_NAME'] == 'PRIMARY'){
+						self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];
+					}
 				}
+			}
+			catch(Exception $e){
+				$this->db = false;
 			}
 		}
 		else{
