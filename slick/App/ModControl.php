@@ -21,7 +21,7 @@ class Slick_App_ModControl extends Slick_Core_Controller
 		if($isDash){
 			if($this->data['app']['slug'] != 'dashboard'){
 				$dashApp = get_app('dashboard');
-				$this->redirect($this->site.'/'.$dashApp['url'].$this->moduleUrl);
+				$this->redirect($this->site.'/'.$dashApp['url'].'/'.join('/', $this->args));
 				die();
 			}
 		}

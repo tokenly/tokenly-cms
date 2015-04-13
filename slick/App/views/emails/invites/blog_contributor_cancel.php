@@ -5,6 +5,6 @@ $data['accept_user']['username'] = '<a href="'.$site['url'].'/profile/user/'.$da
 
 <p>
 	<?= $data['accept_user']['username'] ?> has declined your request to become a contributor on 
-	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/submissions/edit/<?= $data['itemId'] ?>" target="_blank"><?= $data['info']['post_title'] ?></a></strong>.
+	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/blog/submissions/edit/<?= $data['itemId'] ?>" target="_blank"><?= $data['info']['post_title'] ?></a></strong>.
 </p>
 

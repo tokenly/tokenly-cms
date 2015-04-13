@@ -23,7 +23,7 @@
 			<?= $avatar ?>
 			<?php
 			if($user AND $user['userId'] != $profile['userId']){
-				echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$profile['slug'].'" target="_blank" class="btn send-msg-btn" title="Send private message" ><i class="fa fa-envelope"></i> Message</a>';
+				echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$profile['slug'].'" target="_blank" class="btn send-msg-btn" title="Send private message" ><i class="fa fa-envelope"></i> Message</a>';
 			}							
 			?>
 			<?php

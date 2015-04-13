@@ -6,5 +6,5 @@ $culprit = '<a href="'.$site['url'].'/profile/user/'.$data['user']['slug'].'">'.
 
 <p>
 	<?= $culprit ?> posted a new editorial comment on 
-	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/submissions/edit/<?= $data['post']['postId'] ?>#comment-<?= $data['commentId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
+	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/blog/submissions/edit/<?= $data['post']['postId'] ?>#comment-<?= $data['commentId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
 </p>

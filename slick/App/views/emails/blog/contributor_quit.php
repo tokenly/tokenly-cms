@@ -4,5 +4,5 @@ $data['quitter']['username'] = '<a href="'.$site['url'].'/profile/user/'.$data['
 ?>
 <p>
 	<?= $data['quitter']['username'] ?> is no longer a contributor on
-	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
+	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/blog/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
 </p>

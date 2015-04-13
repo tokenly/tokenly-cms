@@ -6,6 +6,6 @@ $culprit = '<a href="'.$site['url'].'/profile/user/'.$data['user']['slug'].'">'.
 
 <p>
 	<?= $culprit ?> updated the decisions for requested categories on
-	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
+	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/blog/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>.
 	<?= join(', ', $data['cat_results']) ?>
 </p>

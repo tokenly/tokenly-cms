@@ -16,6 +16,6 @@ switch($status){
 ?>
 <p>
 	<?= $data['culprit']['username'] ?> changed the status of 
-	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>
+	the blog article <strong><a href="<?= $site['url'] ?>/dashboard/blog/submissions/edit/<?= $data['post']['postId'] ?>" target="_blank"><?= $data['post']['title'] ?></a></strong>
 	to <strong><?= $status ?></strong>
 </p>

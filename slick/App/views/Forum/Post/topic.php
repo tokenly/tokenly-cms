@@ -102,7 +102,7 @@ if($page == 1){
 			
 			if($user AND $user['userId'] != $topic['userId']){
 				if($checkUserTCA){
-					echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+					echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
 				}
 			}
 			?>
@@ -284,7 +284,7 @@ if(count($replies) == 0){
 				}
 				if($user AND $user['userId'] != $reply['userId']){
 					if($checkUserTCA){					
-						echo '<br><a href="'.SITE_URL.'/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+						echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
 					}
 				}				
 				?>
