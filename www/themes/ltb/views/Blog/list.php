@@ -130,11 +130,16 @@ foreach($posts as $post){
 				<a href="https://plus.google.com/share?url=<?= $shareURL ?>" target="_blank"><img src="<?= THEME_URL ?>/images/gplus.png" alt="+1 this Post" /></a>
 			</div>
 			<?php
-			if(isset($post['author']['profile']['bitcoin-address']) AND trim($post['author']['profile']['bitcoin-address']['value']) != ''){
-				$btcAddress = $post['author']['profile']['bitcoin-address']['value'];
+			if(isset($post['tip-address']) OR (isset($post['author']['profile']['bitcoin-address']) AND trim($post['author']['profile']['bitcoin-address']['value']) != '')){
+				if(isset($post['tip-address'])){
+					$btcAddress = $post['tip-address'];
+				}
+				else{
+					$btcAddress = $post['author']['profile']['bitcoin-address']['value'];
+				}
 			?>
-			Tip This Post: <a href="bitcoin:<?= $btcAddress ?>"><?= $btcAddress ?></a>
-
+			Tip This Post: <a href="https://blockchain.info/address/<?= $btcAddress ?>" target="_blank"><?= $btcAddress ?></a><br>
+			
 			<?php
 			}//endif
 			?>
