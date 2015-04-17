@@ -3,7 +3,8 @@
 import csv                                                                      
 import json                                                                     
 import sys                                                                      
-import requests                                                                 
+import requests        
+from time import sleep                                                         
                                                                                 
                                                                                 
 # SETTINGS                                                                      
@@ -39,7 +40,7 @@ with open(sys.argv[1], 'r') as csvfile:
     for row in reader:                                                          
         print('Row {}: {}'.format(reader.line_num, row))                        
         source, destination, asset, quantity, fee = row                              
-                                                                                
+        sleep(5)                                                                        
         # Create send.                                                          
         payload = {                                                             
             "method": "create_send",                                            
