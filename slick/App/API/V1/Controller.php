@@ -63,10 +63,13 @@ class Slick_App_API_V1_Controller extends Slick_Core_Controller
 			unset($_REQUEST['v']);
 			unset($_REQUEST['params']);
 			$this->args['data'] = $_REQUEST;
-			if(isset($this->args['data']['authKey'])){
-				unset($this->args['data']['authKey']);
-			}
 		}
+		if(isset($this->args['data']['authKey'])){
+			unset($this->args['data']['authKey']);
+		}
+		if(isset($this->args['data']['x-auth'])){
+			$this->args['data']['authKey'] = $this->args['data']['x-auth'];
+		}		
 		if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
 			$this->args['data']['authKey'] = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
 		}
