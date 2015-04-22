@@ -96,6 +96,7 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		
 		
 		$output['view'] = 'verify';
+		$output['unverifiable'] = $this->model->checkAddressUnverifiable($getAddress);
 		$output['address'] = $getAddress;
 		$output['depositAddress'] = $this->model->getDepositAddress($getAddress);
 		$output['secretMessage'] = $this->model->getSecretMessage($getAddress);
@@ -186,11 +187,13 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 			return $ouput;
 		}
 		$getAddress = $getAddress[0];
-		
-		$check = $this->model->checkAddressPayment($getAddress);
-		ob_end_clean();
-		header('Content-Type: application/json');
-		echo json_encode($check);
+		$unverifiable = $this->model->checkAddressUnverifiable($getAddress);
+		if(!$unverifiable){
+			$check = $this->model->checkAddressPayment($getAddress);
+			ob_end_clean();
+			header('Content-Type: application/json');
+			echo json_encode($check);
+		}
 		die();
 	}
 	

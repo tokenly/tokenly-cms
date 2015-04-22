@@ -316,6 +316,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			throw new Exception('Already logged in!');
 		}
 		
+		
 		if(!isset($data['username'])){
 			http_response_code(400);
 			throw new Exception('Username required');

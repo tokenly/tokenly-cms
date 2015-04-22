@@ -281,4 +281,13 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		}
 	}
 	
+	public function checkAddressUnverifiable($address)
+	{
+		$getAddresses = $this->getAll('coin_addresses', array('address' => $address['address'], 'verified' => 1));
+		if(count($getAddresses) > 0){
+			return true;
+		}
+		return false;
+	}
+	
 }

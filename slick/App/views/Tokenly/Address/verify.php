@@ -2,6 +2,16 @@
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Go Back</a>
 </p>
+<?php
+if($unverifiable){
+?>
+<p class="error">
+	This address has already been verified by another user.
+</p>
+<?php	
+}
+else{
+?>
 <p>
 	There are two ways that you can verify the ownership of your address with us.
 	The first is by making a small token donation to us. Once we see any amount of bitcoin
@@ -101,3 +111,5 @@
 
 	});
 </script>
+<?php
+}//endif
