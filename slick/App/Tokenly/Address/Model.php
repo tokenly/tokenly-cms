@@ -73,7 +73,11 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		$public = 0;
 		if(isset($data['public']) AND intval($data['public']) === 1){
 			$public = 1;
-		}			
+		}		
+		
+		if(!isset($data['label'])){
+			$data['label'] = null;
+		}	
 		
 		$useData = array('type' => $data['type'], 'address' => $data['address'], 'submitDate' => timestamp(),
 						'isXCP' => $isXCP, 'userId' => $data['userId'], 'label' => $data['label'], 'public' => $public);
@@ -88,7 +92,8 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 			$this->switchPrimary($data['userId'], $add);
 		}
 		
-		return $add;
+		$get = $this->get('coin_addresses', $add);
+		return $get;
 	}
 	
 	public function switchPrimary($userId, $addressId)
@@ -156,7 +161,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		return true;
 	}
 	
-	public function getDepositAddress($address)
+	public function getDepositAddress($address, $throw_except = false)
 	{
 		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
 		$account = 'VERIFY_'.$address['userId'].':'.$address['addressId'];
@@ -165,10 +170,11 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		}
 		catch(Exception $e){
 			$getAddress = 'Error retrieving deposit address';
+			if($throw_except){
+				throw new Exception($getAddress);
+			}
 		}
-		
-		return $getAddress;
-		
+		return $getAddress;		
 	}
 	
 	public function checkAddressPayment($address)
@@ -233,19 +239,23 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		
 	}
 	
-	public function checkSecretMessage($address)
+	public function checkSecretMessage($address, $message = null)
 	{
 		if($address['verified'] != 0){
 			return array('error' => 'Already verified');
 		}
-				
-		if(!isset($_POST['message'])){
-			return array('error' => 'No message entered');
+		
+		if($message == null){
+			if(!isset($_POST['message'])){
+				return array('error' => 'No message entered');
+			}			
+			$message = $_POST['message'];
 		}
+				
 		$getMessage = $this->getSecretMessage($address);
 		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
 		
-		$inputMessage = extract_signature($_POST['message']);
+		$inputMessage = extract_signature($message);
 		
 		$result = false;
 		try{
