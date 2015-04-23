@@ -1,4 +1,9 @@
 <?php
+/*
+ * @module-type = dashboard
+ * @menu-label = Custom Post Fields
+ * 
+ * */
 class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
 {
     public $data = array();
