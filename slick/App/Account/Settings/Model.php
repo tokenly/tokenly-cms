@@ -90,6 +90,12 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		$dropList->setValue(1);
 		$form->add($dropList);		
 		
+		$btcAccess = new Slick_UI_Checkbox('btc_access');
+		$btcAccess->setLabel('Enable API account access via verified bitcoin address?');
+		$btcAccess->setBool(1);
+		$btcAccess->setValue(1);
+		$form->add($btcAccess);
+		
 		if(!$adminView){
 			$pass = new Slick_UI_Password('curPassword');
 			$pass->setLabel('Enter current password to complete changes');
@@ -248,6 +254,10 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		if(isset($data['emailNotify'])){
 			$meta->updateUserMeta($user['userId'], 'emailNotify', $data['emailNotify']);
 		}
+		
+		if(isset($data['btc_access'])){
+			$meta->updateUserMeta($user['userId'], 'btc_access', $data['btc_access']);
+		}
 
 		$avWidth = $app['meta']['avatarWidth'];
 		$avHeight = $app['meta']['avatarHeight'];
@@ -317,6 +327,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		$output['pubProf'] = $meta->getUserMeta($user['userId'], 'pubProf');
 		$output['showEmail'] = $meta->getUserMeta($user['userId'], 'showEmail');
 		$output['emailNotify'] = $meta->getUserMeta($user['userId'], 'emailNotify');
+		$output['btc_access'] = $meta->getUserMeta($user['userId'], 'btc_access');
 		$output['username'] = $user['username'];
 		if(!isset($user['activated'])){
 			$user['activated'] = 1;

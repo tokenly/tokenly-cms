@@ -304,7 +304,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 		return true;
 	}
-	
+
 	public function checkAuth($data)
 	{	
 		if(isset($data['authKey'])){
@@ -316,64 +316,78 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			throw new Exception('Already logged in!');
 		}
 		
-		
-		if(!isset($data['username'])){
-			http_response_code(400);
-			throw new Exception('Username required');
+		$checkPassword = true;
+		$meta = new Slick_App_Meta_Model;
+		$get = false;
+		if(app_enabled('tokenly') AND isset($data['address']) AND isset($data['signed_message'])){
+			//use BTC address + signed message to sign in
+			$findAddress = $this->fetchSingle('SELECT * FROM coin_addresses
+											   WHERE address = :address AND verified = 1', array(':address' => trim($data['address'])));
+			if($findAddress){
+				$site = currentSite();
+				$get = $this->get('users', $findAddress['userId']);
+				if($get){
+					$btc_access = intval($meta->getUserMeta($get['userId'], 'btc_access'));
+					if($btc_access == 1){
+						$secret_message = $site['domain'].' '.date('Y/m/d');
+						$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+						try{
+							$extract_signed = extract_signature($data['signed_message']);
+							$verify = $btc->verifymessage($findAddress['address'], $extract_signed, $secret_message);
+						}
+						catch(Exception $e){
+							http_response_code(400);
+							throw new Exception('Error verifying signed message (bitcoin down?)');
+						}
+						
+						if($verify){
+							$checkPassword = false;
+						}
+						else{
+							$get = false;
+						}
+					}
+				}
+			}
 		}
-		if(!isset($data['password'])){
-			http_response_code(400);
-			throw new Exception('Password required');
+		if(!$get){
+			//use traditional username/password combo
+			if(!isset($data['username'])){
+				http_response_code(400);
+				throw new Exception('Username required');
+			}
+			if(!isset($data['password'])){
+				http_response_code(400);
+				throw new Exception('Password required');
+			}
+			
+			$get = $this->get('users', $data['username'], array(), 'username');
 		}
 		
-		$get = $this->get('users', $data['username'], array(), 'username');
 		if(!$get){ 
 			http_response_code(401);
 			throw new Exception('Invalid credentials');
-		}
+		}		
 		
 		if($get['activated'] == 0){
 			http_response_code(403);
 			throw new Exception('Account not activated. Please check your email');
 		}
 
-		$meta = new Slick_App_Meta_Model;
-		
-		$lastAttempt = strtotime($meta->getUserMeta($get['userId'], 'last_attempt'));
-		$meta->updateUserMeta($get['userId'], 'last_attempt', timestamp());
-		
-		$getAttempts = $meta->getUserMeta($get['userId'], 'login_attempts');
-		if($getAttempts === false){
-			$meta->updateUserMeta($get['userId'], 'login_attempts', 0);
-			$getAttempts = 0;
-			
-		}
-		else{
-			$getAttempts = intval($getAttempts);
-			if(intval($getAttempts) >= 5){
-				if(time() - $lastAttempt > 3600){
-					$meta->updateUserMeta($get['userId'], 'login_attempts', 0);
-					$getAttempts = 0;
-					
-				}
-				else{
-					if($getAttempts < 25){
-						$getAttempts++;
-						$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
-					}
-					http_response_code(429);
-					throw new Exception('Trying too many times, please try again later (attempts: '.($getAttempts).')');
-				}
+		$meta = new Slick_App_Meta_Model;		
+		$getAttempts = $this->getLoginAttempts($get);
+				
+		if($checkPassword){
+			if(!isset($data['password'])){
+				$data['password'] = null;
 			}
-		}
-		
-
-		$pass = hash('sha256', $get['spice'].$data['password']);
-		if($pass != $get['password']){
-			http_response_code(401);
-			$getAttempts++;
-			$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
-			throw new Exception('Invalid credentials');
+			$pass = hash('sha256', $get['spice'].$data['password']);
+			if($pass != $get['password']){
+				http_response_code(401);
+				$getAttempts++;
+				$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
+				throw new Exception('Invalid credentials');
+			}
 		}
 		
 		$token = $this->generateAuthToken($get['userId']);
@@ -395,6 +409,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		if(!$getNumLogins){
 			$getNumLogins = 0;
 		}
+		
 		$meta->updateUserMeta($get['userId'], 'num_logins', ($getNumLogins + 1));
 		$profModel = new Slick_App_Profile_User_Model;
 		$getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
@@ -402,10 +417,37 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$getProf['auth'] = $token;
 		$getProf['lastActive'] = timestamp();
 		
-		
 		return $getProf;
-		
-		
+	}
+	
+	public function getLoginAttempts($get)
+	{
+		$meta = new Slick_App_Meta_Model;
+		$lastAttempt = strtotime($meta->getUserMeta($get['userId'], 'last_attempt'));
+		$meta->updateUserMeta($get['userId'], 'last_attempt', timestamp());
+		$getAttempts = $meta->getUserMeta($get['userId'], 'login_attempts');
+		if($getAttempts === false){
+			$meta->updateUserMeta($get['userId'], 'login_attempts', 0);
+			$getAttempts = 0;
+		}
+		else{
+			$getAttempts = intval($getAttempts);
+			if(intval($getAttempts) >= 5){
+				if(time() - $lastAttempt > 3600){
+					$meta->updateUserMeta($get['userId'], 'login_attempts', 0);
+					$getAttempts = 0;	
+				}
+				else{
+					if($getAttempts < 25){
+						$getAttempts++;
+						$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
+					}
+					http_response_code(429);
+					throw new Exception('Trying too many times, please try again later (attempts: '.($getAttempts).')');
+				}
+			}
+		}
+		return $getAttempts;	
 	}
 	
 	public static function userInfo()

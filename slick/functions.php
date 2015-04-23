@@ -815,4 +815,21 @@ function user()
 	return Slick_App_Account_Home_Model::userInfo();
 }
 
+function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', $end = '-----END BITCOIN SIGNATURE-----')
+{
+	$inputMessage = trim($text);
+	if(strpos($inputMessage, $start) !== false){
+		//pgp style signed message format, extract the actual signature from it
+		$expMsg = explode("\n", $inputMessage);
+		foreach($expMsg as $k => $line){
+			if($line == $end){
+				if(isset($expMsg[$k-1])){
+					$inputMessage = trim($expMsg[$k-1]);
+				}
+			}
+		}
+	}
+	return $inputMessage;
+}
+
 ?>
