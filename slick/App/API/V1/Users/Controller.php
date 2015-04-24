@@ -245,11 +245,19 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		
 		$totalUsers = $this->model->count('users', 'activated', 1);
 		
+		$andSearch = '';
+		$values = array();
+		if(isset($this->args['data']['search'])){
+			$andSearch = ' AND LOWER(username) LIKE :search ';
+			$values[':search'] = strtolower(trim($this->args['data']['search'])).'%';
+		}
+		
 		$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
 										FROM users
 										WHERE activated = 1
+										'.$andSearch.'
 										ORDER BY userId DESC
-										LIMIT '.$start.', '.$max);
+										LIMIT '.$start.', '.$max, $values);
 										
 		try{
 			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
