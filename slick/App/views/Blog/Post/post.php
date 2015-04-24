@@ -60,7 +60,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 			if(isset($post['shapeshift_address'])){
 				?>
 				<script>function shapeshift_click(a,e){e.preventDefault();var link=a.href;window.open(link,'1418115287605','width=700,height=700,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');return false;}</script>
-				<a href="https://shapeshift.io/shifty.html?destination=<?= $post['shapeshift_address'] ?>&apiKey=&amount=" onclick="shapeshift_click(this, event);"><img class="ss-button" src="https://shapeshift.io/images/shifty/large_dark_ss.png"></a>
+				<a href="https://shapeshift.io/shifty.html?destination=<?= $post['shapeshift_address'] ?>&apiKey=&amount=" onclick="shapeshift_click(this, event);"><img class="ss-button" src="<?= THEME_URL ?>/images/shapeshift-tip.png"></a>
 				<?php
 			}		
 			?>
