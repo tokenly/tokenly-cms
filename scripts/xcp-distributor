@@ -41,7 +41,14 @@ while(true){
 	}
 	
 	//refresh the mempool
-	$mempool = $xcp->get_mempool();
+	try{
+		$mempool = $xcp->get_mempool();
+	}
+	catch(Exception $e){
+		echo "Error checking mempool, xcp server down?\n";
+		sleep(300);
+		continue;
+	}
 	
 	
 	foreach($getAll as $key => $row){
