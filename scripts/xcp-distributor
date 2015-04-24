@@ -1,5 +1,6 @@
 #!/usr/bin/php5
 <?php
+$_SERVER['HTTP_HOST'] = 'letstalkbitcoin.com';
 ini_set('display_errors', 1);
 require_once('../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
@@ -8,7 +9,6 @@ $model = new Slick_App_Tokenly_Distribute_Model;
 $model::$cacheMode = false;
 $btc = new Slick_API_Bitcoin(BTC_CONNECT);
 $xcp = new Slick_API_Bitcoin(XCP_CONNECT);
-
 
 
 while(true){
@@ -39,6 +39,9 @@ while(true){
 				break;
 		}
 	}
+	
+	//refresh the mempool
+	$mempool = $xcp->get_mempool();
 	
 	
 	foreach($getAll as $key => $row){
@@ -123,169 +126,218 @@ while(true){
 					$validate = new Slick_API_BTCValidate;
 					$invalidAddresses = 0;
 					$successTx = array();
-					foreach($row['addressList'] as $addr => $amnt){
-						if($validate->checkAddress($addr)){
-							if(is_array($row['txInfo'])){
-								foreach($row['txInfo'] as $txInfo){
-									if(isset($txInfo['result']['code']) AND $txInfo['result']['code'] == 200 AND $txInfo['details'][1] == $addr){
-										//continue 2; //already been sent, skip this one
-										$successTx[] = $addr;
+					
+					$completeItems = array();
+					if(is_array($row['txInfo'])){
+						foreach($row['addressList'] as $addr => $amnt){
+							$itemComplete = false;
+							foreach($row['txInfo'] as $txInfo){
+								if(isset($txInfo['result']['code']) AND $txInfo['result']['code'] == 200 AND $txInfo['details'][1] == $addr){
+									$itemComplete = true;
+									break;
+								}
+							}
+							if($itemComplete){
+								$completeItems[] = $addr;
+							}
+						}
+					}
+					if(count($completeItems) == count($row['addressList'])){
+						//already done, just mark as complete
+						$complete = 1;
+						$failedTx = 0;
+						
+					}
+					else{
+						$getSends = $xcp->get_sends(array('filters' => array('field' => 'source', 'op' => '=', 'value' => $row['address'])));
+						
+						foreach($row['addressList'] as $addr => $amnt){
+							if($validate->checkAddress($addr)){
+								if(is_array($row['txInfo'])){
+									foreach($row['txInfo'] as $txInfo){
+										if(isset($txInfo['result']['code']) AND $txInfo['result']['code'] == 200 AND $txInfo['details'][1] == $addr){
+											//continue 2; //already been sent, skip this one
+											$successTx[] = $addr;
+										}
+									}
+								}
+								if(!in_array($addr, $successTx)){
+									//check mempool if tx already sent
+									foreach($mempool as $pool){
+										if($pool['category'] == 'sends'){
+											$parse = json_decode($pool['bindings'], true);
+											if($parse['destination'] == $addr AND $parse['source'] == $row['address'] AND $amnt == $parse['quantity']){
+												$successTx[] = $addr;
+												break;
+											}
+										}
+									}
+									
+									if(!in_array($addr, $successTx)){
+										//check xcp sends to see if tx already sent
+										foreach($getSends as $send){
+											if($send['destination'] == $addr AND $amnt == $send['quantity']){
+												$successTx[] = $addr;
+												break;
+											}
+										}
+									}
+								}
+								$addressList[$addr] = $amnt;
+								$totalSending += $amnt;
+							}
+							else{
+								$invalidAddresses++;
+							}
+						}
+						
+						$batchAddresses = array();
+						if($row['currentBatch'] == 1){
+							$batchStart = 0;
+						}
+						else{
+							$batchStart = ($batchSize * $row['currentBatch']) - $batchSize;
+						}
+						$batchEnd = ($batchStart + $batchSize) - 1;
+						$bNum = 0;
+						$batchSending = 0;
+						foreach($addressList as $addr => $amnt){
+							if($bNum < $batchStart || $bNum > $batchEnd){
+								$bNum++;
+								continue;
+							}
+							$batchAddresses[$addr] = $amnt;
+							if(!in_array($addr, $successTx)){
+								$batchSending += $amnt;
+							}
+							$bNum++;
+						}
+						//figure out if extra fees were paid
+						$validAddresses = (count($row['addressList']) - $invalidAddresses);
+						$row['fee'] = round($row['fee'] * SATOSHI_MOD);
+						$row['fee'] = $row['fee'] - round(($distributeDust * $validAddresses));
+						$feePerAddress = round($row['fee'] / $validAddresses);
+						$perFee = $distributeFee;
+						if($feePerAddress > $perFee){
+							$perFee += ($feePerAddress - $perFee);
+						}
+						//$perFee = $perFee * SATOSHI_MOD;
+						
+						//build the CSV
+						$csv = array();
+						foreach($batchAddresses as $addr => $amnt){
+							if(in_array($addr, $successTx)){
+								continue; //skip allready successful tx
+							}
+							if($amnt <= 0){
+								continue;
+							}
+							$csvRow = array($row['address'], $addr, $row['asset'], (int)$amnt, (int)(round($perFee)));
+							foreach($csvRow as &$v){
+								$v = '"'.$v.'"';
+							}
+							$csv[] = join(',', $csvRow);
+						}
+						
+						$csvOutput = join("\n", $csv);
+						$csvPath = SITE_BASE.'/data/distributions/'.$row['asset'].'-'.date('Y-m-d-H-i-s').'-batch-'.$row['currentBatch'].'_'.$row['distributeId'].'.csv';
+						$saveCsv = file_put_contents($csvPath, $csvOutput);
+						if(!$saveCsv){
+							echo 'Failed saving distribution .CSV ['.$row['address'].']'."\n";
+							continue;
+						}
+						
+						try{
+							$btc->walletpassphrase(XCP_WALLET, 600);
+						}
+						catch(Exception $e){
+							//probably already unlocked..
+							//echo 'Wallet locking failed ['.$row['address'].'] - '.$e->getMessage();
+							//$btc->walletlock();
+							//continue;
+						}
+						
+						$distributeDust = $distributeDust / 2;
+						
+						//get pubkey
+						$validateAddress = $btc->validateaddress($row['address']);
+						$pubkey = $validateAddress['pubkey'];
+						
+						$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust.' '.$pubkey);
+							
+						$txData = array();
+
+						if(is_array($row['txInfo'])){
+							foreach($row['txInfo'] as $tk => $tv){
+								if(isset($tv['result']['code']) AND $tv['result']['code'] == 200){
+									$txData[] = $tv;
+								}
+							}
+						}
+						
+						$parseSend = preg_replace('/Row ([\d]+)\: /', '~:', $sendmany);
+						$parseSend = explode('~:', $parseSend);
+						
+						foreach($parseSend as $sk => $sent){
+							if(trim($sent) == ''){
+								unset($parseSend[$sk]);
+								continue;
+							}
+							$expSent = explode("\n", $sent);
+							foreach($expSent as &$s){
+								$decode = json_decode(str_replace('\'', '"', $s), true);
+								if(!$decode){
+									if(strpos($s, 'Transaction') !== false){
+										$s = array('txId' => str_replace('Transaction ', '', $s), 'code' => 200);
+										
+									}
+								}
+								else{
+									$s = $decode;
+								}
+								
+							}
+							$thisTx = array('details' => $expSent[0], 'result' => $expSent[1]);
+							$txData[] = $thisTx;
+							
+						}
+						
+						$btc->walletlock();
+						
+						if(count($txData) == 0){
+							echo 'Empty tx data.. ['.$row['address']."] \n";
+							continue;
+						}
+						
+						
+						$complete = 1;
+						$status = $row['status'];
+						$failedTx = 0;
+						$numComplete = 0;
+						foreach($txData as $tx){
+							if(isset($tx['result']['code']) AND $tx['result']['code'] != 200){
+								$failedTx++;
+							}
+							else{
+								if(!isset($tx['result']['code'])){
+									$failedTx++;
+								}
+								elseif($tx['result']['code'] == 200){
+									$numComplete++;
+									if(!in_array($tx['details'][1], $successTx)){
+										$successTx[] = $tx['details'][1];
 									}
 								}
 							}
-							$addressList[$addr] = $amnt;
-							$totalSending += $amnt;
 						}
-						else{
-							$invalidAddresses++;
-						}
-					}
-					
-					$batchAddresses = array();
-					if($row['currentBatch'] == 1){
-						$batchStart = 0;
-					}
-					else{
-						$batchStart = ($batchSize * $row['currentBatch']) - $batchSize;
-					}
-					$batchEnd = ($batchStart + $batchSize) - 1;
-					$bNum = 0;
-					$batchSending = 0;
-					foreach($addressList as $addr => $amnt){
-						if($bNum < $batchStart || $bNum > $batchEnd){
-							$bNum++;
-							continue;
-						}
-						$batchAddresses[$addr] = $amnt;
-						if(!in_array($addr, $successTx)){
-							$batchSending += $amnt;
-						}
-						$bNum++;
-					}
-					//figure out if extra fees were paid
-					$validAddresses = (count($row['addressList']) - $invalidAddresses);
-					$row['fee'] = round($row['fee'] * SATOSHI_MOD);
-					$row['fee'] = $row['fee'] - round(($distributeDust * $validAddresses));
-					$feePerAddress = round($row['fee'] / $validAddresses);
-					$perFee = $distributeFee;
-					if($feePerAddress > $perFee){
-						$perFee += ($feePerAddress - $perFee);
-					}
-					//$perFee = $perFee * SATOSHI_MOD;
-					
-					//build the CSV
-					$csv = array();
-					foreach($batchAddresses as $addr => $amnt){
-						if(in_array($addr, $successTx)){
-							continue; //skip allready successful tx
-						}
-						if($amnt <= 0){
-							continue;
-						}
-						$csvRow = array($row['address'], $addr, $row['asset'], (int)$amnt, (int)(round($perFee)));
-						foreach($csvRow as &$v){
-							$v = '"'.$v.'"';
-						}
-						$csv[] = join(',', $csvRow);
-					}
-
-					$csvOutput = join("\n", $csv);
-					$csvPath = SITE_BASE.'/data/distributions/'.$row['asset'].'-'.date('Y-m-d-H-i-s').'-batch-'.$row['currentBatch'].'_'.$row['distributeId'].'.csv';
-					$saveCsv = file_put_contents($csvPath, $csvOutput);
-					if(!$saveCsv){
-						echo 'Failed saving distribution .CSV ['.$row['address'].']'."\n";
-						continue;
-					}
-					
-					try{
-						$btc->walletpassphrase(XCP_WALLET, 600);
-					}
-					catch(Exception $e){
-						//probably already unlocked..
-						//echo 'Wallet locking failed ['.$row['address'].'] - '.$e->getMessage();
-						//$btc->walletlock();
-						//continue;
-					}
-					
-					$distributeDust = $distributeDust / 2;
-					
-					//get pubkey
-					$validateAddress = $btc->validateaddress($row['address']);
-					$pubkey = $validateAddress['pubkey'];
-					
-					$sendmany = shell_exec('python3 xcp-sendmany.py "'.$csvPath.'" '.$distributeDust.' '.$pubkey);
 						
-					$txData = array();
-
-					if(is_array($row['txInfo'])){
-						foreach($row['txInfo'] as $tk => $tv){
-							if(isset($tv['result']['code']) AND $tv['result']['code'] == 200){
-								$txData[] = $tv;
-							}
+						if($numComplete < $validAddresses){
+							$complete = 0;
 						}
-					}
-					
-					$parseSend = preg_replace('/Row ([\d]+)\: /', '~:', $sendmany);
-					$parseSend = explode('~:', $parseSend);
-					
-					foreach($parseSend as $sk => $sent){
-						if(trim($sent) == ''){
-							unset($parseSend[$sk]);
-							continue;
-						}
-						$expSent = explode("\n", $sent);
-						foreach($expSent as &$s){
-							$decode = json_decode(str_replace('\'', '"', $s), true);
-							if(!$decode){
-								if(strpos($s, 'Transaction') !== false){
-									$s = array('txId' => str_replace('Transaction ', '', $s), 'code' => 200);
-									
-								}
-							}
-							else{
-								$s = $decode;
-							}
-							
-						}
-						$thisTx = array('details' => $expSent[0], 'result' => $expSent[1]);
-						$txData[] = $thisTx;
 						
-					}
-					
-					$btc->walletlock();
-					
-					if(count($txData) == 0){
-						echo 'Empty tx data.. ['.$row['address']."] \n";
-						continue;
-					}
-					
-					
-					$complete = 1;
-					$status = $row['status'];
-					$failedTx = 0;
-					$numComplete = 0;
-					foreach($txData as $tx){
-						if(isset($tx['result']['code']) AND $tx['result']['code'] != 200){
-							$failedTx++;
-						}
-						else{
-							if(!isset($tx['result']['code'])){
-								$failedTx++;
-							}
-							elseif($tx['result']['code'] == 200){
-								$numComplete++;
-								if(!in_array($tx['details'][1], $successTx)){
-									$successTx[] = $tx['details'][1];
-								}
-							}
-						}
-					}
-					
-					if($numComplete < $validAddresses){
-						$complete = 0;
-					}
-					
-					$updateVals = array('txInfo' => json_encode($txData));
+						$updateVals = array('txInfo' => json_encode($txData));
+						
+					}//endif $itemsComplete = count($addressList)
 
 					if($complete === 1 AND $failedTx === 0){
 						$status = 'complete';
