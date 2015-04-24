@@ -289,4 +289,54 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		return false;
 	}
 	
+	public function getBroadcastText($address)
+	{
+		$site = currentSite();
+		$parseDomain = strtoupper(preg_replace('/[^a-z]/i','',$site['domain']));
+		$secret = substr(hash('sha256', $address['userId'].$address['address']), 0, 6);
+		$text = $parseDomain.'-'.$secret;
+		return $text;
+	}
+	
+	public function checkAddressBroadcast($address)
+	{
+		if($address['verified'] == 1){
+			return true;
+		}
+		$req_text = $this->getBroadcastText($address);
+		try{
+			$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+			$broadcasts = $xcp->get_broadcasts(array('filters' => array('field' => 'source', 'op' => '=', 'value' => $address['address'])));
+			$mempool = $xcp->get_mempool();
+		}
+		catch(Exception $e){
+			throw new Exception('Error checking broadcasts');
+		}
+		$found = false;
+		foreach($mempool as $pool){
+			if($pool['category'] == 'broadcasts'){
+				$parse = json_decode($pool['bindings'], true);
+				if($parse['source'] == $address['address'] AND $parse['text'] == $req_text){
+					$found = true;
+					break;
+				}
+			}
+		}			
+		if(!$found){
+			foreach($broadcasts as $cast){
+				if($cast['text'] == $req_text){
+					$found = true;
+					break;
+				}
+			}
+		}
+		if($found){
+			$update = $this->edit('coin_addresses', $address['addressId'], array('verified' => 1));
+			if(!$update){
+				return false;
+			}		
+		}
+		return $found;
+	}
+	
 }

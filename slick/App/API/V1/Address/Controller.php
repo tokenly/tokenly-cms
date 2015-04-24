@@ -94,7 +94,7 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 		try{
 			$output['verify_address'] = $this->model->getDepositAddress($add, true);
 			$output['secret_message'] = $this->model->getSecretMessage($add);
-			$output['broadcast_text'] = '';
+			$output['broadcast_text'] = $this->model->getBroadcastText($add);
 		}
 		catch(Exception $e){
 			http_response_code(400);
@@ -164,6 +164,15 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 				}
 				break;
 			case 'broadcast':
+				try{
+					$check = $this->model->checkAddressBroadcast($getAddress);
+				}
+				catch(Exception $e){
+					http_response_code(400);
+					$output['error'] = $e->getMessage();
+					return $output;
+				}
+				$output['result'] = $check;
 				break;
 		}
 		

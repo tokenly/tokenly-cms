@@ -29,6 +29,7 @@ else{
 <div class="address-verify-opts">
 	<input type="button" id="tokenPayment" value="Make a Small Donation" />
 	<input type="button" id="signMessage" value="Sign a Message" />
+	<input type="button" id="broadcastMessage" value="Broadcast a Message" />
 	<span class="loader"></span>
 </div>
 
@@ -49,7 +50,12 @@ else{
 	<hr>
 	<h3>Sign a Message</h3>
 	<p>Sign the text below with your address using Base 64 encoding (Bitcoin-QT compatible) and enter in the results to verify your address</p>
-	<p><em>Note: there is currently an issue with counterwallet which is causing it to produce invalid signatures</em></p>
+	<p>
+		<em>
+			Note: there is currently an issue with counterwallet which is causing it to produce invalid signatures.
+			Try using the <a href="<?= SITE_URL ?>/wallet" target="_blank">LTB Companion Wallet</a>.
+		</em>
+	</p>
 	<div class="secret-message">
 		<input type="text" readonly onclick="this.select()" value="<?= $secretMessage ?>" />
 	</div>
@@ -57,6 +63,19 @@ else{
 	<input type="button" id="submitSig" value="Verify" />
 	<div class="sig-status"></div>
 
+</div>
+<div id="broadcast-cont" style="display: none;">
+	<hr>
+	<h3>Broadcast a Message</h3>
+	<p>
+		Send a Counterparty Broadcast from your address with the following as the "text" value:
+	</p>
+	<div class="broadcast-message secret-message">
+		<input type="Text" readonly onclick="this.select()" value="<?= $broadcastMessage ?>" />
+	</div>
+	<p>
+		<strong class="broadcast-status">Waiting for broadcast...</strong>
+	</p>
 </div>
 
 <script type="text/javascript">
@@ -108,7 +127,27 @@ else{
 			});
 			
 		});
-
+		
+		$('#broadcastMessage').click(function(){
+			$(this).attr('disabled','disabled');
+			$('#broadcast-cont').slideDown();
+			window.broadcastInt = setInterval(function(){
+				var url = '<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/checkBroadcast/<?= $address['address'] ?>';
+				$.get(url, function(data){
+					if(data.error != null){
+						console.log(data.error);
+						return false;
+					}
+					if(data.result){
+						$('.broadcast-status').addClass('text-success').html('Address Verified!');
+						clearInterval(window.broadcastInt);
+					}
+					
+				});
+				
+			},10000);				
+		});
+		
 	});
 </script>
 <?php

@@ -34,6 +34,9 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 				case 'checkMessage':
 					$output = $this->checkMessage($output);
 					break;
+				case 'checkBroadcast':
+					$output = $this->checkBroadcast($output);
+					break;
 				default:
 					$output = $this->showAddresses($output);
 					break;
@@ -100,6 +103,7 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		$output['address'] = $getAddress;
 		$output['depositAddress'] = $this->model->getDepositAddress($getAddress);
 		$output['secretMessage'] = $this->model->getSecretMessage($getAddress);
+		$output['broadcastMessage'] = $this->model->getBroadcastText($getAddress);
 		
 		
 		return $output;
@@ -216,5 +220,33 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		echo json_encode($check);
 		die();
 	}	
+	
+	public function checkBroadcast($output)
+	{
+		if(!isset($this->args[3])){
+			$output['view'] = '404';
+			return $ouput;
+		}
+		$getAddress = $this->model->getAll('coin_addresses', array('address' => $this->args[3], 'userId' => $this->data['user']['userId']));
+		if(!$getAddress OR count($getAddress) == 0){
+			$output['view'] = '404';
+			return $ouput;
+		}
+		$getAddress = $getAddress[0];
+		$json = array('error' => null);
+		try{
+			$check = $this->model->checkAddressBroadcast($getAddress);
+		}
+		catch(Exception $e){
+			http_response_code(400);
+			$json['error'] = $e->getMessage();
+			$check = false;
+		}
+		$json['result'] = $check;
+		ob_end_clean();
+		header('Content-Type: application/json');
+		echo json_encode($json);
+		die();
+	}
 	
 }
