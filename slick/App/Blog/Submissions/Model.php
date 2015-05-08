@@ -160,7 +160,7 @@ class Submissions_Model extends Core\Model
 		$notes->setLabel('Notes');
 		$form->add($notes);
 		
-		$form->setSubmitText('Save & Submit');
+		$form->setSubmitText('Save');
 		
 		return $form;
 	}
