@@ -1,5 +1,6 @@
 <?php
-class Slick_App_Ad_Controller extends Slick_App_AppControl
+namespace App\Ad;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
@@ -9,15 +10,9 @@ class Slick_App_Ad_Controller extends Slick_App_AppControl
     public function init()
     {
 		$output = parent::init();
-		
 		if(!$this->module){
-			$this->redirect($this->site['url']);
-			$output['view'] = '404';
+			redirect($this->site['url']);
 		}
-		
 		return $output;
-    }
-    
-    
-    
+    }  
 }

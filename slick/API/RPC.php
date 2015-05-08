@@ -1,4 +1,5 @@
 <?php
+namespace API;
 /*
                     COPYRIGHT
 
@@ -29,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @author stijn <stijn.vancampenhout@gmail.com>
  * @version 1.2
  */
-class Slick_API_RPC {
+class RPC {
     private $url;
     private $id;
     private $notification = false;
@@ -80,7 +81,7 @@ class Slick_API_RPC {
     public function __call($method,$params){
         // check
         if (!is_scalar($method)) {
-            throw new Exception('Method name has no scalar value');
+            throw new \Exception('Method name has no scalar value');
         }
 
         // check
@@ -88,7 +89,7 @@ class Slick_API_RPC {
             // no keys
             $params = array_values($params);
         } else {
-            throw new Exception('Params must be given as array');
+            throw new \Exception('Params must be given as array');
         }
         // sets notification or request task
         if ($this->notification) {
@@ -125,15 +126,15 @@ class Slick_API_RPC {
             }
             $response = json_decode($response,true);
         } else {
-            throw new Exception('Unable to connect to '.$this->url);
+            throw new \Exception('Unable to connect to '.$this->url);
         }
         if (!$this->notification) {
             // check
             if ($response['id'] != $currentId) {
-                throw new Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
+                throw new \Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
             }
             if (!is_null($response['error'])) {
-                throw new Exception('Request error: '.$response['error']['code'].'::'.$response['error']['message'].':'.$response['error']['code']);
+                throw new \Exception('Request error: '.$response['error']['code'].'::'.$response['error']['message'].':'.$response['error']['code']);
             }
             return $response['result'];
 

@@ -1,11 +1,12 @@
 <?php
-class Slick_App_Forum_Controller extends Slick_App_AppControl
+namespace App\Forum;
+use App\Account, App\Tokenly;
+class Controller extends \App\AppControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Forum_Model;
-		
+		$this->model = new Model;
 	}
     public function init()
     {
@@ -32,12 +33,9 @@ class Slick_App_Forum_Controller extends Slick_App_AppControl
 													WHERE b.siteId = :siteId', array(':siteId' => $this->site['siteId']));
 			$output['numReplies'] = $numReplies['total'];
 			$output['numUsers'] = $this->model->count('users');
-			$output['numOnline'] = Slick_App_Account_Home_Model::getUsersOnline();
-			$output['mostOnline'] = Slick_App_Account_Home_Model::getMostOnline();
-			$output['onlineUsers'] = Slick_App_Account_Home_Model::getOnlineUsers();
-			
-	
-			
+			$output['numOnline'] = Account\Home_Model::getUsersOnline();
+			$output['mostOnline'] = Account\Home_Model::getMostOnline();
+			$output['onlineUsers'] = Account\Home_Model::getOnlineUsers();
 		}
 		
 		if(!isset($output['template'])){
@@ -54,7 +52,7 @@ class Slick_App_Forum_Controller extends Slick_App_AppControl
 			return false;
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$meta->updateAppMeta($appId, 'forum-title', '', 'Forum Title', 1);
 		$meta->updateAppMeta($appId, 'forum-description', '', 'Forum Description', 1, 'textarea');
 		$meta->updateAppMeta($appId, 'topicsPerPage', 50, 'Topics Per Page', 1);
@@ -75,7 +73,4 @@ class Slick_App_Forum_Controller extends Slick_App_AppControl
 		$meta->addAppPerm($appId, 'canMoveSelf');
 		$meta->addAppPerm($appId, 'canMoveOther');
 	}
-	
 }
-
-

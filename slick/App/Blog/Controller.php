@@ -1,11 +1,10 @@
 <?php
-class Slick_App_Blog_Controller extends Slick_App_AppControl
+namespace App\Blog;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
         parent::__construct();
-        
-        
     }
     
     public function init()
@@ -19,17 +18,14 @@ class Slick_App_Blog_Controller extends Slick_App_AppControl
 			}
 			$output['view'] = 'list';
 			$output['title'] = 'Latest Blog Posts';
-			$catModel = new Slick_App_Blog_Category_Model;
-			$settings = new Slick_App_CMS_Settings_Model;
+			$catModel = new Category_Model;
+			$settings = new \App\CMS\Settings_Model;
 			$postLimit = $this->app['meta']['postsPerPage'];
 			$output['commentsEnabled'] = $this->app['meta']['enableComments'];
 
-			
 			$output['posts'] = $catModel->getHomePosts($output['site']['siteId'], $postLimit);
 			$output['numPages'] = $catModel->getHomePages($output['site']['siteId'], $postLimit);
-			
 
-			
 		}
 		$output['template'] = 'blog';
 		
@@ -43,7 +39,7 @@ class Slick_App_Blog_Controller extends Slick_App_AppControl
 			return false;
 		}
 
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$meta->updateAppMeta($appId, 'postsPerPage', 20, 'Posts Per Page', 1);
 		$meta->updateAppMeta($appId, 'maxExcerpt', 250, 'Max Post Excerpt Characters', 1);
 		$meta->updateAppMeta($appId, 'enableComments', 1, 'Enable Comments', 1, 'bool');
@@ -62,10 +58,5 @@ class Slick_App_Blog_Controller extends Slick_App_AppControl
 		$meta->addAppPerm($appId, 'canEditOtherPost');
 		$meta->addAppPerm($appId, 'canDeleteOtherPost');
 		$meta->addAppPerm($appId, 'canChangeAuthor');
-
-
 	}
-    
-    
-    
 }

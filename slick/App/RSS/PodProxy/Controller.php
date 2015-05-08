@@ -1,10 +1,12 @@
 <?php
-class Slick_App_RSS_PodProxy_Controller extends Slick_App_ModControl
+namespace App\RSS;
+use App\Blog;
+class PodProxy_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Blog_Post_Model;
+		$this->model = new Blog\Post_Model;
 	}
 	
 	public function init()
@@ -31,11 +33,7 @@ class Slick_App_RSS_PodProxy_Controller extends Slick_App_ModControl
 				}
 			}
 		}
-		
 		$output['view'] = '404';
-
 		return $output;
 	}
-	
-
 }

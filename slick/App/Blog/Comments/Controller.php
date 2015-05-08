@@ -1,10 +1,11 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Blog Comments
  * 
  * */
-class Slick_App_Blog_Comments_Controller extends Slick_App_ModControl
+class Comments_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_Blog_Comments_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_Blog_Comments_Model;
-        
-        
+        $this->model = new Comments_Model;
     }
     
     public function init()
@@ -44,32 +42,17 @@ class Slick_App_Blog_Comments_Controller extends Slick_App_ModControl
     {
 		$output = array('view' => 'list');
 		$output['commentList'] = $this->model->getCommentList($this->data['site']['siteId']);
-		
 		return $output;
-		
 	}
 	
 	private function deleteBlogComment()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getBlogComments = $this->model->get('blog_comments', $this->args[3]);
+			if($getBlogComments){
+				$delete = $this->model->delete('blog_comments', $this->args[3]);
+			}
 		}
-		
-		
-		$getBlogComments = $this->model->get('blog_comments', $this->args[3]);
-		if(!$getBlogComments){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('blog_comments', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

@@ -1,17 +1,16 @@
 <?php
-class Slick_App_CMS_Settings_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI;
+class Settings_Model extends Core\Model
 {
 	function __construct()
 	{
 		parent::__construct();
-		
 	}
 	
 	public function getSettings()
 	{
-		$sql = 'SELECT * FROM settings';
-		return $this->fetchAll($sql);
-		
+		return $this->getAll('settings');
 	}
 	
 	public function editSettings($data)
@@ -35,40 +34,33 @@ class Slick_App_CMS_Settings_Model extends Slick_Core_Model
 				}
 			}
 		}
-		
 		foreach($keyValues as $key => $value){
 			$this->editSetting($key, $value);
 		}
-		
 		return true;
 	}
 	
 	public function editSetting($key, $value)
 	{
-		$sql = 'UPDATE settings SET settingValue = :val WHERE settingKey = :key';
-		return $this->sendQuery($sql, array(':val' => $value, ':key' => $key));
+		return $this->edit('settings', $key, array('settingValue' => $value), 'settingKey');
 	}
 	
 	public function getSetting($key)
 	{
-		$sql = 'SELECT * FROM settings WHERE settingKey = :key';
-		$fetch = $this->fetchSingle($sql, array(':key' => $key));
+		$fetch = $this->get('settings', $key, array(), 'settingKey');
 		if(!$fetch){
-			return;
+			return false;
 		}
-		
 		return $fetch['settingValue'];
 	}
 	
 	public function getSettingsForm($settings)
 	{
-		
-		$form = new Slick_UI_Form;
-		
+		$form = new UI\Form;
 		foreach($settings as $setting){		
-			$key = new Slick_UI_Hidden('key-'.$setting['settingKey']);
+			$key = new UI\Hidden('key-'.$setting['settingKey']);
 			if($setting['bool'] == 1){
-				$value = new Slick_UI_Select($setting['settingKey'].'-value');
+				$value = new UI\Select($setting['settingKey'].'-value');
 				$value->addOption(1, 'Yes');
 				$value->addOption(0, 'No');
 				
@@ -80,11 +72,11 @@ class Slick_App_CMS_Settings_Model extends Slick_Core_Model
 				}
 			}
 			elseif($setting['textarea'] == 1){
-				$value = new Slick_UI_Textarea($setting['settingKey'].'-value');
+				$value = new UI\Textarea($setting['settingKey'].'-value');
 				$value->setValue($setting['settingValue']);
 			}
 			else{
-				$value = new Slick_UI_Textbox($setting['settingKey'].'-value');
+				$value = new UI\Textbox($setting['settingKey'].'-value');
 				$value->setValue($setting['settingValue']);
 			}
 			$value->addAttribute('required');
@@ -94,14 +86,6 @@ class Slick_App_CMS_Settings_Model extends Slick_Core_Model
 			$form->add($key);
 			$form->add($value);
 		}
-		
 		return $form;
 	}
-	
 }
-
-
-?>
-
-
-

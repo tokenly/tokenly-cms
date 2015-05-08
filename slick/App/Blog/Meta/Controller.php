@@ -1,10 +1,11 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Custom Post Fields
  * 
  * */
-class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
+class Meta_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -13,9 +14,7 @@ class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         
-        $this->model = new Slick_App_Blog_Meta_Model;
-        
-        
+        $this->model = new Meta_Model;
     }
     
     public function init()
@@ -55,7 +54,6 @@ class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
 		$getBlogMeta = $this->model->getAll('blog_postMetaTypes', array('siteId' => $this->data['site']['siteId']), array(), 'rank', 'asc');
 		$output['fieldList'] = $getBlogMeta;
 
-		
 		return $output;
 		
 	}
@@ -73,35 +71,26 @@ class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addField($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
-			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editField()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getField = $this->model->get('blog_postMetaTypes', $this->args[3]);
 		if(!$getField){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 
 		$output = array('view' => 'form');
@@ -114,47 +103,29 @@ class Slick_App_Blog_Meta_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editField($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getField);
 		
 		return $output;
-		
 	}
 	
 
-	
-	
 	private function deleteField()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getField = $this->model->get('blog_postMetaTypes', $this->args[3]);
+			if($getField AND $getField['siteId'] == $this->data['site']['siteId']){
+				$delete = $this->model->delete('blog_postMetaTypes', $this->args[3]);
+			}
 		}
-		
-		
-		$getField = $this->model->get('blog_postMetaTypes', $this->args[3]);
-		if(!$getField OR $getField['siteId'] != $this->data['site']['siteId']){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('blog_postMetaTypes', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

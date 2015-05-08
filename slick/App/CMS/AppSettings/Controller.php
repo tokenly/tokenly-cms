@@ -1,16 +1,18 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = App Settings
  * 
  * */
-class Slick_App_CMS_AppSettings_Controller extends Slick_App_ModControl
+use Util;
+class AppSettings_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_CMS_AppSettings_Model;
-		$this->meta = new Slick_App_Meta_Model;
+		$this->model = new AppSettings_Model;
+		$this->meta = new \App\Meta_Model;
 	}
 	
 	public function init()
@@ -31,22 +33,16 @@ class Slick_App_CMS_AppSettings_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editSettings($data, $apps);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$edit = false;
-				Slick_Util_Session::flash('message', $e->getMessage(), 'error');	
+				Util\Session::flash('message', $e->getMessage(), 'error');	
 			}
 			
 			if($edit){
-				Slick_Util_Session::flash('message', 'Settings updated!', 'success');	
+				Util\Session::flash('message', 'Settings updated!', 'success');	
 			}
-			$this->redirect($this->site.$this->moduleUrl);
-			die();
+			redirect($this->site.$this->moduleUrl);
 		}
-
 		return $output;
 	}
-	
-	
 }
-
-

@@ -1,11 +1,13 @@
 <?php
-class Slick_App_Blog_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, API;
+class Model extends Core\Model
 {
 	public function downloadBlogAudio($categories, $path)
 	{
 		$output = '';
-		$sc = new Slick_API_Soundcloud;
-		$model = new Slick_App_Blog_Post_Model;
+		$sc = new API\Soundcloud;
+		$model = new Post_Model;
 		
 		$andCats = '';
 		if(!in_array(0, $categories)){
@@ -34,7 +36,7 @@ class Slick_App_Blog_Model extends Slick_Core_Model
 				try{
 					$download = $sc->downloadTrack($post['meta']['soundcloud-id'], $fullPath);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$output .= $e->getMessage.' - #'.$post['postId'].' ['.$post['title']."]\n";
 				}
 				if($download){
@@ -42,11 +44,6 @@ class Slick_App_Blog_Model extends Slick_Core_Model
 				}
 			}
 		}
-		
 		return $output;
 	}
-	
-	
-	
-	
 }

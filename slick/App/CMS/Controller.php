@@ -1,5 +1,6 @@
 <?php
-class Slick_App_CMS_Controller extends Slick_App_AppControl
+namespace App\CMS;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
@@ -14,4 +15,3 @@ class Slick_App_CMS_Controller extends Slick_App_AppControl
 		}
 		return $output;
     }    
-    

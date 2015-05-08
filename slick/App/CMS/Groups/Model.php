@@ -1,22 +1,23 @@
 <?php
-class Slick_App_CMS_Groups_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Groups_Model extends Core\Model
 {
-
 	public function getGroupForm($groupId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Group Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->setLabel('Slug (blank to auto generate)');
 		$form->add($slug);	
 
 
-		$isDefault = new Slick_UI_Checkbox('isDefault');
+		$isDefault = new UI\Checkbox('isDefault');
 		$isDefault->setBool(1);
 		$isDefault->setValue(1);
 		$isDefault->setLabel('Default group?');
@@ -25,7 +26,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 
 		if($groupId != 0){
 			$getSites = $this->getAll('sites');
-			$siteAccess = new Slick_UI_CheckboxList('siteAccess');
+			$siteAccess = new UI\CheckboxList('siteAccess');
 			$siteAccess->setLabel('Site Access');
 			
 			$options = array();
@@ -38,7 +39,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 
 
 
-			$access = new Slick_UI_CheckboxList('moduleAccess');
+			$access = new UI\CheckboxList('moduleAccess');
 			$access->setLabel('Module Access');
 			
 			$getModules = $this->fetchAll('SELECT m.*, a.name as appName	
@@ -54,7 +55,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 			$access->setLabelDir('R');
 			$form->add($access);
 			
-			$permHead = new Slick_UI_FormHeading('App Permissions', 4);
+			$permHead = new UI\FormHeading('App Permissions', 4);
 			$form->add($permHead);
 			
 			$getApps = $this->getAll('apps');
@@ -62,7 +63,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 				$getPerms = $this->getAll('app_perms', array('appId' => $app['appId']));
 				if(count($getPerms) > 0){
 					
-					$perms = new Slick_UI_CheckboxList('perms-'.$app['appId']);
+					$perms = new UI\CheckboxList('perms-'.$app['appId']);
 					$perms->setLabel($app['name']);
 					$perms->setLabelDir('R');
 					$options = array();
@@ -73,11 +74,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 					$form->add($perms);
 				}
 			}
-			
-			
 		}
-		
-
 		return $form;
 	}
 	
@@ -101,7 +98,6 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 		}
 		
 		return $output;
-		
 	}
 	
 	public function getGroupSites($groupId, $idOnly = 0)
@@ -123,18 +119,16 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 		}
 		
 		return $output;
-		
 	}
 
 
-	
 	public function addGroup($data)
 	{
 		$req = array('name', 'isDefault', 'slug', 'siteId');
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -147,12 +141,10 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 		
 		$add = $this->insert('groups', $useData);
 		if(!$add){
-			throw new Exception('Error adding group');
+			throw new \Exception('Error adding group');
 		}
 		
 		return $add;
-		
-		
 	}
 		
 	public function editGroup($id, $data)
@@ -161,7 +153,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -174,7 +166,7 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 
 		$edit = $this->edit('groups', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing group');
+			throw new \Exception('Error editing group');
 		}
 		
 		$this->delete('group_sites', $id, 'groupId');
@@ -205,13 +197,5 @@ class Slick_App_CMS_Groups_Model extends Slick_Core_Model
 		}
 
 		return true;
-		
 	}
-
-
-
-
-
 }
-
-?>

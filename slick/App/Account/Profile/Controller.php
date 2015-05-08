@@ -1,10 +1,11 @@
 <?php
+namespace App\Account;
 /*
  * @module-type = dashboard
  * @menu-label = My Profile
  * 
  * */
-class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
+class Profile_Controller extends \App\ModControl
 {
 	public $args;
 	public $data;
@@ -12,19 +13,16 @@ class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Account_Profile_Model;
-        
-        
+        $this->model = new Profile_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-		$output['user'] = Slick_App_Account_Home_Model::userInfo();
+		$output['user'] = Home_Model::userInfo();
 	
 		if(!$output['user']){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->data['site']['url']);
 		}
 		
 		$thisUser = $output['user'];
@@ -34,7 +32,7 @@ class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
 			//check for account module access
 			$accountModule = $this->model->get('modules', 'accounts', array(), 'slug');
 			if($accountModule){
-				$checkAccess = Slick_App_AppControl::checkModuleAccess($accountModule['moduleId'], false);
+				$checkAccess = \App\AppControl::checkModuleAccess($accountModule['moduleId'], false);
 				if($checkAccess){
 					$thisUser = $this->model->get('users', $this->args[2], array('userId', 'username', 'slug', 'email'));
 					if(!$thisUser){
@@ -46,17 +44,14 @@ class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
 				}
 			}
 		}
-		
-
 		$output['form'] = $this->model->getProfileForm($thisUser, $this->data['site']['siteId'], $this->data['app']);
-		
 		if(posted()){
 			$data = $output['form']->grabData();
 			
 			try{
 				$update = $this->model->updateProfile($thisUser, $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$update = false;
 			}
@@ -64,7 +59,6 @@ class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
 			if($update){
 				$output['message'] = 'Profile updated!';
 			}
-			
 		}
 		
 		$getProfile = $this->model->getProfileInfo($thisUser);
@@ -73,16 +67,9 @@ class Slick_App_Account_Profile_Controller extends Slick_App_ModControl
 		$output['view'] = 'form';
 		$output['template'] = 'admin';
 		$output['title'] = 'Edit My Profile';
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$output['avatar'] = $meta->getUserMeta($thisUser['userId'], 'avatar');
 				
 		return $output;
     }
-    
-
-    
-    
-    
-    
-    
 }

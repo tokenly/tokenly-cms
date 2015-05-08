@@ -1,4 +1,6 @@
 <?php
+namespace App\Tokenly;
+use Core;
 /**
 * Token Controlled Access
 * 
@@ -7,7 +9,7 @@
 * @package [App][LTBcoin][TCA]
 * @author Nick Rathman <nrathman@ironcladtech.ca>
 */
-class Slick_App_Tokenly_TCA_Model extends Slick_Core_Model
+class TCA_Model extends Core\Model
 {
 	public static $balances = array();
 	public static $locks = array();
@@ -17,7 +19,7 @@ class Slick_App_Tokenly_TCA_Model extends Slick_Core_Model
 	function __construct()
 	{
 		parent::__construct();
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model;
+		$this->inventory = new Inventory_Model;
 		if(!self::$rows){
 			//load all token_access entries
 			self::$rows = $this->getAll('token_access', array(), array(), 'stackOrder', 'ASC');

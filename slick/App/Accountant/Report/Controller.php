@@ -1,17 +1,17 @@
 <?php
+namespace App\Accountant;
 /*
  * @module-type = dashboard
  * @menu-label = TX Reports
  * 
  * 
  * */
-class Slick_App_Accountant_Report_Controller extends Slick_App_ModControl
+class Report_Controller extends \App\ModControl
 {
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Accountant_Report_Model;
-        
+        $this->model = new Report_Model;
     }
     
     public function init()
@@ -24,11 +24,10 @@ class Slick_App_Accountant_Report_Controller extends Slick_App_ModControl
 		
 		if(posted()){
 			$data = $output['form']->grabData();
-			
 			try{
 				$report = $this->model->generateAddressReport($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$report = false;
 			}
@@ -54,11 +53,6 @@ class Slick_App_Accountant_Report_Controller extends Slick_App_ModControl
 				die();
 			}			
 		}
-
-		
 		return $output;
     }
-    
-    
-    
 }

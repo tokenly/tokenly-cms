@@ -1,5 +1,7 @@
 <?php
-class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
+namespace App\API\V1;
+use App\Account;
+class Auth_Model extends Account\Home_Model
 {
 	
 	function __construct()
@@ -10,20 +12,20 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 
 	public static function getUser($data)
 	{
-		$model = new Slick_App_API_V1_Auth_Model;
+		$model = new Auth_Model;
 		if(!isset($data['authKey'])){
 			http_response_code(401);
-			throw new Exception('Not logged in');
+			throw new \Exception('Not logged in');
 		}
 
 		$get = $model->checkSession($data['authKey']);
 		if(!$get){
 			http_response_code(401);
 			$model->logout($data);
-			throw new Exception('Invalid authentication key');
+			throw new \Exception('Invalid authentication key');
 		}
 		
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
 		
 		$activeTime = strtotime($get['lastActive']);
@@ -32,7 +34,7 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 			//force logout
 			$model->logout($data);
 			http_response_code(401);
-			throw new Exception('Authentication key expired');
+			throw new \Exception('Authentication key expired');
 		}
 		
 		$model->updateLastActive($get['userId']);
@@ -43,7 +45,7 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 	public function logout($data)
 	{
 		if(!isset($data['authKey'])){
-			throw new Exception('Not logged in');
+			throw new \Exception('Not logged in');
 		}
 		else{
 			$this->clearSession($data['authKey']);
@@ -54,5 +56,4 @@ class Slick_App_API_V1_Auth_Model extends Slick_App_Account_Home_Model
 		}
 		return true;
 	}
-
 }

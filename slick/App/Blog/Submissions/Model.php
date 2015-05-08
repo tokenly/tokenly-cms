@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util, API, App\Tokenly, App\Profile;
+class Submissions_Model extends Core\Model
 {
 	
 	function __construct()
@@ -14,32 +16,32 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 			$getPost = $this->get('blog_posts', $postId);
 		}
 		
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
 		if(!$getPost OR $getPost['formatType'] == 'markdown'){
-			$excerpt = new Slick_UI_Markdown('excerpt', 'markdown');
+			$excerpt = new UI\Markdown('excerpt', 'markdown');
 			$excerpt->setLabel('Excerpt');
 			
-			$content = new Slick_UI_Markdown('content', 'markdown');
+			$content = new UI\Markdown('content', 'markdown');
 			$content->setLabel('Content');
 		}
 		else{
-			$excerpt = new Slick_UI_Textarea('excerpt', 'mini-editor');
+			$excerpt = new UI\Textarea('excerpt', 'mini-editor');
 			$excerpt->setLabel('Excerpt');
 
-			$content = new Slick_UI_Textarea('content', 'html-editor');
+			$content = new UI\Textarea('content', 'html-editor');
 			$content->setLabel('Content');
 		}		
 		
-		$title = new Slick_UI_Textbox('title');
+		$title = new UI\Textbox('title');
 		$title->addAttribute('required');
 		$title->setLabel('Post Title');
 		$form->add($title);
 		
 		$form->add($content);
 		
-		$autoGen = new Slick_UI_Checkbox('autogen-excerpt');
+		$autoGen = new UI\Checkbox('autogen-excerpt');
 		$autoGen->setBool(1);
 		$autoGen->setValue(1);
 		$autoGen->setLabel('Create custom post excerpt');
@@ -47,11 +49,11 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		
 		$form->add($excerpt);
 		
-		$url = new Slick_UI_Textbox('url');
+		$url = new UI\Textbox('url');
 		$url->setLabel('URL');
 		$form->add($url);	
 		
-		$author = new Slick_UI_Select('userId');
+		$author = new UI\Select('userId');
 		$getUsers = $this->getAll('users', array(), array('userId', 'username'));
 		foreach($getUsers as $writer){
 			$author->addOption($writer['userId'], $writer['username']);
@@ -59,50 +61,50 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		$author->setLabel('Author');
 		$form->add($author);	
 		
-		$status = new Slick_UI_Select('status');
+		$status = new UI\Select('status');
 		$status->addOption('draft', 'Draft');
 		$status->addOption('ready', 'Ready for Review');
 		$status->addOption('published', 'Finished');
 		$status->setLabel('Post Status');
 		$form->add($status);
 		
-		$formatType = new Slick_UI_Select('formatType');
+		$formatType = new UI\Select('formatType');
 		$formatType->addOption('markdown', 'Markdown');
 		$formatType->addOption('wysiwyg', 'WYSIWYG');
 		$formatType->setLabel('Formatting Type (Save/Submit to change)');
 		$form->add($formatType);
 
-		/*$featured = new Slick_UI_Checkbox('featured');
+		/*$featured = new UI\Checkbox('featured');
 		$featured->setLabel('Featured');
 		$featured->setBool(1);
 		$featured->setValue(1);
 		$form->add($featured);*/
 
-		$pubTime = new Slick_UI_Textbox('publishDate', 'datetimepicker');
+		$pubTime = new UI\Textbox('publishDate', 'datetimepicker');
 		$pubTime->setLabel('Publish Date/Time');
 		$form->add($pubTime);
-		/*$pubTime = new Slick_UI_DateTime('publishDate');
+		/*$pubTime = new DateTime('publishDate');
 		$pubTime->setLabel('Publish Date/Time');
 		$pubTime->setMinYear(2013);
 		$pubTime->setMaxYear(date('Y') + 5);
 		$form->add($pubTime);*/
 		
 		$app = $this->get('apps', 'blog', array(), 'slug');
-		$metaModel = new Slick_App_Meta_Model;
+		$metaModel = new \App\Meta_Model;
 		$app['meta'] = $metaModel->appMeta($app['appId']);
 		
-		/*$image = new Slick_UI_File('image');
+		/*$image = new UI\File('image');
 		$image->setLabel('Featured Image ('.$app['meta']['featuredWidth'].'x'.$app['meta']['featuredHeight'].')');
 		$form->add($image);*/
         
-		$coverImage = new Slick_UI_File('coverImage');
+		$coverImage = new UI\File('coverImage');
 		$coverImage->setLabel('Cover Image ('.$app['meta']['coverWidth'].'x'.$app['meta']['coverHeight'].')');
 		$form->add($coverImage);
 
-		$categories = new Slick_UI_CascadingCheckboxList('categories');
+		$categories = new UI\CascadingCheckboxList('categories');
 		$categories->setLabel('Requested Blog Categories *');
-		$catModel = new Slick_App_Blog_Categories_Model;
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$catModel = new Categories_Model;
+		$multiblog = new Multiblog_Model;
 		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
 		$getCats = $catModel->getCategories($siteId, 0, true);
 		$blogCatList = array();
@@ -124,13 +126,13 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 				$slug = 'meta_'.$field['metaTypeId'];
 				switch($field['type']){
 					case 'textbox':
-						$elem = new Slick_UI_Textbox($slug);
+						$elem = new UI\Textbox($slug);
 						break;
 					case 'textarea':
-						$elem = new Slick_UI_Textarea($slug);
+						$elem = new UI\Textarea($slug);
 						break;
 					case 'select':
-						$elem = new Slick_UI_Select($slug);
+						$elem = new UI\Select($slug);
 						$options = explode("\n", $field['options']);
 						foreach($options as $option){
 							$option = trim($option);
@@ -154,7 +156,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		
 	
-		$notes = new Slick_UI_Textarea('notes');
+		$notes = new UI\Textarea('notes');
 		$notes->setLabel('Notes');
 		$form->add($notes);
 		
@@ -165,8 +167,8 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	
 	public function checkCategoryListAccess($cats, $user)
 	{
-		$catModel = new Slick_App_Blog_Categories_Model;
-		$multiblog = new Slick_App_Blog_Multiblog_Model;		
+		$catModel = new Categories_Model;
+		$multiblog = new Multiblog_Model;		
 		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
 		foreach($cats as $k => &$cat){
 			$getBlog = $this->get('blogs', $cat['blogId']);
@@ -207,7 +209,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		if($getBlog['active'] == 0){
 			return false;
 		}
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		$getRoles = $multiblog->getBlogUserRoles($getBlog['blogId'], true);
 		if($cat['public'] == 0){
 			$found = false;
@@ -231,7 +233,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 			$cats = array($cats);
 		}
 		
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
 		$postCats = $this->fetchAll('SELECT c.*, pc.approved, pc.postCatId
 									   FROM blog_postCategories pc
@@ -293,7 +295,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	{
 		if(isset($_FILES[$type]['tmp_name']) AND trim($_FILES[$type]['tmp_name']) != false){
 			$app = $this->get('apps', 'blog', array(), 'slug');
-			$metaModel = new Slick_App_Meta_Model;
+			$metaModel = new \App\Meta_Model;
 			$app['meta'] = $metaModel->appMeta($app['appId']);
             switch($type){
                 case 'image':
@@ -309,7 +311,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		
 			$name = $id.'-'.hash('sha256', $_FILES[$type]['name'].$id.$type).'.jpg';
 			$path = SITE_PATH.'/files/blogs/'.$name;
-			$resize = Slick_Util_Image::resizeImage($_FILES[$type]['tmp_name'], $path, $width, $height);
+			$resize = Util\Image::resizeImage($_FILES[$type]['tmp_name'], $path, $width, $height);
 			if($resize){
 				$update = $this->edit('blog_posts', $id, array($type => $name));
 				if($update){
@@ -332,7 +334,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key]) OR (isset($data[$key]) AND trim($data[$key]) == '')){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -371,7 +373,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		//perform insertion
 		$add = $this->insert('blog_posts', $useData);
 		if(!$add){
-			throw new Exception('Error adding post');
+			throw new \Exception('Error adding post');
 		}
 		
 		//insert first version
@@ -430,7 +432,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	
 	private function notifyEditorsOnReady($post, $appData)
 	{
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		$getBlogs = $this->fetchAll('SELECT b.*
 									 FROM blog_postCategories pc
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -449,7 +451,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 					case 'admin':
 					case 'owner':
 					case 'editor':
-						Slick_App_Meta_Model::notifyUser($role['userId'], 'emails.blog.ready_review', $post['postId'], 'blog-post-ready', true, $notifyData);
+						\App\Meta_Model::notifyUser($role['userId'], 'emails.blog.ready_review', $post['postId'], 'blog-post-ready', true, $notifyData);
 						break;
 				}
 			}
@@ -471,7 +473,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key]) OR (isset($data[$key]) AND trim($data[$key]) == '')){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -561,7 +563,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		//apply main edit
 		$edit = $this->edit('blog_posts', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing post');
+			throw new \Exception('Error editing post');
 		}
 		
 		//update categories
@@ -615,7 +617,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	
 	public function getPostMetaVal($postId, $key)
 	{
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new Post_Model;
 		$getMeta = $model->getPostMeta($postId, false, true);
 		foreach($getMeta as $mKey => $mVal){
 			if($mKey == $key AND trim($mVal) != ''){
@@ -717,7 +719,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	
 	public function getVersions($postId)
 	{
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$get = $this->getAll('content_versions', array('type' => 'blog-post', 'itemId' => $postId), array(), 'num', 'asc');
 		foreach($get as &$row){
 			$row['content'] = json_decode($row['content'], true);
@@ -806,22 +808,22 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	{
 		$getPost = $this->get('blog_posts', $invite['itemId']);
 		if(!$getPost){
-			throw new Exception('Invalid blog post');
+			throw new \Exception('Invalid blog post');
 		}
 		
 		$getRow = $this->get('blog_contributors', $invite['inviteId'], array(), 'inviteId');
 		if(!$getRow){
-			throw new Exception('Invalid blog contributor request');
+			throw new \Exception('Invalid blog contributor request');
 		}
 		
 		$contribs = $this->getPostContributors($getPost['postId']);
 		$contribs[] = array('userId' => $getPost['userId']); //add author to contrib list
 		foreach($contribs as $contrib){
-			Slick_App_Meta_Model::notifyUser($contrib['userId'], 'emails.invites.'.$invite['type'].'_complete', $invite['inviteId'], 'user-invite-complete', false, $invite);
+			\App\Meta_Model::notifyUser($contrib['userId'], 'emails.invites.'.$invite['type'].'_complete', $invite['inviteId'], 'user-invite-complete', false, $invite);
 		}
 		
 		//send acceptance notification to user
-		Slick_App_Meta_Model::notifyUser($invite['sendUser'], 'emails.invites.'.$invite['type'].'_accept', $invite['inviteId'], 'user-invite-accept', false, $invite);
+		\App\Meta_Model::notifyUser($invite['sendUser'], 'emails.invites.'.$invite['type'].'_accept', $invite['inviteId'], 'user-invite-accept', false, $invite);
 		
 		$site = currentSite();
 		$dashApp = $this->get('apps', 'dashboard', array(), 'slug');
@@ -905,7 +907,7 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	}
 	public static function checkPostApproved($postId)
 	{
-		$model = new Slick_Core_Model;
+		$model = new \Core\Model;
 		$check = $model->fetchSingle('SELECT count(*) as total
 									 FROM blog_postCategories pc
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -922,22 +924,22 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 	public function notifyContributors($postId, $notification, $data, $skipUser = 0)
 	{
 		$getAuthor = $this->get('blog_posts', $postId, array('userId'));
-		Slick_Core_Model::$cacheMode = false;
+		\Core\Model::$cacheMode = false;
 		$getContribs = $this->getPostContributors($postId);
-		Slick_Core_Model::$cacheMode = true;
+		\Core\Model::$cacheMode = true;
 		$getContribs[] = $getAuthor;
 		foreach($getContribs as $contrib){
 			if($contrib['userId'] == $skipUser){
 				continue;
 			}
-			Slick_App_Meta_Model::notifyUser($contrib['userId'], 'emails.blog.'.$notification, $postId, 'blog-'.$notification, true, $data);
+			\App\Meta_Model::notifyUser($contrib['userId'], 'emails.blog.'.$notification, $postId, 'blog-'.$notification, true, $data);
 		}
 		
 	}
 	
 	public function checkPostBlogRole($postId, $userId)
 	{
-		$multiblogs = new Slick_App_Blog_Multiblog_Model;
+		$multiblogs = new Multiblog_Model;
 		$getCatBlogs = $this->fetchAll('SELECT c.blogId
 									FROM blog_postCategories pc 
 									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -964,8 +966,5 @@ class Slick_App_Blog_Submissions_Model extends Slick_Core_Model
 		}
 		$content = strip_tags($content);
 		return str_word_count($content);
-	}
-		
+	}	
 }
-
-?>

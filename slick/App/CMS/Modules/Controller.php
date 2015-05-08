@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Apps & Modules
  * 
  * */
-class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
+class Modules_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -13,9 +14,7 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         
-        $this->model = new Slick_App_CMS_Modules_Model;
-        
-        
+        $this->model = new Modules_Model;
     }
     
     public function init()
@@ -70,7 +69,6 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 		$getApps = $this->model->getAll('apps');
 		$output['appList'] = $getApps;
 
-		
 		return $output;
 		
 	}
@@ -78,14 +76,12 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 	private function showModules()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'moduleList');
@@ -94,7 +90,6 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 		$output['getApp'] = $getApp;
 		
 		return $output;
-		
 	}
 	
 	private function addApp()
@@ -108,34 +103,27 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addApp($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
 	
 	private function addModule()
 	{
-
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 
 		$output = array('view' => 'moduleForm');
@@ -148,33 +136,27 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addModule($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl.'/view/'.$this->args[3]);
-				return true;
+				redirect($this->site.$this->moduleUrl.'/view/'.$this->args[3]);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
 	
 	private function editApp()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'appForm');
@@ -186,34 +168,30 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editApp($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
 		$output['form']->setValues($getApp);
 		
 		return $output;
-		
 	}
 	
 	private function editModule()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getModule = $this->model->get('modules', $this->args[3]);
 		if(!$getModule){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'moduleForm');
@@ -226,14 +204,13 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editModule($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl.'/view/'.$getModule['appId']);
-				return true;
+				redirect($this->site.$this->moduleUrl.'/view/'.$getModule['appId']);
 			}
 			
 		}
@@ -246,14 +223,12 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 	private function deleteApp()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$delete = $this->model->delete('apps', $this->args[3]);
@@ -262,40 +237,29 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			$this->model->sendQuery('DELETE FROM dash_menu WHERE moduleId = :moduleId AND params = :params',
 									array(':moduleId' => $settingModule['moduleId'], ':params' => '/'.$getApp['slug']));
 		}
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 	private function deleteModule()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+		if(isset($this->args[3])){
+			$getModule = $this->model->get('modules', $this->args[3]);
+			if($getModule){
+				$delete = $this->model->delete('modules', $this->args[3]);
+			}
 		}
-		
-		$getModule = $this->model->get('modules', $this->args[3]);
-		if(!$getModule){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('modules', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl.'/view/'.$getModule['appId']);
-		return true;
-		
+		redirect($this->site.$this->moduleUrl.'/view/'.$getModule['appId']);
 	}
 	
 	public function manageSettings()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'appSettings');
@@ -317,10 +281,7 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			}
 			
 		}
-		
-		
 		return $output;
-		
 	}
 	
 	public function addAppSetting($output)
@@ -338,14 +299,13 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addAppSetting($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
 			}
 		}
 		
@@ -376,20 +336,17 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editAppSetting($getSetting['appMetaId'], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
 			}
 		}
 		
 		$output['form']->setValues($getSetting);
-		
-		
 		return $output;
 	}
 	
@@ -407,7 +364,7 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 		}
 		
 		$delete = $this->model->delete('app_meta', $getSetting['appMetaId']);
-		$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
+		redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/settings/'.$output['thisApp']['appId']);
 		
 		return $output;
 	}
@@ -417,14 +374,12 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 	public function managePerms()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getApp = $this->model->get('apps', $this->args[3]);
 		if(!$getApp){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'appPerms');
@@ -446,7 +401,6 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 		}
 		
 		return $output;
-		
 	}
 	
 	public function addAppPerm($output)
@@ -464,14 +418,13 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addAppPerm($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
 			}
 		}
 		
@@ -502,19 +455,17 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editAppPerm($getPerm['permId'], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
 			}
 		}
 		
 		$output['form']->setValues($getPerm);
-		
 		
 		return $output;
 	}
@@ -533,14 +484,7 @@ class Slick_App_CMS_Modules_Controller extends Slick_App_ModControl
 		}
 		
 		$delete = $this->model->delete('app_perms', $getPerm['permId']);
-		$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
-		
+		redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/perms/'.$output['thisApp']['appId']);
 		return $output;
 	}
-
-
-
-
 }
-
-?>

@@ -59,7 +59,7 @@ else{
 	</thead>
 	<tbody>';
 	
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	foreach($orders as $order){
 		$type = $order['orderType'];
 		switch($type){

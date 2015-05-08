@@ -1,50 +1,52 @@
 <?php
-class Slick_App_Blog_Meta_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util;
+class Meta_Model extends Core\Model
 {
 	public function getFieldForm($fieldId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$label = new Slick_UI_Textbox('label');
+		$label = new UI\Textbox('label');
 		$label->addAttribute('required');
 		$label->setLabel('Label');
 		$form->add($label);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->addAttribute('required');
 		$slug->setLabel('Slug (blank to auto generate)');
 		$form->add($slug);
 		
-		$type = new Slick_UI_Select('type');
+		$type = new UI\Select('type');
 		$type->setLabel('Field Type');
 		$type->addOption('textbox', 'Textbox');
 		$type->addOption('textarea', 'Textarea');
 		$type->addOption('select', 'Select Dropdown');
 		$form->add($type);
 		
-		$options = new Slick_UI_Textarea('options');
+		$options = new UI\Textarea('options');
 		$options->setLabel('Options (if dropdown) - 1 per line');
 		$form->add($options);
 		
-		$active = new Slick_UI_Checkbox('active', 'active');
+		$active = new UI\Checkbox('active', 'active');
 		$active->setLabel('Active?');
 		$active->setBool(1);
 		$active->setValue(1);
 		$form->add($active);
 		
-		$public = new Slick_UI_Checkbox('isPublic', 'isPublic');
+		$public = new UI\Checkbox('isPublic', 'isPublic');
 		$public->setLabel('Publicly Accessable? (e.g via API)');
 		$public->setBool(1);
 		$public->setValue(1);
 		$form->add($public);	
 		
-		$hidden = new Slick_UI_Checkbox('hidden', 'hidden');
+		$hidden = new UI\Checkbox('hidden', 'hidden');
 		$hidden->setLabel('Hidden?');
 		$hidden->setBool(1);
 		$hidden->setValue(1);
 		$form->add($hidden);			
 
-		$rank = new Slick_UI_Textbox('rank');
+		$rank = new UI\Textbox('rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);
 		
@@ -61,7 +63,7 @@ class Slick_App_Blog_Meta_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -93,7 +95,7 @@ class Slick_App_Blog_Meta_Model extends Slick_Core_Model
 		
 		$add = $this->insert('blog_postMetaTypes', $useData);
 		if(!$add){
-			throw new Exception('Error adding field');
+			throw new \Exception('Error adding field');
 		}
 		
 		return $add;
@@ -106,7 +108,7 @@ class Slick_App_Blog_Meta_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -135,14 +137,10 @@ class Slick_App_Blog_Meta_Model extends Slick_Core_Model
 			$useData['hidden'] = intval($useData['hidden']);
 		}
 					
-		
 		$edit = $this->edit('blog_postMetaTypes', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing field');
+			throw new \Exception('Error editing field');
 		}
-
 		return true;	
 	}
-
 }
-?>

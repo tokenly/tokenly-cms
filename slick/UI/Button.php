@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Button extends Slick_UI_FormObject
+namespace UI;
+class Button extends FormObject
 {
 	protected $buttonType;
 	
@@ -29,15 +30,11 @@ class Slick_UI_Button extends Slick_UI_FormObject
 		$output = '<input type="'.$this->buttonType.'" name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.' value="'.$this->value.'" />';
 
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
 		return $output;
 		
 	}
-	
 }
-
-
-?>

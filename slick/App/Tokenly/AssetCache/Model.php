@@ -1,25 +1,27 @@
 <?php
-class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, API, Util;
+class AssetCache_Model extends Core\Model
 {
 	public function addAssetForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
-		$asset = new Slick_UI_Textbox('asset');
+		$asset = new UI\Textbox('asset');
 		$asset->setLabel('Asset Name');
 		$asset->addAttribute('required');
 		$form->add($asset);
 		
-		$description = new Slick_UI_Textarea('description', 'markdown');
+		$description = new UI\Textarea('description', 'markdown');
 		$description->setLabel('Description (use markdown)');
 		$form->add($description);
 		
-		$link = new Slick_UI_Textbox('link');
+		$link = new UI\Textbox('link');
 		$link->setLabel('Additional Info Link');
 		$form->add($link);		
 		
-		$image = new Slick_UI_File('image');
+		$image = new UI\File('image');
 		$image->setLabel('Logo');
 		$form->add($image);
 		
@@ -28,10 +30,10 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 	
 	public function editAssetForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
-		$ownerId = new Slick_UI_Select('ownerId');
+		$ownerId = new UI\Select('ownerId');
 		$ownerId->setLabel('Asset Owner');
 		$ownerId->addOption(0, '[nobody]');
 		$getUsers = $this->getAll('users');
@@ -40,15 +42,15 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 		}
 		$form->add($ownerId);
 		
-		$description = new Slick_UI_Textarea('description', 'markdown');
+		$description = new UI\Textarea('description', 'markdown');
 		$description->setLabel('Description (use markdown)');
 		$form->add($description);
 		
-		$link = new Slick_UI_Textbox('link');
+		$link = new UI\Textbox('link');
 		$link->setLabel('Additional Info Link');
 		$form->add($link);
 		
-		$image = new Slick_UI_File('image');
+		$image = new UI\File('image');
 		$image->setLabel('Logo');
 		$form->add($image);		
 		
@@ -58,21 +60,21 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 	public function addAsset($data)
 	{
 		if(trim($data['asset']) == ''){
-			throw new Exception('Asset name required');
+			throw new \Exception('Asset name required');
 		}
 		$checkAsset = $this->get('xcp_assetCache', strtoupper($data['asset']), array('assetId'), 'asset');
 		if($checkAsset){
-			throw new Exception('Asset already exists in cache');
+			throw new \Exception('Asset already exists in cache');
 		}
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		try{
 			$getAsset = $xcp->get_asset_info(array('assets' => array(strtoupper($data['asset']))));
 		}
-		catch(Exception $e){
-			throw new Exception('Failed getting asset info');
+		catch(\Exception $e){
+			throw new \Exception('Failed getting asset info');
 		}
 		if(count($getAsset) == 0){
-			throw new Exception('Asset not found');
+			throw new \Exception('Asset not found');
 		}
 		$getAsset = $getAsset[0];
 		$divisible = 0;
@@ -85,7 +87,7 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 		$add = $this->insert('xcp_assetCache', array('asset' => strtoupper($data['asset']), 'divisible' => $divisible, 'lastChecked' => timestamp(),
 											'description' => $data['description'], 'link' => $data['link']));
 		if(!$add){
-			throw new Exception('Error adding to cache');
+			throw new \Exception('Error adding to cache');
 		}
 		
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
@@ -93,8 +95,8 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 				@mkdir(SITE_PATH.'/files/tokens');
 			}
 			$imageName = md5($add.$_FILES['image']['name']).'.jpg';
-			$image = new Slick_Util_Image;
-			$meta = new Slick_App_Meta_Model;
+			$image = new Util\Image;
+			$meta = new \App\Meta_Model;
 			$settings = $meta->appMeta('tokenly');
 			$resize = $image->resizeImage($_FILES['image']['tmp_name'], SITE_PATH.'/files/tokens/'.$imageName, intval($settings['token-logo-width']), intval($settings['token-logo-height']));
 			if($resize){
@@ -113,7 +115,7 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 		}
 		$edit = $this->edit('xcp_assetCache', $data['assetId'], $useData);
 		if(!$edit){
-			throw new Exception('Error editing asset cache');
+			throw new \Exception('Error editing asset cache');
 		}
 		
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
@@ -121,17 +123,14 @@ class Slick_App_Tokenly_AssetCache_Model extends Slick_Core_Model
 				@mkdir(SITE_PATH.'/files/tokens');
 			}
 			$imageName = md5($data['assetId'].$_FILES['image']['name']).'.jpg';
-			$image = new Slick_Util_Image;
-			$meta = new Slick_App_Meta_Model;
+			$image = new Util\Image;
+			$meta = new \App\Meta_Model;
 			$settings = $meta->appMeta('tokenly');
 			$resize = $image->resizeImage($_FILES['image']['tmp_name'], SITE_PATH.'/files/tokens/'.$imageName, intval($settings['token-logo-width']), intval($settings['token-logo-height']));
 			if($resize){
 				$this->edit('xcp_assetCache', $data['assetId'], array('image' => $imageName));
 			}
 		}
-		
 		return $edit;
 	}
-
-
 }

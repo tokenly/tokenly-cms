@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_FormHeading extends Slick_UI_FormObject
+namespace UI;
+class FormHeading extends FormObject
 {
 	protected $heading = '';
 	protected $level = 1;
@@ -35,7 +36,7 @@ class Slick_UI_FormHeading extends Slick_UI_FormObject
 		$output = $this->label.'<h'.$this->level.' '.$idText.' '.$classText.' '.$attributeText.'>'.$this->heading.'</h'.$this->level.'>';
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -63,4 +64,3 @@ class Slick_UI_FormHeading extends Slick_UI_FormObject
 	}
 
 }
-?>

@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, Util, API, App\Blog, App\Profile;
+class POP_Model extends Core\Model
 {
 	function __construct()
 	{
@@ -9,7 +11,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 		$this->fields = array('views', 'register', 'comments', 'posts', 'threads', 'magic-words', 'likes', 'referrals');
 		
 		$tokenApp = $this->get('apps', 'tokenly', array(), 'slug');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$this->appMeta = $meta->appMeta($tokenApp['appId']);
 		
 	}
@@ -26,7 +28,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 	
 	public static function recordFirstView($userId, $moduleId, $itemId = 0)
 	{
-		$model = new Slick_App_Tokenly_POP_Model;
+		$model = new POP_Model;
 		$check = $model->checkFirstView($userId, $moduleId, $itemId);
 		if($check){
 			return false;
@@ -71,7 +73,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 	
 	public function getNumUserComments($userId, $timeframe = false, $minLength = 0)
 	{
-		$disqus = new Slick_API_Disqus;
+		$disqus = new API\Disqus;
 		$username = DISQUS_DEFAULT_FORUM.'-'.md5($userId);
 
 		$getPosts = $disqus->getUserPosts($username, false, 100);
@@ -228,7 +230,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 	
 	protected function setPublishedPosts($timeframe)
 	{
-		$submitModel = new Slick_App_Blog_Submissions_Model;
+		$submitModel = new Submissions_Model;
 		$getSite = currentSite();
 		
 		$sql = 'SELECT postId, userId, title, url, publishDate, views, commentCount FROM blog_posts WHERE status="published" AND siteId = :siteId ';
@@ -409,7 +411,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 	
 	public function getPopScoreList($timeframe = false, $fields = false)
 	{
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$getUsers = $profModel->getUsersWithProfile($this->coinFieldId);
 		$output = array();
 		$scores = array();
@@ -442,7 +444,7 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 			return false;
 		}
 		$appId = $getApp['appId'];
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$output = array();
 		
 		$output['commentScore'] = $meta->getAppMeta($appId, 'pop-comment-weight');
@@ -610,17 +612,17 @@ class Slick_App_Tokenly_POP_Model extends Slick_Core_Model
 	{
 		$score = 0;
 		if(!isset($this->disqus)){
-			$this->disqus = new Slick_API_Disqus;
+			$this->disqus = new API\Disqus;
 		}
 		if(!isset($this->postModel)){
-			$this->postModel = new Slick_App_Blog_Post_Model;
+			$this->postModel = new Blog\Post_Model;
 		}
 		
 		if(!isset($this->publishedPosts)){
 			$this->setPublishedPosts($timeframe);
 		}
 		$blogModule = $this->get('modules', 'blog-post', array(), 'slug');
-		$pageIndex = Slick_App_Controller::$pageIndex;
+		$pageIndex = \App\Controller::$pageIndex;
 		$getSite = currentSite();
 		$popScores = array();
 		$output = array('num' => 0, 'posts' => array(), 'total' => 0);

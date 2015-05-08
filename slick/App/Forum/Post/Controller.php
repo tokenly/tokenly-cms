@@ -1,11 +1,13 @@
 <?php
-class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
+namespace App\Forum;
+use App\Tokenly, App\Profile, App\Account, UI, Util;
+class Post_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Forum_Post_Model;
-		$this->tca = new Slick_App_Tokenly_TCA_Model;
+		$this->model = new Post_Model;
+		$this->tca = new Tokenly\TCA_Model;
 	}
 	
 	public function init()
@@ -16,7 +18,6 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			$output['view'] = '404';
 			return $output;
 		}
-		
 		
 		$getTopic = $this->model->get('forum_topics', $this->args[2], array(), 'url');
 		if(!$getTopic OR $getTopic['buried'] == 1){
@@ -64,8 +65,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		
 		$this->topic = $getTopic;
 		$this->board = $getBoard;
-		
-
+	
 		if(isset($this->args[3])){
 			$newOutput = array();
 			switch($this->args[3]){
@@ -136,20 +136,18 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 					break;
 			}
 			
-		
-			
 			$output = array_merge($newOutput , $output);
 			return $output;
 			
 		}
 		else{
 			if($this->data['user']){
-				Slick_App_Tokenly_POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getTopic['topicId']);
+				Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getTopic['topicId']);
 			}	
 			
 		}
 
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$getTopic['author'] = $profModel->getUserProfile($getTopic['userId'], $this->data['site']['siteId']);
 		$output['board'] = $getBoard;
 		$output['topic'] = $getTopic;
@@ -157,8 +155,8 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['title'] = $getTopic['title'].' - '.$getBoard['name'];
 		
 		$output['page'] = 1;
-		$output['totalReplies'] = Slick_App_Forum_Post_Model::getNumTopicReplies($this->topic['topicId']);
-		$output['numPages'] = Slick_App_Forum_Post_Model::getNumTopicPages($this->topic['topicId']);
+		$output['totalReplies'] = Post_Model::getNumTopicReplies($this->topic['topicId']);
+		$output['numPages'] = Post_Model::getNumTopicPages($this->topic['topicId']);
 		if(isset($_GET['page'])){
 			$page = intval($_GET['page']);
 			if($page > 1 AND $page <= $output['numPages']){
@@ -176,19 +174,19 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		$output['reportedPosts'] = false;
 		if($this->data['user']){
 			$output['form'] = $this->model->getReplyForm();
-			$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+			$postCount = Account\Home_Model::getUserPostCount($this->data['user']['userId']);
 			$checkCaptcha = false;
 			if(isset($this->data['app']['meta']['min-posts-captcha'])){
 				$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
 				if($postCount <= $minPosts){
-					$captcha = new Slick_UI_Captcha();
+					$captcha = new UI\Captcha();
 					$output['form']->add($captcha);
 					$checkCaptcha = true;
 				}
 			}
 			
 			
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$output['reportedPosts'] = $meta->getUserMeta($this->data['user']['userId'], 'reportedPosts');
 			if($output['reportedPosts']){
 				$output['reportedPosts'] = json_decode($output['reportedPosts'], true);
@@ -221,20 +219,18 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 	private function postReply()
 	{
 		$output = array();
-
-
 		if(!$this->data['user'] OR !$this->data['perms']['canPostReply']){
 			$output['view'] = '404';
 			return $output;
 		}
 
 		$form = $this->model->getReplyForm();
-		$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+		$postCount = Account\Home_Model::getUserPostCount($this->data['user']['userId']);
 		$checkCaptcha = false;
 		if(isset($this->data['app']['meta']['min-posts-captcha'])){
 			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
 			if($postCount <= $minPosts){
-				$captcha = new Slick_UI_Captcha();
+				$captcha = new UI\Captcha();
 				$form->add($captcha);
 				$checkCaptcha = true;
 			}
@@ -254,7 +250,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			$data['check_captcha'] = $checkCaptcha;
 			$post = $this->model->postReply($data, $this->data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$post = false;
 			$output['replyMessage'] = $e->getMessage();
@@ -262,15 +258,14 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$numPages = Slick_App_Forum_Post_Model::getNumTopicPages($this->topic['topicId']);
+		$numPages = Post_Model::getNumTopicPages($this->topic['topicId']);
 		$page = '';
 		if($numPages > 1){
 			$page = '?page='.$numPages;
 		}
 		
 		if($post){
-			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].$page.'#post-'.$post['postId']);
-			return $output;
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].$page.'#post-'.$post['postId']);
 		}
 		
 		return $output;
@@ -308,13 +303,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 				$this->data['topic'] = $this->topic;
 				$edit = $this->model->editPost($getPost['postId'], $data, $this->data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$edit = false;
 				$output['message'] = $e->getMessage();
 			}
 			
 			if($edit){
-				$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$output['permaPage']);
+				redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$output['permaPage']);
 			}
 		}
 		
@@ -332,7 +327,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$boardModel = new Slick_App_Forum_Board_Model;
+		$boardModel = new Board_Model;
 		$output['view'] = '../Board/topic-form';
 		$output['form'] = $boardModel->getTopicForm();
 		$output['form']->setValues($this->topic);
@@ -347,13 +342,13 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editTopic($this->topic['topicId'], $data, $this->data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$edit['url']);
+				redirect($this->data['site']['url'].$this->moduleUrl.'/'.$edit['url']);
 			}
 		}
 		
@@ -374,7 +369,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		
 		$delete = $this->model->edit('forum_posts', $getPost['postId'], array('buried' => 1, 'buriedBy' => $this->data['user']['userId'], 'buryTime' => timestamp()));
 		$permaPage = ($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '';
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
+		redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
 		
 		return $output;
 	}
@@ -391,7 +386,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$delete = $this->model->edit('forum_topics', $this->topic['topicId'], array('buried' => 1, 'buriedBy' => $this->data['user']['userId'], 'buryTime' => timestamp()));
-		$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
+		redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
 
 		return $output;
 	}
@@ -408,7 +403,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$lock = $this->model->edit('forum_topics', $this->topic['topicId'], array('locked' => 1, 'lockTime' => timestamp(), 'lockedBy' => $this->data['user']['userId']));
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+		redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
 		
 		return $output;
 	}
@@ -425,7 +420,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$lock = $this->model->edit('forum_topics', $this->topic['topicId'], array('locked' => 0));
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+		redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
 		
 		return $output;
 	}
@@ -442,7 +437,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$sticky = $this->model->edit('forum_topics', $this->topic['topicId'], array('sticky' => 1));
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+		redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
 		
 		return $output;
 	}
@@ -459,7 +454,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		}
 		
 		$sticky = $this->model->edit('forum_topics', $this->topic['topicId'], array('sticky' => 0));
-		$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
+		redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url']);
 		
 		return $output;
 	}
@@ -487,20 +482,17 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			try{
 				$move = $this->model->moveTopic($this->topic['topicId'], $data, $this->data['user']);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$move = false;
 			}
 			
 			$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
 			if($move){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$boardModule['url'].'/'.$move['slug']);
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$boardModule['url'].'/'.$move['slug']);
 			}
 		}
-		
-		
 		return $output;
-		
 	}
 	
 	private function likeTopic()
@@ -533,7 +525,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
-		$inventory = new Slick_App_Tokenly_Inventory_Model;
+		$inventory = new Tokenly\Inventory_Model;
 		$getScore = $inventory->getWeightedUserTokenScore($this->data['user']['userId'], $this->topic['userId'], 
 															$this->data['app']['meta']['weighted-votes-token'], 
 															$this->data['app']['meta']['min-upvote-points'], 
@@ -557,7 +549,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		
 		$notifyData = $this->data;
 		$notifyData['topic'] = $this->topic;
-		Slick_App_Meta_Model::notifyUser($this->topic['userId'], 'emails.likeThreadNotice', $this->topic['topicId'], 
+		\App\Meta_Model::notifyUser($this->topic['userId'], 'emails.likeThreadNotice', $this->topic['topicId'], 
 										 'like-topic-'.$this->data['user']['userId'], false, $notifyData);
 		
 		$output['result'] = 'success';
@@ -639,7 +631,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 		
-		$inventory = new Slick_App_Tokenly_Inventory_Model;
+		$inventory = new Tokenly\Inventory_Model;
 		$getScore = $inventory->getWeightedUserTokenScore($this->data['user']['userId'], $getPost['userId'], 
 															$this->data['app']['meta']['weighted-votes-token'], 
 															$this->data['app']['meta']['min-upvote-points'], 
@@ -672,7 +664,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			$notifyData['topic'] = $this->topic;
 			$notifyData['page'] = $andPage;
 			$notifyData['post'] = $getPost;
-			Slick_App_Meta_Model::notifyUser($getPost['userId'], 'emails.likePostNotice', $getPost['postId'], 'like-post-'.$this->data['user']['userId'], false, $notifyData);
+			\App\Meta_Model::notifyUser($getPost['userId'], 'emails.likePostNotice', $getPost['postId'], 'like-post-'.$this->data['user']['userId'], false, $notifyData);
 		}
 		
 		$output['result'] = 'success';
@@ -799,7 +791,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			die();
 		}
 
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$reportedPosts = $meta->getUserMeta($this->data['user']['userId'], 'reportedPosts');
 		if(!$reportedPosts){
 			$reportedPosts = array();
@@ -907,7 +899,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 				$notifyData = $this->data;
 				$notifyData['item'] = $getItem;
 				$notifyData['notifyUser'] = $notifyUser;
-				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $_POST['itemId'], 'report-'.$_POST['type'], true, $notifyData);
+				$notify = \App\Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $_POST['itemId'], 'report-'.$_POST['type'], true, $notifyData);
 				
 			}
 		}
@@ -969,7 +961,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 			
 			$delete = $this->model->delete('forum_posts', $getPost['postId']);
 			$permaPage = ($returnPage = intval($_GET['retpage'])) > 1 ? '?page='.$returnPage : '';
-			$this->redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
+			redirect($this->data['site']['url'].$this->moduleUrl.'/'.$this->topic['url'].$permaPage);
 		}
 		else{
 			if(!$this->data['perms']['canPermaDeleteTopic']){
@@ -977,7 +969,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 				return $output;
 			}
 			$delete = $this->model->delete('forum_topics', $this->topic['topicId']);
-			$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
+			redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/board/'.$this->board['slug']);
 		}
 		
 		return $output;
@@ -1040,7 +1032,7 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 				$notifyData['banUser'] = $getUser;
 				$notifyData['banMessage'] = $message;
 				$notifyData['notifyUser'] = $notifyUser;
-				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.banRequestNotice', $getUser['userId'], 'banrequest', true, $notifyData);
+				$notify = \App\Meta_Model::notifyUser($notifyUser, 'emails.banRequestNotice', $getUser['userId'], 'banrequest', true, $notifyData);
 				
 			}
 		}		
@@ -1050,5 +1042,4 @@ class Slick_App_Forum_Post_Controller extends Slick_App_ModControl
 		die();		
 		return $output;
 	}
-
 }

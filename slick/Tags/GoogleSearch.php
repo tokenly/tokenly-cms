@@ -1,5 +1,6 @@
 <?php
-class Slick_Tags_GoogleSearch
+namespace Tags;
+class GoogleSearch
 {
 	public function display()
 	{
@@ -29,5 +30,3 @@ class Slick_Tags_GoogleSearch
 	}
 
 }
-
-?>

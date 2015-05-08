@@ -1,41 +1,40 @@
 <?php
-class Slick_App_CMS_Themes_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI;
+class Themes_Model extends Core\Model
 {
 
 	public function getThemeForm($themeId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Theme Name');
 		$form->add($name);
 		
-		$location = new Slick_UI_Textbox('location');
+		$location = new UI\Textbox('location');
 		$location->addAttribute('required');
 		$location->setLabel('Location');
 		$form->add($location);	
 
 
-		$isDefault = new Slick_UI_Checkbox('active');
+		$isDefault = new UI\Checkbox('active');
 		$isDefault->setBool(1);
 		$isDefault->setValue(1);
 		$isDefault->setLabel('Enabled for this site?');
 		$form->add($isDefault);
 		
-
 		return $form;
 	}
 	
-
-
 	public function addTheme($data)
 	{
 		$req = array('name', 'location');
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -43,12 +42,12 @@ class Slick_App_CMS_Themes_Model extends Slick_Core_Model
 		}
 		
 		if(!is_dir(SITE_PATH.'/themes/'.$data['location'])){
-			throw new Exception('Theme not found (location does not exist)');
+			throw new \Exception('Theme not found (location does not exist)');
 		}
 		
 		$add = $this->insert('themes', $useData);
 		if(!$add){
-			throw new Exception('Error adding theme');
+			throw new \Exception('Error adding theme');
 		}
 		
 		if(isset($data['siteId']) AND isset($data['active']) AND intval($data['active']) === 1){
@@ -56,8 +55,6 @@ class Slick_App_CMS_Themes_Model extends Slick_Core_Model
 		}
 		
 		return $add;
-		
-		
 	}
 		
 	public function editTheme($id, $data)
@@ -66,7 +63,7 @@ class Slick_App_CMS_Themes_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -74,7 +71,7 @@ class Slick_App_CMS_Themes_Model extends Slick_Core_Model
 		}
 
 		if(!is_dir(SITE_PATH.'/themes/'.$data['location'])){
-			throw new Exception('Theme not found (location does not exist)');
+			throw new \Exception('Theme not found (location does not exist)');
 		}
 
 		if(isset($data['siteId']) AND isset($data['active'])){
@@ -92,18 +89,8 @@ class Slick_App_CMS_Themes_Model extends Slick_Core_Model
 
 		$edit = $this->edit('themes', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing theme');
+			throw new \Exception('Error editing theme');
 		}
-		
-		
 		return true;
-		
 	}
-
-
-
-
-
 }
-
-?>

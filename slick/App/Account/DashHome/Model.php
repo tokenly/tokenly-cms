@@ -1,9 +1,9 @@
 <?php
-class Slick_App_Account_DashHome_Model extends Slick_Core_Model
+namespace App\Account;
+use Core;
+class DashHome_Model extends Core\Model
 {
 
 
 
 }
-
-?>

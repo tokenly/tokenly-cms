@@ -1,38 +1,40 @@
 <?php
-class Slick_App_CMS_Modules_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Modules_Model extends Core\Model
 {
 
 	public function getAppForm($appId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('App Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->addAttribute('required');
 		$slug->setLabel('Slug');
 		$form->add($slug);
 		
-		$location = new Slick_UI_Textbox('location');
+		$location = new UI\Textbox('location');
 		$location->addAttribute('required');
 		$location->setLabel('Controller Class Location');
 		$form->add($location);	
 
-		$url = new Slick_UI_Textbox('url');
+		$url = new UI\Textbox('url');
 		$url->setLabel('URL');
 		$form->add($url);	
 
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setBool(1);
 		$active->setValue(1);
 		$active->setLabel('Active?');
 		$form->add($active);
 		
 		if($appId != 0){
-			$default = new Slick_UI_Select('defaultModule');
+			$default = new UI\Select('defaultModule');
 			$default->setLabel('Default Module');
 			$default->addOption('0', 'Choose Module');
 			$getModules = $this->getAll('modules', array('appId' => $appId));
@@ -47,34 +49,34 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 
 	public function getModuleForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Module Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->addAttribute('required');
 		$slug->setLabel('Slug');
 		$form->add($slug);
 		
-		$location = new Slick_UI_Textbox('location');
+		$location = new UI\Textbox('location');
 		$location->addAttribute('required');
 		$location->setLabel('Controller Class Location');
 		$form->add($location);	
 
-		$url = new Slick_UI_Textbox('url');
+		$url = new UI\Textbox('url');
 		$url->setLabel('URL');
 		$form->add($url);	
 
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setBool(1);
 		$active->setValue(1);
 		$active->setLabel('Active?');
 		$form->add($active);
 		
-		$checkAccess = new Slick_UI_Checkbox('checkAccess');
+		$checkAccess = new UI\Checkbox('checkAccess');
 		$checkAccess->setBool(1);
 		$checkAccess->setValue(1);
 		$checkAccess->setLabel('Check Group Access');
@@ -93,7 +95,7 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -106,16 +108,15 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$add = $this->insert('apps', $useData);
 		if(!$add){
-			throw new Exception('Error adding app');
+			throw new \Exception('Error adding app');
 		}
 		
-		$class = 'Slick_App_'.$data['location'].'_Controller';
+		$class = '\\App\\'.$data['location'].'\\Controller';
 		$class = new $class;
 		$class->__install($add);
 		
 		return $add;
-		
-		
+
 	}
 		
 	public function editApp($id, $data)
@@ -125,7 +126,7 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -138,25 +139,24 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('apps', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing app');
+			throw new \Exception('Error editing app');
 		}
 		
 		return true;
-		
 	}
 
 	public function addModule($appId, $data)
 	{
 		$getApp = $this->get('apps', $appId);
 		if(!$getApp){
-			throw new Exception('App not found');
+			throw new \Exception('App not found');
 		}
 		
 		$req = array('name', 'slug', 'active', 'location', 'url', 'checkAccess');
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -165,17 +165,17 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$getApp = $this->get('apps', $appId);
 		if(!$getApp){
-			throw new Exception('App not found');
+			throw new \Exception('App not found');
 		}
 		
 		$useData['appId'] = $appId;
 		
 		$add = $this->insert('modules', $useData);
 		if(!$add){
-			throw new Exception('Error adding module');
+			throw new \Exception('Error adding module');
 		}
 		
-		$class = 'Slick_App_'.$getApp['location'].'_'.$data['location'].'_Controller';
+		$class = '\\App\\'.$getApp['location'].'\\'.$data['location'].'_Controller';
 		$class = new $class;
 		$class->__install($add);
 		
@@ -189,7 +189,7 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -198,38 +198,36 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('modules', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing module');
+			throw new \Exception('Error editing module');
 		}
-		
 		return true;
-		
 	}
 	
 	public function getAppSettingForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$key = new Slick_UI_Textbox('metaKey');
+		$key = new UI\Textbox('metaKey');
 		$key->setLabel('Meta Key');
 		$key->addAttribute('required');
 		$form->add($key);
 		
-		$label = new Slick_UI_Textbox('label');
+		$label = new UI\Textbox('label');
 		$label->setLabel('Label');
 		$form->add($label);
 		
-		$type = new Slick_UI_Select('type');
+		$type = new UI\Select('type');
 		$type->setLabel('Field Type');
 		$type->addOption('textbox', 'Textbox');
 		$type->addOption('textarea', 'Textarea');
 		$type->addOption('select', 'Select');
 		$form->add($type);
 		
-		$options = new Slick_UI_Textarea('options');
+		$options = new UI\Textarea('options');
 		$options->setLabel('Options (1 per line)');
 		$form->add($options);
 		
-		$value = new Slick_UI_Textarea('metaValue');
+		$value = new UI\Textarea('metaValue');
 		$value->setLabel('Current Value');
 		$form->add($value);
 		
@@ -243,11 +241,10 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$insert = $this->insert('app_meta', $data);
 		if(!$insert){
-			throw new Exception('Error adding app setting');
+			throw new \Exception('Error adding app setting');
 		}
 		
 		return $insert;
-		
 	}
 	
 	public function editAppSetting($id, $data)
@@ -256,7 +253,7 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('app_meta', $id, $data);
 		if(!$edit){
-			throw new Exception('Error editing app setting');
+			throw new \Exception('Error editing app setting');
 		}
 		
 		return true;
@@ -265,15 +262,14 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 
 	public function getAppPermForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$key = new Slick_UI_Textbox('permKey');
+		$key = new UI\Textbox('permKey');
 		$key->setLabel('Permission Key');
 		$key->addAttribute('required');
 		$form->add($key);
 		
 		return $form;
-		
 	}
 	
 	public function addAppPerm($data)
@@ -282,11 +278,10 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$insert = $this->insert('app_perms', $data);
 		if(!$insert){
-			throw new Exception('Error adding app permission key');
+			throw new \Exception('Error adding app permission key');
 		}
 		
 		return $insert;
-		
 	}
 	
 	public function editAppPerm($id, $data)
@@ -295,11 +290,8 @@ class Slick_App_CMS_Modules_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('app_perms', $id, $data);
 		if(!$edit){
-			throw new Exception('Error editing app permission key');
+			throw new \Exception('Error editing app permission key');
 		}
-		
 		return true;
 	}
 }
-
-?>

@@ -1,5 +1,7 @@
 <?php
-class Slick_UI_Form
+namespace UI;
+use Util;
+class Form
 {
 	protected $formName = '';
 	public $fields = array();
@@ -30,13 +32,11 @@ class Slick_UI_Form
 		}
 		
 		return '<form action="'.$this->action.'" method="'.$this->method.'" name="'.$this->formName.'" '.$encText.' >';
-		
 	}
 	
 	public function close()
 	{
-		return '</form>';
-		
+		return '</form>';	
 	}
 	
 	public function displayFields($elemWrap = '')
@@ -49,7 +49,6 @@ class Slick_UI_Form
 		}
 		
 		return $output;
-		
 	}
 	
 	public function displaySubmit($elemWrap = '')
@@ -57,7 +56,7 @@ class Slick_UI_Form
 		if(isset($this->fields['submit'])){
 			return $this->field('submit')->display($elemWrap);
 		}
-		$button = new Slick_UI_Button('submit', '', 'submit');
+		$button = new Button('submit', '', 'submit');
 		$button->setValue($this->submitText);
 		
 		return $button->display($elemWrap);
@@ -78,13 +77,11 @@ class Slick_UI_Form
 		$output .= $this->close();
 		
 		return $output;
-		
 	}
 	
 	public function setFields($fields = array())
 	{
-		$this->fields = $fields;
-		
+		$this->fields = $fields;	
 	}
 	
 	public function add($field, $name = '')
@@ -92,9 +89,7 @@ class Slick_UI_Form
 		if($name == ''){
 			$name = $field->getName();
 		}
-		
 		$this->fields[$name] = $field;
-		
 	}
 	
 	public function remove($field)
@@ -125,7 +120,7 @@ class Slick_UI_Form
 			
 			$class = get_class($this->field($key));
 			
-			if($class == 'Slick_UI_Checkbox'){
+			if($class == 'UI\\Checkbox'){
 				if($this->field($key)->isBool == 1){
 					$this->field($key)->setChecked($value);
 				}
@@ -133,10 +128,10 @@ class Slick_UI_Form
 					$this->field($key)->setValue($value);
 				}
 			}
-			elseif($class == 'Slick_UI_Select'){
+			elseif($class == 'UI\\Select'){
 				$this->field($key)->setSelected($value);	
 			}
-			elseif($class == 'Slick_UI_CheckboxList'){
+			elseif($class == 'UI\\CheckboxList'){
 				if(is_array($value)){
 					foreach($value as $valKey => $val){
 						$this->field($key)->setSelected($val);
@@ -146,9 +141,7 @@ class Slick_UI_Form
 			else{
 				$this->field($key)->setValue($value);
 			}
-			
 		}
-		
 	}
 	
 	public function field($field)
@@ -171,7 +164,7 @@ class Slick_UI_Form
 	
 	public function grabData()
 	{
-		$data = new Slick_Util_Data;
+		$data = new Util\Data;
 		$getThisData = $data->getFormData($this);
 		
 		return $getThisData;
@@ -183,6 +176,3 @@ class Slick_UI_Form
 	}
 	
 }
-
-
-?> 

@@ -1,5 +1,7 @@
 <?php
-class Slick_UI_Table extends Slick_UI_Object
+namespace UI;
+use Util;
+class Table extends Object
 {
 	protected $columns = array();
 	protected $data = array();
@@ -139,7 +141,7 @@ class Slick_UI_Table extends Slick_UI_Object
 			}
 			
 		
-			$pager = new Slick_UI_Pager;
+			$pager = new Pager;
 			$output .= $pager->display($this->numPages, $this->pagerUrl, $currPage);
 
 		}
@@ -197,7 +199,7 @@ class Slick_UI_Table extends Slick_UI_Object
 		$this->usePaging = 1;
 		$this->numPages = ceil(count($this->data) / $perPage);
 		$this->pagerUrl = $pageUrl;
-		$util = new Slick_Util_Paging;
+		$util = new Util\Paging;
 		$this->pagedData  = $util->pageArray($this->data, $perPage);
 		
 		
@@ -211,5 +213,3 @@ class Slick_UI_Table extends Slick_UI_Object
 	
 }
 
-
-?> 

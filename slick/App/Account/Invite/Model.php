@@ -1,14 +1,16 @@
 <?php
-class Slick_App_Account_Invite_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, App\Meta_Model;
+class Invite_Model extends Core\Model
 {
 	
 	public function sendInvite($data)
 	{
 		$data = $this->createInvite($data);
 		$data = $this->getInviteUsers($data);
-		$notify = Slick_App_Meta_Model::notifyUser($data['acceptUser'], 'emails.invites.'.$data['type'], $data['inviteId'], 'user-invite', false, $data);
+		$notify = Meta_Model::notifyUser($data['acceptUser'], 'emails.invites.'.$data['type'], $data['inviteId'], 'user-invite', false, $data);
 		if(!$notify){
-			throw new Exception('Error sending invite notification');
+			throw new \Exception('Error sending invite notification');
 		}
 		return $data;
 	}
@@ -18,7 +20,7 @@ class Slick_App_Account_Invite_Model extends Slick_Core_Model
 		$req = array('userId', 'sendUser', 'type', 'itemId', 'class');
 		foreach($req as $required){
 			if(!isset($data[$required])){
-				throw new Exception($required.' required');
+				throw new \Exception($required.' required');
 			}
 		}
 		if(!isset($data['acceptUser'])){
@@ -39,7 +41,7 @@ class Slick_App_Account_Invite_Model extends Slick_Core_Model
 		$insert = $this->insert('user_invites', $insertData);
 		
 		if(!$insert){
-			throw new Exception('Error creating invitation');
+			throw new \Exception('Error creating invitation');
 		}
 		
 		$data['inviteId'] = $insert;
@@ -72,7 +74,5 @@ class Slick_App_Account_Invite_Model extends Slick_Core_Model
 		ob_end_clean();
 		return $output;
 	}
-	
-	
 }
 

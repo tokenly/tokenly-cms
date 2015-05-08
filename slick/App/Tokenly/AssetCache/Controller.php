@@ -1,22 +1,23 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Asset Cache
  * 
  * */
-class Slick_App_Tokenly_AssetCache_Controller extends Slick_App_ModControl
+class AssetCache_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_AssetCache_Model;
+		$this->model = new AssetCache_Model;
 	}
 	
 	public function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'tokenly');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'tokenly');
 		$output['perms'] = $this->data['perms'];
 		
 		if(isset($this->args[2])){
@@ -50,7 +51,6 @@ class Slick_App_Tokenly_AssetCache_Controller extends Slick_App_ModControl
 				}
 			}
 		}
-		
 		return $output;
 	}
 	
@@ -68,12 +68,12 @@ class Slick_App_Tokenly_AssetCache_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addAsset($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$add = false;
 				$output['message'] = $e->getMessage();
 			}
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
+				redirect($this->site.$this->moduleUrl);
 			}
 		}
 		return $output;
@@ -107,16 +107,15 @@ class Slick_App_Tokenly_AssetCache_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editAsset($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$edit = false;
 				$output['message'] = $e->getMessage();
 			}
 			if($edit){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
+				redirect($this->site.$this->moduleUrl);
 			}
 		}
 		$output['form']->setValues($getAsset);
 		return $output;
 	}
-	
 }

@@ -1,5 +1,7 @@
 <?php
-class Slick_Core_Controller
+namespace Core;
+
+class Controller
 {
 	private $script = '';
 
@@ -8,26 +10,6 @@ class Slick_Core_Controller
 
 	}
 
-	/**
-	*
-	* shortened version of header redirect
-	*
-	*/
-	public function redirect($url, $external = 0)
-	{
-		header('Location: '.$url);
-	}
-
-	/**
-	 *  
-	 *  Set the page headers to a different type (file, json, html, image etc.)
-	 * 
-	 * */
-	public function setHeaders($type)
-	{
-		
-		
-	}
 }
 
 ?>

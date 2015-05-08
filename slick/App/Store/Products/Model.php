@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Store_Products_Model extends Slick_Core_Model
+namespace App\Store;
+use Core;
+class Products_Model extends Core\Model
 {
 
 

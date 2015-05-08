@@ -1,14 +1,16 @@
 <?php
-class Slick_App_Forum_Boards_Model extends Slick_Core_Model
+namespace App\Forum;
+use Core, UI, Util, App\Tokenly;
+class Boards_Model extends Core\Model
 {
 
 	public function getBoardForm($siteId)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
-		$categoryId = new Slick_UI_Select('categoryId');
+		$categoryId = new UI\Select('categoryId');
 		$categoryId->setLabel('Board Category');
 		$categoryId->addOption(0, '[none]');
 		foreach($getCats as $cat){
@@ -16,16 +18,16 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		}
 		$form->add($categoryId);
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Board Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->setLabel('Slug / URL (blank to auto generate)');
 		$form->add($slug);	
 		
-		$ownerId = new Slick_UI_Select('ownerId');
+		$ownerId = new UI\Select('ownerId');
 		$ownerId->setLabel('Board Owner');
 		$ownerId->addOption(0, '[nobody]');
 		$getUsers = $this->getAll('users');
@@ -34,17 +36,17 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		}
 		$form->add($ownerId);
 		
-		$rank = new Slick_UI_Textbox('rank');
+		$rank = new UI\Textbox('rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);
 		
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setLabel('Board Active?');
 		$active->setBool(1);
 		$active->setValue(1);
 		$form->add($active);
 		
-		$description = new Slick_UI_Markdown('description', 'markdown');
+		$description = new UI\Markdown('description', 'markdown');
 		$description->setLabel('Description (use markdown)');
 		$form->add($description);
 		
@@ -60,7 +62,7 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -85,7 +87,7 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		
 		$add = $this->insert('forum_boards', $useData);
 		if(!$add){
-			throw new Exception('Error adding board');
+			throw new \Exception('Error adding board');
 		}
 		
 		return $add;
@@ -100,7 +102,7 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -133,7 +135,7 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('forum_boards', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing board');
+			throw new \Exception('Error editing board');
 		}
 			
 		return true;
@@ -154,9 +156,9 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 
 	public function getModForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$id = new Slick_UI_Textbox('userId');
+		$id = new UI\Textbox('userId');
 		$id->setLabel('Add New Moderator');
 		$id->addAttribute('placeholder', 'Username or User ID');
 		$form->add($id);
@@ -174,13 +176,13 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		if(!$get){
 			$get = $this->get('users', intval($userId));
 			if(!$get){
-				throw new Exception('User not found');
+				throw new \Exception('User not found');
 			}
 		}
 		
 		$getMod = $this->getAll('forum_mods', array('userId' => $userId, 'boardId' => $boardId));
 		if(count($getMod) > 0){
-			throw new Exception('User already a moderator');
+			throw new \Exception('User already a moderator');
 		}
 		
 		return $this->insert('forum_mods', array('userId' => $get['userId'], 'boardId' => $boardId));
@@ -202,5 +204,3 @@ class Slick_App_Forum_Boards_Model extends Slick_Core_Model
 		return $slug.'-'.($get['total']+1);
 	}
 }
-
-?>

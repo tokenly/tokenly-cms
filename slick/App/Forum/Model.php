@@ -1,10 +1,12 @@
 <?php
-class Slick_App_Forum_Model extends Slick_Core_Model
+namespace App\Forum;
+use Core, Util, App\Profile, App\Tokenly;
+class Model extends Core\Model
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->tca = new Slick_App_Tokenly_TCA_Model;
+		$this->tca = new Tokenly\TCA_Model;
 		$this->boardModule = $this->get('modules', 'forum-board', array(), 'slug');
 		$this->postModule = $this->get('modules', 'forum-post', array(), 'slug');
 		$this->profileModule = $this->get('modules', 'user-profile', array(), 'slug');
@@ -15,7 +17,7 @@ class Slick_App_Forum_Model extends Slick_Core_Model
 		$siteId = $site['siteId'];
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
 		$boardModule = $this->boardModule;
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$tca = $this->tca;
 		$userId = 0;
 		if($user){

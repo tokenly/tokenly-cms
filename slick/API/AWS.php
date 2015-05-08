@@ -1,10 +1,12 @@
 <?php
+namespace API;
 require_once(SITE_PATH.'/resources/aws/aws-autoloader.php');
+use Core;
 use Aws\Common\Aws;
 use Aws\S3\Exception\S3Exception;
 use Aws\Common\Exception\MultipartUploadException;
 use Aws\S3\Model\MultipartUpload\UploadBuilder;
-class Slick_API_AWS extends Slick_Core_Model
+class AWS extends Core\Model;
 {
 	private $aws = false;
 	private $service = false;
@@ -28,11 +30,11 @@ class Slick_API_AWS extends Slick_Core_Model
 	public function uploadFile($data)
 	{
 		if(!isset($data['file'])){
-			throw new Exception('No file set');
+			throw new \Exception('No file set');
 		}
 		if(!isset($data['bucket'])){
 			if(!defined('AWS_DEFAULT_BUCKET')){
-				throw new Exception('No bucket set');
+				throw new \Exception('No bucket set');
 			}
 			$data['bucket'] = AWS_DEFAULT_BUCKET;
 		}
@@ -58,7 +60,7 @@ class Slick_API_AWS extends Slick_Core_Model
 			
 		} catch (MultipartUploadException $e) {
 			$uploader->abort();
-			throw new Exception($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 		return $upload['Location'];
 	}
@@ -81,6 +83,4 @@ class Slick_API_AWS extends Slick_Core_Model
 		$response = $this->service->getObjectUrl($bucket, $path);
 		return $response;
 	}
-	
-	
 }

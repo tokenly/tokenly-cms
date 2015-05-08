@@ -1,15 +1,17 @@
 <?php
+namespace App\Store;
+use Core;
 /*
  * @module-type = dashboard
  * @menu-label = Orders
  * 
  * */
-class Slick_App_Store_Order_Controller extends Slick_App_ModControl
+class Order_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 	}
 	
 	public function init()
@@ -40,20 +42,13 @@ class Slick_App_Store_Order_Controller extends Slick_App_ModControl
 	
 	private function deleteOrder($output)
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getOrder = $this->model->get('payment_order', $this->args[3]);
+			if($getOrder){
+				$delete = $this->model->delete('payment_order', $this->args[3]);
+			}
 		}
-		
-		$getOrder = $this->model->get('payment_order', $this->args[3]);
-		if(!$getOrder){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('payment_order', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 }

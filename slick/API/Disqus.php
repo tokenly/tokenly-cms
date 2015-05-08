@@ -1,6 +1,7 @@
 <?php
+namespace API;
 
-class Slick_API_Disqus
+class Disqus
 {
 	private $apiURL = 'https://disqus.com/api/3.0/';
 	private $forumId = DISQUS_DEFAULT_FORUM;

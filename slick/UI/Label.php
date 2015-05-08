@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Label extends Slick_UI_Object
+namespace UI;
+class Label extends Object
 {
 	public function display($text = '')
 	{
@@ -23,5 +24,3 @@ class Slick_UI_Label extends Slick_UI_Object
 	
 	
 }
-
-?>

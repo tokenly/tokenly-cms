@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Date extends Slick_UI_FormObject
+namespace UI;
+class Date extends FormObject
 {
 	
 	protected $minYear = 1969;
@@ -18,9 +19,9 @@ class Slick_UI_Date extends Slick_UI_FormObject
 	
 	public function display($elemWrap = '')
 	{
-		$dSelect = new Slick_UI_Select($this->name.'-day', $this->name.'-day');
-		$mSelect = new Slick_UI_Select($this->name.'-month', $this->name.'-month');
-		$ySelect = new Slick_UI_Select($this->name.'-year', $this->name.'-year');
+		$dSelect = new Select($this->name.'-day', $this->name.'-day');
+		$mSelect = new Select($this->name.'-month', $this->name.'-month');
+		$ySelect = new Select($this->name.'-year', $this->name.'-year');
 		
 		for($i = 1; $i <= 31; $i++){
 			$dSelect->addOption($i, $i);
@@ -55,7 +56,7 @@ class Slick_UI_Date extends Slick_UI_FormObject
 		$output = $this->label.'<div class="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.'>'.$dSelect->display().$mSelect->display().$ySelect->display().'</div>';
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -137,5 +138,3 @@ class Slick_UI_Date extends Slick_UI_FormObject
 	}
 
 }
-
-?>

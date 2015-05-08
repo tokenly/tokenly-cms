@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Link extends Slick_UI_Object
+namespace UI;
+class Link extends Object
 {
 	public function display($url, $text = '', $target = '')
 	{
@@ -23,10 +24,4 @@ class Slick_UI_Link extends Slick_UI_Object
 		return $output;
 		
 	}
-	
-	
-	
 }
-
-
-?> 

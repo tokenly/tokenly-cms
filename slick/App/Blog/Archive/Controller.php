@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Archive_Controller extends Slick_App_ModControl
+namespace App\Blog;
+
+class Archive_Controller extends \App\ModControl
 {
 	public $args;
 	public $data;
@@ -7,9 +9,7 @@ class Slick_App_Blog_Archive_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Blog_Archive_Model;
-        
-        
+        $this->model = new Archive_Model;
     }
     
     public function init()
@@ -62,12 +62,6 @@ class Slick_App_Blog_Archive_Controller extends Slick_App_ModControl
 		
 		$output['posts'] = $this->model->getArchivePosts($this->data['site']['siteId'], $postLimit, $year, $month, $day, $useMonth, $useDay);
 		$output['numPages'] = $this->model->getArchivePages($this->data['site']['siteId'], $postLimit, $year, $month, $day, $useMonth, $useDay);
-
-
 		return $output;
-		
-		
 	}
-	
-	
 }

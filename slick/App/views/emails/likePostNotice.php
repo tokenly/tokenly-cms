@@ -1,5 +1,5 @@
 <?php
-$tca = new Slick_App_Tokenly_TCA_Model;
+$tca = new  \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 
 $checkTCA = $tca->checkItemAccess($data['post']['userId'], $profileModule['moduleId'], $data['user']['userId'], 'user-profile');

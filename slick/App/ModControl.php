@@ -1,5 +1,7 @@
 <?php
-class Slick_App_ModControl extends Slick_Core_Controller
+namespace App;
+use Core;
+class ModControl extends Core\Controller
 {
     public $data = array();
     public $args = array();
@@ -7,22 +9,27 @@ class Slick_App_ModControl extends Slick_Core_Controller
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 	}
 	
 	public function init()
 	{
 		$output = array();
 		if(intval($this->data['module']['checkAccess']) === 1){
-			Slick_App_AppControl::checkModuleAccess($this->data['module']['moduleId']);
+			AppControl::checkModuleAccess($this->data['module']['moduleId']);
 		}
 		$dashModel = app_class('dashboard', 'model');
 		$isDash = $dashModel->checkModuleIsDash($this->data['module']['moduleId']);
 		if($isDash){
 			if($this->data['app']['slug'] != 'dashboard'){
 				$dashApp = get_app('dashboard');
-				$this->redirect($this->site.'/'.$dashApp['url'].'/'.join('/', $this->args));
-				die();
+				if(count($this->args) == 0){
+					redirect($this->site.$dashApp['url'].'/');
+				}
+				else{
+					redirect($this->site.$dashApp['url'].'/'.join('/', $this->args).'/');
+				}
+				
 			}
 		}
 		return $output;

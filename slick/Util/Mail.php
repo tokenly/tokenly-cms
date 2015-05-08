@@ -1,8 +1,7 @@
 <?php
-/**
- * Borrowed from NSWAT :)
- * */
-class Slick_Util_Mail 
+namespace Util;
+
+class Mail 
 {
 	private $version='1.0';
 	private $to;	

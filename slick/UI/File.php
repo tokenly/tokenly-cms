@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_File extends Slick_UI_FormObject
+namespace UI;
+class File extends FormObject
 {
 	function __construct($name, $id = '')
 	{
@@ -29,14 +30,10 @@ class Slick_UI_File extends Slick_UI_FormObject
 		$output = $this->label.'<input type="file" name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.'  />';
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
 		return $output;
 	}
-	
-	
 }
-
-?>

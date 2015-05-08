@@ -1,7 +1,8 @@
 <?php
-class Slick_App_CMS_Pages_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Pages_Model extends Core\Model
 {
-
 	public function getPageForm($pageId = 0, $theme)
 	{
 		$getPage = false;
@@ -9,19 +10,19 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 			$getPage = $this->get('pages', $pageId);
 		}
 		
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Page Name');
 		$form->add($name);
 		
-		$url = new Slick_UI_Textbox('url');
+		$url = new UI\Textbox('url');
 		$url->setLabel('URL');
 		$form->add($url);	
 
 		
-		$template = new Slick_UI_Select('template');
+		$template = new UI\Select('template');
 		$template->setLabel('Template');
 		$template->addOption('default', 'default');
 		$form->add($template);
@@ -36,13 +37,13 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 			
 		}
 		
-		$formatType = new Slick_UI_Select('formatType');
+		$formatType = new UI\Select('formatType');
 		$formatType->addOption('markdown', 'Markdown');
 		$formatType->addOption('wysiwyg', 'WYSIWYG');
 		$formatType->setLabel('Formatting Type (Save/Submit to change)');
 		$form->add($formatType);		
 		
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setLabel('Active');
 		$active->setBool(1);
 		$active->setValue(1);
@@ -50,17 +51,17 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		
 		
 		if(!$getPage OR $getPage['formatType'] == 'markdown'){
-			$content = new Slick_UI_Markdown('content', 'markdown');
+			$content = new UI\Markdown('content', 'markdown');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
 		else{
-			$content = new Slick_UI_Textarea('content', 'html-editor');
+			$content = new UI\Textarea('content', 'html-editor');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
 		
-		$description = new Slick_UI_Textarea('description');
+		$description = new UI\Textarea('description');
 		$description->setLabel('Meta Description');
 		$form->add($description);
 
@@ -76,7 +77,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -96,7 +97,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		
 		$add = $this->insert('pages', $useData);
 		if(!$add){
-			throw new Exception('Error adding page');
+			throw new \Exception('Error adding page');
 		}
 		
 		$this->updatePageIndex($add, $useData['url'], $useData['siteId']);
@@ -110,7 +111,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 	{
 		$pageModule = $this->get('modules', 'page-view', array(), 'slug');
 		if(!$pageModule){
-			throw new Exception('Page View module not installed');
+			throw new \Exception('Page View module not installed');
 		}
 		$values = array(':moduleId' => $pageModule['moduleId'], ':id' => $pageId, ':siteId' => $siteId);
 		$getIndex = $this->fetchSingle('SELECT * FROM page_index WHERE itemId = :id AND moduleId = :moduleId AND siteId = :siteId',
@@ -126,7 +127,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		$update = $this->sendQuery($sql, $values);
 
 		if(!$update){
-			throw new Exception('Error updating page index');
+			throw new \Exception('Error updating page index');
 		}
 		
 		return true;
@@ -143,7 +144,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -166,7 +167,7 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('pages', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing page');
+			throw new \Exception('Error editing page');
 		}
 		
 		$this->updatePageIndex($id, $useData['url'], $useData['siteId']);
@@ -197,9 +198,4 @@ class Slick_App_CMS_Pages_Model extends Slick_Core_Model
 
 		return $url;
 	}
-
-
-
 }
-
-?>

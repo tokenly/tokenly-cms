@@ -3,7 +3,7 @@
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Go Back</a>
 </p>
 <?php
-$tca = new Slick_App_Tokenly_TCA_Model;
+$tca = new \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 if(isset($error) AND trim($error) != ''){
 	echo '<p class="error">'.$error.'</p>';

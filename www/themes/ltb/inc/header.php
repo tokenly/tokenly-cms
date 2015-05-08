@@ -106,7 +106,7 @@
 			
 			<?php
 			//grab last 10 posts with soundcloud ids
-			$scModel = new Slick_App_API_V1_Blog_Model;
+			$scModel = new \App\API\V1\Blog_Model;
 			$scPosts = $scModel->getAllPosts(array('page' => 1, 'limit' => 10, 'soundcloud-id' => 'true', 'site' => $site, 'noProfiles' => true,
 													'noCategories' => true, 'noComments' => true, 'minimize' => true));
 			$mediaPlayer = array();
@@ -124,6 +124,7 @@
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/scripts.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/player.js"></script>
 	<?= $scripts ?>
+	<!-- google analytics code -->
 </head>
 <body class="body-<?= $template ?>">
 	<div class="header">
@@ -136,7 +137,7 @@
 					<div class="mobile-header">
                                             <a href="#" class="menu-pull" title="Menu"><i class="fa fa-bars"></i></a>
                                                 <?php 
-                                                    $model = new Slick_Core_Model;
+                                                    $model = new \Core\Model;
                                                     if(isset($user) AND $user){
                                                             $numNotes = $model->fetchSingle('SELECT count(*) as total FROM user_notifications WHERE userId = :userId
                                                                                                                              AND isRead = 0', array(':userId' => $user['userId']));

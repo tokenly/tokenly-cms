@@ -1,18 +1,16 @@
 <?php
+namespace App\Store;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Products
  * 
  * */
-class Slick_App_Store_Products_Controller extends Slick_App_ModControl
+class Products_Controller extends \App\ModControl
 {
-    public $data = array();
-    public $args = array();
-
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Store_Products_Model;    
+        $this->model = new Products_Model;    
     }
     
     public function init()

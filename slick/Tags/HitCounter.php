@@ -1,11 +1,13 @@
 <?php
-class Slick_Tags_HitCounter
+namespace Tags;
+use Core;
+class HitCounter
 {
 	public $params = array();
 	
 	function __construct()
 	{
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 	}
 	
 	public function display()

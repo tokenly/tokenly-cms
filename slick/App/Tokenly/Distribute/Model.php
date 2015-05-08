@@ -1,37 +1,38 @@
 <?php
-class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, Util, API;
+class Distribute_Model extends Core\Model
 {
-	
-	private $coinFieldId = 12;
+	private $coinFieldId = 12; //temporarily hardcoded
 
 	public function getShareForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->setLabel('Distribution Title (optional)');
 		$form->add($name);
 		
-		$asset = new Slick_UI_Textbox('asset');
+		$asset = new UI\Textbox('asset');
 		$asset->addAttribute('required');
 		$asset->setLabel('Asset Name');
 		$form->add($asset);
 		
-		$type = new Slick_UI_Select('valueType');
+		$type = new UI\Select('valueType');
 		$type->setLabel('Input Value Type');
 		$type->addOption('fixed', 'Fixed');
 		$type->addOption('percent', 'Percentage');
 		$form->add($type);
 		
-		$amount = new Slick_UI_Textbox('amount', 'amount');
+		$amount = new UI\Textbox('amount', 'amount');
 		$amount->setLabel('Total Amount to Send');
 		$form->add($amount);		
 		
-		$upload = new Slick_UI_File('csv');
+		$upload = new UI\File('csv');
 		$upload->setLabel('Upload CSV file:');
 		$form->add($upload);
 		
-		$addresses = new Slick_UI_Textarea('addresses', 'distribute-addresses');
+		$addresses = new UI\Textarea('addresses', 'distribute-addresses');
 		$addresses->setLabel('or Pay to Addresses:');
 		$addresses->addAttribute('placeholder', '<address>, <amount>');
 		$form->add($addresses);
@@ -47,7 +48,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 	{
 		
 		if(!isset($data['asset']) OR trim($data['asset']) == ''){
-			throw new Exception('Asset name required');
+			throw new \Exception('Asset name required');
 		}
 
 		$hasAddresses = false;
@@ -58,21 +59,21 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 			$hasAddresses = true;
 		}
 		if(!$hasAddresses){
-			throw new Exception('Please either upload a .csv of addresses/amounts, or enter in the addresses below');
+			throw new \Exception('Please either upload a .csv of addresses/amounts, or enter in the addresses below');
 		}
 		
 		
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		$data['asset'] = trim(strtoupper($data['asset']));
 		try{
 			$getAsset = $xcp->get_asset_info(array('assets' => array($data['asset'])));
 		}
-		catch(Exception $e){
-			throw new Exception('Error obtaining asset info');
+		catch(\Exception $e){
+			throw new \Exception('Error obtaining asset info');
 		}
 		
 		if(!$getAsset){
-			throw new Exception('Asset ['.$data['asset'].'] does not exist');
+			throw new \Exception('Asset ['.$data['asset'].'] does not exist');
 		}
 		
 		$getAsset = $getAsset[0];
@@ -80,7 +81,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		$usePercents = false;
 		if(isset($data['valueType']) AND $data['valueType'] == 'percent'){
 			if(!isset($data['amount']) OR trim($data['amount']) == ''){
-				throw new Exception('Must enter total sending amount when using percentage values');
+				throw new \Exception('Must enter total sending amount when using percentage values');
 			}
 			
 			$usePercents = true;
@@ -135,11 +136,11 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 				$check = $this->obtainAddress($csvAddr);
 				if(!$check){
 					continue;
-					//throw new Exception('Invalid bitcoin address or system user: '.$csvAddr);
+					//throw new \Exception('Invalid bitcoin address or system user: '.$csvAddr);
 				}
 				
 				if(!isset($expRow[1])){
-					throw new Exception('No amount set for '.$csvAddr);
+					throw new \Exception('No amount set for '.$csvAddr);
 				}
 				$expRow[1] = trim($expRow[1]);
 				
@@ -176,11 +177,11 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 				$check = $this->obtainAddress($address);
 				if(!$check){
 					continue;
-					//throw new Exception('Invalid bitcoin address or system user: '.$address);
+					//throw new \Exception('Invalid bitcoin address or system user: '.$address);
 				}
 								
 				if(!isset($expAmount[1]) OR trim($expAmount[1]) == ''){
-					throw new Exception('No amount set for '.$address);
+					throw new \Exception('No amount set for '.$address);
 				}
 				$expAmount[1] = trim($expAmount[1]);
 				
@@ -213,7 +214,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		}
 		
 		if(count($addressList) == 0){
-			throw new Exception('No valid addresses found');
+			throw new \Exception('No valid addresses found');
 		}
 		
 		$totalSending = 0;
@@ -229,17 +230,17 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 			else{
 				$newSupply = ($totalSending - $getAsset['supply']);
 			}
-			throw new Exception('Invalid total amount (not enough supply). If needed, issue at least '.$newSupply.' more tokens');
+			throw new \Exception('Invalid total amount (not enough supply). If needed, issue at least '.$newSupply.' more tokens');
 		}
 		
 		$time = timestamp();
 		$xcpAccount = XCP_PREFIX.'Distribute_'.substr(hash('sha256', $time.$data['asset'].json_encode($addressList)), 0, 10);
 		
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		$getAddress = $btc->getaccountaddress($xcpAccount);
 		
 		if(!$getAddress){
-			throw new Exception('Error retreiving payment address');
+			throw new \Exception('Error retreiving payment address');
 		}
 		
 		$fee = (count($addressList) * $distributeFee);
@@ -258,7 +259,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		
 		$insert = $this->insert('xcp_distribute', $useData);
 		if(!$insert){
-			throw new Exception('Error initializing distribution');
+			throw new \Exception('Error initializing distribution');
 		}
 		
 		$useData['distributeId'] = $insert;
@@ -269,7 +270,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 	
 	public function obtainAddress($address)
 	{
-		$btc = new Slick_API_BTCValidate;
+		$btc = new API\BTCValidate;
 		
 		if($btc->checkAddress($address)){
 			return $address;
@@ -320,13 +321,13 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 	
 	public function getEditShareForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->setLabel('Distribution Title (optional)');
 		$form->add($name);
 
-		$status = new Slick_UI_Select('status');
+		$status = new UI\Select('status');
 		$status->setLabel('Status');
 		$status->addOption('processing', 'Processing');
 		$status->addOption('receiving', 'Receiving');
@@ -335,7 +336,7 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		$status->addOption('hold', 'On Hold');
 		$form->add($status);
 		
-		$batch = new Slick_UI_Textbox('currentBatch');
+		$batch = new UI\Textbox('currentBatch');
 		$batch->setLabel('Current Batch #');
 		$form->add($batch);
 
@@ -347,11 +348,11 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 	public function editDistribution($data)
 	{
 		if(!isset($data['distributeId'])){
-			throw new Exception('No distribution set');
+			throw new \Exception('No distribution set');
 		}
 		$useData = checkRequiredFields($data, array('status' => false, 'name' => false, 'batch' => false));
 		if(count($useData) == 0){
-			throw new Exception('No fields set');
+			throw new \Exception('No fields set');
 		}
 		if(isset($useData['status'])){
 			if($useData['status'] == 'complete'){
@@ -367,10 +368,8 @@ class Slick_App_Tokenly_Distribute_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('xcp_distribute', $data['distributeId'], $useData);
 		if(!$edit){
-			throw new Exception('Error updating distribution');
+			throw new \Exception('Error updating distribution');
 		}
 		return true;
 	}
 }
-
-

@@ -1,12 +1,14 @@
 <?php
-class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class MenuItems_Model extends Core\Model
 {
 
 	public function getMenuPageForm($siteId, $itemId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$menuId = new Slick_UI_Select('menuId');
+		$menuId = new UI\Select('menuId');
 		$menuId->setLabel('Menu');
 		$getMenus = $this->getAll('menus', array('siteId' => $siteId));
 		foreach($getMenus as $menu){
@@ -14,7 +16,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		}
 		$form->add($menuId);
 		
-		$pageId = new Slick_UI_Select('pageId', 'pageId');
+		$pageId = new UI\Select('pageId', 'pageId');
 		$pageId->setLabel('Page');
 		$getPages = $this->getAll('pages', array('siteId' => $siteId));
 		foreach($getPages as $page){
@@ -22,16 +24,16 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		}
 		$form->add($pageId);
 		
-		$label = new Slick_UI_Textbox('label', 'label');
+		$label = new UI\Textbox('label', 'label');
 		$label->addAttribute('required');
 		$label->setLabel('Label');
 		$form->add($label);
 		
-		$rank = new Slick_UI_Textbox('rank', 'rank');
+		$rank = new UI\Textbox('rank', 'rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);	
 		
-		$parentId = new Slick_UI_Select('parentId');
+		$parentId = new UI\Select('parentId');
 		$parentId->setLabel('Parent');
 		$parentId->addOption('0-0-0', '-Root-');
 		$form->add($parentId);
@@ -59,7 +61,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 	public function getMenuTree($menuId, $getItems = false, $output = array(), $indent = 0)
 	{
 		if(!$getItems){
-			$getItems = Slick_App_View::getMenu($menuId);
+			$getItems = \App\View::getMenu($menuId);
 		}
 
 		foreach($getItems as $item){
@@ -77,10 +79,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		
 		return $output;
 
-		
 	}
-	
-	
 	
 	public function addMenuPage($data)
 	{
@@ -89,7 +88,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -109,7 +108,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		
 		$add = $this->insert('menu_pages', $useData);
 		if(!$add){
-			throw new Exception('Error adding menu page');
+			throw new \Exception('Error adding menu page');
 		}
 		
 		
@@ -124,7 +123,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -144,7 +143,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('menu_pages', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing menu page');
+			throw new \Exception('Error editing menu page');
 		}
 		
 		
@@ -158,7 +157,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -178,9 +177,8 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 
 		$add = $this->insert('menu_links', $useData);
 		if(!$add){
-			throw new Exception('Error adding menu link');
+			throw new \Exception('Error adding menu link');
 		}
-		
 		
 		return $add;
 	}
@@ -193,7 +191,7 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -213,18 +211,17 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 
 		$edit = $this->edit('menu_links', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing menu link');
+			throw new \Exception('Error editing menu link');
 		}
-		
 		
 		return $edit;
 	}
 
 	public function getMenuLinkForm($siteId, $itemId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$menuId = new Slick_UI_Select('menuId');
+		$menuId = new UI\Select('menuId');
 		$menuId->setLabel('Menu');
 		$getMenus = $this->getAll('menus', array('siteId' => $siteId));
 		foreach($getMenus as $menu){
@@ -232,21 +229,21 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 		}
 		$form->add($menuId);
 		
-		$url = new Slick_UI_Textbox('url', 'url');
+		$url = new UI\Textbox('url', 'url');
 		$url->addAttribute('required');
 		$url->setLabel('URL');
 		$form->add($url);
 		
-		$label = new Slick_UI_Textbox('label', 'label');
+		$label = new UI\Textbox('label', 'label');
 		$label->addAttribute('required');
 		$label->setLabel('Label');
 		$form->add($label);
 		
-		$rank = new Slick_UI_Textbox('rank', 'rank');
+		$rank = new UI\Textbox('rank', 'rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);	
 
-		$parentId = new Slick_UI_Select('parentId');
+		$parentId = new UI\Select('parentId');
 		$parentId->setLabel('Parent');
 		$parentId->addOption('0-0-0', '-Root-');
 		$form->add($parentId);
@@ -265,9 +262,6 @@ class Slick_App_CMS_MenuItems_Model extends Slick_Core_Model
 				$parentId->addOption($menu['menuId'].'-'.$item['itemId'].'-'.$isLink, $item['label'].' ('.$item['rank'].')');
 			}
 		}
-
 		return $form;
 	}
 }
-
-?>

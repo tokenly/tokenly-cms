@@ -1,16 +1,16 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Asset Dropper
  * 
  * */
-class Slick_App_Tokenly_AssetDrop_Controller extends Slick_App_ModControl
+class AssetDrop_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_AssetDrop_Model;
-		
+		$this->model = new AssetDrop_Model;
 	}
 	
 	public function init()
@@ -27,22 +27,16 @@ class Slick_App_Tokenly_AssetDrop_Controller extends Slick_App_ModControl
 			try{
 				$init = $this->model->initDrop($data, $this->data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$init = false;
 			}
 			
 			if($init){
 				$distModule = $this->model->get('modules', 'share-distribute', array(), 'slug');
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$distModule['url'].'/tx/'.$init['address']);
-				return $output;
+				redirect($this->site.$this->data['app']['url'].'/'.$distModule['url'].'/tx/'.$init['address']);
 			}
-			
 		}
-		
-		
 		return $output;
-		
 	}
-	
 }

@@ -1,5 +1,8 @@
-﻿<?php
-class Slick_Core_Model
+<?php 
+namespace Core;
+use PDO;
+
+class Model
 {
 	private $savedQueries = array();
 	public static $db;
@@ -28,7 +31,7 @@ class Slick_Core_Model
 					}
 				}
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$this->db = false;
 			}
 		}
@@ -133,13 +136,10 @@ class Slick_Core_Model
 	*/
 	public function getSavedQuery($key)
 	{
-
 		if(!isset($this->savedQueries[$key])){
 			return false;
 		}
-
 		return $this->savedQueries[$key];
-
 	}
 
 	/**
@@ -152,17 +152,14 @@ class Slick_Core_Model
 	{
 		$this->savedQueries[$key] = $value;
 		return true;
-
 	}
 	
 	public function getParams($array = array())
 	{
 		$output = array();
-		
 		foreach($array as $key => $val){
 			$output[':'.$key] = $val;
 		}
-		
 		return $output;
 	}
 	
@@ -174,14 +171,11 @@ class Slick_Core_Model
 			$fields[] = $key;
 			$params[] = ':'.$key;
 		}
-		
 		$sql = 'INSERT INTO '.$table.'('.join(',', $fields).') VALUES('.join(',', $params).')';
 		$insert = $this->sendQuery($sql, $this->getParams($data));
-		
 		if(!$insert){
 			return false;
 		}
-		
 		return $this->db->lastInsertId($table);
 	}
 	

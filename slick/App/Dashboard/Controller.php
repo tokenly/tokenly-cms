@@ -1,10 +1,11 @@
 <?php
-class Slick_App_Dashboard_Controller extends Slick_App_AppControl
+namespace App\Dashboard;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Dashboard_Model;
+        $this->model = new Model;
     }
     
     public function init()

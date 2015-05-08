@@ -1,11 +1,13 @@
 <?php
-class Slick_App_CMS_Notifier_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Notifier_Model extends Core\Model
 {
 	public function getNotifyForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$groups = new Slick_UI_CheckboxList('groups');
+		$groups = new UI\CheckboxList('groups');
 		$getGroups = $this->getAll('groups');
 		$groups->addOption(0, 'All');
 		foreach($getGroups as $group){
@@ -15,7 +17,7 @@ class Slick_App_CMS_Notifier_Model extends Slick_Core_Model
 		$groups->setLabelDir('R');
 		$form->add($groups);
 		
-		$message = new Slick_UI_Textarea('message');
+		$message = new UI\Textarea('message');
 		$message->addAttribute('required');
 		$message->setLabel('Message:');
 		$form->add($message);
@@ -29,11 +31,11 @@ class Slick_App_CMS_Notifier_Model extends Slick_Core_Model
 	{
 		$data['message'] = strip_tags(trim($data['message']), '<a><img><em><b><strong><u><s><i><sup>');	
 		if(trim($data['message']) == ''){
-			throw new Exception('Please enter a message');
+			throw new \Exception('Please enter a message');
 		}
 		
 		if(!isset($data['groups']) OR !is_array($data['groups']) OR count($data['groups']) == 0){
-			throw new Exception('Please select at least one group');
+			throw new \Exception('Please select at least one group');
 		}
 		
 		if(in_array(0, $data['groups'])){
@@ -70,16 +72,12 @@ class Slick_App_CMS_Notifier_Model extends Slick_Core_Model
 		}
 		
 		if(count($sendUsers) == 0){
-			throw new Exception('No users selected');
+			throw new \Exception('No users selected');
 		}
 		
 		foreach($sendUsers as $userId){
-			$notify = Slick_App_Meta_Model::notifyUser($userId, $data['message'], substr(time(), -5), 'push-notify');
+			$notify = \App\Meta_Model::notifyUser($userId, $data['message'], substr(time(), -5), 'push-notify');
 		}
-		
 		return true;
-		
 	}
-
-
 }

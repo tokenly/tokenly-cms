@@ -5,7 +5,7 @@
 </p>
 <?php
 echo $this->displayFlash('message');
-$form = new Slick_UI_Form;
+$form = new \UI\Form;
 echo $form->open();
 foreach($apps as $appSettings){
 	if(count($appSettings['settings']) == 0){

@@ -1,10 +1,12 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Categories
  * 
  * */
-class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
+use Util, App\Tokenly;
+class Categories_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -13,15 +15,14 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         
-        $this->model = new Slick_App_Blog_Categories_Model;
-        $this->multiblog_model = new Slick_App_Blog_Multiblog_Model;
-       
+        $this->model = new Categories_Model;
+        $this->multiblog_model = new Multiblog_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
 		$this->data['user']['perms'] = $this->data['perms'];
         if(isset($this->args[2])){
 			switch($this->args[2]){
@@ -84,15 +85,14 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addBlogCategory($data, $this->data['user']);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				Slick_Util_Session::flash('blog-message', 'Category created!', 'success');	
-				$this->redirect($this->site.$this->moduleUrl);
-				return true;
+				Util\Session::flash('blog-message', 'Category created!', 'success');	
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
@@ -102,14 +102,12 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 	private function editBlogCategory()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getBlogCategory = $this->model->get('blog_categories', $this->args[3]);
 		if(!$getBlogCategory){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getBlogCategory['blog'] = $this->model->get('blogs', $getBlogCategory['blogId']);
@@ -126,7 +124,7 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 			return $output;
 		}			
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
 		if(!$checkTCA){
@@ -146,35 +144,30 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editBlogCategory($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				Slick_Util_Session::flash('blog-message', 'Category ['.$getBlogCategory['name'].'] edited!', 'success');				
-				$this->redirect($this->site.$this->moduleUrl);
-				return true;
+				Util\Session::flash('blog-message', 'Category ['.$getBlogCategory['name'].'] edited!', 'success');				
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
 		$output['form']->setValues($getBlogCategory);
-		
 		return $output;
-		
 	}
 	
 	private function deleteBlogCategory()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getBlogCategory = $this->model->get('blog_categories', $this->args[3]);
 		if(!$getBlogCategory){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getBlogCategory['blog'] = $this->model->get('blogs', $getBlogCategory['blogId']);
@@ -191,7 +184,7 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 			return $output;
 		}			
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
 		if(!$checkTCA){
@@ -199,12 +192,8 @@ class Slick_App_Blog_Categories_Controller extends Slick_App_ModControl
 			return $output;
 		}
 				
-		
 		$delete = $this->model->delete('blog_categories', $this->args[3]);
-		Slick_Util_Session::flash('blog-message', 'Category ['.$getBlogCategory['name'].'] deleted.', 'success');	
-		$this->redirect($this->site.$this->moduleUrl);
-		return true;
+		Util\Session::flash('blog-message', 'Category ['.$getBlogCategory['name'].'] deleted.', 'success');	
+		redirect($this->site.$this->moduleUrl);
 	}
 }
-
-?>

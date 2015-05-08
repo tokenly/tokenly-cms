@@ -1,18 +1,20 @@
 <?php
-class Slick_App_Blog_Categories_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util, App\Tokenly, App\Account;
+class Categories_Model extends Core\Model
 {
 
 	public function getBlogCategoryForm($appData, $categoryId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
-		$blogId = new Slick_UI_Select('blogId');
+		$blogId = new UI\Select('blogId');
 		$blogId->setLabel('Choose Blog');
 		$getBlogs = $this->getAll('blogs', array('siteId' => $appData['site']['siteId']));
 
 		$blogPerms = array();
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		foreach($getBlogs as $blog){
 			$getRoles =  $multiblog->getBlogUserRoles($blog['blogId']);
 			
@@ -36,16 +38,16 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		}
 		$form->add($blogId);
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Category Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->setLabel('Slug (blank to auto generate)');
 		$form->add($slug);	
 		
-		$parentId = new Slick_UI_Select('parentId');
+		$parentId = new UI\Select('parentId');
 		$getThisCat = false;
 		$thisBlogId = 0;
 		if($categoryId != 0){
@@ -73,19 +75,19 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		$parentId->setLabel('Parent');
 		$form->add($parentId);
 	
-		$rank = new Slick_UI_Textbox('rank');
+		$rank = new UI\Textbox('rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);	
 		
-		$description = new Slick_UI_Markdown('description', 'markdown');
+		$description = new UI\Markdown('description', 'markdown');
 		$description->setLabel('Description');
 		$form->add($description);
 		
-		$image = new Slick_UI_File('image');
+		$image = new UI\File('image');
 		$image->setLabel('Image');
 		$form->add($image);
 		
-		$public = new Slick_UI_Checkbox('public', 'public');
+		$public = new UI\Checkbox('public', 'public');
 		$public->setLabel('Public Category?');
 		$public->setBool(1);
 		$public->setValue(1);
@@ -132,14 +134,14 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 	public function getCategories($siteId, $parentId = 0, $menuMode = 0)
 	{
 		$thisUser = false;
-		$accountModel = new Slick_App_Account_Home_Model;
+		$accountModel = new Account\Home_Model;
 		if(isset($_SESSION['accountAuth'])){
 			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
 			if($getUser){
 				$thisUser = $getUser['userId'];
 			}
 		}
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$getSite = $this->get('sites', $siteId);
 		
@@ -186,7 +188,7 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -211,14 +213,14 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		if($useData['parentId'] > 0){
 			$getParent = $this->get('blog_categories', $useData['parentId']);
 			if(!$getParent OR $getParent['blogId'] != $data['blogId']){
-				throw new Exception('Invalid parent category');
+				throw new \Exception('Invalid parent category');
 			}
 		}
 		
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		$getBlog = $multiblog->get('blogs', $data['blogId']);
 		if(!$getBlog){
-			throw new Exception('Invalid blog');
+			throw new \Exception('Invalid blog');
 		}
 		
 		$getRoles =  $multiblog->getBlogUserRoles($data['blogId']);
@@ -235,12 +237,12 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		}
 
 		if(!$is_admin AND !$user['perms']['canManageAllBlogs']){
-			throw new Exception('You do not have permission to create a category on this blog.');
+			throw new \Exception('You do not have permission to create a category on this blog.');
 		}		
 		
 		$add = $this->insert('blog_categories', $useData);
 		if(!$add){
-			throw new Exception('Error adding category');
+			throw new \Exception('Error adding category');
 		}
 		
 		$this->uploadImage($add);
@@ -257,7 +259,7 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -283,13 +285,13 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		if($useData['parentId'] > 0){
 			$getParent = $this->get('blog_categories', $useData['parentId']);
 			if(!$getParent OR $getParent['blogId'] != $thisCategory['blogId'] OR $getParent['categoryId'] == $id OR $getParent['parentId'] == $id){
-				throw new Exception('Invalid parent category');
+				throw new \Exception('Invalid parent category');
 			}
 		}		
 		
 		$edit = $this->edit('blog_categories', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing category');
+			throw new \Exception('Error editing category');
 		}
 		
 		$this->uploadImage($id);
@@ -302,10 +304,10 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
 			$getApp = $this->get('apps', 'blog', array(), 'slug');
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$appMeta = $meta->appMeta($getApp['appId']);
 			$fileName = md5('category-'.$categoryId.'-'.$_FILES['image']['name']).'.jpg';
-			$image = new Slick_Util_Image;
+			$image = new Util\Image;
 			$imageWidth = 200;
 			$imageHeight = 200;
 			if(isset($appMeta['category-image-width'])){
@@ -344,15 +346,5 @@ class Slick_App_Blog_Categories_Model extends Slick_Core_Model
 		}
 		
 		return $dates;
-		
 	}
-	
-	
-
-
-
-
-
 }
-
-?>

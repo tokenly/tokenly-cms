@@ -1,34 +1,32 @@
 <?php
+namespace App\Account;
+use App\API\V1;
 /*
  * @module-type = dashboard
  * @menu-label = Account Dashboard Home
  * 
  * */
-class Slick_App_Account_DashHome_Controller extends Slick_App_ModControl
+class DashHome_Controller extends \App\ModControl
 {
 
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_Account_DashHome_Model;
-
+        $this->model = new DashHome_Model;
     }
     
     public function init()
     {
 		if(isset($_SESSION['accountAuth'])){
 			try{
-				$userInfo = Slick_App_API_V1_Auth_Model::getUser(array('authKey' => $_SESSION['accountAuth'], 'site' => $this->data['site']));
+				$userInfo = V1\Auth_Model::getUser(array('authKey' => $_SESSION['accountAuth'], 'site' => $this->data['site']));
 			}
-			catch(Exception $e){
-				$this->redirect($this->site.'/account/logout');
-				return true;
+			catch(\Exception $e){
+				redirect($this->site.'account/logout');
 			}
 		}
 		else{
-			$this->redirect($this->site);
-			return true;
+			redirect($this->site);
 		}
 		
 		$output = parent::init();
@@ -37,8 +35,4 @@ class Slick_App_Account_DashHome_Controller extends Slick_App_ModControl
         
         return $output;
     }
-
-
 }
-
-?>

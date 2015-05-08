@@ -1,16 +1,17 @@
 <?php
-class Slick_App_Account_Reset_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, UI, Util;
+class Reset_Model extends Core\Model
 {
-
 	public function getResetForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 
-		$username = new Slick_UI_Textbox('username');
+		$username = new UI\Textbox('username');
 		$username->setLabel('Username');
 		$form->add($username);
 
-		$email = new Slick_UI_Textbox('email');
+		$email = new UI\Textbox('email');
 		$email->setLabel(' Or Email Address');
 		$form->add($email);
 		
@@ -22,11 +23,11 @@ class Slick_App_Account_Reset_Model extends Slick_Core_Model
 	public function sendPasswordReset($data, $site)
 	{
 		if((!isset($data['email']) OR trim($data['email']) == '') AND (!isset($data['username']) OR trim($data['username']) == '')){
-			throw new Exception('Email address or Username required');
+			throw new \Exception('Email address or Username required');
 		}
 		
 		if(isset($data['email']) AND trim($data['email']) != '' AND !filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
-			throw new Exception('Invalid email address');
+			throw new \Exception('Invalid email address');
 		}
 		
 		$get = false;
@@ -38,16 +39,16 @@ class Slick_App_Account_Reset_Model extends Slick_Core_Model
 		}
 		
 		if(!$get){
-			throw new Exception('No user found');
+			throw new \Exception('No user found');
 		}
 		
 		$genLink = hash('sha256', $get['userId'].time().':'.mt_rand(0,1000).$get['lastAuth']);
 		$addLink = $this->insert('reset_links', array('userId' => $get['userId'], 'url' => $genLink, 'requestTime' => timestamp()));
 		if(!$addLink){
-			throw new Exception('Error generating reset link');
+			throw new \Exception('Error generating reset link');
 		}
 		
-		$mail = new Slick_Util_Mail;
+		$mail = new Util\Mail;
 		$mail->addTo($get['email']);
 		$mail->setFrom('noreply@'.$site['domain']);
 		$mail->setSubject($site['name'].' Password Reset');
@@ -68,59 +69,55 @@ class Slick_App_Account_Reset_Model extends Slick_Core_Model
 		$mail->setHTML($body);
 		$send = $mail->send();
 		if(!$send){
-			throw new Exception('Error sending password reset');
+			throw new \Exception('Error sending password reset');
 		}
-		
 		return true;
 	}
 	
 	public function getPassResetForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setSubmitText('Complete Password Reset');
 		
-		$pass = new Slick_UI_Password('password');
+		$pass = new UI\Password('password');
 		$pass->setLabel('New Password');
 		$pass->addAttribute('required');
 		$form->add($pass);
 		
-		$pass2 = new Slick_UI_Password('password2');
+		$pass2 = new UI\Password('password2');
 		$pass2->setLabel('New Password (repeat)');
 		$pass2->addAttribute('required');
 		$form->add($pass2);	
 		
 		return $form;
-		
 	}
 	
 	public function completePassChange($data)
 	{
 		if(!isset($data['password']) OR trim($data['password']) == ''){
-			throw new Exception('Password');
+			throw new \Exception('Password');
 		}
 		if(!isset($data['password2']) OR trim($data['password2']) == ''){
-			throw new Exception('Password');
+			throw new \Exception('Password');
 		}
 		if($data['password'] != $data['password2']){
-			throw new Exception('Passwords do not match');
+			throw new \Exception('Passwords do not match');
 		}
 		if(!isset($data['userId'])){
-			throw new Exception('No user set');
+			throw new \Exception('No user set');
 		}
 		if(!isset($data['resetId'])){
-			throw new Exception('Invalid reset link');
+			throw new \Exception('Invalid reset link');
 		}
 
 		$hashPass = genPassSalt($data['password']);
 		$update = $this->edit('users', $data['userId'], array('password' => $hashPass['hash'], 'spice' => $hashPass['salt']));
 		if(!$update){
-			throw new Exception('Error resetting password');
+			throw new \Exception('Error resetting password');
 		}
 	
 		$this->delete('reset_links', $data['resetId']);
 		return true;
 		
 	}
-
 }
-

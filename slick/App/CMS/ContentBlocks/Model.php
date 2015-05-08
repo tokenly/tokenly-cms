@@ -1,56 +1,52 @@
 <?php
-class Slick_App_CMS_ContentBlocks_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class ContentBlocks_Model extends Core\Model
 {
-
 	public function getBlockForm($blockId = 0)
 	{
 		$getBlock = false;
 		if($blockId != 0){
 			$getBlock = $this->get('content_blocks', $blockId);
 		}
+		$form = new UI\Form;
 		
-		$form = new Slick_UI_Form;
-		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Block Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->addAttribute('required');
 		$slug->setLabel('Slug');
 		$form->add($slug);	
 
 		
-		$formatType = new Slick_UI_Select('formatType');
+		$formatType = new UI\Select('formatType');
 		$formatType->addOption('markdown', 'Markdown');
 		$formatType->addOption('wysiwyg', 'WYSIWYG');
 		$formatType->setLabel('Formatting Type (Save/Submit to change)');
 		$form->add($formatType);
 
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setLabel('Active');
 		$active->setBool(1);
 		$active->setValue(1);
 		$form->add($active);
 		
-		
-		
 		if(!$getBlock OR $getBlock['formatType'] == 'markdown'){
-			$content = new Slick_UI_Markdown('content', 'markdown');
+			$content = new UI\Markdown('content', 'markdown');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
 		else{
-			$content = new Slick_UI_Textarea('content', 'html-editor');
+			$content = new UI\Textarea('content', 'html-editor');
 			$content->setLabel('Content');
 			$form->add($content);
 		}
 
 		return $form;
 	}
-	
-
 
 	public function addBlock($data)
 	{
@@ -58,7 +54,7 @@ class Slick_App_CMS_ContentBlocks_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -67,7 +63,7 @@ class Slick_App_CMS_ContentBlocks_Model extends Slick_Core_Model
 		
 		$add = $this->insert('content_blocks', $useData);
 		if(!$add){
-			throw new Exception('Error adding block');
+			throw new \Exception('Error adding block');
 		}
 			
 		return $add;
@@ -80,7 +76,7 @@ class Slick_App_CMS_ContentBlocks_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -93,13 +89,8 @@ class Slick_App_CMS_ContentBlocks_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('content_blocks', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing block');
+			throw new \Exception('Error editing block');
 		}
-		
 		return true;
-		
 	}
-
 }
-
-?>

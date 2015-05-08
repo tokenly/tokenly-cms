@@ -1,21 +1,23 @@
 <?php
-class Slick_App_Tokenly_Participation_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI;
+class Participation_Model extends Core\Model
 {
 	private $startDate = '2014-06-27 00:00:00';
 	private $realStart = '2014-01-01';
 
 	public function getPOPForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$label = new Slick_UI_Textbox('label');
+		$label = new UI\Textbox('label');
 		$label->setLabel('Label (optional)');
 		$form->add($label);
 		
 		$startDate = $this->startDate;
 		$curDate = timestamp();
 		
-		$chooseWeek = new Slick_UI_Select('week');
+		$chooseWeek = new UI\Select('week');
 		$chooseWeek->setLabel('Report Week');
 		
 		$diff = strtotime($startDate, 0) - strtotime($curDate, 0);
@@ -37,20 +39,20 @@ class Slick_App_Tokenly_Participation_Model extends Slick_Core_Model
 		$form->add($chooseWeek);
 		
 		/*
-		$start = new Slick_UI_Date('startDate');
+		$start = new Date('startDate');
 		$start->setLabel('Start Date');
 		$start->setMinYear(2014);
 		$start->setMaxYear(date('Y'));		
 		$form->add($start);
 		
-		$end = new Slick_UI_Date('endDate');
+		$end = new Date('endDate');
 		$end->setLabel('End Date');
 		$end->setMinYear(2014);
 		$end->setMaxYear(date('Y'));
 		$form->add($end);
 		*/
 		
-		$fields = new Slick_UI_CheckboxList('fields');
+		$fields = new UI\CheckboxList('fields');
 		$fields->setLabel('Choose Metrics');
 		
 		$fieldList = array('comments' => 'Blog Comments', 'posts' => 'Forum Posts', 'threads' => 'Forum Threads',
@@ -93,10 +95,10 @@ class Slick_App_Tokenly_Participation_Model extends Slick_Core_Model
 		$data['endDate'] = date('Y-m-d H:i:s', $weekEndTime);
 		
 		$timeframe = array('start' => $data['startDate'], 'end' => $data['endDate']);
-		$pop = new Slick_App_Tokenly_POP_Model;
+		$pop = new POP_Model;
 		$getScores = $pop->getPopScoreList($timeframe, $data['fields']);
 		if(!$getScores){
-			throw new Exception('Error generating report');
+			throw new \Exception('Error generating report');
 		}
 		
 		if(!isset($data['label'])){
@@ -109,7 +111,7 @@ class Slick_App_Tokenly_Participation_Model extends Slick_Core_Model
 
 		$insert = $this->insert('pop_reports', $useData);
 		if(!$insert){
-			throw new Exception('Error saving report');
+			throw new \Exception('Error saving report');
 		}
 		
 		return $insert;	
@@ -117,14 +119,12 @@ class Slick_App_Tokenly_Participation_Model extends Slick_Core_Model
 	
 	public function getEditReportForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$label = new Slick_UI_Textbox('label');
+		$label = new UI\Textbox('label');
 		$label->setLabel('Label');
 		$form->add($label);
 		
 		return $form;
 	}
-
-
 }

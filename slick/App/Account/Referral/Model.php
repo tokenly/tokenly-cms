@@ -1,7 +1,8 @@
 <?php
-class Slick_App_Account_Referral_Model extends Slick_Core_Model
+namespace App\Account;
+use Core;
+class Referral_Model extends Core\Model
 {
-
 	public function getUserRefs($userId)
 	{
 		$getRefs = $this->fetchAll('SELECT r.*, u.username, u.slug
@@ -10,12 +11,6 @@ class Slick_App_Account_Referral_Model extends Slick_Core_Model
 									WHERE r.affiliateId = :id
 									ORDER BY r.referralId DESC', array(':id' => $userId));
 		
-
-		
-		
 		return $getRefs;
-		
 	}
-
-
 }

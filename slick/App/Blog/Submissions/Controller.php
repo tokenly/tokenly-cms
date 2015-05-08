@@ -1,26 +1,28 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Submissions
  * 
  * */
-class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
+use App\Tokenly, App\Account, API, Util;
+class Submissions_Controller extends \App\ModControl
 {
     
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Blog_Submissions_Model;
-        $this->user = Slick_App_Account_Home_Model::userInfo();
-		$this->tca = new Slick_App_Tokenly_TCA_Model;
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model;
-		$this->meta = new Slick_App_Meta_Model;
+        $this->model = new Submissions_Model;
+        $this->user = Account\Home_Model::userInfo();
+		$this->tca = new Tokenly\TCA_Model;
+		$this->inventory = new Tokenly\Inventory_Model;
+		$this->meta = new \App\Meta_Model;
 		$this->postModule = $this->model->get('modules', 'blog-post', array(), 'slug');
 		$this->catModule = $this->model->get('modules', 'blog-category', array(), 'slug');        
 		$this->blogApp = $this->model->get('apps', 'blog', array(), 'slug');
 		$this->blogSettings = $this->meta->appMeta($this->blogApp['appId']);
-        $this->postModel = new Slick_App_Blog_Post_Model;
-        $this->invite = new Slick_App_Account_Invite_Model;
+        $this->postModel = new Post_Model;
+        $this->invite = new Account\Invite_Model;
     }
     
     function __install($moduleId)
@@ -30,7 +32,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			return false;
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = $this->meta;
 		$blogApp = $meta->get('apps', 'blog', array(), 'slug');
 		$meta->updateAppMeta($blogApp['appId'], 'submission-fee', 1000, 'Article Submission Fee', 1);
 		$meta->updateAppMeta($blogApp['appId'], 'submission-fee-token', 'LTBCOIN', 'Submission Fee Token', 1);
@@ -43,9 +45,9 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
     public function init()
     {
 		$output = parent::init();
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
 		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], 0, '');
 
         if(isset($this->args[2])){
@@ -126,7 +128,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$output['totalViews'] = 0;
 		$output['totalComments'] = 0;
 		$output['totalContributed'] = 0;
-		$disqus = new Slick_API_Disqus;
+		$disqus = new API\Disqus;
 		foreach($getPosts as $key => $row){
 			$row['published'] = $this->model->checkPostApproved($row['postId']);
 			$getPosts[$key]['published'] = $row['published'];
@@ -140,7 +142,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 				}
 			}
 			$output['totalViews']+=$row['views'];	
-			$pageIndex = Slick_App_Controller::$pageIndex;
+			$pageIndex = \App\Controller::$pageIndex;
 			$getIndex = extract_row($pageIndex, array('itemId' => $row['postId'], 'moduleId' => $this->postModule['moduleId']));
 			$postURL = $this->data['site']['url'].'/blog/post/'.$row['url'];
 			if($getIndex AND count($getIndex) > 0){
@@ -191,12 +193,12 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$output['submission_fee'] = $this->blogSettings['submission-fee'];
 		$getDeposit = $this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-address');
 		if(!$getDeposit){
-			$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+			$btc = new API\Bitcoin(BTC_CONNECT);
 			$accountName = XCP_PREFIX.'BLOG_CREDITS_'.$this->user['userId'];
 			try{
 				$getAddress = $btc->getaccountaddress($accountName);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$getAddress = false;
 			}
 			$this->meta->updateUserMeta($this->user['userId'], 'article-credit-deposit-address', $getAddress);
@@ -232,9 +234,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		
 		$output['num_credits'] = intval($this->meta->getUserMeta($this->user['userId'], 'article-credits'));
 		if(!$this->data['perms']['canBypassSubmitFee'] AND $output['num_credits'] <= 0){
-			Slick_Util_Session::flash('blog-message', 'You do not have enough submission credits to create a new post', 'error');
-			$this->redirect($this->site.$this->moduleUrl);
-			die();
+			Util\Session::flash('blog-message', 'You do not have enough submission credits to create a new post', 'error');
+			redirect($this->site.$this->moduleUrl);
 		}
 		$this->data['user']['perms'] = $this->data['perms'];
 		$output['form'] = $this->model->getPostForm(0, $this->data['site']['siteId'], true, $this->data['user']);
@@ -286,8 +287,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addPost($data, $this->data);
 			}
-			catch(Exception $e){
-				Slick_Util_Session::flash('blog-message', $e->getMessage(), 'error');
+			catch(\Exception $e){
+				Util\Session::flash('blog-message', $e->getMessage(), 'error');
 				$add = false;
 			}
 			
@@ -298,10 +299,10 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 					$this->meta->updateUserMeta($this->user['userId'], 'article-credits', $newCredits);
 				}
 				
-				$this->redirect($this->site.$this->moduleUrl);
+				redirect($this->site.$this->moduleUrl);
 			}
 			else{
-				$this->redirect($this->site.$this->moduleUrl.'/add');
+				redirect($this->site.$this->moduleUrl.'/add');
 			}
 			
 			return;
@@ -316,17 +317,17 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 	protected function accessPost()
 	{
 		if(!isset($this->args[3])){
-			throw new Exception('404');
+			throw new \Exception('404');
 		}		
 		
 		$getPost = $this->model->get('blog_posts', $this->args[3]);
 		if(!$getPost OR $getPost['trash'] == 1){
-			throw new Exception('404');
+			throw new \Exception('404');
 		}
 		$getPost['published'] = $this->model->checkPostApproved($getPost['postId']);
 
 
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');	
 		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
@@ -338,7 +339,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		if(!$this->data['perms']['canManageAllBlogs']){
 			$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
 			if(!$postTCA){
-				throw new Exception('403');
+				throw new \Exception('403');
 			}
 			
 			if($getPost['userId'] != $this->data['user']['userId']){
@@ -368,11 +369,11 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 				OR
 			   ($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
 			   ){
-				throw new Exception('403');
+				throw new \Exception('403');
 			}
 			
 			if($getPost['status'] == 'published' AND !$this->data['perms']['canEditAfterPublished']){
-				throw new Exception('403');
+				throw new \Exception('403');
 			}
 		}
 		
@@ -388,7 +389,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		try{
 			$getPost = $this->accessPost();
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return array('view' => $e->getMessage());
 		}
 		
@@ -528,16 +529,15 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editPost($this->args[3], $data, $this->data);
 			}
-			catch(Exception $e){
-				Slick_Util_Session::flash('blog-message', $e->getMessage(), 'error');			
+			catch(\Exception $e){
+				Util\Session::flash('blog-message', $e->getMessage(), 'error');			
 				$edit = false;
 			}
 			
 			if($edit){
-				Slick_Util_Session::flash('blog-message', 'Post edited successfully!', 'success');
+				Util\Session::flash('blog-message', 'Post edited successfully!', 'success');
 			}
-			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
-			return true;
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
 		}	
 		
 		//get version list and #
@@ -555,9 +555,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 								OR
 							 ($getPost['userId'] != $this->data['user']['userId'] AND $this->data['perms']['canDeleteOtherPostVersion'])){
 								$killVersion = $this->model->delete('content_versions', $oldVersion['versionId']);
-								Slick_Util_Session::flash('blog-message', 'Version #'.$oldVersion['num'].' removed', 'success');
-								$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
-								die();
+								Util\Session::flash('blog-message', 'Version #'.$oldVersion['num'].' removed', 'success');
+								redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$getPost['postId']);
 							}
 						}
 						$output['post']['content'] = $oldVersion['content']['content'];
@@ -584,7 +583,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$output['comment_form'] = $this->postModel->getCommentForm();
 		$output['private_comments'] = $this->postModel->getPostComments($getPost['postId'], 1);
 		if(count($output['private_comments']) > 0){
-			$meta = new Slick_App_Meta_Model;
+			$meta = $this->meta;
 			$viewedComments = $meta->getUserMeta($this->data['user']['userId'], 'viewed-editorial-comments');
 			$getLastComment = $meta->fetchSingle('SELECT commentId FROM blog_comments
 												  WHERE postId = :postId AND userId != :userId AND editorial = 1
@@ -690,7 +689,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		try{
 			$postComment = $this->postModel->postComment($data, $this->data, 1);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -700,14 +699,13 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$postComment['formatDate'] = formatDate($postComment['commentDate']);
 		$postComment['html_content'] = markdown($postComment['message']);
 		$postComment['encoded'] = base64_encode($postComment['message']);
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$authProf = $profModel->getUserProfile($postComment['userId']);
 		$postComment['author'] = array('username' => $authProf['username'], 'slug' => $authProf['slug'], 'avatar' => $authProf['avatar']);
 		$output['comment'] = $postComment;
 		$output['new_hash'] = $this->model->getCommentListHash($this->data['post']['postId']);
 		
 		return $output;
-		
 	}
 	
 	protected function deletePrivateComment()
@@ -793,7 +791,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$comment['formatEditDate'] = formatDate($data['editTime']);
 		$comment['html_content'] = markdown($data['message']);
 		$comment['encoded'] = base64_encode($data['message']);
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$authProf = $profModel->getUserProfile($comment['userId']);
 		$comment['author'] = array('username' => $authProf['username'], 'slug' => $authProf['slug'], 'avatar' => $authProf['avatar']);
 		$output['comment'] = $comment;
@@ -834,14 +832,12 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 	private function deletePost()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getPost = $this->model->get('blog_posts', $this->args[3]);
 		if(!$getPost){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		if(($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canDeleteSelfPost'])
@@ -853,7 +849,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			return array('view' => '403');
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
@@ -869,24 +865,21 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		}			
 		
 		$delete = $this->model->delete('blog_posts', $this->args[3]);
-		Slick_Util_Session::flash('blog-message', $getPost['title'].' deleted successfully', 'success');
+		Util\Session::flash('blog-message', $getPost['title'].' deleted successfully', 'success');
 		
-		$this->redirect($this->site.$this->moduleUrl.'/trash');
-		return true;
+		redirect($this->site.$this->moduleUrl.'/trash');
 	}
 	
 	private function previewPost($output)
 	{
 		if(!isset($this->args[3])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new Post_Model;
 		$getPost = $model->getPost($this->args[3], $this->data['site']['siteId']);
 		if(!$getPost){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		if(isset($this->args[4])){
@@ -897,7 +890,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			}
 		}	
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
@@ -925,14 +918,11 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		$output['force-view'] = 'Blog/Post/post';
 		$output['post'] = $getPost;
 		$output['disableComments'] = true;
-		$output['user'] = Slick_App_Account_Home_Model::userInfo();
+		$output['user'] = Home_Model::userInfo();
 		$output['title'] = $getPost['title'];
 		$output['commentError'] = '';
 		$output['comments'] = array();
-		
-
 		return $output;
-		
 	}
 	
 	
@@ -957,8 +947,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		else{
 			//check balances including the mempool
 			$assetInfo = $this->inventory->getAssetData($this->blogSettings['submission-fee-token']);
-			$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
-			$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+			$xcp = new API\Bitcoin(XCP_CONNECT);
+			$btc = new API\Bitcoin(BTC_CONNECT);
 			try{
 				$getPool = $xcp->get_mempool();
 				$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getAddress)));
@@ -992,7 +982,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 					}
 				}
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				http_response_code(400);
 				$output['error'] = 'Error retrieving data from xcp server';
 			}
@@ -1075,14 +1065,12 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 	private function trashPost($restore = false)
 	{
 		if(!isset($this->args[3])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getPost = $this->model->get('blog_posts', $this->args[3]);
 		if(!$getPost){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		if($getPost['userId'] != $this->data['user']['userId']){
@@ -1093,7 +1081,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			return array('view' => '403');
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
@@ -1110,15 +1098,14 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		
 		if($restore){
 			$restorePost = $this->model->edit('blog_posts', $this->args[3], array('trash' => 0));
-			Slick_Util_Session::flash('blog-message', $getPost['title'].' restored from trash', 'success');
-			$this->redirect($this->site.$this->moduleUrl.'/trash');
+			Util\Session::flash('blog-message', $getPost['title'].' restored from trash', 'success');
+			redirect($this->site.$this->moduleUrl.'/trash');
 		}
 		else{
 			$delete = $this->model->edit('blog_posts', $this->args[3], array('trash' => 1));
-			Slick_Util_Session::flash('blog-message', $getPost['title'].' moved to trash', 'success');
-			$this->redirect($this->site.$this->moduleUrl);
+			Util\Session::flash('blog-message', $getPost['title'].' moved to trash', 'success');
+			redirect($this->site.$this->moduleUrl);
 		}
-		return true;
 	}		
 		
 	private function clearTrash()
@@ -1128,7 +1115,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 															 'userId' => $this->user['userId'], 
 															 'trash' => 1));
 															 
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = $this->tca;
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');															 
 		
@@ -1157,8 +1144,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			$delete = $this->model->delete('blog_posts', $getPost['postId']);
 		}
 		
-		Slick_Util_Session::flash('blog-message', 'Trash bin emptied!', 'success');
-		$this->redirect($this->site.$this->moduleUrl.'/trash');
+		Util\Session::flash('blog-message', 'Trash bin emptied!', 'success');
+		redirect($this->site.$this->moduleUrl.'/trash');
 	
 		return true;
 	}		
@@ -1168,7 +1155,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 		try{
 			$getPost = $this->accessPost();
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return array('view' => $e->getMessage());
 		}
 		
@@ -1195,69 +1182,61 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 	
 	public function requestContributor($output, $author_invite = false)
 	{
-		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 
 		if($author_invite){
 			$getUser = $this->model->get('users', trim($_POST['username']), array('userId', 'username', 'slug', 'email'), 'username');
 			if(!$getUser OR $getUser['userId'] == $output['post']['userId']){
-				Slick_Util_Session::flash('blog-message', 'User '.$_POST['username'].' not found (contributor request)', 'error');
-				$this->redirect($redirect_link);
-				die();
+				Util\Session::flash('blog-message', 'User '.$_POST['username'].' not found (contributor request)', 'error');
+				redirect($redirect_link);
 			}
 		}
 			
 		$role = strip_tags($_POST['role']);
 		if(trim($role) == ''){
-			Slick_Util_Session::flash('blog-message', 'Must enter a contributor role', 'error');
-			$this->redirect($redirect_link);
-			die();
+			Util\Session::flash('blog-message', 'Must enter a contributor role', 'error');
+			redirect($redirect_link);
 		}
-		
 		$share = round(floatval($_POST['share']), 2);
-		
 		$contribs = $this->model->getPostContributors($output['post']['postId'], false);
 		$totalShare = $share;
 		foreach($contribs as $contrib){
 			if(!$author_invite){
 				if($this->data['user']['userId'] == $contrib['userId']){
-					Slick_Util_Session::flash('blog-message', 'You already have a pending contribution request', 'error');				
-					$this->redirect($redirect_link);
-					die();
+					Util\Session::flash('blog-message', 'You already have a pending contribution request', 'error');				
+					redirect($redirect_link);
 				}
 			}
 			else{
 				if($getUser['userId'] == $contrib['userId']){
-					Slick_Util_Session::flash('blog-message', 'User already pending contribution request', 'error');
-					$this->redirect($redirect_link);
-					die();
+					Util\Session::flash('blog-message', 'User already pending contribution request', 'error');
+					redirect($redirect_link);
 				}
 			}
 			$totalShare += $contrib['share'];
 		}
 		
 		if($share < 0){
-			Slick_Util_Session::flash('blog-message', 'Reward share cannot be less than 0', 'error');
-			$this->redirect($redirect_link);
-			die();
+			Util\Session::flash('blog-message', 'Reward share cannot be less than 0', 'error');
+			redirect($redirect_link);
 		}
 		
 		if($totalShare > 100){
-			Slick_Util_Session::flash('blog-message', 'Total reward share percentage cannot go over 100%', 'error');
-			$this->redirect($redirect_link);
-			die();
+			Util\Session::flash('blog-message', 'Total reward share percentage cannot go over 100%', 'error');
+			redirect($redirect_link);
 		}
 		
 		if(!$author_invite){
 			$inviteData = array('userId' => $this->data['user']['userId'], 'acceptUser' => $output['post']['userId'], 'sendUser' => $this->data['user']['userId'],
 						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'request',
 						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
-						  'class' => 'Slick_App_Blog_Submissions_Model');	
+						  'class' => 'Submissions_Model');	
 		}
 		else{
 			$inviteData = array('userId' => $getUser['userId'], 'acceptUser' => $getUser['userId'], 'sendUser' => $this->data['user']['userId'],
 						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'invite',
 						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
-						  'class' => 'Slick_App_Blog_Submissions_Model');	
+						  'class' => 'Submissions_Model');	
 		}
 		
 		$invite = $this->invite->sendInvite($inviteData);
@@ -1265,14 +1244,13 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 							'role' => $role, 'share' => $share);
 		
 		$add_contrib = $this->model->insert('blog_contributors', $contribData);
-		Slick_Util_Session::flash('blog-message', 'Contributor request sent!', 'success');
-		$this->redirect($redirect_link);
-		die();
+		Util\Session::flash('blog-message', 'Contributor request sent!', 'success');
+		redirect($redirect_link);
 	}
 	
 	public function deleteContributor($output)
 	{
-		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 		$getContrib = $this->model->get('blog_contributors', @$this->args[6]);
 		if(!$getContrib){
 			$output['view'] = '404';
@@ -1298,9 +1276,8 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 					$notifyData['post'] = $output['post'];
 					$this->model->notifyContributors($output['post']['postId'], 'contributor_quit', $notifyData, 0);
 				}
-				Slick_Util_Session::flash('blog-message', $getUser['username'].' has been removed as a contributor.', 'success');
-				$this->redirect($redirect_link);
-				die();			
+				Util\Session::flash('blog-message', $getUser['username'].' has been removed as a contributor.', 'success');
+				redirect($redirect_link);		
 			}
 		}
 		$output['view'] = '403';
@@ -1309,7 +1286,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 	
 	public function updateContributors($output)
 	{
-		$redirect_link = $this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
+		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 		
 		$changeRoles = false;
 		$changeShares = false;
@@ -1361,10 +1338,7 @@ class Slick_App_Blog_Submissions_Controller extends Slick_App_ModControl
 			$edit = $this->model->edit('blog_contributors', $itemId, $item);
 		}
 		
-		Slick_Util_Session::flash('blog-message', 'Contributor list updated!', 'success');
-		$this->redirect($redirect_link);	
-		die();
+		Util\Session::flash('blog-message', 'Contributor list updated!', 'success');
+		redirect($redirect_link);	
 	}
-	
-
 }

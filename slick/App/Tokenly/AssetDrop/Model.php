@@ -1,26 +1,27 @@
 <?php
-class Slick_App_Tokenly_AssetDrop_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, App\Profile;
+class AssetDrop_Model extends Core\Model
 {
-	public $coinFieldId = 12;
-	
+	public $coinFieldId = 12; //temporarily hardcoded
 	
 	public function getDropperForm($appData)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$asset = new Slick_UI_Textbox('asset');
+		$asset = new UI\Textbox('asset');
 		$asset->setLabel('Asset Name:');
 		$asset->addAttribute('required');
 		$form->add($asset);
 		
-		$amount = new Slick_UI_Textbox('amount');
+		$amount = new UI\Textbox('amount');
 		$amount->setLabel('Total Amount:');
 		$amount->addAttribute('required');
 		$form->add($amount);
 		
-		$groups = new Slick_UI_CheckboxList('groups');
+		$groups = new UI\CheckboxList('groups');
 		$getGroups = $this->getAll('groups');
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$xcpUsers = $profModel->getUsersWithProfile($this->coinFieldId);
 		$groups->addOption(0, 'All ('.count($xcpUsers).')');
 		foreach($getGroups as $group){
@@ -46,19 +47,19 @@ class Slick_App_Tokenly_AssetDrop_Model extends Slick_Core_Model
 	
 	public function initDrop($data, $appData)
 	{
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$xcpUsers = $profModel->getUsersWithProfile($this->coinFieldId);
 		
 		if(!isset($data['asset']) OR trim($data['asset']) == ''){
-			throw new Exception('Please enter in an asset name');
+			throw new \Exception('Please enter in an asset name');
 		}
 		
 		if(!isset($data['amount']) OR trim($data['amount']) == ''){
-			throw new Exception('Please enter in a total amount to send');
+			throw new \Exception('Please enter in a total amount to send');
 		}
 		
 		if(!isset($data['groups']) OR !is_array($data['groups']) OR count($data['groups']) == 0){
-			throw new Exception('Please select what user groups to send to');
+			throw new \Exception('Please select what user groups to send to');
 		}
 		
 		$getAll = false;
@@ -84,7 +85,7 @@ class Slick_App_Tokenly_AssetDrop_Model extends Slick_Core_Model
 		}
 		
 		if(count($users) == 0){
-			throw new Exception('No valid users');
+			throw new \Exception('No valid users');
 		}
 		
 		$totalAmount = floatval($data['amount']);
@@ -103,14 +104,13 @@ class Slick_App_Tokenly_AssetDrop_Model extends Slick_Core_Model
 			$distData['userId'] = $appData['user']['userId'];
 		}
 		
-		$distModel = new Slick_App_Tokenly_Distribute_Model;
+		$distModel = new Distribute_Model;
 		$init = $distModel->initDistribution($distData);
 		
 		if($init){
 			return $init;
 		}
 		
-		throw new Exception('Error initializing');
+		throw new \Exception('Error initializing');
 	}
-	
 }

@@ -1,13 +1,14 @@
 <?php
-class Slick_App_CMS_Accounts_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Accounts_Model extends Core\Model
 {
-
 	public function accountForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$form->add(new Slick_UI_FormHeading('Groups', 3));
-		$groups = new Slick_UI_CheckboxList('groups');
+		$form->add(new UI\FormHeading('Groups', 3));
+		$groups = new UI\CheckboxList('groups');
 		$groups->setLabel('Group Memberships');
 		$groups->setLabelDir('R');
 		$getGroups = $this->getAll('groups');
@@ -17,12 +18,12 @@ class Slick_App_CMS_Accounts_Model extends Slick_Core_Model
 		
 		$form->add($groups);
 		
-		$form->add(new Slick_UI_FormHeading('Change Password', 3));
-		$pass = new Slick_UI_Password('password');
+		$form->add(new UI\FormHeading('Change Password', 3));
+		$pass = new UI\Password('password');
 		$pass->setLabel('New Password');
 		$form->add($pass);
 
-		$pass2 = new Slick_UI_Password('password2');
+		$pass2 = new UI\Password('password2');
 		$pass2->setLabel('Repeat Password');
 		$form->add($pass2);
 
@@ -38,32 +39,26 @@ class Slick_App_CMS_Accounts_Model extends Slick_Core_Model
 		
 		if(trim($data['password']) != ''){
 			if($data['password'] != $data['password2']){
-				throw new Exception('Passwords do not match!');
+				throw new \Exception('Passwords do not match!');
 			}
 			$hashPass = genPassSalt($data['password']);
 			$update = $this->edit('users', $id, array('password' => $hashPass['hash'], 'spice' => $hashPass['salt']));
 			if(!$update){
-				throw new Exception('Error updating password');
+				throw new \Exception('Error updating password');
 			}
 		}
-		
-		
-		
 		return true;
 	}
 	
 	public function getSearchForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$username = new Slick_UI_Textbox('username');
+		$username = new UI\Textbox('username');
 		$username->setLabel('Username');
 		$username->addAttribute('required');
 		$form->add($username);
 		
 		return $form;
 	}
-
 }
-
-?>

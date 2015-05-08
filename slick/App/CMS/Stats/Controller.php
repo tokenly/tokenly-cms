@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Stats
  * 
  * */
-class Slick_App_CMS_Stats_Controller extends Slick_App_ModControl
+class Stats_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_CMS_Stats_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_CMS_Stats_Model;
-        
-        
+        $this->model = new Stats_Model;
     }
     
     public function init()
@@ -27,8 +25,4 @@ class Slick_App_CMS_Stats_Controller extends Slick_App_ModControl
         
         return $output;
     }
-
-
 }
-
-?>

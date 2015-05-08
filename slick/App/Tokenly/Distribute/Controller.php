@@ -1,21 +1,22 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Share Distributor
  * 
  * */
-class Slick_App_Tokenly_Distribute_Controller extends Slick_App_ModControl
+class Distribute_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_Distribute_Model;
+		$this->model = new Distribute_Model;
 	}
 	
 	public function init()
 	{
 		$output = parent::init();
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'tokenly');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'tokenly');
 		$output['perms'] = $this->data['perms'];
 		
         if(isset($this->args[2])){
@@ -56,14 +57,13 @@ class Slick_App_Tokenly_Distribute_Controller extends Slick_App_ModControl
 			try{
 				$init = $this->model->initDistribution($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$init = false;
 				$output['message'] = $e->getMessage();
 				$output['form']->setValues($data);
 			}
 			if($init){
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/tx/'.$init['address']);
-				return $output;
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/tx/'.$init['address']);
 			}
 		}
 		return $output;
@@ -102,8 +102,7 @@ class Slick_App_Tokenly_Distribute_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		$delete = $this->model->delete('xcp_distribute', $getTx['distributeId']);
-		$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-		return $output;
+		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
 	public function downloadTxReport($output)
@@ -207,13 +206,13 @@ class Slick_App_Tokenly_Distribute_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editDistribution($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/tx/'.$getTx['address']);
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/tx/'.$getTx['address']);
 			}
 		}
 		else{

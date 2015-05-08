@@ -1,9 +1,9 @@
 <?php
-class Slick_App_CMS_Files_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core;
+class Files_Model extends Core\Model
 {
 
 
 
 }
-
-?>

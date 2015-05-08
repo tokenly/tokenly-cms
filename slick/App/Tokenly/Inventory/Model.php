@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Tokenly_Inventory_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, API;
+class Inventory_Model extends Core\Model
 {
 	public static $addresses = array();
 	public static $assets = array();
@@ -23,7 +25,7 @@ class Slick_App_Tokenly_Inventory_Model extends Slick_Core_Model
 	
 	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false, $keepAddress = false)
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$time = time();
 		$lastChecked = $meta->getUserMeta($userId, 'lastBalanceCheck');
 		if($lastChecked){
@@ -78,11 +80,11 @@ class Slick_App_Tokenly_Inventory_Model extends Slick_Core_Model
 			return false;
 		}
 		$getCurrent = $this->getAll('xcp_balances', array('addressId' => $addressId));
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		try{
 			$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getAddress['address'])));
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return $this->getAddressBalances($addressId);
 			//return false;
 		}
@@ -123,7 +125,7 @@ class Slick_App_Tokenly_Inventory_Model extends Slick_Core_Model
 	
 	public function getAssetData($asset)
 	{
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		$getAsset = false;
 		if(isset(self::$assets[$asset])){
 			$getAsset = self::$assets[$asset];
@@ -135,7 +137,7 @@ class Slick_App_Tokenly_Inventory_Model extends Slick_Core_Model
 			try{
 				$asset = $xcp->get_asset_info(array('assets' => array($asset)));
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				return false;
 			}
 			if(!isset($asset[0])){

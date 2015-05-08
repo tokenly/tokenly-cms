@@ -1,10 +1,12 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = My Blogs
  * 
  * */
-class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
+use Util, App\Tokenly;
+class Multiblog_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,14 +14,13 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Blog_Multiblog_Model;
-
+        $this->model = new Multiblog_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
 			
         if(isset($this->args[2])){
 			switch($this->args[2]){
@@ -69,12 +70,9 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 				$roleList[$role['type']][] = $role['userId'];
 			}
 			$blog['roles'] = $roleList;
-			
 		}
 		return $output;
-		
 	}
-	
 	
 	private function addBlog()
 	{
@@ -100,33 +98,28 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addBlog($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				Slick_Util_Session::flash('blog-message', 'Blog created!', 'success');	
-				$this->redirect($this->site.$this->moduleUrl);
-				return true;
+				Util\Session::flash('blog-message', 'Blog created!', 'success');	
+				redirect($this->site.$this->moduleUrl);
 			}
 		}
 		return $output;
 	}
 	
-
-	
 	private function editBlog()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getBlog = $this->model->get('blogs', $this->args[3]);
 		if(!$getBlog){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -137,7 +130,6 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 				$is_admin = true;
 			}
 		}
-		
 		if(!$is_admin AND !$this->data['perms']['canManageAllBlogs'] AND $getBlog['userId'] != $this->data['user']['userId']){
 			$output['view'] = '403';
 			return $output;
@@ -157,14 +149,13 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 				try{
 					$add = $this->model->addBlogRole($getBlog['blogId'], $_POST['roleUserId'], $_POST['roleType'], $this->data['user']);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$add = false;
 					$output['error'] = $e->getMessage();
 				}
 				if($add){
-					Slick_Util_Session::flash('blog-message', 'Blog role added!', 'success');	
-					$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
-					return true;
+					Util\Session::flash('blog-message', 'Blog role added!', 'success');	
+					redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 				}							
 			}
 			else{			
@@ -173,71 +164,52 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 				try{
 					$edit = $this->model->editBlog($this->args[3], $data);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$output['error'] = $e->getMessage();
 					$edit = false;
 				}
 				if($edit){
-					Slick_Util_Session::flash('blog-message', 'Blog edited!', 'success');	
-					$this->redirect($this->site.$this->moduleUrl);
-					return true;
+					Util\Session::flash('blog-message', 'Blog edited!', 'success');	
+					redirect($this->site.$this->moduleUrl);
 				}				
 			}			
 		}
 		$output['form']->setValues($getBlog);
-		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteBlog()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getBlog = $this->model->get('blogs', $this->args[3]);
+			if($getBlog){
+				if($this->data['perms']['canCreateBlogs'] OR $getBlog['userId'] == $this->data['user']['userId']){
+					$delete = $this->model->delete('blogs', $this->args[3]);
+					Util\Session::flash('blog-message', 'Blog deleted.', 'success');
+				}	
+			}
 		}
-		
-		$getBlog = $this->model->get('blogs', $this->args[3]);
-		if(!$getBlog){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
-		}
-		
-		if(!$this->data['perms']['canCreateBlogs'] AND $getBlog['userId'] != $this->data['user']['userId']){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
-		}		
-		
-		$delete = $this->model->delete('blogs', $this->args[3]);
-		Slick_Util_Session::flash('blog-message', 'Blog deleted.', 'success');	
-		$this->redirect($this->site.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 	private function removeBlogRole()
 	{		
 		if(!isset($this->args[3]) OR !isset($this->args[4])){
-			$this->redirect($this->site.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$getBlog = $this->model->get('blogs', $this->args[3]);
 		$getBlogRole = $this->model->get('blog_roles', $this->args[4]);
 		if(!$getBlog OR !$getBlogRole){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
-		
-		
+
 		$getUser = false;
 		if($getBlogRole['userId'] != 0){
 			$getUser = $this->model->get('users', $getBlogRole['userId']);
 		}
 		
-		$inventory = new Slick_App_Tokenly_Inventory_Model;		
+		$inventory = new Tokenly\Inventory_Model;		
 		$getToken = false;
 		if($getBlogRole['token'] != ''){
 			$getToken = $inventory->getAssetData($getBlogRole['token']);
@@ -252,8 +224,7 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 		}		
 		
 		if(!$is_admin AND !$this->data['perms']['canManageAllBlogs'] AND $getBlog['userId'] != $this->data['user']['userId']){
-			$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
-			return false;
+			redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 		}				
 			
 		$delete = $this->model->delete('blog_roles', $getBlogRole['userRoleId']);
@@ -300,13 +271,7 @@ class Slick_App_Blog_Multiblog_Controller extends Slick_App_ModControl
 			}
 			
 		}
-		
-		$this->redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
-		return true;
+		redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 	}
-	
-
-
 }
 
-?>

@@ -7,7 +7,7 @@ function displayPaymentOrderDetails($order, $app, $module)
 		}
 	}
 	else{
-		$model = new Slick_Core_Model;
+		$model = new \Core\Model;
 		$type = $order['orderType'];
 		switch($type){
 			case 'tca-forum':

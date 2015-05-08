@@ -1,22 +1,23 @@
 <?php
-class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util, API, App\Tokenly;
+class Multiblog_Model extends Core\Model
 {
-
 	public function getBlogForm($siteId)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Blog Title');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->setLabel('Slug (leave blank to auto generate)');
 		$form->add($slug);		
 				
-		$ownerId = new Slick_UI_Select('userId');
+		$ownerId = new UI\Select('userId');
 		$ownerId->setLabel('Blog Owner');
 		$ownerId->addOption(0, '[nobody]');
 		$getUsers = $this->getAll('users');
@@ -25,15 +26,15 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		}
 		$form->add($ownerId);
 		
-		$description = new Slick_UI_Markdown('description', 'markdown');
+		$description = new UI\Markdown('description', 'markdown');
 		$description->setLabel('Description (use markdown)');
 		$form->add($description);		
 		
-		$image = new Slick_UI_File('image');
+		$image = new UI\File('image');
 		$image->setLabel('Image');
 		$form->add($image);		
 		
-		$active = new Slick_UI_Checkbox('active');
+		$active = new UI\Checkbox('active');
 		$active->setLabel('Blog Active?');
 		$active->setBool(1);
 		$active->setValue(1);
@@ -51,7 +52,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -77,7 +78,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		
 		$add = $this->insert('blogs', $useData);
 		if(!$add){
-			throw new Exception('Error creating blog');
+			throw new \Exception('Error creating blog');
 		}
 		
 		$this->uploadImage($add);
@@ -112,7 +113,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -137,7 +138,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		
 		$edit = $this->edit('blogs', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing blog');
+			throw new \Exception('Error editing blog');
 		}
 		
 		$this->uploadImage($id);
@@ -154,7 +155,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 				WHERE r.blogId = :blogId
 				ORDER BY r.type ASC, r.userId ASC';
 		$get = $this->fetchAll($sql, array(':blogId' => $blogId));
-		$scout = new Slick_App_Tokenly_AssetScout_Model;
+		$scout = new Tokenly\AssetScout_Model;
 		
 		$roleList = array();
 		$usedUsers = array();
@@ -166,7 +167,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 					$getTokenUsers = $scout->scoutAsset(array('asset' => $row['token']));
 					
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$getTokenUsers = false;
 				}
 				if(!$getTokenUsers){
@@ -210,14 +211,14 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 
 	public function getBlogRoleForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$id = new Slick_UI_Textbox('roleUserId');
+		$id = new UI\Textbox('roleUserId');
 		$id->setLabel('Add New Role');
 		$id->addAttribute('placeholder', 'Username, User ID or token:MYTOKEN');
 		$form->add($id);
 		
-		$type = new Slick_UI_Select('roleType');
+		$type = new UI\Select('roleType');
 		$type->setLabel('Type');
 		$type->addOption('writer', 'Writer');
 		$type->addOption('independent-writer', 'Independent Writer');
@@ -240,14 +241,14 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		if(isset($expUserId[1]) AND $expUserId[0] == 'token'){
 			$getRole = $this->getAll('blog_roles', array('token' => $expUserId[1], 'blogId' => $blogId));
 			if(count($getRole) > 0){
-				throw new Exception('Token already assigned a role!');
+				throw new \Exception('Token already assigned a role!');
 			}
 			
 			//add a tokenized role instead of single user
-			$inventory = new Slick_App_Tokenly_Inventory_Model;
+			$inventory = new Tokenly\Inventory_Model;
 			$getAsset = $inventory->getAssetData($expUserId[1]);
 			if(!$getAsset){
-				throw new Exception('Invalid token name');
+				throw new \Exception('Invalid token name');
 			}
 			$roleData['token'] = $getAsset['asset'];
 		}
@@ -256,12 +257,12 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 			if(!$get){
 				$get = $this->get('users', intval($userId));
 				if(!$get){
-					throw new Exception('User not found');
+					throw new \Exception('User not found');
 				}
 			}
 			$getRole = $this->getAll('blog_roles', array('userId' => $get['userId'], 'blogId' => $blogId));
 			if(count($getRole) > 0){
-				throw new Exception('User already assigned a role!');
+				throw new \Exception('User already assigned a role!');
 			}
 			$roleData['userId'] = $get['userId'];
 			$isUser = true;
@@ -269,7 +270,7 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 			
 		$add =  $this->insert('blog_roles', $roleData);
 		if(!$add){
-			throw new Exception('Error adding user role');
+			throw new \Exception('Error adding user role');
 		}
 		
 		if(!$isUser){
@@ -327,10 +328,10 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
 			$getApp = $this->get('apps', 'blog', array(), 'slug');
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$appMeta = $meta->appMeta($getApp['appId']);
 			$fileName = md5('category-'.$categoryId.'-'.$_FILES['image']['name']).'.jpg';
-			$image = new Slick_Util_Image;
+			$image = new Util\Image;
 			$imageWidth = 200;
 			$imageHeight = 200;
 			if(isset($appMeta['category-image-width'])){
@@ -346,5 +347,3 @@ class Slick_App_Blog_Multiblog_Model extends Slick_Core_Model
 		}
 	}
 }
-
-?>

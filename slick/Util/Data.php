@@ -1,5 +1,8 @@
 <?php
-class Slick_Util_Data extends Slick_Core_Model
+namespace Util;
+use Core;
+
+class Data extends Core\Model
 {
 	public function getFormData($form)
 	{
@@ -15,10 +18,10 @@ class Slick_Util_Data extends Slick_Core_Model
 		foreach($fields as $field){
 			$class = get_class($field);
 			
-			if($class == 'Slick_UI_Date' || $class == 'Slick_UI_DateTime'){
+			if($class == '\\UI\\Date' || $class == '\\UI\\DateTime'){
 				$_POST[$field->getName()] = $field->getPostValue();
 			}
-			elseif($class == 'Slick_UI_Inkpad' AND trim($field->getInkpad()) != ''){
+			elseif($class == '\\UI\\Inkpad' AND trim($field->getInkpad()) != ''){
 				$_POST[$field->getName()] = $field->getValue();
 			}
 			$checkVars[] = $field->getName();
@@ -36,9 +39,4 @@ class Slick_Util_Data extends Slick_Core_Model
 		
 		return $data;
 	}
-	
-
-
 }
-
-?>

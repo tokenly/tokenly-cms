@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Category_Controller extends Slick_App_ModControl
+namespace App\Blog;
+use App\Tokenly;
+class Category_Controller extends \App\ModControl
 {
 	public $args;
 	public $data;
@@ -7,9 +9,7 @@ class Slick_App_Blog_Category_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Blog_Category_Model;
-        
-        
+        $this->model = new Category_Model;
     }
     
     public function init()
@@ -27,7 +27,7 @@ class Slick_App_Blog_Category_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$checkTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $output['category']['categoryId'], 'blog-category');
 		if(!$checkTCA){
 			$output['view'] = '403';
@@ -47,13 +47,8 @@ class Slick_App_Blog_Category_Controller extends Slick_App_ModControl
 
 
 		if($this->data['user']){
-			Slick_App_Tokenly_POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $output['category']['categoryId']);
+			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $output['category']['categoryId']);
 		}
-
 		return $output;
-		
-		
 	}
-	
-	
 }

@@ -1,7 +1,8 @@
 <?php
-class Slick_App_Blog_Comments_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core;
+class Comments_Model extends Core\Model
 {
-
 	public function getCommentList($siteId)
 	{
 		$get = $this->fetchAll('SELECT c.*, u.username as author, CONCAT(p.url, "#comment-", c.commentId) as postURL, p.title as postTitle
@@ -11,14 +12,6 @@ class Slick_App_Blog_Comments_Model extends Slick_Core_Model
 								WHERE p.siteId = :siteId
 								ORDER BY c.commentId DESC',
 								array(':siteId' => $siteId));
-		
 		return $get;
-		
 	}
-
-	
-
-
 }
-
-?>

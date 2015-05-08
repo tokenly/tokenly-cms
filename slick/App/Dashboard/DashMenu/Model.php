@@ -1,12 +1,14 @@
 <?php
-class Slick_App_Dashboard_DashMenu_Model extends Slick_App_Dashboard_Model
+namespace App\Dashboard;
+use App\Tokenly;
+class DashMenu_Model extends Model
 {
 
 	public static function getDashMenu()
 	{
 		$output = array();
-		$model = new Slick_App_Dashboard_DashMenu_Model;
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$model = new DashMenu_Model;
+		$tca = new Tokenly\TCA_Model;
 		$dashApp = get_app('dashboard');
 		$site = currentSite();
 		$user = user();
@@ -60,9 +62,6 @@ class Slick_App_Dashboard_DashMenu_Model extends Slick_App_Dashboard_Model
 		foreach($getPerms as $perm){
 			$access[] = $perm['moduleId'];
 		}		
-		
 		return $access;
 	}
-
 }
-

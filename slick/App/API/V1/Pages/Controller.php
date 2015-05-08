@@ -1,15 +1,15 @@
 <?php
-class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+class Pages_Controller extends \Core\Controller
 {
 	public $methods = array('GET');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Page_View_Model;
-		$this->tca = new Slick_App_Tokenly_TCA_Model;
+		$this->model = new \App\Page\View_Model;
+		$this->tca = new \App\Tokenly\TCA_Model;
 		$this->pageModule = $this->model->get('modules', 'page-view', array(), 'slug');
-
 	}
 
 	public function init($args = array())
@@ -17,9 +17,9 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 		$output = array();
 		$this->args = $args;
 		try{
-			$this->user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$this->user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$this->user = false;
 		}				
 				
@@ -117,7 +117,7 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 		
 		unset($getMenu['siteId']);
 		$output = $getMenu;
-		$output['items'] = Slick_App_View::getMenu($getMenu['menuId'], 0, 0, 1);
+		$output['items'] = \App\View::getMenu($getMenu['menuId'], 0, 0, 1);
 		
 		return $output;
 	}
@@ -131,12 +131,9 @@ class Slick_App_API_V1_Pages_Controller extends Slick_Core_Controller
 		$getMenus = $this->model->getAll('menus', array('siteId' => $this->args['data']['site']['siteId']), 
 												  array('menuId', 'name', 'slug'));
 		foreach($getMenus as $key => $row){
-			$getMenus[$key]['items'] = Slick_App_View::getMenu($row['menuId'], 0, 0, 1);
+			$getMenus[$key]['items'] = \App\View::getMenu($row['menuId'], 0, 0, 1);
 		}
 		$output['menus'] = $getMenus;
 		return $output;
 	}
-
 }
-
-?>

@@ -1,20 +1,19 @@
 <?php
-class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+class Users_Controller extends \Core\Controller
 {
 	public $methods = array('POST', 'GET', 'PATCH');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_API_V1_Users_Model;
-		
+		$this->model = new Users_Model;
 	}
 	
 	public function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
-		
 		if(isset($this->args[1])){
 			switch($this->args[1]){
 				case 'update':
@@ -30,7 +29,6 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 					$output = $this->getUser();
 					break;
 			}
-			
 		}
 		else{
 			if($this->useMethod == 'POST'){
@@ -45,21 +43,18 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 				$output['error'] = 'Invalid request';
 			}
 		}
-		
 		return $output;
 	}
 	
 	private function register()
 	{
-		
-		$model = new Slick_App_API_V1_Register_Model;
-
+		$model = new Register_Model;
 		$output = array();
 
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			//do nothing
 		}
 		
@@ -73,7 +68,7 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 			$this->args['data']['isAPI'] = true;
 			$create = $model->createAccount($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -81,9 +76,7 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		
 		http_response_code(200);
 		$output['result'] = $create;
-		
 		return $output;
-		
 	}
 	
 	private function getSelf()
@@ -107,16 +100,14 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
 		$output = $user;
-		
 		return $output;
 	}
 	
@@ -130,7 +121,7 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$model = new Slick_App_Profile_User_Model;
+		$model = new \App\Profile\User_Model;
 		$getUser = $model->get('users', $this->args[1], array('userId'), 'slug');
 		if(!$getUser){
 			http_response_code(400);
@@ -139,15 +130,15 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}		
 		
 		$profile = $model->getUserProfile($getUser['userId'], $this->args['data']['site']['siteId']);
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
 		
 		$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getUser['userId'], 'user-profile');
@@ -172,7 +163,6 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 	private function updateProfile()
 	{
 		$output = array();
-		
 		if($this->useMethod != 'PATCH'){
 			http_response_code(400);
 			$output['error'] = 'Invalid request method';
@@ -181,39 +171,34 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		}
 
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
 		$data = $this->args['data'];
 		$data['user'] = $user;
-		
 		try{
 			$update = $this->model->updateProfile($data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
 		$output['result'] = 'success';
-		
 		return $output;
 	}
 	
 	private function profileFields()
 	{
 		$output = array();
-
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -227,8 +212,7 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 	private function getAllUsers()
 	{
 		$output = array();
-		
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$max = 20;
 		$page = 1;
 		if(isset($this->args['data']['page'])){
@@ -244,7 +228,6 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 		$start = ($page * $max) - $max;
 		
 		$totalUsers = $this->model->count('users', 'activated', 1);
-		
 		$andSearch = '';
 		$values = array();
 		if(isset($this->args['data']['search'])){
@@ -260,13 +243,13 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 										LIMIT '.$start.', '.$max, $values);
 										
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}		
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
 		
 												
@@ -298,15 +281,9 @@ class Slick_App_API_V1_Users_Controller extends Slick_Core_Controller
 			unset($user['lastActive']);
 			unset($user['userId']);
 			$users[$key] = $user;
-			
 		}
 		$output['numPages'] = ceil($totalUsers / $max);
-		
 		$output['users'] = $users;
-		
 		return $output;
-	}
-	
+	}	
 }
-
-?>

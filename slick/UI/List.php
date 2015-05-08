@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_List extends Slick_UI_Object
+namespace UI;
+class List extends Object
 {
 	protected $itemClass = '';
 	protected $singleClasses = array();
@@ -60,9 +61,4 @@ class Slick_UI_List extends Slick_UI_Object
 	{
 		$this->singleClasses[$key] = $class;
 	}
-	
-	
 }
-
-
-?> 

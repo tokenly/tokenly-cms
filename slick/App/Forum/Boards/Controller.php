@@ -1,10 +1,11 @@
 <?php
+namespace App\Forum;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Boards
  * 
  * */
-class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
+class Boards_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,16 +13,13 @@ class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_Forum_Boards_Model;
-        
-        
+        $this->model = new Boards_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'forum');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'forum');
 			
         
         if(isset($this->args[2])){
@@ -71,9 +69,7 @@ class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
 				}
 			}
 		}
-		
 		return $output;
-		
 	}
 	
 	
@@ -105,35 +101,28 @@ class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addBoard($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editBoard()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getBoard = $this->model->get('forum_boards', $this->args[3]);
 		if(!$getBoard){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -161,12 +150,11 @@ class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
 				try{
 					$add = $this->model->addMod($getBoard['boardId'], $_POST['userId']);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$output['error'] = $e->getMessage();
 				}
 				if($add){
-					$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
-					return true;
+					redirect($this->site.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
 				}							
 			}
 			else{			
@@ -175,80 +163,47 @@ class Slick_App_Forum_Boards_Controller extends Slick_App_ModControl
 				try{
 					$add = $this->model->editBoard($this->args[3], $data);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$output['error'] = $e->getMessage();
 					$add = false;
 				}
 				if($add){
-					$this->redirect($this->site.'/'.$this->moduleUrl);
-					return true;
+					redirect($this->site.$this->moduleUrl);
 				}				
 			}			
 		}
 		$output['form']->setValues($getBoard);
 		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteBoard()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getBoard = $this->model->get('forum_boards', $this->args[3]);
+			if($getBoard){
+				if($this->data['perms']['canManageAllBoards'] OR $getBoard['ownerId'] == $this->data['user']['userId']){
+					$delete = $this->model->delete('forum_boards', $this->args[3]);
+				}						
+			}			
 		}
-		
-		$getBoard = $this->model->get('forum_boards', $this->args[3]);
-		if(!$getBoard){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		if(!$this->data['perms']['canManageAllBoards'] AND $getBoard['ownerId'] != $this->data['user']['userId']){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}		
-		
-		$delete = $this->model->delete('forum_boards', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 	private function removeModerator()
 	{
-		if(!isset($this->args[3]) OR !isset($this->args[4])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3]) AND isset($this->args[4])){
+			$getBoard = $this->model->get('forum_boards', $this->args[3]);
+			$getUser = $this->model->get('users', $this->args[4]);
+			if($getBoard AND $getUser){
+				if($this->data['perms']['canManageAllBoards'] OR $getBoard['ownerId'] == $this->data['user']['userId']){
+					$boardMod = $this->model->getAll('forum_mods', array('userId' => $getUser['userId'], 'boardId' => $getBoard['boardId']));
+					if($boardMod AND count($boardMod) > 0){
+						$this->model->delete('forum_mods', $boardMod[0]['modId']);
+					}
+				}		
+			}
 		}
-		
-		$getBoard = $this->model->get('forum_boards', $this->args[3]);
-		$getUser = $this->model->get('users', $this->args[4]);
-		if(!$getBoard OR !$getUser){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		if(!$this->data['perms']['canManageAllBoards'] AND $getBoard['ownerId'] != $this->data['user']['userId']){
-			$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
-			return false;
-		}				
-		
-		$boardMod = $this->model->getAll('forum_mods', array('userId' => $getUser['userId'], 'boardId' => $getBoard['boardId']));
-		if(!$boardMod OR count($boardMod) == 0){
-			$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
-			return false;
-		}
-		
-		$this->model->delete('forum_mods', $boardMod[0]['modId']);
-		
-		$this->redirect($this->site.'/'.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
+		redirect($this->site.$this->moduleUrl.'/edit/'.$getBoard['boardId']);
 	}
-	
-
-
 }
-
-?>

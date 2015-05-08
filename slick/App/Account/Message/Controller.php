@@ -1,15 +1,16 @@
 <?php
+namespace App\Account;
 /*
  * @module-type = dashboard
  * @menu-label = Private Messages
  * 
  * */
-class Slick_App_Account_Message_Controller extends Slick_App_ModControl
+class Message_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Account_Message_Model;
+		$this->model = new Message_Model;
 		
 		
 	}
@@ -20,8 +21,7 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 		$this->model->appData = $this->data;
 
 		if(!$this->data['user']){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->data['site']['url']);
 		}
 		$output['template'] = 'admin';
 		$output['title'] = 'Private Messages';		
@@ -105,13 +105,13 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 			try{
 				$send = $this->model->sendMessage($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$send = false;
 				$output['message'] = $e->getMessage();
 			}
 			
 			if($send){
-				$this->redirect($this->site.$this->moduleUrl.'/view/'.$send.'#message');
+				redirect($this->site.$this->moduleUrl.'/view/'.$send.'#message');
 			}
 		}
 		
@@ -137,8 +137,7 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 		
 		$chainEnd = $this->model->getEndOfChain($getMessage['messageId']);
 		if($chainEnd != $getMessage['messageId'] AND !posted()){
-			$this->redirect($this->site.$this->moduleUrl.'/view/'.$chainEnd.'#message-'.$getMessage['messageId']);
-			return $output;
+			redirect($this->site.$this->moduleUrl.'/view/'.$chainEnd.'#message-'.$getMessage['messageId']);
 		}
 		
 		$getMessage = $this->model->parseMessage($getMessage);
@@ -172,13 +171,13 @@ class Slick_App_Account_Message_Controller extends Slick_App_ModControl
 			try{
 				$reply = $this->model->sendReply($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$reply = false;
 				$output['error'] = $e->getMessage();
 			}
 			
 			if($reply){
-				$this->redirect($this->site.$this->moduleUrl.'/view/'.$reply.'#message-'.$reply.'');
+				redirect($this->site.$this->moduleUrl.'/view/'.$reply.'#message-'.$reply.'');
 			}
 		}
 		

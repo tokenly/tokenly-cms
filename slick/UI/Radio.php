@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Radio extends Slick_UI_FormObject
+namespace UI;
+class Radio extends FormObject
 {
 	protected $options = array();
 	protected $selected = '';
@@ -50,7 +51,7 @@ class Slick_UI_Radio extends Slick_UI_FormObject
 		$output .= '</div>';
 
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 	
@@ -84,4 +85,3 @@ class Slick_UI_Radio extends Slick_UI_FormObject
 		
 	}
 }
-?>

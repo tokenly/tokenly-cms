@@ -1,5 +1,6 @@
 <?php
-class Slick_App_API_Controller extends Slick_Core_Controller
+namespace App\API;
+class Controller extends \Core\Controller
 {
 	function __construct()
 	{
@@ -18,7 +19,7 @@ class Slick_App_API_Controller extends Slick_Core_Controller
 			switch($_REQUEST['v']){
 				case '1':
 				default:
-					$api = new Slick_App_API_V1_Controller;
+					$api = new \App\API\V1\Controller;
 					$output = $api->init();
 					break;
 			}
@@ -32,9 +33,6 @@ class Slick_App_API_Controller extends Slick_Core_Controller
 		echo json_encode($output);
 		$json = ob_get_contents();
 		ob_end_clean();
-		
 		echo trim($json);
 	}
 }
-
-?>

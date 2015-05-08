@@ -1,10 +1,11 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Disqus Comments
  * 
  * */
-class Slick_App_Blog_Disqus_Controller extends Slick_App_ModControl
+class Disqus_Controller extends \App\ModControl
 {
 	function __construct()
 	{
@@ -13,7 +14,6 @@ class Slick_App_Blog_Disqus_Controller extends Slick_App_ModControl
 	
     public function init()
     {
-
 		$output = parent::init();
         $output['view'] = 'index';
         $output['template'] = 'admin';

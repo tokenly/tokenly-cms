@@ -1,4 +1,5 @@
 <?php
+namespace API;
 /*
 					COPYRIGHT
 
@@ -27,7 +28,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * @author sergio <jsonrpcphp@inservibile.org>
  */
-class Slick_API_Bitcoin {
+class Bitcoin
+{
 
 	
 	/**
@@ -100,7 +102,7 @@ class Slick_API_Bitcoin {
 		
 		// check
 		if (!is_scalar($method)) {
-			throw new Exception('Method name has no scalar value');
+			throw new \Exception('Method name has no scalar value');
 		}
 		
 		// check
@@ -108,7 +110,7 @@ class Slick_API_Bitcoin {
 			// no keys
 			$params = array_values($params);
 		} else {
-			throw new Exception('Params must be given as array');
+			throw new \Exception('Params must be given as array');
 		}
 		
 		// sets notification or request task
@@ -147,7 +149,7 @@ class Slick_API_Bitcoin {
         $response = curl_exec($ch);
         if($response === false)
         {
-			throw new Exception('Unable to connect to '.$this->url);
+			throw new \Exception('Unable to connect to '.$this->url);
 		}
         
         $this->debug && $this->debug.='***** Server response *****'."\n".$response.'***** End of server response *****'."\n";
@@ -164,15 +166,15 @@ class Slick_API_Bitcoin {
 
 			if (@$response['id'] != $currentId) {
 				if(isset($response['data'])){
-					throw new Exception($response['data']);
+					throw new \Exception($response['data']);
 				}
-				throw new Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
+				throw new \Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
 			}
 			if (isset($response['error']) AND !is_null($response['error'])) {
 				if(isset($response['data'])){
-					throw new Exception($response['data']);
+					throw new \Exception($response['data']);
 				}				
-				throw new Exception('Request error: '.$response['error']['message']);
+				throw new \Exception('Request error: '.$response['error']['message']);
 			}
 			
 			return $response['result'];
@@ -199,11 +201,11 @@ class Slick_API_Bitcoin {
 		}
 		
 		if(count($outputsFound) == 0){
-			throw new Exception('No valid unspent outputs found for this address');
+			throw new \Exception('No valid unspent outputs found for this address');
 		}
 
 		if($totalFound < ($amount + $fee)){
-			throw new Exception('Insufficient funds at this address (need '.(($amount + $fee) - $totalFound).')');
+			throw new \Exception('Insufficient funds at this address (need '.(($amount + $fee) - $totalFound).')');
 		}
 		
 		$rawInputs = array();
@@ -211,12 +213,12 @@ class Slick_API_Bitcoin {
 			$item = array('txid' => $utxo['txid'], 'vout' => $utxo['vout']);
 			$rawInputs[] = $item;
 		}
+		
 
-	
 		$rawAddresses = array($to => $amount);
 		$leftover = $totalFound - $amount;
 		$change = $leftover - $fee;
-		if($change > 0){
+		if($change > 0.000055){
 			$rawAddresses[$address] = $change;
 		}
 		

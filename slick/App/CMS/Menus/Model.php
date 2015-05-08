@@ -1,17 +1,18 @@
 <?php
-class Slick_App_CMS_Menus_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class Menus_Model extends Core\Model
 {
-
 	public function getMenuForm($menuId = 0)
 	{
-		$form = new Slick_UI_Form;
-		
-		$name = new Slick_UI_Textbox('name');
+		$form = new UI\Form;
+	
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Menu Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->addAttribute('required');
 		$slug->setLabel('Slug');
 		$form->add($slug);	
@@ -19,15 +20,13 @@ class Slick_App_CMS_Menus_Model extends Slick_Core_Model
 		return $form;
 	}
 	
-
-
 	public function addMenu($data)
 	{
 		$req = array('name', 'slug', 'siteId');
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -36,12 +35,10 @@ class Slick_App_CMS_Menus_Model extends Slick_Core_Model
 		
 		$add = $this->insert('menus', $useData);
 		if(!$add){
-			throw new Exception('Error adding menu');
+			throw new \Exception('Error adding menu');
 		}
 		
 		return $add;
-		
-		
 	}
 		
 	public function editMenu($id, $data)
@@ -50,28 +47,17 @@ class Slick_App_CMS_Menus_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
 			}
 		}
 		
-		
 		$edit = $this->edit('menus', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing menu');
+			throw new \Exception('Error editing menu');
 		}
-		
-		
 		return true;
-		
 	}
-
-
-
-
-
 }
-
-?>

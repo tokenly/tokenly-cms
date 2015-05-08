@@ -1,7 +1,8 @@
 <?php
+namespace API;
 //hex input must be in uppercase, with no leading 0x
  
-class Slick_API_BTCValidate
+class BTCValidate
 {
  
 	function decodeHex($hex)

@@ -1,32 +1,31 @@
 <?php
-class Slick_App_Forum_Categories_Model extends Slick_Core_Model
+namespace App\Forum;
+use Core, UI, Util;
+class Categories_Model extends Core\Model
 {
-
 	public function getCategoryForm($categoryId = 0)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
 		$name->setLabel('Category Name');
 		$form->add($name);
 		
-		$slug = new Slick_UI_Textbox('slug');
+		$slug = new UI\Textbox('slug');
 		$slug->setLabel('Slug (blank to auto generate)');
 		$form->add($slug);	
 		
-		$rank = new Slick_UI_Textbox('rank');
+		$rank = new UI\Textbox('rank');
 		$rank->setLabel('Order Rank');
 		$form->add($rank);
 		
-		$description = new Slick_UI_Textarea('description', 'html-editor');
+		$description = new UI\Textarea('description', 'html-editor');
 		$description->setLabel('Description');
 		$form->add($description);
 
 		return $form;
 	}
-	
-
 
 	public function addCategory($data)
 	{
@@ -35,7 +34,7 @@ class Slick_App_Forum_Categories_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -52,12 +51,10 @@ class Slick_App_Forum_Categories_Model extends Slick_Core_Model
 		
 		$add = $this->insert('forum_categories', $useData);
 		if(!$add){
-			throw new Exception('Error adding category');
+			throw new \Exception('Error adding category');
 		}
 		
 		return $add;
-		
-		
 	}
 		
 	public function editCategory($id, $data)
@@ -67,7 +64,7 @@ class Slick_App_Forum_Categories_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception(ucfirst($key).' required');
+					throw new \Exception(ucfirst($key).' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -82,21 +79,10 @@ class Slick_App_Forum_Categories_Model extends Slick_Core_Model
 			$useData['slug'] = genURL($useData['name']);
 		}
 		
-		
 		$edit = $this->edit('forum_categories', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing category');
+			throw new \Exception('Error editing category');
 		}
-		
-		
 		return true;
-		
 	}
-
-
-
-
-
 }
-
-?>

@@ -17,7 +17,7 @@ if($scout){
 			  </p>';
 			  
 		echo '<ul class="token-list">';
-		$model = new Slick_Core_Model;
+		$model = new \Core\Model;
 		$usedAssets = array();
 		foreach($scout['balances'] as $address => $balances){
 			echo '<li><strong><a href="http://blockscan.com/address.aspx?q='.$address.'" target="_blank">'.$address.'</a></strong>

@@ -1,12 +1,13 @@
 <?php
-class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+class Account_Controller extends \Core\Controller
 {
 	public $methods = array('GET', 'PATCH');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Account_Settings_Model;
+		$this->model = new \App\Account\Settings_Model;
 		
 	}
 	
@@ -16,9 +17,9 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 		$output = array();
 
 		try{
-			$this->user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$this->user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -78,7 +79,7 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 		}
 		
 		$getApp = $this->model->get('apps', 'account', array(), 'slug');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$appSettings = $meta->appMeta($getApp['appId']);
 		$getForm = $this->model->getSettingsForm($this->user, array('meta' => $appSettings));
 		
@@ -113,7 +114,7 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 		}
 		
 		$getApp = $this->model->get('apps', 'account', array(), 'slug');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$appSettings = $meta->appMeta($getApp['appId']);
 		$getApp['meta'] = $appSettings;
 		
@@ -137,7 +138,7 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 		try{
 			$update = $this->model->updateSettings($this->user, $useData, true);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(401);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -155,9 +156,4 @@ class Slick_App_API_V1_Account_Controller extends Slick_Core_Controller
 		
 		return $output;
 	}
-	
-	
-	
-	
 }
-?>

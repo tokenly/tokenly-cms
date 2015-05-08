@@ -1,14 +1,16 @@
 <?php
-class Slick_Tags_LTBStats
+namespace Tags;
+use Core, App, App\Account, App\Tokenly, UI, Util, API;
+class LTBStats
 {
 	
 	private static $reportData = array();
 	
 	function __construct()
 	{
-		$this->model = new Slick_App_Meta_Model;
+		$this->model = new \App\Meta_Model;
 		$this->site = $this->model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-		$this->accountModel = new Slick_App_Account_Home_Model;
+		$this->accountModel = new Account\Home_Model;
 		
 	}
 	
@@ -22,9 +24,9 @@ class Slick_Tags_LTBStats
 			}
 		}
 		
-		$getUser = Slick_App_Account_Home_Model::userInfo();
+		$getUser = Account\Home_Model::userInfo();
 		$model = $this->model;
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		
 		$stats = array();
 		try{
@@ -52,7 +54,7 @@ class Slick_Tags_LTBStats
 			$stats['totalHolders'] = count($uniqueBalances);
 			
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$stats['totalIssued'] = 'N/A';
 			$stats['totalHolders'] = 'N/A';
 		}
@@ -63,7 +65,6 @@ class Slick_Tags_LTBStats
 		$stats['launchDays'] = ceil($diff / 60 / 60 / 24);
 		$stats['launchWeeks'] = round(($stats['launchDays'] / 7), 1);		
 		
-		$getMelotic = json_decode(file_get_contents('https://www.melotic.com/api/markets/ltbc-btc/ticker'), true);
 		$getExchange = json_decode(file_get_contents('https://poloniex.com/public?command=returnTicker'), true);
 		$getDEX = json_decode(file_get_contents('http://xcp.blockscan.com/api2.aspx?module=price&asset1=LTBCOIN&asset2=BTC'), true);
 		if(isset($getExchange['BTC_LTBC'])){
@@ -118,14 +119,12 @@ class Slick_Tags_LTBStats
 			<li><strong>Latest BTC/LTBcoin Price:</strong>
 				<ul>
 						<li><?= $stats['latestPrice'] ?> BTC / 1 LTBc (Poloniex)</li>
-						<li><?= convertFloat($getMelotic['latest_price']) ?> BTC / 1 LTBc (Melotic)</li>
 						<li><?= $getDEX['result'] ?> BTC / 1 LTBc (DEX)</li>
 				</ul>
 			</li>
 			<li><strong>24h Exchange Volume:</strong>
 				<ul>
 					<li><?= round($stats['volume'], 3) ?> BTC (Poloniex)</li>
-					<li><?= round($getMelotic['volume'], 3) ?> BTC (Melotic)</li>
 				</ul>
 			</li>
 			<li><strong>Market Cap:</strong> <?= $stats['marketCap'] ?> (based on poloniex)
@@ -512,7 +511,7 @@ class Slick_Tags_LTBStats
 		
 		$metrics = array();
 		$useMetrics = array('posts', 'comments', 'threads', 'likes', 'views', 'magic-words', 'referrals');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		foreach($report['info'] as &$row){
 			if(!isset($row['negativeScore'])){
 				$row['negativeScore'] = 0;
@@ -611,7 +610,7 @@ class Slick_Tags_LTBStats
 		}
 		echo '<li><strong>'.$mLabel.':</strong> '.number_format($mTotal).'</li>';
 	}
-		$view = new Slick_App_View;
+		$view = new \App\View;
 		aasort($report['info'], 'score');
 		$report['info'] = array_reverse($report['info']);	
 
@@ -985,7 +984,7 @@ class Slick_Tags_LTBStats
 		if(isset(self::$reportData[$type])){
 			return self::$reportData[$type];
 		}
-		$model = new Slick_App_Tokenly_POP_Model;
+		$model = new Tokenly\POP_Model;
 		if($type == 'content'){
 			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%[poq:%" OR label LIKE "%[pov:%" ORDER BY reportId DESC');
 		}
@@ -993,7 +992,7 @@ class Slick_Tags_LTBStats
 			$getPop = $model->fetchAll('SELECT * FROM pop_reports WHERE label LIKE "%['.$type.':%" ORDER BY reportId DESC');
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$tokenlyApp = get_app('tokenly');
 		$lastReportHash = $meta->getAppMeta($tokenlyApp['appId'], 'leaderboard-hash-'.$type);
 		$thisHash = false;
@@ -1126,7 +1125,7 @@ class Slick_Tags_LTBStats
 	public function showPersonalStats()
 	{
 		$output = '';
-		$user = Slick_App_Account_Home_Model::userInfo();
+		$user = Account\Home_Model::userInfo();
 		if(!$user){
 			return $output;
 		}
@@ -1142,7 +1141,7 @@ class Slick_Tags_LTBStats
 		$weekName = 'Week #'.($weeks + 1).' '.$weekStartDate.' - '.$weekEndDate;
 		$timeframe = array('start' => date('Y-m-d H:i:s', $weekStart), 'end' => date('Y-m-d H:i:s', $weekEnd));
 		
-		$popModel = new Slick_App_Tokenly_POP_Model;
+		$popModel = new Tokenly\POP_Model;
 		$getScore = $popModel->getPopScore($user['userId'], $timeframe,
 											array('comments', 'posts', 'threads', 'views', 'register', 'magic-words', 'likes'));
 											

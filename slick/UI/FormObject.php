@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_FormObject extends Slick_UI_Object
+namespace UI;
+class FormObject extends Object
 {
 	protected $name = '';
 	protected $value = '';
@@ -10,7 +11,6 @@ class Slick_UI_FormObject extends Slick_UI_Object
 	{
 		parent::__construct();
 		$this->addClass(get_class($this));
-		
 	}
 	
 	public function setName($name)
@@ -35,7 +35,7 @@ class Slick_UI_FormObject extends Slick_UI_Object
 	
 	public function setLabel($text, $class='', $id = '')
 	{
-		$label = new Slick_UI_Label;
+		$label = new Label;
 		
 		if($class != ''){
 			if(is_array($class)){
@@ -69,8 +69,4 @@ class Slick_UI_FormObject extends Slick_UI_Object
 	{
 		return $this->label_raw;
 	}
-		
-
 }
-
-?>

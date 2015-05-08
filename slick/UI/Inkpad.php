@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Inkpad extends Slick_UI_FormObject
+namespace UI;
+class Inkpad extends FormObject
 {
 	private $inkpad = false;
 	const INK_URL = 'http://www.inkpad.io';
@@ -38,7 +39,7 @@ class Slick_UI_Inkpad extends Slick_UI_FormObject
 		}
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -117,8 +118,5 @@ class Slick_UI_Inkpad extends Slick_UI_FormObject
 		
 		return $url;
 	}
-	
-	
-}
 
-?>
+}

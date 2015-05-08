@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util, API, App\Tokenly, App\Profile, App\Account;
+class Newsroom_Model extends Core\Model
 {
 	public static $posts = false;
 	public static $blogs = false;
@@ -14,7 +16,7 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 	{
 		parent::__construct();
 		$this->site = currentSite();
-		$this->multiblogs = new Slick_App_Blog_Multiblog_Model;
+		$this->multiblogs = new Multiblog_Model;
 		if(!self::$posts){
 			self::$posts = $this->fetchAll('SELECT p.postId, p.title, p.url, p.userId, p.siteId, p.postDate,
 												p.publishDate, p.image, p.coverImage, p.views, p.commentCount,
@@ -88,9 +90,9 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 	
 	public function getBlogRooms($data)
 	{
-		$model = new Slick_App_Blog_Multiblog_Model;
-		$submitModel = new Slick_App_Blog_Submissions_Model;
-		$meta = new Slick_App_Meta_Model;
+		$model = new Multiblog_Model;
+		$submitModel = new Submissions_Model;
+		$meta = new \App\Meta_Model;
 		$postModule = $this->get('modules', 'blog-post', array(), 'slug');
 	
 		$getPosts = self::$posts;
@@ -237,8 +239,8 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 	
 	public function getBlogs($data)
 	{
-		$model = new Slick_App_Blog_Multiblog_Model;
-		$catModel = new Slick_App_Blog_Categories_Model;
+		$model = new Multiblog_Model;
+		$catModel = new Categories_Model;
 		$myRoles = extract_row(self::$roles, array('userId' => $data['user']['userId']), true, 'blog_roles');
 		$allowed_roles = array('admin', 'editor');
 		$getBlogs = $this->getAll('blogs', array('siteId' => $data['site']['siteId'], 'active' => 1));
@@ -265,18 +267,16 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 			$blog['categories'] = $catModel->getCategoryFormList($data['site']['siteId'], false, array(), false, 0, $blog['blogId']);
 		}
 		$blogArray = array();
-
 		foreach($getBlogs as $thisBlog){
 			$blogArray[$thisBlog['blogId']] = $thisBlog;
 		}
-
 		return $blogArray;
 	}
 	
 	public function getBlogStats($blog)
 	{
 		$getPosts = $this->getPostsInBlog($blog['blogId']);
-		$submitModel = new Slick_App_Blog_Submissions_Model;
+		$submitModel = new Submissions_Model;
 		
 		$output = array();
 		$output['posts_published'] = 0;
@@ -342,7 +342,7 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 	
 	public function getBlogTeam($blog)
 	{
-		$multiblogs = new Slick_App_Blog_Multiblog_Model;
+		$multiblogs = new Multiblog_Model;
 		$getRoles = $multiblogs->getBlogUserRoles($blog['blogId']);
 		//$getRoles = $this->getAll('blog_roles', array('blogId' => $blog['blogId']), array(), 'type', 'ASC');
 
@@ -390,5 +390,4 @@ class Slick_App_Blog_Newsroom_Model extends Slick_Core_Model
 		
 		return $get;
 	}
-	
 }

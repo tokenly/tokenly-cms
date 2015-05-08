@@ -1,4 +1,5 @@
 <?php
+namespace App\API\V1;
 /**
 * Forum API Endpoint 
 *
@@ -8,16 +9,16 @@
 * @author Nick Rathman <nrathman@ironcladtech.ca>
 * 
 */
-class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
+class Forum_Controller extends \Core\Controller
 {
 	public $methods = array('GET', 'POST','PATCH','DELETE'); //set the valid request methods
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_API_V1_Forum_Model;
-		$this->tca = new Slick_App_Tokenly_TCA_Model; //load token controlled access functions
-		$this->meta = new Slick_App_Meta_Model;
+		$this->model = new Forum_Model;
+		$this->tca = new \App\Tokenly\TCA_Model; //load token controlled access functions
+		$this->meta = new \App\Meta_Model;
 		$this->forumApp = $this->model->get('apps', 'forum', array(), 'slug');
 		$this->forumApp['meta'] = $this->meta->appMeta($this->forumApp['appId']);
 		$this->boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
@@ -37,16 +38,16 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		$output = array();
 		//load user data if possible
 		try{
-			$this->user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$this->user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$this->user = false;
 		}
 		$userId = 0;
 		if($this->user){
 			$userId = $this->user['userId'];
 		}
-		$this->args['data']['perms'] = Slick_App_Meta_Model::getUserAppPerms($userId, 'forum');
+		$this->args['data']['perms'] = \App\Meta_Model::getUserAppPerms($userId, 'forum');
 		$this->args['data']['perms'] = $this->tca->checkPerms($this->user, $this->args['data']['perms'], $this->postModule['moduleId'], 0, '');
 		$this->perms = $this->args['data']['perms'];
 		
@@ -417,7 +418,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		try{
 			$post = $this->model->postThread($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -453,7 +454,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		try{
 			$edit = $this->model->editThread($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -535,7 +536,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		$data = $this->args['data'];
 		//get author profile
 		if(!isset($data['no-profiles']) OR (intval($data['no-profiles']) === 0 AND $data['no-profiles'] != 'true')){
-			$profile = new Slick_App_Profile_User_Model;
+			$profile = new \App\Profile\User_Model;
 			$getPost['author'] = $profile->getUserProfile($getPost['userId'], $data['site']['siteId']);
 			unset($getPost['author']['email']);
 			unset($getPost['author']['lastAuth']);
@@ -596,7 +597,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		try{
 			$post = $this->model->postReply($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -634,7 +635,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 		try{
 			$edit = $this->model->editReply($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -751,7 +752,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['user'] = $this->user;
 			$flag = $this->model->flagPost($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -787,7 +788,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			try{
 				$check = $this->model->checkLikePost($this->args['data']);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				http_response_code(400);
 				$output['error'] = $e->getMessage();
 				return $output;
@@ -799,7 +800,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			try{
 				$update = $this->model->likePost($this->args['data']);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				http_response_code(400);
 				$output['error'] = $e->getMessage();
 				return $output;
@@ -837,7 +838,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['user'] = $this->user;
 			$unlike = $this->model->unlikePost($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -868,7 +869,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['perms'] = $this->perms;
 			$move = $this->model->moveThread($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -898,7 +899,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['perms'] = $this->perms;
 			$lock = $this->model->lockThread($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -926,7 +927,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['perms'] = $this->perms;
 			$lock = $this->model->lockThread($this->args['data'], 0);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -954,7 +955,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['perms'] = $this->perms;
 			$sticky = $this->model->stickyThread($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -982,7 +983,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 			$this->args['data']['perms'] = $this->perms;
 			$sticky = $this->model->stickyThread($this->args['data'], 0);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -1021,7 +1022,7 @@ class Slick_App_API_V1_Forum_Controller extends Slick_Core_Controller
 					$getItem = $this->model->get('forum_boards', $this->args['data']['id']);
 					if($getItem){
 						$perms = $this->tca->checkPerms($this->user['userId'], $perms, $this->boardModule['moduleId'], $getItem['boardId'], 'board');
-						$forumControl = new Slick_App_Forum_Post_Controller;
+						$forumControl = new \App\Forum\Post_Controller;
 						$boardAppData = array('perms' => $perms, 'user' => $this->user, 'app' => $this->forumApp);
 						$perms = $forumControl->checkModPerms($getItem['boardId'], $boardAppData);		
 					}		

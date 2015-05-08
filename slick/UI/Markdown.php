@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Markdown extends Slick_UI_FormObject
+namespace UI;
+class Markdown extends FormObject
 {
 	protected $livePreview = true;
 	protected $previewTitle = 'Live Preview';
@@ -37,7 +38,7 @@ class Slick_UI_Markdown extends Slick_UI_FormObject
 		}
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -47,11 +48,8 @@ class Slick_UI_Markdown extends Slick_UI_FormObject
 	public function displayLivePreview()
 	{
 		$sitePath = '';
-		$model = new Slick_Core_Model;
-		$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-		if($getSite){
-			$sitePath = $getSite['url'];
-		}
+		$getSite = currentSite();
+		$sitePath = $getSite['url'];
 		
 		ob_start();
 		?>

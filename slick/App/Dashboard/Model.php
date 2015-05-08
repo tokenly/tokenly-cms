@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Dashboard_Model extends Slick_Core_Model
+namespace App\Dashboard;
+use Core;
+class Model extends Core\Model
 {
 	public function getModuleFromArgs($args)
 	{
@@ -55,7 +57,7 @@ class Slick_App_Dashboard_Model extends Slick_Core_Model
 			$siteId = $site['siteId'];
 		}
 				
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$cms = get_app('cms');
 		$prevHash = $meta->getAppMeta($cms['appId'], 'dashboard-hash');
 		$getPrevData = $meta->getAppMeta($cms['appId'], 'dashboard-modules-'.$siteId);

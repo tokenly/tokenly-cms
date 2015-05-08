@@ -1,11 +1,13 @@
 <?php
-class Slick_App_API_V1_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+use Core;
+class Controller extends Core\Controller
 {
 	function __construct()
 	{
 		parent::__construct();
 		$this->args = explode('/', $_REQUEST['params']);	
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 	}
 	
 	/***
@@ -14,14 +16,12 @@ class Slick_App_API_V1_Controller extends Slick_Core_Controller
 	 * */
 	public function init()
 	{
-
-
 		if(!isset($this->args[0]) OR empty($this->args[0])){
 			http_response_code(400);
 			return array('error' => 'No endpoint defined');
 		}
 		
-		$class = 'Slick_App_API_V1_'.ucfirst($this->args[0]).'_Controller';
+		$class = '\\App\\API\\V1\\'.ucfirst($this->args[0]).'_Controller';
 		if(!class_exists($class)){
 			http_response_code(400);
 			return array('error' => 'Invalid endpoint');
@@ -83,7 +83,4 @@ class Slick_App_API_V1_Controller extends Slick_Core_Controller
 		
 		return $endpoint->init($this->args);	
 	}
-	
 }
-
-?>

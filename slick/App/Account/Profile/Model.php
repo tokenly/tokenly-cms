@@ -1,13 +1,16 @@
 <?php
-class Slick_App_Account_Profile_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, UI, Util, API;
+
+class Profile_Model extends Core\Model
 {
 	public function getProfileForm($user, $siteId, $app)
 	{
 		$app = get_app('account');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$app['meta'] = $meta->appMeta($app['appId']);
 		
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$groupIds = array();
 		foreach($user['groups'] as $group){
 			$groupIds[] = $group['groupId'];
@@ -27,13 +30,13 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 			$slug = 'field-'.$field['fieldId'];
 			switch($field['type']){
 				case 'textbox':
-					$elem = new Slick_UI_Textbox($slug);
+					$elem = new UI\Textbox($slug);
 					break;
 				case 'textarea':
-					$elem = new Slick_UI_Textarea($slug);
+					$elem = new UI\Textarea($slug);
 					break;
 				case 'select':
-					$elem = new Slick_UI_Select($slug);
+					$elem = new UI\Select($slug);
 					$options = explode("\n", $field['options']);
 					foreach($options as $option){
 						$option = trim($option);
@@ -52,7 +55,7 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 		$avatarWidth = $app['meta']['avatarWidth'];
 		$avatarHeight = $app['meta']['avatarHeight'];
 		
-		$avatar = new Slick_UI_File('avatar');
+		$avatar = new UI\File('avatar');
 		$avatar->setLabel('Profile Avatar (resizes to '.$avatarWidth.'x'.$avatarHeight.')');
 		$form->add($avatar);		
 		$form->setFileEnc();
@@ -76,15 +79,15 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 			
 			switch($getField['validation']){
 				case 'btc':
-					$validate = new Slick_API_BTCValidate;
+					$validate = new API\BTCValidate;
 					$check = $validate->checkAddress($val);
 					if(!$check){
-						throw new Exception('Invalid bitcoin address: '.$val);
+						throw new \Exception('Invalid bitcoin address: '.$val);
 					}
 					break;
 				case 'email':
 					if(!filter_var($val, FILTER_VALIDATE_EMAIL)){
-						throw new Exception('Invalid email address');
+						throw new \Exception('Invalid email address');
 					}
 					break;
 				
@@ -100,17 +103,16 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 				$insertData['fieldId'] = $fieldId;
 				$update = $this->insert('user_profileVals', $insertData);
 			}
-			
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$avWidth = $app['meta']['avatarWidth'];
 		$avHeight = $app['meta']['avatarHeight'];
 
 		if(!$isAPI){
 			if(isset($_FILES['avatar']['tmp_name']) AND trim($_FILES['avatar']['tmp_name']) != ''){
 				$picName = md5($user['username'].$_FILES['avatar']['name']).'.jpg';
-				$upload = Slick_Util_Image::resizeImage($_FILES['avatar']['tmp_name'], SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
+				$upload = Util\Image::resizeImage($_FILES['avatar']['tmp_name'], SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
 				if($upload){
 					$meta->updateUserMeta($user['userId'], 'avatar', $picName);
 				}
@@ -124,14 +126,13 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 					$getMime = @getimagesize('/tmp/'.$tmpName);
 					if($getMime){
 						$picName = md5($user['username'].$tmpName).'.jpg';
-						$upload = Slick_Util_Image::resizeImage('/tmp/'.$tmpName, SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
+						$upload = Util\Image::resizeImage('/tmp/'.$tmpName, SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
 						if($upload){
 							$meta->updateUserMeta($user['userId'], 'avatar', $picName);
 						}
 					}
 					unlink('/tmp/'.$tmpName);
 				}
-				
 			}
 		}		
 		
@@ -150,7 +151,4 @@ class Slick_App_Account_Profile_Model extends Slick_Core_Model
 		
 		return $output;
 	}
-
 }
-
-?>

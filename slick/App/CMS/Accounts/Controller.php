@@ -1,10 +1,12 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Accounts
  * 
  * */
-class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
+use App\Profile;
+class Accounts_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,7 +14,7 @@ class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_CMS_Accounts_Model;
+        $this->model = new Accounts_Model;
     }
     
     public function init()
@@ -57,57 +59,44 @@ class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
 			}
 			else{
 				if(count($getUser) === 1){
-					$this->redirect($this->site.'/'.$this->moduleUrl.'/view/'.$getUser[0]['userId']);
-					return true;
+					redirect($this->site.$this->moduleUrl.'/view/'.$getUser[0]['userId']);
 				}
 				else{
 					$output['users'] = $getUser;
 					return $output;
 				}
-				
 			}
 		}
-		
 		$get = $this->model->getAll('users', array(), array('userId', 'username', 'email', 'regDate', 'lastAuth', 'lastActive'), 'userId');
 		$output['users'] = $get;
-		
 		
 		return $output;
 	}
 	
 	private function deleteUser()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$user = Account\Home_Model::userInfo();
+			if($this->args[3] != $user['userId']){
+				$get = $this->model->get('users', $this->args[3]);
+				if($get){
+					$this->model->delete('users', $this->args[3]);
+				}
+			}
 		}
-		
-		$user = Slick_App_Account_Home_Model::userInfo();
-		if($this->args[3] == $user['userId']){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$get = $this->model->get('users', $this->args[3]);
-		if($get){
-			$this->model->delete('users', $this->args[3]);
-		}
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 	private function viewUser()
 	{
 		$output = array();
 		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$get = $this->model->get('users', $this->args[3], array('userId', 'username', 'email', 'regDate', 'lastAuth', 'lastActive', 'slug'));
 		if(!$get){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output['form'] = $this->model->accountForm();
@@ -115,15 +104,13 @@ class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
 			try{
 				$update = $this->model->updateAccount($this->args[3], $output['form']->grabData());
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$update = false;
 			}
-			
 			if($update){
 				$output['message'] = 'User updated successfully!';
 			}
-			
 		}
 		
 		$meta = $this->model->getAll('user_meta', array('userId' => $this->args[3]));
@@ -141,7 +128,7 @@ class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
 			$groupIds[] = $row['groupId'];
 		}
 		
-		$profile = new Slick_App_Profile_User_Model;
+		$profile = new Profile\User_Model;
 		$get['profile'] = $profile->getUserProfile($get['userId'], $this->data['site']['siteId']);
 		$get['profile'] = $get['profile']['profile'];
 		
@@ -149,13 +136,6 @@ class Slick_App_CMS_Accounts_Controller extends Slick_App_ModControl
 		$output['view'] = 'view';
 
 		$output['form']->setValues(array('groups' => $groupIds));
-		
 		return $output;
-		
 	}
-	
-
-
 }
-
-?>

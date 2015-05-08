@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Pages
  * 
  * */
-class Slick_App_CMS_Pages_Controller extends Slick_App_ModControl
+class Pages_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_CMS_Pages_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_CMS_Pages_Model;
-        
-        
+        $this->model = new Pages_Model;
     }
     
     public function init()
@@ -55,11 +53,8 @@ class Slick_App_CMS_Pages_Controller extends Slick_App_ModControl
 		$getPages = $this->model->getAll('pages', array('siteId' => $this->data['site']['siteId']));
 		$output['pageList'] = $getPages;
 
-		
 		return $output;
-		
 	}
-	
 	
 	private function addPage()
 	{
@@ -73,35 +68,28 @@ class Slick_App_CMS_Pages_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addPage($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
 
 	
 	private function editPage()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getPage = $this->model->get('pages', $this->args[3]);
 		if(!$getPage){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -115,47 +103,28 @@ class Slick_App_CMS_Pages_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editPage($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
 		$output['form']->setValues($getPage);
-		
 		return $output;
-		
 	}
-	
 
-	
-	
 	private function deletePage()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getPage = $this->model->get('pages', $this->args[3]);
+			if($getPage){
+				$delete = $this->model->delete('pages', $this->args[3]);
+			}			
 		}
-		
-		
-		$getPage = $this->model->get('pages', $this->args[3]);
-		if(!$getPage){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('pages', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

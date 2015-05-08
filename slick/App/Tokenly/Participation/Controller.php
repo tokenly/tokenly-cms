@@ -1,16 +1,16 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Participation Reports
  * 
  * */
-class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
+class Participation_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_Participation_Model;
-		
+		$this->model = new Participation_Model;
 	}
 	
 	public function init()
@@ -40,7 +40,6 @@ class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		
 		$output['view'] = 'index';
 		$output['form'] = $this->model->getPOPForm();
 		$output['reports'] = $this->model->getAll('pop_reports', array(), array(), 'reportId');
@@ -51,13 +50,13 @@ class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
 			try{
 				$generate = $this->model->generateReport($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$generate = false;
 			}
 			
 			if($generate){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/view/'.$generate);
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/view/'.$generate);
 			}
 		}
 		
@@ -114,7 +113,7 @@ class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
 				$output['message'] = 'Error editing report info';
 			}
 			else{
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/view/'.$getReport['reportId']);
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/view/'.$getReport['reportId']);
 			}
 		}
 		
@@ -133,9 +132,7 @@ class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
 		}
 		
 		$delete = $this->model->delete('pop_reports', $getReport['reportId']);
-		$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-		
-		return $output;
+		redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
 	private function downloadReport($output)
@@ -189,7 +186,5 @@ class Slick_App_Tokenly_Participation_Controller extends Slick_App_ModControl
 		ob_end_clean();
 		echo $getCsv;
 		die();
-
 	}
-	
 }

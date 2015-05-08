@@ -82,7 +82,7 @@
 				}
 			}
 			
-			$model = new Slick_Core_Model;
+			$model = new \Core\Model;
 			foreach($profile['profile'] as $field){
 				if($field['fieldId'] == PRIMARY_TOKEN_FIELD){
 					$getAddress = $model->getAll('coin_addresses', array('userId' => $profile['userId'], 'address' => $field['value']));
@@ -177,7 +177,7 @@
 			?>
 			</ul>
 			<?php
-			$pager = new Slick_UI_Pager;
+			$pager = new \UI\Pager;
 			$pager->addClass('pager');
 			$curForumPage = 1;
 			if(isset($_GET['page']) AND isset($_GET['t']) AND $_GET['t'] == 'forums'){
@@ -204,7 +204,7 @@
 				<ul class="blog-list">
 				<?php
 
-				$settings = new Slick_App_CMS_Settings_Model;
+				$settings = new \App\CMS\Settings_Model;
 				$maxChars = $settings->getSetting('blog-excerptChars');
 				if(!$maxChars){
 					$maxChars = 250;
@@ -299,7 +299,7 @@
 				?>
 				</ul>				
 				<?php
-				$blogPager = new Slick_UI_Pager;
+				$blogPager = new \UI\Pager;
 				$blogPager->addClass('pager');
 				$curBlogPage = 1;
 				if(isset($_GET['page']) AND isset($_GET['t']) AND $_GET['t'] == 'blog'){

@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_MagicWordSubmits_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core;
+class MagicWordSubmits_Model extends Core\Model
 {
 	public function getWordSubmissions()
 	{
@@ -37,8 +39,6 @@ class Slick_App_Blog_MagicWordSubmits_Model extends Slick_Core_Model
 					break;
 			}
 		}
-		
 		return $get;
 	}
-
 }

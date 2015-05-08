@@ -1,12 +1,12 @@
 <?php
-class Slick_App_API_V1_Auth_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+class Auth_Controller extends \Core\Controller
 {
 	public $methods = array('GET','POST');
 	
 	function __construct()
 	{
-		$this->model = new Slick_App_API_V1_Auth_Model;
-		
+		$this->model = new Auth_Model;
 	}
 	
 	public function init($args = array())
@@ -31,19 +31,17 @@ class Slick_App_API_V1_Auth_Controller extends Slick_Core_Controller
 				break;
 			
 		}
-		
 		return $output;
 	}
 	
 	private function authenticate()
 	{
 		$output = array();
-		
 		try{
 			$this->args['data']['isAPI'] = true;
 			$auth = $this->model->checkAuth($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
@@ -55,41 +53,30 @@ class Slick_App_API_V1_Auth_Controller extends Slick_Core_Controller
 	private function getUser()
 	{
 		$output = array();
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		
 		try{
 			$get = $this->model->getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
 		$output['result'] = $get;
-		
 		return $output;
 	}
 	
 	private function logout()
 	{
 		$output = array();
-		
 		try{
 			$logout = $this->model->logout($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
 			return $output;
 		}
-		
 		$output['result'] = 'Success';
-		
 		return $output;
-		
 	}
-	
-	
 }
-
-
-?>

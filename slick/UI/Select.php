@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Select extends Slick_UI_FormObject
+namespace UI;
+class Select extends FormObject
 {
 	protected $options = array();
 	protected $optionAttributes = array();
@@ -53,7 +54,7 @@ class Slick_UI_Select extends Slick_UI_FormObject
 		$output .= '</select>';
 
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 	
@@ -114,5 +115,3 @@ class Slick_UI_Select extends Slick_UI_FormObject
 	}
 	
 }
-
-?> 

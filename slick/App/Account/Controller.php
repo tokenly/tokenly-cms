@@ -1,11 +1,10 @@
 <?php
-class Slick_App_Account_Controller extends Slick_App_AppControl
+namespace App\Account;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
         parent::__construct();
-        
-        
     }
     
     public function init()
@@ -20,8 +19,7 @@ class Slick_App_Account_Controller extends Slick_App_AppControl
 		if(!$update){
 			return false;
 		}
-		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$meta->updateAppMeta($appId, 'avatarWidth', 150, 'Avatar Width (px)', 1);
 		$meta->updateAppMeta($appId, 'avatarHeight', 150, 'Avatar Height (px)', 1);
 		$meta->updateAppMeta($appId, 'disableRegister', 0, 'Disable New User Registration', 1, 'bool');

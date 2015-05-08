@@ -31,7 +31,7 @@
 </p>
 <h3>Account Information</h3>
 <?php
-$profModel = new Slick_App_Profile_User_model;
+$profModel = new \App\Profile\User_model;
 $getProfile = $profModel->getUserProfile($user['userId'], $site['siteId']);
 ?>
 <ul class="dash-home-stats">

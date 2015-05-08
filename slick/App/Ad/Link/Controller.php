@@ -1,10 +1,12 @@
 <?php
-class Slick_App_Ad_Link_Controller extends Slick_App_ModControl
+namespace App\Ad;
+use Core;
+class Link_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 	}
 	
 	public function init()
@@ -46,8 +48,7 @@ class Slick_App_Ad_Link_Controller extends Slick_App_ModControl
 																		 'last_click' => $time));																 
 			$_SESSION['visited_tracking_urls'][] = $getLink['urlId'];
 		}
-		$this->redirect($getLink['url'], 1);
-		die();
+		redirect($getLink['url']);
 	}
 	
 	protected function checkUniqueClick($urlId)

@@ -5,10 +5,10 @@ ini_set('display_errors', 1);
 require_once('../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
 
-$model = new Slick_App_Tokenly_Distribute_Model;
+$model = new \App\Tokenly\Distribute_Model;
 $model::$cacheMode = false;
-$btc = new Slick_API_Bitcoin(BTC_CONNECT);
-$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+$btc = new \API\Bitcoin(BTC_CONNECT);
+$xcp = new \API\Bitcoin(XCP_CONNECT);
 
 
 while(true){
@@ -130,7 +130,7 @@ while(true){
 					//verify addresses are valid
 					$addressList = array();
 					$totalSending = 0;
-					$validate = new Slick_API_BTCValidate;
+					$validate = new \API\BTCValidate;
 					$invalidAddresses = 0;
 					$successTx = array();
 					
@@ -303,6 +303,10 @@ while(true){
 									$s = $decode;
 								}
 								
+								if(isset($s['txId']) AND (trim($s['txId']) == '' OR strtolower($s['txId']) == 'none')){
+									$s['code'] = 69;
+								}
+								
 							}
 							$thisTx = array('details' => $expSent[0], 'result' => $expSent[1]);
 							$txData[] = $thisTx;
@@ -356,7 +360,7 @@ while(true){
 						if($row['userId'] != 0){
 							$_SERVER['HTTP_HOST'] = SITE_DOMAIN;
 							$message = 'Your distribution of '.$row['asset'].' has been completed. <a href="/dashboard/xcp-distribute/tx/'.$row['address'].'" target="_blank">Click here to view details</a>';
-							$notify = Slick_App_Meta_Model::notifyUser($row['userId'], $message, $row['distributeId'], 'distribute-complete');
+							$notify = \App\Meta_Model::notifyUser($row['userId'], $message, $row['distributeId'], 'distribute-complete');
 						}
 						//notify users
 						foreach($addressList as $addr => $amnt){
@@ -370,7 +374,7 @@ while(true){
 									if(trim($row['name']) != ''){
 										$message .= ' - '.$row['name'];
 									}
-									$notify = Slick_App_Meta_Model::notifyUser($xcpuser['userId'], $message, $row['distributeId'], 'distribute-notify');
+									$notify = \App\Meta_Model::notifyUser($xcpuser['userId'], $message, $row['distributeId'], 'distribute-notify');
 								}
 							}
 						}

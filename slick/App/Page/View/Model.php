@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Page_View_Model extends Slick_Core_Model
+namespace App\Page;
+use Core;
+class View_Model extends Core\Model
 {
 	public function getPageData($pageId)
 	{
@@ -25,14 +27,12 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 	{
 		$content = $this->parsePageTags($content);
 		$content = $this->parseContentBlocks($content, $siteId);
-		
 		return $content;
-		
 	}
 	
 	public static function parseContentBlocks($str, $siteId)
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$newStr = $str;
 		$get = $model->getAll('content_blocks', array('siteId' => $siteId));
 		$getBlockTags = preg_match_all('/(\[BLOCK:(.*?)\])/', $newStr, $blockTags);
@@ -47,10 +47,10 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 				
 				foreach($blockTags[2] as $foundTag){
 					if($foundTag == $block['slug']){
-						$newStr = str_replace('[BLOCK:'.$foundTag.']', Slick_App_View::displayBlock($block['slug']), $newStr);
+						$newStr = str_replace('[BLOCK:'.$foundTag.']', App\View::displayBlock($block['slug']), $newStr);
 					}
 					elseif($foundTag == $block['blockId']){
-						$newStr = str_replace('[BLOCK:'.$foundTag.']', Slick_App_View::displayBlock($block['blockId']), $newStr);
+						$newStr = str_replace('[BLOCK:'.$foundTag.']', App\View::displayBlock($block['blockId']), $newStr);
 					}
 				}
 			}
@@ -62,7 +62,7 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 	
 	public static function parsePageTags($str, $strip = false)
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$newStr = $str;
 		$tags = $model->getAll('page_tags');
 		
@@ -96,7 +96,8 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 									$paramData[] = $param;
 								}
 							}
-						}						
+						}			
+						$tag['class'] = 'Tags\\'.$tag['class'];			
 						$class = new $tag['class']($paramData);
 						$class->params = $paramData;
 						$newStr = str_replace('['.$match.']', $class->display(), $newStr);
@@ -109,18 +110,14 @@ class Slick_App_Page_View_Model extends Slick_Core_Model
 						if($strip){
 							$newStr = str_replace('['.$match.']', '', $newStr);
 							continue 2;
-						}						
+						}				
+						$tag['class'] = 'Tags\\'.$tag['class'];			
 						$class = new $tag['class'];
 						$newStr = str_replace('['.$match.']', $class->display(), $newStr);
 					}
 				}
 			}
 		}
-		
 		return $newStr;
-		
 	}
-	
-	
-	
 }

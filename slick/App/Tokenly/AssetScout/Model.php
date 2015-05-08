@@ -1,18 +1,20 @@
 <?php
-class Slick_App_Tokenly_AssetScout_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, Util;
+class AssetScout_Model extends Core\Model
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model;
+		$this->inventory = new Inventory_Model;
 	}
 	
 	public function getScoutForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setMethod('GET');
 		
-		$name = new Slick_UI_Textbox('asset');
+		$name = new UI\Textbox('asset');
 		$name->addAttribute('required');
 		$name->addAttribute('placeholder', 'Enter an asset name or a username');
 		$form->add($name);
@@ -23,7 +25,7 @@ class Slick_App_Tokenly_AssetScout_Model extends Slick_Core_Model
 	public function scoutAsset($data)
 	{
 		if(!isset($data['asset'])){
-			throw new Exception('Please enter a asset name');
+			throw new \Exception('Please enter a asset name');
 		}
 		
 		$getAsset = $this->inventory->getAssetData(strtoupper($data['asset']));
@@ -31,7 +33,7 @@ class Slick_App_Tokenly_AssetScout_Model extends Slick_Core_Model
 		if(!$getAsset){
 			$getUser = $this->get('users', trim($data['asset']), array('userId', 'username', 'slug'), 'username');
 			if(!$getUser){
-				throw new Exception('Error getting asset or user data');
+				throw new \Exception('Error getting asset or user data');
 			}
 			$isUser = $getUser;
 		}
@@ -81,6 +83,4 @@ class Slick_App_Tokenly_AssetScout_Model extends Slick_Core_Model
 			return array('isUser' => false, 'asset' => $getAsset['asset'], 'users' => $totalUsers, 'addresses' => $totalAddresses, 'balance' => $totalBalance, 'list' => $balanceList);
 		}
 	}
-	
-	
 }

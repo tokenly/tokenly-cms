@@ -1,15 +1,17 @@
 <?php
+namespace App\Tokenly;
+use Util;
 /*
  * @module-type = dashboard
  * @menu-label = Asset Scouter
  * 
  * */
-class Slick_App_Tokenly_AssetScout_Controller extends Slick_App_ModControl
+class AssetScout_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_AssetScout_Model;
+		$this->model = new AssetScout_Model;
 	}
 	
 	public function init()
@@ -26,14 +28,12 @@ class Slick_App_Tokenly_AssetScout_Controller extends Slick_App_ModControl
 			try{
 				$output['scout'] = $this->model->scoutAsset($data);
 			}
-			catch(Exception $e){
-				Slick_Util_Session::flash('message', $e->getMessage(), 'text-error');
+			catch(\Exception $e){
+				Util\Session::flash('message', $e->getMessage(), 'text-error');
 				$output['scout'] = false;
 			}
 		}
 		
 		return $output;
 	}
-	
-	
 }

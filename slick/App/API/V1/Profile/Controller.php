@@ -1,12 +1,14 @@
 <?php
-class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+
+class Profile_Controller extends \Core\Controller
 {
 	public $methods = array('POST', 'GET');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_API_V1_Profile_Model;
+		$this->model = new Profile_Model;
 		
 	}
 	
@@ -54,7 +56,7 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$model = new Slick_App_Profile_User_Model;
+		$model = new \App\Profile\User_Model;
 		$getUser = $model->get('users', $this->args[2], array('userId'), 'slug');
 		if(!$getUser){
 			http_response_code(400);
@@ -90,9 +92,9 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 		}
 
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -104,7 +106,7 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 		try{
 			$update = $this->model->updateProfile($data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -120,9 +122,9 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 		$output = array();
 
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -137,7 +139,7 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 	{
 		$output = array();
 		
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$max = 20;
 		$page = 1;
 		if(isset($this->args['data']['page'])){
@@ -160,13 +162,13 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 										LIMIT '.$start.', '.$max);
 										
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}		
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');			
 										
 		foreach($users as $key => $user){
@@ -200,12 +202,7 @@ class Slick_App_API_V1_Profile_Controller extends Slick_Core_Controller
 			
 		}
 		$output['numPages'] = ceil($totalUsers / $max);
-		
 		$output['users'] = $users;
-		
 		return $output;
 	}
-	
 }
-
-?>

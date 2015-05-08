@@ -1,16 +1,13 @@
 <?php
-class Slick_App_Profile_User_Controller extends Slick_App_ModControl
+namespace App\Profile;
+use App\Tokenly;
+class User_Controller extends \App\ModControl
 {
-	public $args;
-	public $data;
-	
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Profile_User_Model;
-        $this->tca = new Slick_App_Tokenly_TCA_Model;
-        
-        
+        $this->model = new User_Model;
+        $this->tca = new Tokenly\TCA_Model;
     }
     
     public function init()
@@ -18,8 +15,7 @@ class Slick_App_Profile_User_Controller extends Slick_App_ModControl
 		$output = parent::init();
 		
 		if(!isset($this->args[2])){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->site);
 		}
 		
 		$getProfile = $this->model->getUserProfile($this->args[2], $this->data['site']['siteId']);
@@ -43,11 +39,5 @@ class Slick_App_Profile_User_Controller extends Slick_App_ModControl
 		$output['title'] = 'User Info - '.$getProfile['username'];
 		
 		return $output;
-		
-		
 	}
-	
-
-	
-	
 }

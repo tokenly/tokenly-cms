@@ -1,13 +1,12 @@
 <?php
-class Slick_App_Account_Home_Controller extends Slick_App_ModControl
-{
-	public $args;
-	public $data;
-	
+namespace App\Account;
+use App\API\V1;
+class Home_Controller extends \App\ModControl
+{	
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Account_Home_Model;
+        $this->model = new Home_Model;
     }
     
     public function init()
@@ -64,19 +63,17 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		}
 		else{
 			try{
-				$userInfo = Slick_App_API_V1_Auth_Model::getUser(array('authKey' => $_SESSION['accountAuth'], 'site' => $this->data['site']));
+				$userInfo = V1\Auth_Model::getUser(array('authKey' => $_SESSION['accountAuth'], 'site' => $this->data['site']));
 			}
-			catch(Exception $e){
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/logout');
-				return $output;
+			catch(\Exception $e){
+				redirect($this->site.$this->data['app']['url'].'/logout');
 			}
 			if(isset($_REQUEST['r'])){
-				$this->redirect($this->site.$_GET['r']);
+				redirect($this->site.$_GET['r']);
 			}
 			else{
-				$this->redirect(route('account.dash-home'), 1);
+				redirect(route('account.dash-home'));
 			}			
-			die();
 		}
 		$output['title'] = 'Log In';
 		return $output;
@@ -90,16 +87,16 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		try{
 			$login = $this->model->checkAuth($data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['loginMessage'] = $e->getMessage();
 			$login = false;
 		}
 		if($login){
 			if(isset($_REQUEST['r'])){
-				$this->redirect($this->site.$_GET['r']);
+				redirect($this->site.$_GET['r']);
 			}
 			else{
-				$this->redirect(route('account.dash-home'), 1);
+				redirect(route('account.dash-home'));
 			}
 		}
 		return $output;
@@ -117,13 +114,13 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		try{
 			$register = $this->model->registerAccount($data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$output['registerMessage'] = $e->getMessage();
 			$register = false;
 		}
 		
 		if($register){
-			$this->redirect($this->site.'/'.$this->data['app']['url'].'/success', 1);
+			redirect($this->site.$this->data['app']['url'].'/success');
 		}
 		
 		return $output;
@@ -131,7 +128,7 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
     
     public static function logRemembered()
     {	
-		$model = new Slick_App_Account_Home_Model;
+		$model = new Home_Model;
 		if(!isset($_COOKIE['rememberAuth'])){
 			return false;
 		}
@@ -196,6 +193,4 @@ class Slick_App_Account_Home_Controller extends Slick_App_ModControl
 		
 		return $output;
 	}
-    
-    
 }

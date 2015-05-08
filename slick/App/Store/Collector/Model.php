@@ -1,22 +1,22 @@
 <?php
-class Slick_App_Store_Collector_Model extends Slick_Core_Model
+namespace App\Store;
+use API, App\Tokenly, UI, Util, Core;
+class Collector_Model extends Core\Model
 {
-	
 	function __construct()
 	{
 		parent::__construct();
-		$this->btc = new Slick_API_Bitcoin(BTC_CONNECT);
-		$this->xcp = new Slick_API_Bitcoin(XCP_CONNECT);
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model;
-		
+		$this->btc = new API\Bitcoin(BTC_CONNECT);
+		$this->xcp = new API\Bitcoin(XCP_CONNECT);
+		$this->inventory = new Tokenly\Inventory_Model;
 	}
 	
 	public function getSelectionForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setSubmitText('Go');
 		$form->setMethod('get');
-		$options = new Slick_UI_Select('option');
+		$options = new UI\Select('option');
 		$options->setLabel('Choose a Collection Option');
 		$options->addOption('sponsor-form', 'Sponsorship Form');
 		$options->addOption('submission-credits', 'Blog Submisson Credits');
@@ -35,19 +35,19 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 	
 	public function getCollectionForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$type = new Slick_UI_Hidden('type');
+		$type = new UI\Hidden('type');
 		$type->setValue(0);
 		$form->add($type);
 		
-		$address = new Slick_UI_Textbox('address');
+		$address = new UI\Textbox('address');
 		$address->setLabel('BTC Address');
 		$address->addAttribute('required');
 		$address->addAttribute('autocomplete', 'false');
 		$form->add($address);
 		
-		$pass = new Slick_UI_Password('pass');
+		$pass = new UI\Password('pass');
 		$pass->setLabel('Your Password');
 		$pass->addAttribute('required');
 		$pass->addAttribute('autocomplete', 'false');
@@ -63,13 +63,11 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 		try{
 			$balance = $this->btc->getbalance();
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return false;
 		}
-		
 		return $balance;
 	}
-	
 	
 	public function getFuelInfo()
 	{
@@ -78,13 +76,12 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 			$balance = $this->btc->getbalance(XCP_FUEL_ACCOUNT, 0);
 			$address = $this->btc->getaccountaddress(XCP_FUEL_ACCOUNT);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return $output;
 		}
 		$output['balance'] = $balance;
 		$output['address'] = $address;
 		return $output;
-		
 	}
 	
 	public function getPaymentsList($option)
@@ -106,7 +103,6 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 			case 'donate-verify':
 				$output = $this->getVerifyFunds();
 				break;
-			
 		}
 		
 		$newOutput = array();
@@ -183,16 +179,16 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 			try{
 				$item['amount'] = $this->btc->getaddressbalance($order['address']);
 			}
-			catch(Exception $e){
-				throw new Exception('Error getting balance for order #'.$order['orderId']);
+			catch(\Exception $e){
+				throw new \Exception('Error getting balance for order #'.$order['orderId']);
 			}
 			$output[] = $item;	
 			//check XCP balances
 			try{
 				$balances = $this->xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '==', 'value' => $item['address'])));
 			}
-			catch(Exception $e){
-				throw new Exception('Error getting XCP balances for order #'.$order['orderId']);
+			catch(\Exception $e){
+				throw new \Exception('Error getting XCP balances for order #'.$order['orderId']);
 			}
 			foreach($balances as $balance){
 				if($balance['quantity'] <= 0){
@@ -231,16 +227,16 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 		$getUser = $this->get('users', $appData['user']['userId']);
 		$pass = hash('sha256', $getUser['spice'].$data['pass']);
 		if($pass != $getUser['password']){
-			throw new Exception('Invalid password');
+			throw new \Exception('Invalid password');
 		}
 		
-		$btc_validate = new Slick_API_BTCValidate;
+		$btc_validate = new API\BTCValidate;
 		if(!$btc_validate->checkAddress($data['address'])){
-			throw new Exception('Invalid bitcoin address');
+			throw new \Exception('Invalid bitcoin address');
 		}
 		
 		if(count($data['payments']) == 0){
-			throw new Exception('No payments selected');
+			throw new \Exception('No payments selected');
 		}
 		
 		$getPayments = $this->getPaymentsList($data['type']);
@@ -275,6 +271,7 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 				}
 			}
 			foreach($amounts as $asset => $amnt){
+				$collect = null;
 				switch($asset){
 					case 'BTC':
 						$amnt = $amnt - $total_cost - $fuel_cost;
@@ -285,6 +282,10 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 					default:
 						$collect = $this->collectXCP($address, $data['address'], $amnt, $asset, $fuel_cost);
 						break;
+				}
+				
+				if($collect == null){
+					continue;
 				}
 				
 				if($collect AND $amnt > 0){
@@ -316,7 +317,7 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 					$success[] = $collectData;					
 				}
 				else{
-					throw new Exception('Error collecting '.$asset.' from address '.$address);
+					throw new \Exception('Error collecting '.$asset.' from address '.$address);
 				}
 			}
 		}
@@ -330,8 +331,8 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 		try{
 			$send = $this->btc->sendfromaddress($from, $amount, $to, $cost);
 		}
-		catch(Exception $e){	
-			throw new Exception('Error collecting BTC from '.$from);
+		catch(\Exception $e){	
+			throw new \Exception('Error collecting BTC from '.$from);
 		}
 		
 		return $send;
@@ -343,7 +344,7 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 			$assetData = $this->inventory->getAssetData($asset);
 			$getAddress = $this->btc->validateaddress($from);
 			if(!$getAddress OR !$getAddress['ismine']){
-				throw new Exception('Error getting pubkey for '.$from);
+				throw new \Exception('Error getting pubkey for '.$from);
 			}
 			
 			if($assetData['divisible']){
@@ -362,14 +363,13 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 							  'fee' => round(0.00005 * SATOSHI_MOD));
 			
 			$getRaw = $this->xcp->create_send($sendData);
-			$sign = $this->xcp->sign_tx(array('unsigned_tx_hex' => $getRaw));
-			$send = $this->xcp->broadcast_tx(array('signed_tx_hex' => $sign));
+			$sign = $this->btc->signrawtransaction($getRaw);
+			$send = $this->btc->sendrawtransaction($sign['hex']);
 
 			
 		}
-		catch(Exception $e){
-
-			throw new Exception('Error collecting '.$asset.' from '.$from);
+		catch(\Exception $e){
+			throw new \Exception('Error collecting '.$asset.' from '.$from);
 		}
 		
 		return $send;
@@ -405,8 +405,8 @@ class Slick_App_Store_Collector_Model extends Slick_Core_Model
 					
 				}			
 			}
-			catch(Exception $e){
-				throw new Exception('Error priming outputs for '.$address);
+			catch(\Exception $e){
+				throw new \Exception('Error priming outputs for '.$address);
 			}
 		}
 	}

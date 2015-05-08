@@ -25,7 +25,7 @@ function getCategoryParent($parentId, $blogs, $output = array())
 				<option value="all">Show All</option>
 			</select></div><hr>';
 	echo $this->displayFlash('blog-message');		
-	$profModel = new Slick_App_Profile_User_Model;
+	$profModel = new \App\Profile\User_Model;
 foreach($blogs as $blog){
 	if(isset($blog_rooms[$blog['blogId']]) AND count($blog_rooms[$blog['blogId']]) > 0){
 		echo '<h3>'.$blog['name'].' <a href="#" class="expand-posts collapse" data-blog="'.$blog['slug'].'"><i class="fa fa-minus-circle"></i></a></h3>';

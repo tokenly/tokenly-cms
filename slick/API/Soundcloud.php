@@ -1,5 +1,8 @@
 <?php
-class Slick_API_Soundcloud extends Slick_Core_Model
+namespace API;
+use Core;
+
+class Soundcloud extends Core\Model;
 {
 	private $api_url = 'http://api.soundcloud.com';
 	
@@ -8,17 +11,17 @@ class Slick_API_Soundcloud extends Slick_Core_Model
 		$url = $this->api_url.'/tracks/'.$trackId.'/stream?client_id='.SOUNDCLOUD_ID;
 		$get = @file_get_contents($url);
 		if(!$get){
-			throw new Exception('Error retrieving download');
+			throw new \Exception('Error retrieving download');
 		}
 		if(!is_dir(dirname($path))){
 			$make = @mkdir(dirname($path));
 			if(!$make){
-				throw new Exception('Error creating download folder');
+				throw new \Exception('Error creating download folder');
 			}
 		}
 		$save = file_put_contents($path, $get);
 		if(!$save){
-			throw new Exception('Error saving file');
+			throw new \Exception('Error saving file');
 		}
 		return true;
 	}

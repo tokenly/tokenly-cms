@@ -1,11 +1,13 @@
 <?php
-class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, UI, Util;
+class MagicWords_Model extends Core\Model
 {
 	public function getWordForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$word = new Slick_UI_Textbox('word');
+		$word = new UI\Textbox('word');
 		$word->addAttribute('required');
 		$word->setLabel('Enter Magic Word:');
 		$form->add($word);
@@ -19,14 +21,14 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 	{
 		$coinApp = $this->get('apps', 'tokenly', array(), 'slug');
 		if(!$coinApp){
-			throw new Exception('Token app not installed');
+			throw new \Exception('Token app not installed');
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$settings = $meta->appMeta($coinApp['appId']);
 
 		if(!isset($settings['pol-word-expire'])){
-			throw new Exception('No magic word expiration setting set');
+			throw new \Exception('No magic word expiration setting set');
 		}
 
 		$expire = intval($settings['pol-word-expire']) * 60 * 60;
@@ -37,7 +39,7 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 			default:
 				$module = $this->get('modules', 'blog-post', array(), 'slug');
 				if(!$module){
-					throw new Exception('Blog post module not installed');
+					throw new \Exception('Blog post module not installed');
 				}
 				$candidates = $this->getBlogCandidates($word, $expireLimit);
 			break;
@@ -51,7 +53,7 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 				$useData = array('word' => $word, 'userId' => $userId, 'itemId' => $cand, 'moduleId' => $module['moduleId'], 'submitDate' => timestamp());
 				$insert = $this->insert('pop_words', $useData);
 				if(!$insert){
-					throw new Exception('Error submitting magic word');
+					throw new \Exception('Error submitting magic word');
 				}
 				return true;
 			}
@@ -60,10 +62,10 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 			}
 		}
 		if(count($usedSubmits) > 0){
-			throw new Exception('You have already submitted that word!');
+			throw new \Exception('You have already submitted that word!');
 		}
 		
-		throw new Exception('Invalid or expired magic word');
+		throw new \Exception('Invalid or expired magic word');
 	}
 	
 	public function checkWordSubmitted($word, $userId, $itemId, $moduleId)
@@ -81,7 +83,7 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 		$sql = 'SELECT postId FROM blog_posts WHERE published = 1 AND publishDate >= :limit';
 		$getPosts = $this->fetchAll($sql, array(':limit' => date('Y-m-d H:i:s', $expire)));
 		
-		$postModel = new Slick_App_Blog_Post_Model;
+		$postModel = new Post_Model;
 		$candidates = array();
 		foreach($getPosts as $post){
 			$postMeta = $postModel->getPostMeta($post['postId'], false, true);
@@ -99,10 +101,10 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 	public function submitMagicWord($data)
 	{
 		if(!isset($data['word']) OR trim($data['word']) == ''){
-			throw new Exception('Please enter a valid word');
+			throw new \Exception('Please enter a valid word');
 		}
 		if(!isset($data['userId']) OR trim($data['userId']) == ''){
-			throw new Exception('User not set');
+			throw new \Exception('User not set');
 		}
 		if(!isset($data['type'])){
 			$data['type'] = 'blog';
@@ -112,16 +114,16 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 			$_SESSION['magicWordTries'] = 0;
 		}
 		elseif($_SESSION['magicWordTries'] >= 10){
-			throw new Exception('Too many wrong tries! Please come back in a while and try again.');
+			throw new \Exception('Too many wrong tries! Please come back in a while and try again.');
 		}
 
 		try{
 			$_SESSION['lastMagicWordTry'] = time();
 			$submit = $this->checkMagicWord($data['word'], $data['userId'], $data['type']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$_SESSION['magicWordTries']++;
-			throw new Exception($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 		
 		if($submit){
@@ -160,8 +162,6 @@ class Slick_App_Blog_MagicWords_Model extends Slick_Core_Model
 					break;
 			}
 		}
-		
 		return $get;
 	}
-
 }

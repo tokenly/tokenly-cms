@@ -1,5 +1,6 @@
 <?php
-class Slick_App_Accountant_Controller extends Slick_App_AppControl
+namespace App\Accountant;
+class Controller extends App\AppControl
 {
     function __construct()
     {
@@ -14,5 +15,4 @@ class Slick_App_Accountant_Controller extends Slick_App_AppControl
 		}
 		return $output;
     }    
-    
 }

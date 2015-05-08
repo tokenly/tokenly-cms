@@ -1,5 +1,7 @@
 <?php
-class Slick_Util_Compress
+namespace Util;
+
+class Compress
 {
 
 	public static function generateZip($files = array(), $filePath ,$destination = '',$overwrite = false) {
@@ -47,7 +49,4 @@ class Slick_Util_Compress
 		return false;
 	  }
 	}
-
 }
-
-?>

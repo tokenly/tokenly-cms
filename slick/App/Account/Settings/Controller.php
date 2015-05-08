@@ -1,9 +1,11 @@
 <?php
+namespace App\Account;
+use App\CMS;
 /*
  * @module-type = dashboard
  * 
  * */
-class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
+class Settings_Controller extends \App\ModControl
 {
 	public $args;
 	public $data;
@@ -11,17 +13,16 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Account_Settings_Model;
+        $this->model = new Settings_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-		$output['user'] = Slick_App_Account_Home_Model::userInfo();
+		$output['user'] = Home_Model::userInfo();
 		
 		if(!$output['user']){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->data['site']['url']);
 		}		
 				
 		if(isset($this->args[2])){
@@ -39,7 +40,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 			//check for account module access
 			$accountModule = $this->model->get('modules', 'accounts', array(), 'slug');
 			if($accountModule){
-				$checkAccess = Slick_App_AppControl::checkModuleAccess($accountModule['moduleId'], false);
+				$checkAccess = \App\AppControl::checkModuleAccess($accountModule['moduleId'], false);
 				if($checkAccess){
 					$thisUser = $this->model->get('users', $this->args[2], array('userId', 'username', 'slug', 'email','activated'));
 					if(!$thisUser){
@@ -60,13 +61,11 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 		$output['form'] = $this->model->getSettingsForm($thisUser, $output['adminView']);
 
 		if(posted()){
-			$data = $output['form']->grabData();
-
-			
+			$data = $_POST;
 			try{
 				$update = $this->model->updateSettings($thisUser, $data, false, $output['adminView']);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$update = false;
 			}
@@ -74,11 +73,10 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 			if($update){
 				$output['message'] = 'Account Settings updated!';
 			}
-			
 		}
 		
 		$getSettings = $this->model->getSettingsInfo($thisUser);
-		
+	
 		$dropGroup = $this->model->get('groups', 'drop-list', array(), 'slug');
 		$getSettings['dropList'] = 0;
 		if($dropGroup){
@@ -101,7 +99,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 			unset($data['password2']);
 			$output['form']->setValues($data);
 		}
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$output['avatar'] = $meta->getUserMeta($thisUser['userId'], 'avatar');
 		$output['view'] = 'form';
 		$output['template'] = 'admin';
@@ -123,7 +121,7 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 			try{
 				$delete = $this->model->deleteAccount($user, $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$delete = false;
 			}
@@ -142,9 +140,4 @@ class Slick_App_Account_Settings_Controller extends Slick_App_ModControl
 		
 		return $output;
 	}
-    
-    
-    
-    
-    
 }

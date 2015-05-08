@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Menus
  * 
  * */
-class Slick_App_CMS_Menus_Controller extends Slick_App_ModControl
+class Menus_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -13,9 +14,7 @@ class Slick_App_CMS_Menus_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         
-        $this->model = new Slick_App_CMS_Menus_Model;
-        
-        
+        $this->model = new Menus_Model;
     }
     
     public function init()
@@ -54,9 +53,7 @@ class Slick_App_CMS_Menus_Controller extends Slick_App_ModControl
 		$output = array('view' => 'list');
 		$output['menuList'] = $this->model->getAll('menus', array('siteId' => $this->data['site']['siteId']));;
 
-		
 		return $output;
-		
 	}
 	
 	
@@ -72,35 +69,30 @@ class Slick_App_CMS_Menus_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addMenu($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
 		
 		return $output;
-		
 	}
 	
 
-	
 	private function editMenu()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getMenu = $this->model->get('menus', $this->args[3]);
 		if(!$getMenu){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -113,47 +105,29 @@ class Slick_App_CMS_Menus_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editMenu($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
 			
 		}
 		$output['form']->setValues($getMenu);
 		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteMenu()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getMenu = $this->model->get('menus', $this->args[3]);
+			if($getMenu){
+				$delete = $this->model->delete('menus', $this->args[3]);
+			}			
 		}
-		
-		
-		$getMenu = $this->model->get('menus', $this->args[3]);
-		if(!$getMenu){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('menus', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

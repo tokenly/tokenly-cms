@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Profile_User_Model extends Slick_Core_Model
+namespace App\Profile;
+use Core, App\Tokenly, Tags;
+class User_Model extends Core\Model
 {
 	public static $profiles = array();
 	
@@ -31,7 +33,7 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 												GROUP BY v.fieldId
 												ORDER BY f.rank ASC', array(':userId' => $get['userId'], ':siteId' => $siteId));
 
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$output['pubProf'] = $meta->getUserMeta($get['userId'], 'pubProf');
 		$output['showEmail'] = $meta->getUserMeta($get['userId'], 'showEmail');
 		$output['avatar'] = $meta->getUserMeta($get['userId'], 'avatar');
@@ -71,7 +73,7 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 	{
 		$getUser = $this->get('users', $userId, array('userId', 'username', 'slug', 'email'));
 		$site = currentSite();
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$avatar = $meta->getUserMeta($userId, 'avatar');
 		if(trim($avatar) == ''){
 			$avatar = 'https://www.gravatar.com/avatar/'.md5(strtolower($getUser['email'])).'?d='.urlencode($site['url'].'/files/avatars/default.jpg');
@@ -97,18 +99,15 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 					$users[] = $getUser;
 					array_push($used, $row['userId']);
 				}
-				
 			}
 		}
-		
 		return $users;
-		
 	}
 	
 	public function getUserActivity($userId, $user)
 	{
 		$output = array();
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$output['forums'] = false;
 		if(app_enabled('forum')){
 			$postModel = app_class('forum.forum-post', 'model');
@@ -144,7 +143,7 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		
 		$output['tokenly'] = false;
 		if(app_enabled('tokenly')){
-			$stats = new Slick_Tags_LTBStats;
+			$stats = new Tags\LTBStats;
 			$popLeaders = $stats->getLeaderboardData('pop', false);
 			$contentLeaders = $stats->getLeaderboardData('content', false);
 			
@@ -170,13 +169,12 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 															array('userId' => $userId, 'verified' => 1, 'public' => 1));
 			
 		}
-		
 		return $output;
 	}
 	
 	public function getProfileViews($userId, $update = false)
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$views = intval($meta->getUserMeta($userId, 'profile-views'));
 		
 		if($update){
@@ -191,6 +189,4 @@ class Slick_App_Profile_User_Model extends Slick_Core_Model
 		}
 		return $views;
 	}
-	
-	
 }

@@ -1,10 +1,12 @@
 <?php
-class Slick_Tags_TrackingURL
+namespace Tags;
+use Core;
+class TrackingURL
 {
 	function __construct($params = array())
 	{
 		$this->params = $params;
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 		$this->site = currentSite();
 	}
 	

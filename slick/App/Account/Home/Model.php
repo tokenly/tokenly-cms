@@ -1,40 +1,36 @@
 <?php
-class Slick_App_Account_Home_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, UI, Util, API, App\Profile;
+class Home_Model extends Core\Model
 {
 	public static $activity_updated = false;
 	
 	public function getLoginForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		/*$hny = new Slick_UI_Textbox('user-mail');
-		$hny->addClass('hny');
-		$hny->addAttribute('autocomplete', 'off');
-		$hny->setLabel('Email Address', 'hny');
-		$form->add($hny);*/
-		
-		$username = new Slick_UI_Textbox('username');
+		$username = new UI\Textbox('username');
 		$username->addAttribute('required');
 		$username->setLabel('Username');
 		$form->add($username);
 
-		$password = new Slick_UI_Password('password');
+		$password = new UI\Password('password');
 		$password->addAttribute('required');
 		$password->setLabel('Password');
 		$form->add($password);	
 		
-		$hidden = new Slick_UI_Hidden('submit-type');
+		$hidden = new UI\Hidden('submit-type');
 		$hidden->setValue('login');
 		$form->add($hidden);
 		
-		$remember = new Slick_UI_Checkbox('rememberMe', 'rememberMe');
+		$remember = new UI\Checkbox('rememberMe', 'rememberMe');
 		$remember->setLabel('Remember Me?');
 		$remember->setBool(1);
 		$remember->setValue(1);
 		$form->add($remember);
 		
 		if(isset($_GET['r'])){
-			$redirect = new Slick_UI_Hidden('r');
+			$redirect = new UI\Hidden('r');
 			$redirect->setValue($_GET['r']);
 			$form->add($redirect);
 		}
@@ -45,34 +41,34 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public function getRegisterForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$username = new Slick_UI_Textbox('username');
+		$username = new UI\Textbox('username');
 		$username->addAttribute('required');
 		$username->setLabel('Username *');
 		$form->add($username);
 
-		$password = new Slick_UI_Password('password');
+		$password = new UI\Password('password');
 		$password->addAttribute('required');
 		$password->setLabel('Password *');
 		$form->add($password);
 		
-		$email = new Slick_UI_Textbox('email');
+		$email = new UI\Textbox('email');
 		$email->setLabel('Email *');
 		$email->addAttribute('required');
 		$form->add($email);	
 		
-		$hny = new Slick_UI_Textbox('website');
+		$hny = new UI\Textbox('website');
 		$hny->addClass('hny');
 		$hny->setLabel('Your Website:', 'hny');
 		$form->add($hny);
 		
-		$challenge = new Slick_UI_Textbox('challenge');
+		$challenge = new UI\Textbox('challenge');
 		$challenge->setLabel('Question: Who created the very first version of Bitcoin?');
 		$challenge->addAttribute('required');
 		$form->add($challenge);
 
-		$hidden = new Slick_UI_Hidden('submit-type');
+		$hidden = new UI\Hidden('submit-type');
 		$hidden->setValue('register');
 		$form->add($hidden);
 
@@ -84,17 +80,17 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	{
 		if(!isset($data['isAPI'])){
 			require_once(SITE_PATH.'/resources/recaptchalib2.php');
-			$recaptcha = new Recaptcha(CAPTCHA_PRIV);
+			$recaptcha = new UI\Recaptcha(CAPTCHA_PRIV);
 			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], $_POST['g-recaptcha-response']);
 			if($resp == null OR !$resp->success){
-				throw new Exception('Captcha invalid!');
+				throw new \Exception('Captcha invalid!');
 			}
 			if(!isset($data['challenge']) OR trim($data['challenge']) == ''){
-				throw new Exception('Please answer the challenge question');
+				throw new \Exception('Please answer the challenge question');
 			}
 			$possible_answers = array('satoshi', 'satoshi nakamoto', 'nakamoto');
 			if(!in_array(trim(strtolower($data['challenge'])), $possible_answers)){
-				throw new Exception('Incorrect answer');
+				throw new \Exception('Incorrect answer');
 			}
 		}
 		else{
@@ -106,7 +102,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$req = array('username' => true, 'password' => true, 'email' => true);
 		foreach($req as $key => $required){
 			if($required AND !isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 		}
 		
@@ -114,25 +110,25 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		
 		if(trim($data['username']) == ''){
 			http_response_code(400);
-			throw new Exception('Username required');
+			throw new \Exception('Username required');
 		}
 		if(trim($data['password']) == ''){
 			http_response_code(400);
-			throw new Exception('Password required');
+			throw new \Exception('Password required');
 		}
 		if(!isset($data['email'])){
 			$data['email'] = '';
 		}
 		else{
-			$settingsModel = new Slick_App_Account_Settings_Model;
+			$settingsModel = new CMS\Settings_Model;
 			$checkEmail = $settingsModel->checkEmailInUse(0, $data['email']);
 			if($checkEmail){
-				throw new Exception('Email already in use');
+				throw new \Exception('Email already in use');
 			}
 		}
 		if(isset($data['email']) AND trim($data['email']) != '' AND !filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
 			http_response_code(400);
-			throw new Exception('Invalid email address');
+			throw new \Exception('Invalid email address');
 		}
 		
 		//check honeypot, mark as spammer if true
@@ -161,7 +157,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 
 		if($this->usernameExists($useData['username'])){
 			http_response_code(400);
-			throw new Exception('Username already taken');
+			throw new \Exception('Username already taken');
 		}
 		
 		$genPass = genPassSalt($useData['password']);
@@ -177,7 +173,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$add = $this->insert('users', $useData);
 		if(!$add){
 			http_response_code(400);
-			throw new Exception('Error creating user account');
+			throw new \Exception('Error creating user account');
 		}
 		
 		if(!$noAuth){
@@ -193,7 +189,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$activateURL = $getSite['url'].'/'.$accountApp['url'].'/verify/'.$useData['activate_code'];
 		
 		//generate activation email
-		$mail = new Slick_Util_Mail;
+		$mail = new Util\Mail;
 		$mail->setFrom('noreply@'.SITE_DOMAIN);
 		$mail->addTo($useData['email']);
 		$mail->setSubject(SITE_NAME.' - Account Activiation');
@@ -215,7 +211,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			}
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		if(!$noAuth){
 			$meta->updateUserMeta($add, 'IP_ADDRESS', $_SERVER['REMOTE_ADDR']);
 		}
@@ -272,14 +268,14 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		if(!isset($this->api) OR $this->api != true){
 			$_SESSION['accountAuth'] = $token;
 		}
-		Slick_App_Account_Home_Model::updateLastActive($userId);
+		Home_Model::updateLastActive($userId);
 		return $token;
 	}
 
 	public static function updateLastActive($userId)
 	{
 		if(!self::$activity_updated){
-			$model = new Slick_App_Account_Home_Model;
+			$model = new Home_Model;
 			$auth = false;
 			if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
 				$auth = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
@@ -309,15 +305,15 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	{	
 		if(isset($data['authKey'])){
 			http_response_code(400);
-			throw new Exception('Already logged in!');
+			throw new \Exception('Already logged in!');
 		}
 		elseif(isset($_SESSION['accountAuth']) AND !isset($data['isAPI'])){
 			http_response_code(400);
-			throw new Exception('Already logged in!');
+			throw new \Exception('Already logged in!');
 		}
 		
 		$checkPassword = true;
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$get = false;
 		if(app_enabled('tokenly') AND isset($data['address']) AND isset($data['signed_message'])){
 			//use BTC address + signed message to sign in
@@ -330,14 +326,14 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 					$btc_access = intval($meta->getUserMeta($get['userId'], 'btc_access'));
 					if($btc_access == 1){
 						$secret_message = $site['domain'].' '.date('Y/m/d');
-						$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+						$btc = new API\Bitcoin(BTC_CONNECT);
 						try{
 							$extract_signed = extract_signature($data['signed_message']);
 							$verify = $btc->verifymessage($findAddress['address'], $extract_signed, $secret_message);
 						}
-						catch(Exception $e){
+						catch(\Exception $e){
 							http_response_code(400);
-							throw new Exception('Error verifying signed message (bitcoin down?)');
+							throw new \Exception('Error verifying signed message (bitcoin down?)');
 						}
 						
 						if($verify){
@@ -354,11 +350,11 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			//use traditional username/password combo
 			if(!isset($data['username'])){
 				http_response_code(400);
-				throw new Exception('Username required');
+				throw new \Exception('Username required');
 			}
 			if(!isset($data['password'])){
 				http_response_code(400);
-				throw new Exception('Password required');
+				throw new \Exception('Password required');
 			}
 			
 			$get = $this->get('users', $data['username'], array(), 'username');
@@ -366,15 +362,15 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		
 		if(!$get){ 
 			http_response_code(401);
-			throw new Exception('Invalid credentials');
+			throw new \Exception('Invalid credentials');
 		}		
 		
 		if($get['activated'] == 0){
 			http_response_code(403);
-			throw new Exception('Account not activated. Please check your email');
+			throw new \Exception('Account not activated. Please check your email');
 		}
 
-		$meta = new Slick_App_Meta_Model;		
+		$meta = new \App\Meta_Model;		
 		$getAttempts = $this->getLoginAttempts($get);
 				
 		if($checkPassword){
@@ -386,7 +382,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 				http_response_code(401);
 				$getAttempts++;
 				$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
-				throw new Exception('Invalid credentials');
+				throw new \Exception('Invalid credentials');
 			}
 		}
 		
@@ -395,7 +391,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			http_response_code(400);
 			$getAttempts++;
 			$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
-			throw new Exception('Error authenticating');
+			throw new \Exception('Error authenticating');
 		}
 		
 		if(isset($data['rememberMe']) AND intval($data['rememberMe']) === 1){
@@ -411,7 +407,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		}
 		
 		$meta->updateUserMeta($get['userId'], 'num_logins', ($getNumLogins + 1));
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
 
 		$getProf['auth'] = $token;
@@ -422,7 +418,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public function getLoginAttempts($get)
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$lastAttempt = strtotime($meta->getUserMeta($get['userId'], 'last_attempt'));
 		$meta->updateUserMeta($get['userId'], 'last_attempt', timestamp());
 		$getAttempts = $meta->getUserMeta($get['userId'], 'login_attempts');
@@ -443,7 +439,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 						$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
 					}
 					http_response_code(429);
-					throw new Exception('Trying too many times, please try again later (attempts: '.($getAttempts).')');
+					throw new \Exception('Trying too many times, please try again later (attempts: '.($getAttempts).')');
 				}
 			}
 		}
@@ -452,10 +448,10 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public static function userInfo()
 	{
-		$model = new Slick_App_Account_Home_Model;
+		$model = new Home_Model;
 		if(!isset($_SESSION['accountAuth'])){
 			if(isset($_COOKIE['rememberAuth'])){
-				Slick_App_Account_Home_Controller::logRemembered();
+				Home_Controller::logRemembered();
 			}
 			return false;
 		}
@@ -473,15 +469,12 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 		$timeDiff = time() - $activeTime;
 		$getSite = currentSite();
 		/*if($timeDiff > 7200){
-			$controller = new Slick_Core_Controller;
 			$model->edit('users', $get['userId'], array('auth' => ''));
 			unset($_SESSION['accountAuth']);
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');
 			}
-			$controller->redirect($getSite['url'].'/account');
-			
-			die();
+			redirect($getSite['url'].'/account');
 		}*/
 		
 		$meta = $model->getAll('user_meta', array('userId' => $get['userId']));
@@ -505,7 +498,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 										   LEFT JOIN group_sites s ON s.groupId = g.groupId
 										   WHERE u.userId = :id AND s.siteId = :siteId', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
 		
-		Slick_App_Account_Home_Model::updateLastActive($get['userId']);
+		Home_Model::updateLastActive($get['userId']);
 		
 		return $user;
 		
@@ -513,7 +506,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public static function getUsersOnline()
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$sql= 'SELECT COUNT(*) as total FROM users
 									WHERE  ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200';
 		$get = $model->fetchSingle($sql);
@@ -521,7 +514,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 			return false;
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$mostOnline = $meta->getStat('mostOnline');
 		if($get['total'] > $mostOnline){
 			$meta->updateStat('mostOnline', $get['total']);
@@ -532,14 +525,14 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public static function getMostOnline()
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$mostOnline = $meta->getStat('mostOnline');
 		return $mostOnline;
 	}
 	
 	public static function getOnlineUsers()
 	{
-		$model = new Slick_App_Profile_User_Model;
+		$model = new Profile\User_Model;
 
 		$getUsers = $model->fetchAll('SELECT userId FROM user_sessions
 									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200
@@ -560,7 +553,7 @@ class Slick_App_Account_Home_Model extends Slick_Core_Model
 	
 	public static function getUserPostCount($userId)
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$totalPosts = 0;
 		$forumApp = $model->get('apps', 'forum', array('appId'), 'slug');
 		if($forumApp){

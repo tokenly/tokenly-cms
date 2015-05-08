@@ -1,18 +1,18 @@
 <?php
-class Slick_Core_View
+namespace Core;
+use UI;
+class View
 {
 	public $misc;
 
 	function __construct()
 	{
-		$this->misc = new Slick_UI_Misc;
-
-
+		$this->misc = new UI\Misc;
 	}
 	
 	public function generateTable($data, $params)
 	{
-		$table = new Slick_UI_Table;
+		$table = new UI\Table;
 		$table->setData($data);
 		
 		if(isset($params['class'])){
@@ -56,7 +56,4 @@ class Slick_Core_View
 		
 		return $table;
 	}
-
 }
-
-?>

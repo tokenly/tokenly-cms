@@ -255,9 +255,9 @@ function get_object_vars_all($obj) {
 function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData = array(), $whitelist = false)
 {
 	$match = preg_match_all('/\B\@([\w\-]+)/', $str, $matches);
-	$model = new Slick_Core_Model;
-	$tca = new Slick_App_Tokenly_TCA_Model;
-	
+	$model = new \Core\Model;
+	$tca = new \App\Tokenly\TCA_Model;
+
 	$profileModule = $model->get('modules', 'user-profile', array(), 'slug');
 	$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	$thisUser = $model->get('users', $userId, array('userId', 'username', 'slug'));
@@ -279,7 +279,7 @@ function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData =
 			}
 			$notifyData['username'] = $replace;
 			$message = str_replace('%username%', $replace, $message);
-			$notify = Slick_App_Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type, false, $notifyData);
+			$notify = \App\Meta_Model::notifyUser($getUser['userId'], $message, $itemId, $type, false, $notifyData);
 			if($notify){
 				$success = true;
 			}
@@ -302,7 +302,7 @@ function markdown($str)
 	
 	/*** @mention mod ***/
 	$match = preg_match_all('/\B\@([\w\-]+)/', $str, $matches);
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	
 	$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	
@@ -409,7 +409,7 @@ function checkRequiredFields($data, $fields = array())
 	foreach($req as $key => $required){
 		if(!isset($data[$key]) OR trim($data[$key]) == ''){
 			if($required){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = '';
@@ -455,8 +455,8 @@ function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false)
 	
 	if($cache_key){
 		$rowLock = md5(json_encode($vals).intval($returnEmpty).$cache_key);
-		if(isset(Slick_App_Meta_Model::$metaCache[$rowLock])){
-			return Slick_App_Meta_Model::$metaCache[$rowLock];
+		if(isset(\App\Meta_Model::$metaCache[$rowLock])){
+			return \App\Meta_Model::$metaCache[$rowLock];
 		}
 	}
 	
@@ -479,13 +479,13 @@ function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false)
 		
 	if(!$returnEmpty AND count($output) == 0){
 		if($cache_key){
-			Slick_App_Meta_Model::$metaCache[$rowLock] = false;
+			\App\Meta_Model::$metaCache[$rowLock] = false;
 		}
 		return false;
 	}
 	
 	if($cache_key){
-		Slick_App_Meta_Model::$metaCache[$rowLock] = $output;
+		\App\Meta_Model::$metaCache[$rowLock] = $output;
 	}	
 	
 	return $output;
@@ -602,7 +602,7 @@ function getRatio($num1, $num2)
 	
 function currentSite()
 {
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	if($get){
 		$get['apps'] = $model->fetchAll('SELECT a.* FROM site_apps s LEFT JOIN apps a ON a.appId = s.appId WHERE s.siteId = :siteId', array(':siteId' => $get['siteId']));
@@ -613,7 +613,7 @@ function currentSite()
 function linkify_username($username)
 {
 	$slug = genURL($username);
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$get = $model->get('users', $slug, array('username', 'slug'), 'slug');
 	if(!$get){
 		return $username;
@@ -639,7 +639,7 @@ function route($route, $path = '')
 {
 	$full_path = '';
 	$site = currentSite();
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$expRoute = explode('.', $route);
 	$getApp = $model->get('apps', $expRoute[0], array(), 'slug');
 	if(!$getApp){
@@ -662,7 +662,7 @@ function app_enabled($slugs, $searchType = 'slug', $fields = false)
 		$fields = array('moduleId');
 	}
 	$exp = explode('.', $slugs);
-	$model = new Slick_App_Meta_Model;
+	$model = new \App\Meta_Model;
 	$getApp = $model->get('apps', $exp[0], array(), $searchType);
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
@@ -686,20 +686,24 @@ function get_app($slugs, $searchType = 'slug')
 function app_class($slugs, $type = 'controller', $construct = true)
 {
 	$exp = explode('.', $slugs);
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$getApp = $model->get('apps', $exp[0], array(), 'slug');
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
 	}
-	$class_name = 'Slick_App_'.$getApp['location'];
+	$class_name = '\\App\\'.$getApp['location'];
 	if(isset($exp[1])){
 		$getModule = $model->getAll('modules', array('appId' => $getApp['appId'], 'slug' => $exp[1], 'active' => 1), array('moduleId','slug','location'));
 		if(count($getModule) == 0){
 			return false;
 		}
-		$class_name .= '_'.$getModule[0]['location'];
+		$class_name .= '\\'.$getModule[0]['location'];
+		$class_name .= '_'.ucfirst($type);
 	}
-	$class_name .= '_'.ucfirst($type);
+	else{
+		$class_name .= '\\'.ucfirst($type);
+	}
+	
 	if(!$construct){
 		return $class_name;
 	}
@@ -708,7 +712,7 @@ function app_class($slugs, $type = 'controller', $construct = true)
 
 function app_setting($slug, $setting)
 {
-	$model = new Slick_App_Meta_Model;
+	$model = new \App\Meta_Model;
 	$getApp = $model->get('apps', $slug, array(), 'slug');
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
@@ -718,7 +722,7 @@ function app_setting($slug, $setting)
 
 function app_path($slugs, $class = '')
 {
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$exp = explode('.', $slugs);
 	$field = 'appId';
 	if(!is_numeric($exp[0])){
@@ -812,7 +816,7 @@ function parse_fileComments($path)
 
 function user()
 {
-	return Slick_App_Account_Home_Model::userInfo();
+	return \App\Account\Home_Model::userInfo();
 }
 
 function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', $end = '-----END BITCOIN SIGNATURE-----')
@@ -830,6 +834,12 @@ function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', 
 		}
 	}
 	return $inputMessage;
+}
+
+function redirect($url)
+{
+	header('Location: '.$url);
+	die();
 }
 
 ?>

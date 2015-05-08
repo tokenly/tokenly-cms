@@ -1,21 +1,16 @@
 <?php
+namespace App\Store;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Categories
  * 
  * */
-class Slick_App_Store_Categories_Controller extends Slick_App_ModControl
+class Categories_Controller extends \App\ModControl
 {
-    public $data = array();
-    public $args = array();
-    
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_Store_Categories_Model;
-        
-        
+        $this->model = new Categories_Model;
     }
     
     public function init()
@@ -53,11 +48,8 @@ class Slick_App_Store_Categories_Controller extends Slick_App_ModControl
 		$output = array('view' => 'list');
 		$output['catList'] = $this->model->getCategories($this->data['site']['siteId']);
 
-		
 		return $output;
-		
 	}
-	
 	
 	private function addStoreCategory()
 	{
@@ -71,35 +63,27 @@ class Slick_App_Store_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addStoreCategory($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
 
-	
 	private function editStoreCategory()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getStoreCategory = $this->model->get('store_categories', $this->args[3]);
 		if(!$getStoreCategory){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -112,47 +96,27 @@ class Slick_App_Store_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editStoreCategory($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getStoreCategory);
-		
 		return $output;
-		
 	}
-	
 
-	
-	
 	private function deleteStoreCategory()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getStoreCategory = $this->model->get('store_categories', $this->args[3]);
+			if($getStoreCategory){
+				$delete = $this->model->delete('store_categories', $this->args[3]);
+			}
 		}
-		
-		
-		$getStoreCategory = $this->model->get('store_categories', $this->args[3]);
-		if(!$getStoreCategory){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('store_categories', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

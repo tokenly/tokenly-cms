@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_CheckboxList extends Slick_UI_FormObject
+namespace UI;
+class CheckboxList extends FormObject
 {
 	protected $options = array();
 	protected $selected = array();
@@ -136,4 +137,3 @@ class Slick_UI_CheckboxList extends Slick_UI_FormObject
 	}
 	
 }
-?>

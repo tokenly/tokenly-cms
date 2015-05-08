@@ -79,7 +79,7 @@ if($monitorStatus == 'OFFLINE'){
 <h4>Distribution Addresses:</h4>
 <?php
 $tableData = array();
-$xcpModel = new Slick_App_Tokenly_Distribute_Model;
+$xcpModel = new \App\Tokenly\Distribute_Model;
 foreach($distribute['addressList'] as $addr => $amount){
 	if($distribute['divisible'] == 1){
 		$amount = $amount / SATOSHI_MOD;
@@ -99,7 +99,7 @@ foreach($distribute['addressList'] as $addr => $amount){
 	$tableData[] = array('address' => '<a href="https://blockchain.info/address/'.$addr.'" target="_blank">'.$addr.'</a> '.$andUserName, 'amount' => $amount);
 }
 
-$table = new Slick_UI_Table;
+$table = new \UI\Table;
 $table->addClass('admin-table');
 $table->setData($tableData);
 $table->addColumn('address', 'Address');
@@ -141,7 +141,7 @@ if(trim($distribute['txInfo']) != ''){
 		if($distribute['complete'] == 1){
 			echo '<p><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/download/'.$distribute['address'].'" target="_blank">Download .CSV Transaction Report</a></p>';
 		}
-		$xTable = new Slick_UI_Table;
+		$xTable = new \UI\Table;
 		$xTable->setData($infoData);
 		$xTable->addColumn('address', 'Address');
 		$xTable->addColumn('amount', 'Quantity');

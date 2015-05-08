@@ -1,34 +1,31 @@
 <?php
-class Slick_App_CMS_PageTags_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, Util;
+class PageTags_Model extends Core\Model
 {
-
 	public function getTagForm($tagId = 0)
 	{
-		$form = new Slick_UI_Form;
-		
-		$tag = new Slick_UI_Textbox('tag');
+		$form = new UI\Form;
+		$tag = new UI\Textbox('tag');
 		$tag->addAttribute('required');
 		$tag->setLabel('Tag');
 		$form->add($tag);
 		
-		$class = new Slick_UI_Textbox('class');
+		$class = new UI\Textbox('class');
 		$class->addAttribute('required');
 		$class->setLabel('Class');
 		$form->add($class);	
-
-
+		
 		return $form;
 	}
 	
-
-
 	public function addTag($data)
 	{
 		$req = array('tag', 'class');
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
@@ -37,12 +34,10 @@ class Slick_App_CMS_PageTags_Model extends Slick_Core_Model
 		
 		$add = $this->insert('page_tags', $useData);
 		if(!$add){
-			throw new Exception('Error adding tag');
+			throw new \Exception('Error adding tag');
 		}
 		
-		return $add;
-		
-		
+		return $add;	
 	}
 		
 	public function editTag($id, $data)
@@ -51,28 +46,16 @@ class Slick_App_CMS_PageTags_Model extends Slick_Core_Model
 		$useData = array();
 		foreach($req as $key){
 			if(!isset($data[$key])){
-				throw new Exception(ucfirst($key).' required');
+				throw new \Exception(ucfirst($key).' required');
 			}
 			else{
 				$useData[$key] = $data[$key];
 			}
 		}
-		
-		
 		$edit = $this->edit('page_tags', $id, $useData);
 		if(!$edit){
-			throw new Exception('Error editing tag');
+			throw new \Exception('Error editing tag');
 		}
-		
-		
 		return true;
-		
 	}
-
-
-
-
-
 }
-
-?>

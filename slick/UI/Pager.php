@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Pager extends Slick_UI_Object
+namespace UI;
+class Pager extends Object
 {
 	function __construct()
 	{
@@ -53,8 +54,4 @@ class Slick_UI_Pager extends Slick_UI_Object
 		return $output;
 		
 	}
-	
-	
 }
-
-?> 

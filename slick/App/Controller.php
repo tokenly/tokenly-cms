@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Controller extends Slick_Core_Controller
+namespace App;
+use Core, App\CMS, App\Account;
+class Controller extends Core\Controller
 {
 	public static $pageIndex = array();
 	
@@ -12,8 +14,8 @@ class Slick_App_Controller extends Slick_Core_Controller
 		else{
 			$this->args = explode('/', $_REQUEST['params']);	
 		}
-        $this->model = new Slick_Core_Model;
-        $this->view = new Slick_App_View;
+        $this->model = new Core\Model;
+        $this->view = new View;
 
 	}
 	
@@ -40,9 +42,9 @@ class Slick_App_Controller extends Slick_Core_Controller
 		$data['url'] = '';
 		$data['scripts'] = '';
 
-        $settings = new Slick_App_CMS_Settings_Model;
+        $settings = new CMS\Settings_Model;
         $disabled = $settings->getSetting('systemDisabled');
-        $getUser = Slick_App_Account_Home_Model::userInfo();
+        $getUser = Account\Home_Model::userInfo();
         if(intval($disabled) === 1){
 			if($getUser){
 				$settingModule = $this->model->get('modules', 'settings', array(), 'slug');
@@ -133,13 +135,13 @@ class Slick_App_Controller extends Slick_Core_Controller
         }
 
         if($thisApp){
-			$meta = new Slick_App_Meta_Model;
+			$meta = new Meta_Model;
 			$appMeta = $meta->appMeta($thisApp['appId']);
 			$thisApp['meta'] = $appMeta;
             $data['module'] = $thisModule;
             $data['app'] = $thisApp;			
 			
-            $className = 'Slick_App_'.$thisApp['location'].'_Controller';
+            $className = '\\App\\'.$thisApp['location'].'\\Controller';
             $class = new $className;
             $class->module = $thisModule;
             $class->app = $thisApp;
@@ -163,8 +165,7 @@ class Slick_App_Controller extends Slick_Core_Controller
         }
 
         if(!$getUser AND isset($data['view']) AND $data['view'] == '403'){
-			$this->redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI'], 1);
-			die();
+			redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI']);
 		}
         
         if(!isset($data['theme'])){
@@ -180,4 +181,3 @@ class Slick_App_Controller extends Slick_Core_Controller
 	}
 }
 
-?>

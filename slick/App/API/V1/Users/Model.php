@@ -1,7 +1,8 @@
 <?php
-class Slick_App_API_V1_Users_Model extends Slick_Core_Model
+namespace App\API\V1;
+use Core;
+class Users_Model extends Core\Model
 {
-	
 	public function getProfileFields($user, $siteId)
 	{
 		$getGroups = $this->getAll('group_users', array('userId' => $user['userId']));
@@ -32,7 +33,7 @@ class Slick_App_API_V1_Users_Model extends Slick_Core_Model
 	public function updateProfile($data)
 	{
 		if(!isset($data['fields']) OR count($data['fields']) == 0){
-			throw new Exception('No fields set');
+			throw new \Exception('No fields set');
 		}
 		$getFields = $this->getProfileFields($data['user'], $data['site']['siteId']);
 		
@@ -47,18 +48,11 @@ class Slick_App_API_V1_Users_Model extends Slick_Core_Model
 				
 			}
 		}
-		
-		$model = new Slick_App_Account_Profile_Model;
+		$model = new \App\Account\Profile_Model;
 		$update = $model->updateProfile($data['user'], $useData);
 		if(!$update){
-			throw new Exception('Error updating profile');
+			throw new \Exception('Error updating profile');
 		}
-		
 		return true;
-		
 	}
-	
-	
 }
-
-?>

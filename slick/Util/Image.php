@@ -1,7 +1,7 @@
 <?php
-class Slick_Util_Image
+namespace Util;
+class Image
 {
-		
     public function resizeImage($image, $destImage, $width='', $height='',$mode=0, $bgr=255, $bgg=255, $bgb=255)
     {
 		

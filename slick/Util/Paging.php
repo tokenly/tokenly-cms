@@ -1,5 +1,6 @@
 <?php
-class Slick_Util_Paging
+namespace Util;
+class Paging
 {
 	
 	public function pageArray($data = array(), $perPage = 0)
@@ -26,9 +27,5 @@ class Slick_Util_Paging
 		}
 		return $newArray;
 	}
-	
-	
+
 }
-
-
-?> 

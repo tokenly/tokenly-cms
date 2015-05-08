@@ -1,9 +1,11 @@
 <?php
-class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
+namespace App\API\V1;
+use Core, API;
+class Blog_Model extends \App\Blog\Submissions_Model
 {
 	public function getAllPosts($data, $getExtra = 0, $start = 0, $filled = array())
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$blogApp = $this->get('apps', 'blog', array('appId'), 'slug');
 		$blogMeta = $meta->appMeta($blogApp['appId']);
 		$limit = 15;
@@ -52,7 +54,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 				//$andCats = ' AND c.categoryId IN('.join(',', $catList).') ';
 			}
 			else{
-				throw new Exception('Categories not found');
+				throw new \Exception('Categories not found');
 			}
 		}
 		
@@ -75,7 +77,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					$siteList = $newSites;
 				}
 				else{
-					throw new Exception('Sites not found');
+					throw new \Exception('Sites not found');
 				}
 			}
 		}
@@ -98,7 +100,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 					$andUsers = ' AND p.userId IN('.join(',', $userList).') ';
 				}
 				else{
-					throw new Exception('Users not found');
+					throw new \Exception('Users not found');
 				}
 			}
 		}
@@ -247,15 +249,15 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 
 		$getPosts = $this->fetchAll($sql);
 
-		$profModel = new Slick_App_Profile_User_Model;
-		$postModel = new Slick_App_Blog_Post_Model;
-		$submitModel = new Slick_App_Blog_Submissions_Model;
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$profModel = new \App\Profile\User_Model;
+		$postModel = new \App\Blog\Post_Model;
+		$submitModel = new \App\Blog\Submissions_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		$isRSS = false;
 		if(!isset($data['isRSS'])){
-			$disqus = new Slick_API_Disqus;
+			$disqus = new API\Disqus;
 		}
 		else{
 			$isRSS = true;
@@ -307,7 +309,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			}
 			
 			
-			$pageIndex = Slick_App_Controller::$pageIndex;
+			$pageIndex = \App\Controller::$pageIndex;
 			$getIndex = extract_row($pageIndex, array('itemId' => $post['postId'], 'moduleId' => 28));
 			$postURL = $data['site']['url'].'/blog/post/'.$post['url'];
 			if($getIndex AND count($getIndex) > 0){
@@ -433,31 +435,31 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 	public function addComment($data, $appData)
 	{
 		if(!isset($data['postId'])){
-			throw new Exception('postId not set');
+			throw new \Exception('postId not set');
 		}
 		
 		if(!isset($data['user'])){
-			throw new Exception('Not logged in');
+			throw new \Exception('Not logged in');
 		}
 		
 		if(!isset($data['message'])){
-			throw new Exception('Message required');
+			throw new \Exception('Message required');
 		}
 		
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new \App\Blog\Post_Model;
 		$get = $model->get('blog_posts', $data['postId'], array('postId', 'url'), 'url');
 		if(!$get){
 			$get = $model->get('blog_posts', $data['postId'], array('postId', 'url'));
 			if(!$get){
-				throw new Exception('Post not found');
+				throw new \Exception('Post not found');
 			}
 		}
 		$data['postId'] = $get['postId'];
 		$data['userId'] = $data['user']['userId'];
 		
 		/* Disqus Comment Code */
-		$disqus = new Slick_API_Disqus;
-		$profModel = new Slick_App_Profile_User_Model;
+		$disqus = new API\Disqus;
+		$profModel = new \App\Profile\User_Model;
 		$getIndex = $this->getAll('page_index', array('itemId' => $get['postId'], 'moduleId' => 28));
 		$postURL = $appData['site']['url'].'/blog/post/'.$get['url'];
 		if($getIndex AND count($getIndex) > 0){
@@ -467,12 +469,12 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		$userProf = $profModel->getUserProfile($data['userId'], $appData['site']['siteId']);
 		
 		if(!$userProf){
-			throw new Exception('Error getting user profile');
+			throw new \Exception('Error getting user profile');
 		}
 		
 		$getThread = $disqus->getThread($postURL);
 		if(!$getThread){
-			throw new Exception('Comment thread not found');
+			throw new \Exception('Comment thread not found');
 		}
 		$threadId = $getThread['thread']['id'];
 		
@@ -483,11 +485,11 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		
 		$postComment = $disqus->makePost($comData);
 		if(!$postComment){
-			throw new Exception('Error posting comment');
+			throw new \Exception('Error posting comment');
 		}
 		
 		if(!is_array($postComment)){
-			throw new Exception($postComment);
+			throw new \Exception($postComment);
 		}
 		
 		$com = $postComment;
@@ -542,7 +544,7 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 			unset($output['author']['showEmail']);
 			return $output;
 		}
-		throw new Exception('Error posting comment..');
+		throw new \Exception('Error posting comment..');
 		*/
 	}
 	
@@ -557,5 +559,4 @@ class Slick_App_API_V1_Blog_Model extends Slick_App_Forum_Board_Model
 		}
 		return $catList;
 	}
-	
 }

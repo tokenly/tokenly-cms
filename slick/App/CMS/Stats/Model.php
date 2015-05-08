@@ -1,7 +1,8 @@
 <?php
-class Slick_App_CMS_Stats_Model extends Slick_Core_Model
+namespace App\CMS;
+use Core, UI, App\Profile;
+class Stats_Model extends Core\Model
 {
-
 	public function getStats()
 	{
 		$output = array();
@@ -19,7 +20,7 @@ class Slick_App_CMS_Stats_Model extends Slick_Core_Model
 		$output['numForumTopics'] = $this->count('forum_topics');
 		$output['numForumPosts'] = $this->count('forum_posts');
 		
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		$output['LTBcoinUsers'] = $profModel->getUsersWithProfile(PRIMARY_TOKEN_FIELD);
 		$output['numLTBcoinUsers'] = count($output['LTBcoinUsers']);
 		$output['numLTBcoinUsersToday'] = 0;
@@ -31,11 +32,6 @@ class Slick_App_CMS_Stats_Model extends Slick_Core_Model
 				$output['numLTBcoinUsersToday']++;
 			}
 		}
-		
-		
 		return $output;
 	}
-
 }
-
-?>

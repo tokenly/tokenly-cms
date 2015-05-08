@@ -1,12 +1,13 @@
 <?php
-class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+class Address_Controller extends \Core\Controller
 {
 	public $methods = array('GET','POST');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_Address_Model;
+		$this->model = new \App\Tokenly\Address_Model;
 	}
 	
 	public function init($args = array())
@@ -15,9 +16,9 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 		$output = array();
 		
 		try{
-			$this->user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$this->user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -83,7 +84,7 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 		try{
 			$add = $this->model->addAddress($data);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -96,7 +97,7 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 			$output['secret_message'] = $this->model->getSecretMessage($add);
 			$output['broadcast_text'] = $this->model->getBroadcastText($add);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output = array('error' => $e->getMessage());
 			return $output;
@@ -167,7 +168,7 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 				try{
 					$check = $this->model->checkAddressBroadcast($getAddress);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					http_response_code(400);
 					$output['error'] = $e->getMessage();
 					return $output;
@@ -175,7 +176,6 @@ class Slick_App_API_V1_Address_Controller extends Slick_Core_Controller
 				$output['result'] = $check;
 				break;
 		}
-		
 		return $output;
 	}
 }

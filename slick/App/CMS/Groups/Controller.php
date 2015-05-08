@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Groups
  * 
  * */
-class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
+class Groups_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_CMS_Groups_Model;
-        
-        
+        $this->model = new Groups_Model;
     }
     
     public function init()
@@ -45,7 +43,6 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
 			$output = $this->showGroups();
 		}
 		$output['template'] = 'admin';
-        
         return $output;
     }
     
@@ -55,9 +52,7 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
 		$getGroups = $this->model->getAll('groups');
 		$output['groupList'] = $getGroups;
 
-		
 		return $output;
-		
 	}
 	
 	
@@ -73,35 +68,27 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addGroup($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
-		}
-		
+		}	
 		return $output;
-		
 	}
-	
-
 	
 	private function editGroup()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getGroup = $this->model->get('groups', $this->args[3]);
 		if(!$getGroup){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -118,16 +105,14 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editGroup($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$getPerms = $this->model->getAll('group_perms', array('groupId' => $getGroup['groupId']));
 		foreach($getPerms as $perm){
@@ -140,37 +125,18 @@ class Slick_App_CMS_Groups_Controller extends Slick_App_ModControl
 		$output['form']->setValues($getGroup);
 		
 		return $output;
-		
 	}
-	
 
-	
-	
 	private function deleteGroup()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			if($this->model->count('groups') > 1){
+				$getGroup = $this->model->get('groups', $this->args[3]);
+				if($getGroup){
+					$delete = $this->model->delete('groups', $this->args[3]);
+				}
+			}
 		}
-		
-		if($this->model->count('groups') <= 1){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$getGroup = $this->model->get('groups', $this->args[3]);
-		if(!$getGroup){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('groups', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

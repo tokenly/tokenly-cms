@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Textarea extends Slick_UI_FormObject
+namespace UI;
+class Textarea extends FormObject
 {
 	function __construct($name, $id = '')
 	{
@@ -27,7 +28,7 @@ class Slick_UI_Textarea extends Slick_UI_FormObject
 		$output = $this->label.'<textarea name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.'>'.$this->value.'</textarea>';
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -36,5 +37,3 @@ class Slick_UI_Textarea extends Slick_UI_FormObject
 	
 	
 }
-
-?>

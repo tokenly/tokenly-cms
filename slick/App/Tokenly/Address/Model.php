@@ -1,65 +1,65 @@
 <?php
-class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
+namespace App\Tokenly;
+use Core, UI, Util, API;
+class Address_Model extends Core\Model
 {
 	public function getAddressForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$address = new Slick_UI_Textbox('address');
+		$address = new UI\Textbox('address');
 		$address->setLabel('BTC Address');
 		$address->addAttribute('required');
 		$form->add($address);
 		
-		$label = new Slick_UI_Textbox('label');
+		$label = new UI\Textbox('label');
 		$label->setLabel('Label (optional)');
 		$form->add($label);
 		
-		$isPrimary = new Slick_UI_Checkbox('isPrimary');
+		$isPrimary = new UI\Checkbox('isPrimary');
 		$isPrimary->setBool(1);
 		$isPrimary->setValue(1);
 		$isPrimary->setLabel('Primary Address?');
 		$form->add($isPrimary);
 		
-		$isXCP = new Slick_UI_Checkbox('isXCP');
+		$isXCP = new UI\Checkbox('isXCP');
 		$isXCP->setBool(1);
 		$isXCP->setValue(1);
 		$isXCP->setLabel('Counterparty Compatible Address?');
 		$form->add($isXCP);
 		
-		$public = new Slick_UI_Checkbox('public');
+		$public = new UI\Checkbox('public');
 		$public->setBool(1);
 		$public->setValue(1);
 		$public->setLabel('Public Address?');
 		$form->add($public);		
-		
 		return $form;
-		
 	}
 	
 	public function addAddress($data)
 	{
 		if(!isset($data['userId'])){
-			throw new Exception('No User ID set');
+			throw new \Exception('No User ID set');
 		}
 		
 		$validTypes = array('btc');
 		if(!in_array($data['type'], $validTypes)){
-			throw new Exception('Invalid coin type!');
+			throw new \Exception('Invalid coin type!');
 		}
 			
-		$validate = new Slick_API_BTCValidate;
+		$validate = new API\BTCValidate;
 		if(!isset($data['address'])){
-			throw new Exception('No address set!');
+			throw new \Exception('No address set!');
 		}
 		$check = $validate->checkAddress($data['address']);
 		if(!$check){
-			throw new Exception('Invalid Bitcoin address');
+			throw new \Exception('Invalid Bitcoin address');
 		}
 		
 		//check if they added this address already
 		$checkAdded = $this->getAll('coin_addresses', array('userId' => $data['userId'], 'address' => $data['address']));
 		if(count($checkAdded) > 0){
-			throw new Exception('Address already submitted');
+			throw new \Exception('Address already submitted');
 		}
 		
 		$isXCP = 0;
@@ -85,7 +85,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 
 		$add = $this->insert('coin_addresses', $useData);
 		if(!$add){
-			throw new Exception('Error adding address');
+			throw new \Exception('Error adding address');
 		}
 		
 		if($isPrimary === 1){
@@ -153,7 +153,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		$useData = array('label' => $data['label'], 'isXCP' => $isXCP, 'isPrimary' => $isPrimary, 'public' => $public);
 		$edit = $this->edit('coin_addresses', $addressId, $useData);
 		if(!$edit){
-			throw new Exception('Error editing address');
+			throw new \Exception('Error editing address');
 		}
 		if($useData['isPrimary'] == 1){
 			$this->switchPrimary($getAddress['userId'], $addressId);
@@ -163,15 +163,15 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 	
 	public function getDepositAddress($address, $throw_except = false)
 	{
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		$account = 'VERIFY_'.$address['userId'].':'.$address['addressId'];
 		try{
 			$getAddress = $btc->getaccountaddress($account);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$getAddress = 'Error retrieving deposit address';
 			if($throw_except){
-				throw new Exception($getAddress);
+				throw new \Exception($getAddress);
 			}
 		}
 		return $getAddress;		
@@ -182,7 +182,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		if($address['verified'] != 0){
 			return array('result' => 'verified');
 		}
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		$account = 'VERIFY_'.$address['userId'].':'.$address['addressId'];
 		try{
 			$txs = $btc->listtransactions($account);
@@ -204,7 +204,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 				}
 			}			
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return array('error' => 'Error getting transactions');
 		}
 
@@ -253,7 +253,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		}
 				
 		$getMessage = $this->getSecretMessage($address);
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		
 		$inputMessage = extract_signature($message);
 		
@@ -264,7 +264,7 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 				$result = true;
 			}
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return array('error' => 'Invalid signature');
 		}
 		
@@ -305,12 +305,12 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		}
 		$req_text = $this->getBroadcastText($address);
 		try{
-			$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+			$xcp = new API\Bitcoin(XCP_CONNECT);
 			$broadcasts = $xcp->get_broadcasts(array('filters' => array('field' => 'source', 'op' => '=', 'value' => $address['address'])));
 			$mempool = $xcp->get_mempool();
 		}
-		catch(Exception $e){
-			throw new Exception('Error checking broadcasts');
+		catch(\Exception $e){
+			throw new \Exception('Error checking broadcasts');
 		}
 		$found = false;
 		foreach($mempool as $pool){
@@ -338,5 +338,4 @@ class Slick_App_Tokenly_Address_Model extends Slick_Core_Model
 		}
 		return $found;
 	}
-	
 }

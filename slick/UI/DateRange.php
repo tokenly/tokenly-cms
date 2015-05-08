@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_DateRange extends Slick_UI_FormObject
+namespace UI;
+class DateRange extends FormObject
 {
 
 	protected $minYear = 1969;
@@ -17,8 +18,8 @@ class Slick_UI_DateRange extends Slick_UI_FormObject
 	
 	public function display($elemWrap = ''){
 		
-		$date1 = new Slick_UI_Date($this->name.'-start', $this->name.'-start');
-		$date2 = new Slick_UI_Date($this->name.'-end', $this->name.'-end');
+		$date1 = new Date($this->name.'-start', $this->name.'-start');
+		$date2 = new Date($this->name.'-end', $this->name.'-end');
 		
 		$date1->setMinYear($this->minYear);
 		$date2->setMinYear($this->minYear);
@@ -50,7 +51,7 @@ class Slick_UI_DateRange extends Slick_UI_FormObject
 		$output = $this->label.'<div class="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.'>'.$date1->display().$date2->display().'</div>';
 	
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -98,5 +99,3 @@ class Slick_UI_DateRange extends Slick_UI_FormObject
 	}
 
 }
-
-?>

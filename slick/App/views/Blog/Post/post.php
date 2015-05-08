@@ -3,7 +3,7 @@ if($post['formatType'] == 'markdown'){
 	$post['content'] = markdown($post['content']);
 	$post['excerpt'] = markdown($post['excerpt']);
 }
-$tca = new Slick_App_Tokenly_TCA_Model;
+$tca = new \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 $catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['author']['userId'], 'user-profile');
@@ -184,7 +184,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
     <?php
     
     if($user){
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$userProf = $profModel->getUserProfile($user['userId'], $site['siteId']);
 		$disqusUser = array('id' => $user['userId'], 'username' => $user['username'],
 							'email' => $user['email'], 'avatar' => SITE_URL.'/files/avatars/'.$userProf['avatar'],
@@ -218,7 +218,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 			this.sso = {
 				  name:   "LTB Network",
 				  icon:     "<?= SITE_URL ?>/favicon.png",
-				  url:        "<?= SITE_URL ?>/account?r=/dashboard?closeThis=1",
+				  url:        "<?= SITE_URL ?>/account?r=/dashboard/account/home?closeThis=1",
 				  logout:  "<?= SITE_URL ?>/account/logout?r=<?= $_SERVER['REQUEST_URI'] ?>",
 				  width:   "800",
 				  height:  "400"

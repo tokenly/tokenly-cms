@@ -1,14 +1,16 @@
 <?php
-class Slick_Tags_ForumBuilder
+namespace Tags;
+use Core, App, App\Tokenly, App\Account, UI, Util, API;
+class ForumBuilder
 {
 
 	function __construct()
 	{
-		$this->model = new Slick_Core_Model;
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model; //load inventory model
-		$this->user = Slick_App_Account_Home_Model::userInfo(); //load user data
+		$this->model = new Core\Model;
+		$this->inventory = new Tokenly\Inventory_Model; //load inventory model
+		$this->user = Account\Home_Model::userInfo(); //load user data
 		$tokenApp = $this->model->get('apps', 'tokenly', array(), 'slug'); //get the tokenly/ltbcoin app
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$this->settings = $meta->appMeta($tokenApp['appId']); //load some settings
 		$this->pageURL = 'token-societies'; //CMS page URL the form is located on
 		$this->site = $this->model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain'); //get basic site data
@@ -195,7 +197,7 @@ class Slick_Tags_ForumBuilder
 			try{
 				$submit = $this->submitForm($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$error = $e->getMessage();
 				$submit = false;
 			}
@@ -218,36 +220,36 @@ class Slick_Tags_ForumBuilder
 	
 	private function getBuilderForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
-		$tokenName = new Slick_UI_Textbox('token_name');
+		$tokenName = new UI\Textbox('token_name');
 		$tokenName->setLabel('Token/Asset Name *');
 		$tokenName->addAttribute('required');
 		$form->add($tokenName);
 		
-		$tokenDesc = new Slick_UI_Textarea('token_description');
+		$tokenDesc = new UI\Textarea('token_description');
 		$tokenDesc->setLabel('Token/Asset Description (use markdown formatting)');
 		$form->add($tokenDesc);
 		
-		$tokenLink = new Slick_UI_Textbox('token_link');
+		$tokenLink = new UI\Textbox('token_link');
 		$tokenLink->setLabel('Token Information Link');
 		$form->add($tokenLink);
 		
-		$logo = new Slick_UI_File('image');
+		$logo = new UI\File('image');
 		$logo->setLabel('Token Logo');
 		$form->add($logo);		
 		
-		$boardName = new Slick_UI_Textbox('board_name');
+		$boardName = new UI\Textbox('board_name');
 		$boardName->addAttribute('required');
 		$boardName->setLabel('Message Board Name *');
 		$form->add($boardName);
 		
-		$boardDesc = new Slick_UI_Textarea('board_description');
+		$boardDesc = new UI\Textarea('board_description');
 		$boardDesc->setLabel('Message Board Description');
 		$form->add($boardDesc);
 		
-		$payType = new Slick_UI_Select('payment_type');
+		$payType = new UI\Select('payment_type');
 		$payType->setLabel('Payment Type');
 		$payType->addOption('LTBCOIN', number_format($this->settings['tca-forum-token-fee']).' LTBCOIN');
 		$payType->addOption('BTC', $this->settings['tca-forum-btc-fee'].' BTC');
@@ -259,22 +261,22 @@ class Slick_Tags_ForumBuilder
 	private function submitForm($data)
 	{
 		if(trim($data['token_name']) == ''){
-			throw new Exception('Token Name Required');
+			throw new \Exception('Token Name Required');
 		}
 		if(trim($data['board_name']) == ''){
-			throw new Exception('Board Name Required');
+			throw new \Exception('Board Name Required');
 		}
 	
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
 		try{
 			$getAsset = $xcp->get_asset_info(array('assets' => array(strtoupper(trim($data['token_name'])))));
 		}
-		catch(Exception $e){
-			throw new Exception('Error connecting to Counterparty');
+		catch(\Exception $e){
+			throw new \Exception('Error connecting to Counterparty');
 		}
 
 		if(!$getAsset OR count($getAsset) == 0){
-			throw new Exception('Token not found: '.strtoupper($data['token_name']));
+			throw new \Exception('Token not found: '.strtoupper($data['token_name']));
 		}
 		
 		$getAsset = $getAsset[0];
@@ -289,7 +291,7 @@ class Slick_Tags_ForumBuilder
 				$tokenType = 'BTC';
 				break;
 			default:
-				throw new Exception('Invalid Payment Type');
+				throw new \Exception('Invalid Payment Type');
 				break;
 		}
 		
@@ -314,12 +316,12 @@ class Slick_Tags_ForumBuilder
 		$orderInfo['payment_token'] = $tokenType;
 		$orderInfo['userId'] = $this->user['userId'];
 		
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		try{
 			$getAddress = $btc->getaccountaddress($orderInfo['account']);
 		}
-		catch(Exception $e){
-			throw new Exception('Error connecting to bitcoin');
+		catch(\Exception $e){
+			throw new \Exception('Error connecting to bitcoin');
 		}
 		
 		$orderInfo['address'] = $getAddress;
@@ -345,7 +347,7 @@ class Slick_Tags_ForumBuilder
 										
 		$addOrder = $this->model->insert('payment_order', $insertData);
 		if(!$addOrder){
-			throw new Exception('Error submitting order');
+			throw new \Exception('Error submitting order');
 		}
 		
 		$orderInfo['orderId'] = $addOrder;
@@ -368,13 +370,13 @@ class Slick_Tags_ForumBuilder
 			$editValues = array();
 			switch($getOrder['asset']){
 				case 'BTC':
-					$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+					$btc = new API\Bitcoin(BTC_CONNECT);
 					$balance = 0;
 					$confirmed = 0;
 					try{
 						$getTx = $btc->listtransactions($getOrder['account']);
 					}
-					catch(Exception $e){
+					catch(\Exception $e){
 						http_response_code(400);
 						$output['error'] = 'Error getting balance';
 						echo json_encode($output);
@@ -400,7 +402,7 @@ class Slick_Tags_ForumBuilder
 						try{
 							$finalize = $this->completeOrder($getOrder);
 						}
-						catch(Exception $e){
+						catch(\Exception $e){
 							$finalize = false;
 							http_response_code(400);
 							$output['error'] = 'Could not complete order: '.$e->getMessage();
@@ -411,11 +413,11 @@ class Slick_Tags_ForumBuilder
 					}
 					break;
 				default:
-					$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
+					$xcp = new API\Bitcoin(XCP_CONNECT);
 					try{
 						$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getOrder['address'])));
 					}
-					catch(Exception $e){
+					catch(\Exception $e){
 						http_response_code(400);
 						$output['reror'] = 'Error retrieving balance';
 						echo json_encode($output);
@@ -443,7 +445,7 @@ class Slick_Tags_ForumBuilder
 						try{
 							$finalize = $this->completeOrder($getOrder);
 						}
-						catch(Exception $e){
+						catch(\Exception $e){
 							$finalize = false;
 							http_response_code(400);
 							$output['error'] = 'Could not complete order: '.$e->getMessage();
@@ -489,7 +491,7 @@ class Slick_Tags_ForumBuilder
 			if($getAsset){
 				$updateAsset = $this->model->edit('xcp_assetCache', $getAsset['assetId'], $updateVals);
 				if(!$updateAsset){
-					throw new Exception('Error updating asset cache');
+					throw new \Exception('Error updating asset cache');
 				} 
 			}
 		}
@@ -508,13 +510,13 @@ class Slick_Tags_ForumBuilder
 							
 		$addBoard = $this->model->insert('forum_boards', $boardData);
 		if(!$addBoard){
-			throw new Exception('Error creating new board');
+			throw new \Exception('Error creating new board');
 		}
 		
 		//add user to mod list
 		$addMod = $this->model->insert('forum_mods', array('userId' => $data['userId'], 'boardId' => $addBoard));
 		if(!$addMod){
-			throw new Exception('Error adding user to forum moderator list');
+			throw new \Exception('Error adding user to forum moderator list');
 		}
 		
 		//create token_access entry
@@ -523,20 +525,20 @@ class Slick_Tags_ForumBuilder
 							'amount' => 0, 'op' => '>', 'stackOp' => 'AND', 'stackOrder' => 0);
 		$addLock = $this->model->insert('token_access', $accessData);
 		if(!$addLock){
-			throw new Exception('Error creating token access lock');
+			throw new \Exception('Error creating token access lock');
 		}
 		
 		//link token to board via boardMeta
 		$addMeta = $this->model->insert('forum_boardMeta', array('boardId' => $addBoard, 'metaKey' => 'access_token',
 																 'value' => $data['token'], 'lastUpdate' => timestamp()));
 		if(!$addMeta){
-			throw new Exception('Error linking token to board');
+			throw new \Exception('Error linking token to board');
 		}
 		
 		//activate board
 		$activate = $this->model->edit('forum_boards', $addBoard, array('active' => 1));
 		if(!$activate){
-			throw new Exception('Error activating new board');
+			throw new \Exception('Error activating new board');
 		}
 		
 		//add user to private forum owner group, dont error out
@@ -567,8 +569,8 @@ class Slick_Tags_ForumBuilder
 			@mkdir(SITE_PATH.'/files/tokens');
 		}
 		$imageName = md5(time().$_FILES['image']['name']).'.jpg';
-		$image = new Slick_Util_Image;
-		$meta = new Slick_App_Meta_Model;
+		$image = new Util\Image;
+		$meta = new \App\Meta_Model;
 		$settings = $meta->appMeta('tokenly');
 		$resize = $image->resizeImage($_FILES['image']['tmp_name'], SITE_PATH.'/files/tokens/'.$imageName, intval($settings['token-logo-width']), intval($settings['token-logo-height']));
 		if($resize){

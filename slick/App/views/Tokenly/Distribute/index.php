@@ -35,7 +35,7 @@ if(count($distributeList) > 0){
 		}
 	}
 
-	$table = new Slick_UI_Table;
+	$table = new \UI\Table;
 	$table->addClass('admin-table');
 	$table->setData($distributeList);
 	$table->addColumn('distributeId', 'ID');

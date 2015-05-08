@@ -1,23 +1,25 @@
 <?php
-class Slick_App_Accountant_Report_Model extends Slick_Core_Model
+namespace App\Accountant;
+use Core, UI, Util, App\Tokenly, API;
+class Report_Model extends Core\Model
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->inventory = new Slick_App_Tokenly_Inventory_Model;
+		$this->inventory = new Tokenly\Inventory_Model;
 	}
 	
 	public function getAddressReportForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$addresses = new SLick_UI_Textarea('addresses');
+		$addresses = new UI\Textarea('addresses');
 		$addresses->setLabel('Address List');
 		$addresses->addAttribute('placeholder', '(one address per line)');
 		$addresses->addAttribute('required');
 		$form->add($addresses);
 		
-		$filters = new Slick_UI_Textarea('filters');
+		$filters = new UI\Textarea('filters');
 		$filters->setLabel('Asset Filters');
 		$filters->addAttribute('placeholder', '(one asset per line)');
 		$form->add($filters);
@@ -31,12 +33,12 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 		$output = array();
 		
 		if(!has_key($data, 'addresses')){
-			throw new Exception('Address list required');
+			throw new \Exception('Address list required');
 		}
 		
 		$expList = explode("\n", $data['addresses']);
 		$validList = array();
-		$validate = new Slick_API_BTCValidate;
+		$validate = new API\BTCValidate;
 		foreach($expList as $addr){
 			$addr = trim($addr);
 			if($validate->checkAddress($addr)){
@@ -45,7 +47,7 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 		}
 		
 		if(count($validList) == 0){
-			throw new Exception('Please enter at least 1 valid BTC address');
+			throw new \Exception('Please enter at least 1 valid BTC address');
 		}
 		
 		$filterList = array();
@@ -59,8 +61,8 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 			}
 		}
 		
-		$xcp = new Slick_API_Bitcoin(XCP_CONNECT);
-		$btc = new Slick_API_Bitcoin(BTC_CONNECT);
+		$xcp = new API\Bitcoin(XCP_CONNECT);
+		$btc = new API\Bitcoin(BTC_CONNECT);
 		$txList = array();
 		foreach($validList as $addr){
 			
@@ -72,8 +74,8 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 				$xcpCredits = $xcp->get_credits(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $addr), 'limit' => 1000));
 				$xcpDebits = $xcp->get_debits(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $addr), 'limit' => 1000));
 			}
-			catch(Exception $e){
-				throw new Exception('Error getting XCP transaction lists for '.$addr);
+			catch(\Exception $e){
+				throw new \Exception('Error getting XCP transaction lists for '.$addr);
 			}
 			$usedTxs = array();
 			//xcp credits
@@ -185,7 +187,7 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 		$txList = array_values($txList);
 		
 		$output[] = array('Date', 'Address', 'Asset', 'Debit', 'Credit', 'BTC Amount', 'TX Type', 'Block Height', 'TX ID');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$tokenlyApp = get_app('tokenly');
 		$blockCache = $meta->getAppMeta($tokenlyApp['appId'], 'block-cache');
 		$blockInfos = array();
@@ -199,8 +201,8 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 					$blockHash = $btc->getblockhash($tx['block']);
 					$blockInfo = $btc->getblock($blockHash);
 				}
-				catch(Exception $e){
-					throw new Exception('Error getting block info for index '.$tx['block']);
+				catch(\Exception $e){
+					throw new \Exception('Error getting block info for index '.$tx['block']);
 				}
 				$blockInfos[$tx['block']] = $blockInfo;
 			}
@@ -242,6 +244,4 @@ class Slick_App_Accountant_Report_Model extends Slick_Core_Model
 
 		return $output;
 	}
-	
-	
 }

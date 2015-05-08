@@ -1,15 +1,16 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Inventory
  * 
  * */
-class Slick_App_Tokenly_Inventory_Controller extends Slick_App_ModControl
+class Inventory_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_Inventory_Model;
+		$this->model = new Inventory_Model;
 	}
 	
 	public function init()
@@ -32,5 +33,4 @@ class Slick_App_Tokenly_Inventory_Controller extends Slick_App_ModControl
 		
 		return $output;
 	}
-	
 }

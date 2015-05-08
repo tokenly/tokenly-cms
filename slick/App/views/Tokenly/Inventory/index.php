@@ -27,7 +27,7 @@ if(count($addressBalances) == 0){
 	echo '<p>Looks like you don\'t have any tokens yet. Have you <a href="'.SITE_URL.'/'.$app['url'].'/address-manager">added and verified</a> a bitcoin address yet?</p>';
 }
 else{
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$usedAssets = array();
 	echo '<ul class="token-list">';
 	if($grouped){

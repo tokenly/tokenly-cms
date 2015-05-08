@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Themes
  * 
  * */
-class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
+class Themes_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -13,9 +14,8 @@ class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
     {
         parent::__construct();
         
-        $this->model = new Slick_App_CMS_Themes_Model;
-        
-        
+        $this->model = new Themes_Model;
+ 
     }
     
     public function init()
@@ -53,7 +53,6 @@ class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
     {
 		$output = array('view' => 'list');
 		
-		
 		$getThemes = $this->model->getAll('themes');
 		foreach($getThemes as $k => $t){
 			if($t['themeId'] == $this->data['site']['themeId']){
@@ -83,35 +82,27 @@ class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addTheme($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editTheme()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getTheme = $this->model->get('themes', $this->args[3]);
 		if(!$getTheme){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -124,16 +115,14 @@ class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editTheme($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		
 		if($this->data['site']['themeId'] == $getTheme['themeId']){
@@ -145,37 +134,18 @@ class Slick_App_CMS_Themes_Controller extends Slick_App_ModControl
 		$output['form']->setValues($getTheme);
 		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteTheme()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			if($this->model->count('themes') > 1){
+				$getTheme = $this->model->get('themes', $this->args[3]);
+				if($getTheme AND $getTheme['themeId'] != $this->data['themeData']['themeId']){
+					$delete = $this->model->delete('themes', $this->args[3]);
+				}
+			}
 		}
-		
-		if($this->model->count('themes') <= 1){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$getTheme = $this->model->get('themes', $this->args[3]);
-		if(!$getTheme OR $getTheme['themeId'] == $this->data['themeData']['themeId']){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('themes', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

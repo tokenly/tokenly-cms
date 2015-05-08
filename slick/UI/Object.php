@@ -1,6 +1,6 @@
 <?php
-
-class Slick_UI_Object
+namespace UI;
+class Object
 {
 	protected $classes = array();
 	protected $id = '';
@@ -104,5 +104,3 @@ class Slick_UI_Object
 	}
 }
 
-
-?>

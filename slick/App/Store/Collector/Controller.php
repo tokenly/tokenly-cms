@@ -1,14 +1,16 @@
 <?php
+namespace App\Store;
+use Util;
 /*
  * @module-type = dashboard
  * @menu-label = Payment Collector
  * 
  * */
-class Slick_App_Store_Collector_Controller extends Slick_App_ModControl
+class Collector_Controller extends \App\ModControl
 {
 	function __construct()
 	{
-		$this->model = new Slick_App_Store_Collector_Model;
+		$this->model = new Collector_Model;
 	}
 	
 	public function init()
@@ -31,16 +33,15 @@ class Slick_App_Store_Collector_Controller extends Slick_App_ModControl
 			try{
 				$collect = $this->model->collectPayments($data, $this->data);
 			}
-			catch(Exception $e){
-				Slick_Util_Session::flash('collector-message', $e->getMessage(), 'error');
+			catch(\Exception $e){
+				Util\Session::flash('collector-message', $e->getMessage(), 'error');
 				$collect = false;
 			}
 			
 			if($collect){
-				Slick_Util_Session::flash('collector-message', 'Payments collected and sent to <a href="https://blockchain.info/address/'.$data['address'].'" target="_blank">'.$data['address'].'</a>', 'success');
+				Util\Session::flash('collector-message', 'Payments collected and sent to <a href="https://blockchain.info/address/'.$data['address'].'" target="_blank">'.$data['address'].'</a>', 'success');
 			}
-			$this->redirect($this->site.$this->moduleUrl);
-			die();
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		if(isset($_GET['option'])){
@@ -52,9 +53,9 @@ class Slick_App_Store_Collector_Controller extends Slick_App_ModControl
 				try{
 					$output['payments'] = $this->model->getPaymentsList($_GET['option']);
 				}
-				catch(Exception $e){
+				catch(\Exception $e){
 					$output['payments'] = array();
-					Slick_Util_Session::flash('collector-message', $e->getMessage(), 'error');
+					Util\Session::flash('collector-message', $e->getMessage(), 'error');
 				}
 			}
 		}

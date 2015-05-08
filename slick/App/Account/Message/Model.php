@@ -1,21 +1,23 @@
 <?php
-class Slick_App_Account_Message_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, UI, Util, App\Tokenly, App\Profile\User_Model, App\Tokenly\TCA_Model, App\Meta_Model;
+class Message_Model extends Core\Model
 {
 	
 	public function getMessageForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$username = new Slick_UI_Textbox('username');
+		$username = new UI\Textbox('username');
 		$username->addAttribute('required');
 		$username->setLabel('Username');
 		$form->add($username);
 		
-		$subject = new Slick_UI_Textbox('subject');
+		$subject = new UI\Textbox('subject');
 		$subject->setLabel('Subject');
 		$form->add($subject);
 		
-		$message = new Slick_UI_Markdown('message', 'markdown');
+		$message = new UI\Markdown('message', 'markdown');
 		$message->addAttribute('required');
 		$message->setLabel('Message');
 		$form->add($message);
@@ -35,15 +37,15 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 			//try by slug
 			$getUser = $this->get('users', trim($useData['username']), array('userId', 'username', 'slug'), 'slug');
 			if(!$getUser){
-				throw new Exception('User not found: '.$useData['username']);
+				throw new \Exception('User not found: '.$useData['username']);
 			}
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$checkTCA = $tca->checkItemAccess($useData['userId'], $profileModule['moduleId'], $getUser['userId'], 'user-profile');
 		if(!$checkTCA){
-			throw new Exception('You cannot send a message to this user');
+			throw new \Exception('You cannot send a message to this user');
 		}
 		
 		$insertData = array('userId' => $useData['userId'], 'toUser' => $getUser['userId'], 'message' => encrypt_string(strip_tags($useData['message'])),
@@ -51,7 +53,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		
 		$add = $this->insert('private_messages', $insertData);
 		if(!$add){
-			throw new Exception('Error sending private message');
+			throw new \Exception('Error sending private message');
 		}
 		
 		//notify user
@@ -64,7 +66,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		$notifyData['messageId'] = $add;
 		$notifyData['subject'] = $subject;
 		$notifyData['toUser'] = $getUser['userId'];
-		Slick_App_Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
+		Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
 		
 		return $add;
 		
@@ -76,7 +78,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		if($page > 1){
 			$start = ($page * $perPage) - $perPage;
 		}
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new User_Model;
 		$getMessages = $this->getAll('private_messages', array('toUser' => $userId), array(), 'sendDate', 'desc', $perPage, $start);
 		foreach($getMessages as &$row){
 			$row['subject'] = decrypt_string($row['subject']);
@@ -105,7 +107,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		if($page > 1){
 			$start = ($page * $perPage) - $perPage;
 		}
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new User_Model;
 		$getMessages = $this->getAll('private_messages', array('userId' => $userId), array(), 'sendDate', 'desc', $perPage, $start);
 		foreach($getMessages as &$row){
 			$row['subject'] = decrypt_string($row['subject']);
@@ -125,12 +127,12 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		
 		$getMessage = $this->get('private_messages', $data['replyId']);
 		if(!$getMessage){
-			throw new Exception('Message not found');
+			throw new \Exception('Message not found');
 		}
 		
 		$getUser = $this->get('users', $useData['toUser'], array('userId'));
 		if(!$getUser){
-			throw new Exception('User not found');
+			throw new \Exception('User not found');
 		}
 		
 		$insertData = array('userId' => $useData['userId'], 'toUser' => $useData['toUser'], 'message' => encrypt_string(strip_tags($useData['message'])),
@@ -138,7 +140,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		
 		$add = $this->insert('private_messages', $insertData);
 		if(!$add){
-			throw new Exception('Error sending private message');
+			throw new \Exception('Error sending private message');
 		}
 		
 		//notify user
@@ -151,7 +153,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		$notifyData['messageId'] = $add;
 		$notifyData['subject'] = $subject;
 		$notifyData['toUser'] = $useData['toUser'];
-		Slick_App_Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
+		Meta_Model::notifyUser($getUser['userId'], 'emails.newMessageNotice', $add, 'private-message', false, $notifyData);
 		
 		return $add;
 	}
@@ -185,7 +187,7 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		if(trim($getMessage['subject']) == ''){
 			$getMessage['subject'] = '(no subject)';
 		}
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new User_Model;
 		$getMessage['from'] = $profModel->getUserProfile($getMessage['userId'], $this->appData['site']['siteId']);
 		$getMessage['to'] = $profModel->getUserProfile($getMessage['toUser'], $this->appData['site']['siteId']);
 		
@@ -200,5 +202,4 @@ class Slick_App_Account_Message_Model extends Slick_Core_Model
 		}
 		return $this->getEndOfChain($getReply['messageId']);
 	}
-
 }

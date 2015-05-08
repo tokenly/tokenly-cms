@@ -1,21 +1,16 @@
 <?php
+namespace App\RSS;
 /*
  * @module-type = dashboard
  * @menu-label =  Proxy URLs
  * 
  * */
-class Slick_App_RSS_ProxyURLs_Controller extends Slick_App_ModControl
+class ProxyURLs_Controller extends \App\ModControl
 {
-    public $data = array();
-    public $args = array();
-    
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_RSS_ProxyURLs_Model;
-        
-        
+        $this->model = new ProxyURLs_Model;
     }
     
     public function init()
@@ -45,7 +40,6 @@ class Slick_App_RSS_ProxyURLs_Controller extends Slick_App_ModControl
 			$output = $this->showProxies();
 		}
 		$output['template'] = 'admin';
-        
         return $output;
     }
     
@@ -53,10 +47,7 @@ class Slick_App_RSS_ProxyURLs_Controller extends Slick_App_ModControl
     {
 		$output = array('view' => 'list');
 		$output['proxyList'] = $this->model->getAll('proxy_url');
-
-		
 		return $output;
-		
 	}
 	
 	
@@ -71,35 +62,27 @@ class Slick_App_RSS_ProxyURLs_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addProxy($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
-			}
-			
+				redirect($this->site.$this->moduleUrl);
+			}	
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editProxy()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getProxy = $this->model->get('proxy_url', $this->args[3]);
 		if(!$getProxy){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -111,47 +94,27 @@ class Slick_App_RSS_ProxyURLs_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editProxy($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getProxy);
-		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteProxy()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getProxy = $this->model->get('proxy_url', $this->args[3]);
+			if($getProxy){
+				$delete = $this->model->delete('proxy_url', $this->args[3]);
+			}
 		}
-		
-		
-		$getProxy = $this->model->get('proxy_url', $this->args[3]);
-		if(!$getProxy){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('proxy_url', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

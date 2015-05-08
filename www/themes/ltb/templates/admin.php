@@ -1,7 +1,7 @@
 <?php
 include(THEME_PATH.'/inc/header.php');
-$menu = Slick_App_Dashboard_DashMenu_Model::getDashMenu();
-$msgModel = new Slick_App_Account_Message_Model;
+$menu = \App\Dashboard\DashMenu_Model::getDashMenu();
+$msgModel = new \App\Account\Message_Model;
 $numMessages = $msgModel->getNumUnreadMessages($user['userId']);
 					
 $menuStr = '';

@@ -1,5 +1,6 @@
 <?php
-class Slick_Util_Upload
+namespace Util;
+class Upload
 {
 
 	public function uploadFile($name, $fileType, $location, $preserveName = 0)
@@ -22,7 +23,7 @@ class Slick_Util_Upload
 		
 		foreach($blackList as $black){
 			if($ext == $black){
-				throw new Exception('Illegal File Type'); 
+				throw new \Exception('Illegal File Type'); 
 				return false;
 			}
 		}
@@ -36,7 +37,7 @@ class Slick_Util_Upload
 			}
 			
 			if($found == 0){
-				throw new Exception('Invalid Extension');
+				throw new \Exception('Invalid Extension');
 				return false;
 			}
 		}
@@ -51,7 +52,7 @@ class Slick_Util_Upload
 			}
 			
 			if($found == 0){
-				throw new Exception('Invalid File Type');
+				throw new \Exception('Invalid File Type');
 				return false;
 			}
 		}
@@ -70,7 +71,7 @@ class Slick_Util_Upload
 			return $newName;
 		}
 		else{
-			throw new Exception('Error uploading file');
+			throw new \Exception('Error uploading file');
 			return false;
 		}
 
@@ -163,5 +164,3 @@ class Slick_Util_Upload
 	}
 
 }
-
-?> 

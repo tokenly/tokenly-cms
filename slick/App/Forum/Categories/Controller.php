@@ -1,27 +1,21 @@
 <?php
+namespace App\Forum;
 /*
  * @module-type = dashboard
  * @menu-label = Manage Categories
  * 
  * */
-class Slick_App_Forum_Categories_Controller extends Slick_App_ModControl
+class Categories_Controller extends \App\ModControl
 {
-    public $data = array();
-    public $args = array();
-    
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_Forum_Categories_Model;
-        
-        
+        $this->model = new Categories_Model;
     }
     
     public function init()
     {
 		$output = parent::init();
-        
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
@@ -45,7 +39,6 @@ class Slick_App_Forum_Categories_Controller extends Slick_App_ModControl
 			$output = $this->showCategories();
 		}
 		$output['template'] = 'admin';
-        
         return $output;
     }
     
@@ -53,10 +46,7 @@ class Slick_App_Forum_Categories_Controller extends Slick_App_ModControl
     {
 		$output = array('view' => 'list');
 		$output['categoryList'] = $this->model->getAll('forum_categories', array('siteId' => $this->data['site']['siteId']), array(), 'rank', 'asc');
-
-		
 		return $output;
-		
 	}
 	
 	
@@ -72,35 +62,27 @@ class Slick_App_Forum_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addCategory($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editCategory()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getCategory = $this->model->get('forum_categories', $this->args[3]);
 		if(!$getCategory){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'form');
@@ -113,47 +95,27 @@ class Slick_App_Forum_Categories_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editCategory($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getCategory);
-		
 		return $output;
-		
 	}
-	
 
-	
-	
 	private function deleteCategory()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getCategory = $this->model->get('forum_categories', $this->args[3]);
+			if($getCategory){
+				$delete = $this->model->delete('forum_categories', $this->args[3]);
+			}			
 		}
-		
-		
-		$getCategory = $this->model->get('forum_categories', $this->args[3]);
-		if(!$getCategory){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('forum_categories', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

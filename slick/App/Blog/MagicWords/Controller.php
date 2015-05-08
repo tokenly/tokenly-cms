@@ -1,16 +1,18 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Magic Words
  * 
  * */
-class Slick_App_Blog_MagicWords_Controller extends Slick_App_ModControl
+ use App\Tokenly;
+class MagicWords_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Blog_MagicWords_Model;
-		$this->popModel = new Slick_App_Tokenly_POP_Model;
+		$this->model = new MagicWords_Model;
+		$this->popModel = new Tokenly\POP_Model;
 	}
 	
 	public function init()
@@ -28,7 +30,7 @@ class Slick_App_Blog_MagicWords_Controller extends Slick_App_ModControl
 			try{
 				$submit = $this->model->submitMagicWord($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$submit = false;
 				$output['message'] = $e->getMessage();
 			}
@@ -37,13 +39,7 @@ class Slick_App_Blog_MagicWords_Controller extends Slick_App_ModControl
 				$output['message'] = 'Correct! Word submitted successfully';
 			}	
 		}
-		
 		$output['words'] = $this->model->getUserWordSubmissions($this->data['user']['userId']);
-		
-		
 		return $output;
-		
 	}
-	
-
 }

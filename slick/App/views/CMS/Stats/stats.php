@@ -5,8 +5,8 @@
 </p>
 <h4>General</h4>
 <ul class="system-stats">
-	<li><strong># Users Online:</strong> <?= count(Slick_App_Account_Home_Model::getOnlineUsers()) ?>
-	<li><strong>Most Ever Online:</strong> <?= Slick_App_Account_Home_Model::getMostOnline() ?>
+	<li><strong># Users Online:</strong> <?= count(\App\Account\Home_Model::getOnlineUsers()) ?>
+	<li><strong>Most Ever Online:</strong> <?= \App\Account\Home_Model::getMostOnline() ?>
 	<li><strong># Users:</strong> <?= $stats['numUsers'] ?></li>
 	<li><strong># Groups:</strong> <?= $stats['numGroups'] ?></li>
 	<li><strong># Sites:</strong> <?= $stats['numSites'] ?></li>

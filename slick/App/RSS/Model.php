@@ -1,5 +1,7 @@
 <?php
-class Slick_App_RSS_Model extends Slick_Core_Model
+namespace App\RSS;
+use Core, App\API\V1, UI, Util, App\Blog;
+class Model extends Core\Model
 {
 	public function getBlogFeed($data)
 	{
@@ -7,7 +9,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		
 		include(SITE_PATH.'/resources/rss/FeedWriter.php');
 
-		$model = new Slick_App_API_V1_Blog_Model;
+		$model = new \App\API\V1\Blog_Model;
 		$data['isRSS'] = true;
 		if(isset($data['audio'])){
 			switch($data['audio']){
@@ -27,17 +29,16 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		}
 		
 		$getPosts = $model->getAllPosts($data);
-
 		
 		$blogApp = $this->get('apps', 'blog', array('appId', 'url'), 'slug');
 		$postModule = $this->get('modules', 'blog-post', array('moduleId', 'url'), 'slug');
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$rssApp = $this->get('apps', 'rss', array('appId', 'url'), 'slug');
 		$rssMeta = $meta->appMeta($rssApp['appId']);
 		$feedModule = $this->get('modules', 'rss-feed', array('moduleId', 'url'), 'slug');
 		
-		$feed = new FeedWriter(RSS2);
+		$feed = new \FeedWriter(RSS2);
 		$feed->setTitle($rssMeta['blog-feed-title']);
 		
 		if(isset($_SERVER['HTTP_FROMLINK'])){
@@ -127,25 +128,19 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 					if(isset($audioLength)){
 						$item->setEncloser($audio, $audioLength, 'audio/mpeg');
 					}
-					
-		
-
 				}
-					
 			}
-			
 			$item->addElement('guid', $getPostSite['url'].'/'.$blogApp['url'].'/'.$postModule['url'].'/'.$post['url'], array('isPermaLink' => 'true'));
 			$feed->addItem($item);
-			
 		}
 		$feed->generateFeed();
 	}
 	
 	public function getCustomizeForm($data)
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$sites = new Slick_UI_CheckboxList('sites');
+		$sites = new UI\CheckboxList('sites');
 		$sites->setElemClass('choose-sites');
 		$sites->setElemWrap('div');
 		$sites->setLabel('Network Sites');
@@ -159,7 +154,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		}
 		$form->add($sites);
 		
-		$catModel = new Slick_App_Blog_Categories_Model;
+		$catModel = new Blog\Categories_Model;
 		
 		foreach($getSites as $site){
 			if($site['siteId'] > 1){
@@ -169,7 +164,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 			if(count($getCats) <= 0){
 				continue;
 			}
-			$siteCats = new Slick_UI_CheckboxList('cats-'.$site['siteId']);
+			$siteCats = new UI\CheckboxList('cats-'.$site['siteId']);
 			$siteCats->setLabel($site['name'].' Categories');
 			$siteCats->setElemWrap('div');
 			$siteCats->setElemClass('site-cats');
@@ -183,7 +178,7 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 			$form->add($siteCats);
 		}
 		
-		$audio = new Slick_UI_Select('audio');
+		$audio = new UI\Select('audio');
 		$audio->setLabel('Contains Audio (podcasts)?');
 		$audio->addOption(0, 'Either');
 		$audio->addOption(1, 'Audio Only');
@@ -191,18 +186,14 @@ class Slick_App_RSS_Model extends Slick_Core_Model
 		$form->add($audio);
 		
 		
-		$numItems = new Slick_UI_Textbox('numItems');
+		$numItems = new UI\Textbox('numItems');
 		$numItems->setLabel('Max # of Feed Items');
 		$numItems->setValue(15);
 		$numItems->addAttribute('required');
 		$form->add($numItems);
 		
-		
 		return $form;
 	}
-	
-	
-	
 }
 
 

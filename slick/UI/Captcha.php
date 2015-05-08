@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Captcha extends Slick_UI_FormObject
+namespace UI;
+class Captcha extends FormObject
 {
 	protected $type = '';
 	
@@ -27,17 +28,10 @@ class Slick_UI_Captcha extends Slick_UI_FormObject
 				ob_end_clean();
 				break;
 		}
-		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
-		
 		return $output;
-
-	}
-	
-	
+	}	
 }
-
-?> 

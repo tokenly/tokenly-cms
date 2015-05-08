@@ -1,20 +1,17 @@
 <?php
-class Slick_App_Tokenly_Controller extends Slick_App_AppControl
+namespace App\Tokenly;
+class Controller extends \App\AppControl
 {
     function __construct()
     {
         parent::__construct();
-        
-        
     }
     
     public function init()
     {
 		$output = parent::init();
-		
 		if(!$output['module']){
 			$output['view'] = '404';
-			$output['title'] = '404 Page Not Found';
 		}
 		return $output;
     }
@@ -22,9 +19,8 @@ class Slick_App_Tokenly_Controller extends Slick_App_AppControl
     public function __install($appId)
     {
 		parent::__install($appId);
-		
 	
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		
 		$meta->updateAppMeta($appId, 'distribute-fee', 0.00001, 'Share Distributor - per address miner fee', 1);
 		$meta->updateAppMeta($appId, 'distribute-dust', 0.000055, 'Share Distributor - dust output BTC value', 1);
@@ -41,9 +37,5 @@ class Slick_App_Tokenly_Controller extends Slick_App_AppControl
 		$meta->addAppPerm($appId, 'canDeleteDistribution');
 		$meta->addAppPerm($appId, 'canChangeDistributeStatus');
 		$meta->addAppPerm($appId, 'canChangeDistributeLabels');
-		
 	}
-    
-    
-    
 }

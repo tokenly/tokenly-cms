@@ -1,10 +1,10 @@
 <?php
-class Slick_UI_Misc
+namespace UI;
+class Misc
 {
-		
 		public function link($url, $text = '', $class = '', $id = '')
 		{
-			$link = new Slick_UI_Link;
+			$link = new Link;
 			if(is_array($class)){
 				$link->setClasses($class);
 			}
@@ -20,7 +20,7 @@ class Slick_UI_Misc
 		
 		public function img($src, $alt = '', $class = '', $id = '')
 		{
-			$img = new Slick_UI_Img;
+			$img = new Img;
 			if(is_array($class)){
 				$img->setClasses($class);
 			}
@@ -51,9 +51,4 @@ class Slick_UI_Misc
 			return $output;
 			
 		}
-
-	
-	
-	
 }
-?>

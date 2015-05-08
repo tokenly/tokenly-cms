@@ -1,16 +1,16 @@
 <?php
+namespace App\Account;
 /*
  * @module-type = dashboard
  * @menu-label = Referrals
  * 
  * */
-class Slick_App_Account_Referral_Controller extends Slick_App_ModControl
+class Referral_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Account_Referral_Model;
-		
+		$this->model = new Referral_Model;
 	}
 	
 	public function init()
@@ -18,11 +18,10 @@ class Slick_App_Account_Referral_Controller extends Slick_App_ModControl
 		$output = parent::init();
 
 		if(!$this->data['user']){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->site);
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$getRefLink = $meta->getUserMeta($this->data['user']['userId'], 'ref-link');
 		if(!$getRefLink){
 			$getRefLink = substr(hash('sha256', $this->data['user']['userId'].$this->data['user']['regDate']), 0, 8);
@@ -38,6 +37,4 @@ class Slick_App_Account_Referral_Controller extends Slick_App_ModControl
 
 		return $output;	
 	}
-	
-	
 }

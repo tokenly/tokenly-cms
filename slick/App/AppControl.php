@@ -1,5 +1,7 @@
 <?php
-class Slick_App_AppControl extends Slick_Core_Controller
+namespace App;
+use Core, App\Tokenly, App\Account;
+class AppControl extends Core\Controller
 {
     public $module = false;
     public $app = false;
@@ -10,9 +12,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_Core_Model;
-        
-        
+        $this->model = new Core\Model;
     }
     
     public function init()
@@ -31,16 +31,16 @@ class Slick_App_AppControl extends Slick_Core_Controller
             if($getDefault){
 				$this->module = $getDefault;
 				$output['module'] = $this->module;
-				$className = 'Slick_App_'.$this->app['location'].'_'.$getDefault['location'].'_Controller';
+				$className = '\\App\\'.$this->app['location'].'\\'.$getDefault['location'].'_Controller';
 			}
         }
         else{
 			$moduleApp = $this->model->get('apps', $this->module['appId']);
-            $className = 'Slick_App_'.$moduleApp['location'].'_'.$this->module['location'].'_Controller';
+            $className = '\\App\\'.$moduleApp['location'].'\\'.$this->module['location'].'_Controller';
         }
 
-		$tca = new Slick_App_Tokenly_TCA_Model;
-        $output['user'] = Slick_App_Account_Home_Model::userInfo();
+		$tca = new Tokenly\TCA_Model;
+        $output['user'] = Account\Home_Model::userInfo();
         if($output['user']){
 			$output['perms'] = array();
 			$getPerms = $this->model->getAll('app_perms', array('appId' => $moduleApp['appId']));
@@ -68,7 +68,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
             $class = new $className;
             $class->args = $this->args;
             $class->data = $output;
-            $class->site = $this->site['url'];
+            $class->site = $this->site['url'].'/';
             $class->itemId = $this->itemId;
             $class->moduleUrl = '/'.$this->app['url'].'/'.$this->module['url'];
             
@@ -84,16 +84,14 @@ class Slick_App_AppControl extends Slick_Core_Controller
     
     public static function checkModuleAccess($moduleId, $redirect = true, $andCheckTCA = true)
     {
-		$model = new Slick_Core_Model;
-		$tca = new Slick_App_Tokenly_TCA_Model;
-		$accountModel = new Slick_App_Account_Home_Model;
+		$model = new Core\Model;
+		$tca = new Tokenly\TCA_Model;
+		$accountModel = new Account\Home_Model;
 		$getSite = currentSite();
-		$controller = new Slick_Core_Controller;
-		
+
 		if(!isset($_SESSION['accountAuth'])){
 			if($redirect){
-				$controller->redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI'], 1);
-				die();
+				redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI']);
 			}
 			return false;
 		}
@@ -102,8 +100,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
 		if(!$get){
 			unset($_SESSION['accountAuth']);
 			if($redirect){
-				$controller->redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI'], 1);
-				die();
+				redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI']);
 			}
 			return false;
 		}
@@ -140,8 +137,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
 			return true;
 		}
 		if($redirect){
-			$controller->redirect($getSite['url'].'/403?r='.$_SERVER['REQUEST_URI'], 1);
-			die();
+			redirect($getSite['url'].'/403?r='.$_SERVER['REQUEST_URI']);
 		}
 		return false;
 	}
@@ -167,10 +163,7 @@ class Slick_App_AppControl extends Slick_Core_Controller
 													'dashGroup' => $getApp['name'], 'rank' => 0,
 													'label' => $getApp['name'].' Settings', 'checkAccess' => 1,
 													'params' => '/'.$getApp['slug']));
-		}
-		
+		}	
 		return true;
 	}
-
-    
 }

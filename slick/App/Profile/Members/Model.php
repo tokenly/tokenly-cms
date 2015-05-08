@@ -1,8 +1,9 @@
 <?php
-class Slick_App_Profile_Members_Model extends Slick_Core_Model
+namespace App\Profile;
+use Core;
+class Members_Model extends Core\Model
 {
 
 
 
 }
-?>

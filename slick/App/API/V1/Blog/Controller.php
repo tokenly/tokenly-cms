@@ -1,13 +1,14 @@
 <?php
-
-class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
+namespace App\API\V1;
+use API;
+class Blog_Controller extends \Core\Controller
 {
 	public $methods = array('GET', 'POST','PATCH','DELETE');
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_API_V1_Blog_Model;
+		$this->model = new Blog_Model;
 		
 	}
 	
@@ -102,7 +103,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 
 
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new \App\Blog\Post_Model;
 		
 		$getPost = $model->get('blog_posts', $this->args[2], array('postId'), 'url');
 		if(!$getPost){
@@ -115,18 +116,18 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}		
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
 		
 		/* Disqus Comments Code */
-		$disqus = new Slick_API_Disqus;
-		$profModel = new Slick_App_Profile_User_Model;
+		$disqus = new API\Disqus;
+		$profModel = new \App\Profile\User_Model;
 		$getComment = $disqus->getPost($this->args[4]);
 		
 		$comment = array();
@@ -196,9 +197,9 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 				
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -206,7 +207,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		$this->args['data']['user'] = $user;
 
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new \App\Blog\Post_Model;
 		
 		$getPost = $model->get('blog_posts', $this->args[2], array('postId'), 'url');
 		if(!$getPost){
@@ -221,7 +222,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		$this->args['data']['postId'] = $getPost['postId'];
 		
 		try{
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$blogApp = $meta->get('apps', 'blog', array(), 'slug');
 			$appMeta = $meta->appMeta($blogApp['appId']);
 			$blogApp['meta'] = $appMeta;
@@ -233,7 +234,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$appData['site'] = $meta->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 			$add = $this->model->addComment($this->args['data'], $appData);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -255,9 +256,9 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 				
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -280,8 +281,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		/* Disqus Comments */
-		$disqus = new Slick_API_Disqus;
-		$profModel = new Slick_App_Profile_User_Model;
+		$disqus = new API\Disqus;
+		$profModel = new \App\Profile\User_Model;
 		$getComment = $disqus->getPost($this->args[4]);
 		if(!$getComment || $getComment['isDeleted'] == 1 || $getComment['isSpam'] == 1){
 			http_response_code(400);
@@ -365,9 +366,9 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 				
 		try{
-			$user = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$user = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(403);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -391,7 +392,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		
 		/* Disqus Comments */
-		$disqus = new Slick_API_Disqus;
+		$disqus = new API\Disqus;
 		$getComment = $disqus->getPost($this->args[4]);
 		if(!$getComment || $getComment['isDeleted'] == 1 || $getComment['isSpam'] == 1){
 			http_response_code(400);
@@ -473,7 +474,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $output;
 		}
 
-		$model = new Slick_App_Blog_Post_Model;
+		$model = new \App\Blog\Post_Model;
 		
 		$getPost = $model->get('blog_posts', $this->args[2], array('postId', 'url', 'published'), 'url');
 		if(!$getPost){
@@ -486,13 +487,13 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}
 
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		
@@ -504,8 +505,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}				
 
 		/* Disqus Comments Code */
-		$disqus = new Slick_API_Disqus;
-		$profModel = new Slick_App_Profile_User_Model;
+		$disqus = new API\Disqus;
+		$profModel = new \App\Profile\User_Model;
 		$getIndex = $model->getAll('page_index', array('itemId' => $getPost['postId'], 'moduleId' => 28));
 		$postURL = $this->args['data']['site']['url'].'/blog/post/'.$getPost['url'];
 		if($getIndex AND count($getIndex) > 0){
@@ -640,8 +641,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $this->getPostComments();
 		}
 		
-		$model = new Slick_App_Blog_Post_Model;
-		$submitModel = new Slick_App_Blog_Submissions_Model;
+		$model = new \App\Blog\Post_Model;
+		$submitModel = new \App\Blog\Submissions_Model;
 		$getPost = $model->getPost($this->args[2], $this->args['data']['site']['siteId']);
 		$approved = false;
 		if($getPost){
@@ -654,13 +655,13 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}		
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
 		
@@ -757,7 +758,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$model = new Slick_App_Blog_Categories_Model;
+		$model = new \App\Blog\Categories_Model;
 		$get = $this->model->get('blog_categories', $this->args[2]);
 		if(!$get){
 			$get = $this->model->get('blog_categories', $this->args[2], array(), 'slug');
@@ -778,13 +779,13 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$thisUser = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$thisUser = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$thisUser = false;
 		}			
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new \App\Tokenly\TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$catTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $get['categoryId'], 'blog-category');
 		if(!$catTCA){
@@ -815,7 +816,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			return $output;
 		}
 		
-		$model = new Slick_App_Blog_Category_Model;
+		$model = new \App\Blog\Category_Model;
 		$get = $this->model->get('blog_categories', $this->args[2]);
 		if(!$get){
 			$get = $this->model->get('blog_categories', $this->args[2], array(), 'slug');
@@ -836,7 +837,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		$getPosts = $model->getCategoryPosts($get['categoryId'], $this->args['data']['site']['siteId'], $limit, array(), $page);
-		$postModel = new Slick_App_Blog_Post_Model;
+		$postModel = new \App\Blog\Post_Model;
 		foreach($getPosts as $k => $row){
 			unset($row['userId']);
 			$author = $row['author'];
@@ -877,7 +878,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 	
 	private function getCategoryList()
 	{
-		$model = new Slick_App_Blog_Categories_Model;
+		$model = new \App\Blog\Categories_Model;
 		$getCats = $model->getCategories($this->args['data']['site']['siteId']);
 		
 		$output['categories'] = $getCats;
@@ -918,16 +919,16 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		}
 		
 		try{
-			$this->args['data']['user'] = Slick_App_API_V1_Auth_Model::getUser($this->args['data']);
+			$this->args['data']['user'] = Auth_Model::getUser($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			$this->args['data']['user'] = false;
 		}
 
 		try{
 			$output['posts'] = $this->model->getAllPosts($this->args['data']);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$output['error'] = $e->getMessage();
 			return $output;
@@ -940,7 +941,7 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 	
 	private function getArchiveList()
 	{
-		$catModel = new Slick_App_Blog_Categories_Model;
+		$catModel = new \App\Blog\Categories_Model;
 		$output = array();
 		
 		$getArchive = $catModel->getArchiveList($this->args['data']['site']['siteId']);
@@ -1003,8 +1004,8 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 			$_GET['page'] = intval($this->args['data']['page']);
 		}
 		
-		$model = new Slick_App_Blog_Archive_Model;
-		$postModel = new Slick_App_Blog_Post_Model;
+		$model = new \App\Blog\Archive_Model;
+		$postModel = new \App\Blog\Post_Model;
 		$getPosts = $model->getArchivePosts($this->args['data']['site']['siteId'], $postLimit, $year, $month, $day, $useMonth, $useDay);
 		foreach($getPosts as $key => $row){
 			unset($row['userId']);
@@ -1043,6 +1044,4 @@ class Slick_App_API_V1_Blog_Controller extends Slick_Core_Controller
 		
 		return $output;
 	}
-
-	
 }

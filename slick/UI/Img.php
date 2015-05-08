@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_Img extends Slick_UI_Object
+namespace UI;
+class Img extends Object
 {
 	
 	public function display($src, $alt = '')
@@ -21,9 +22,4 @@ class Slick_UI_Img extends Slick_UI_Object
 		return $output;
 		
 	}
-	
-	
 }
-
-
-?>

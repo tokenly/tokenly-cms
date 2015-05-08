@@ -1,5 +1,7 @@
 <?php
-class Slick_Tags_ContactForm
+namespace Tags;
+use UI, Util;
+class ContactForm
 {
 	public $params = array();
 	
@@ -9,7 +11,7 @@ class Slick_Tags_ContactForm
 			try{
 				$output =  $this->submitForm();
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output = $this->showFormError($e->getMessage());
 			}
 			
@@ -18,7 +20,6 @@ class Slick_Tags_ContactForm
 		else{
 			return $this->showForm();
 		}
-	
 	}
 	
 	private function showFormError($err = '')
@@ -55,19 +56,19 @@ class Slick_Tags_ContactForm
 	
 	private function getForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$email = new Slick_UI_Textbox('email');
+		$email = new UI\Textbox('email');
 		$email->setLabel('Email Address:');
 		$email->addAttribute('required');
 		$form->add($email);
 
-		$name = new Slick_UI_Textbox('name');
+		$name = new UI\Textbox('name');
 		$name->setLabel('Name:');
 		$name->addAttribute('required');
 		$form->add($name);
 		
-		$message = new Slick_UI_Textarea('message');
+		$message = new UI\Textarea('message');
 		$message->setLabel('Message:');
 		$message->addAttribute('required');
 		$form->add($message);
@@ -85,7 +86,7 @@ class Slick_Tags_ContactForm
 										$_POST["recaptcha_response_field"]);
 
 		if(!$resp->is_valid) {
-			throw new Exception('Captcha invalid!');
+			throw new \Exception('Captcha invalid!');
 		}
 		
 		$form = $this->getForm();
@@ -96,19 +97,19 @@ class Slick_Tags_ContactForm
 		$req = array('email', 'name', 'message');
 		foreach($req as $required){
 			if(!isset($data[$required]) OR trim($data[$required]) == ''){
-				throw new Exception(ucfirst($required).' required');
+				throw new \Exception(ucfirst($required).' required');
 			}
 			$data[$required] = htmlentities(strip_tags($data[$required]));
 		}
 		
 		if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
-			throw new Exception('Please enter a valid email address');
+			throw new \Exception('Please enter a valid email address');
 		}
 		if(!isset($this->params['email'])){
 			$this->params['email'] = 'nickrathman@gmail.com';
 		}
 		
-		$mail = new Slick_Util_Mail;
+		$mail = new Util\Mail;
 		$mail->addTo($this->params['email']);
 		$mail->setSubject('Lets Talk Bitcoin! Contact Request');
 		$mail->setFrom('noreply@letstalkbitcoin.com');
@@ -125,7 +126,7 @@ class Slick_Tags_ContactForm
 		
 		$send = $mail->send();
 		if(!$send){
-			throw new Exception('Error sending contact request, please try again');
+			throw new \Exception('Error sending contact request, please try again');
 		}
 		
 		$output = '<p><Strong>Thank you for contacting us!</strong></p>';
@@ -135,5 +136,3 @@ class Slick_Tags_ContactForm
 	}
 
 }
-
-?>

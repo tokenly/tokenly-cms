@@ -9,19 +9,12 @@ include(FRAMEWORK_PATH.'/functions.php');
 */
 function slick_autoload($class)
 {
-	$explode = explode('_', $class);
-
-	$classDir = '';
+	$explode = explode('\\', $class);
+	$classDir = FRAMEWORK_PATH.'/';
 	$total = count($explode);
 	$num = 1;
 	foreach($explode as $folder){
-
-		if($num == 1){
-			$folder = strtolower($folder);
-		}
-
-		$classDir .= $folder;
-
+		$classDir .= str_replace('_', '/', $folder);
 		if($num == $total){
 			$classDir .= '.php';
 		}
@@ -30,12 +23,9 @@ function slick_autoload($class)
 		}
 		$num++;
 	}
-	$fullPath = SITE_BASE.'/'.$classDir;
+	$fullPath = $classDir;
 	if(file_exists($fullPath)){
 		include($fullPath);
 	}
 }
-
 spl_autoload_register('slick_autoload');
-
-?>

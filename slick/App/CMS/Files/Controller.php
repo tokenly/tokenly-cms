@@ -1,26 +1,23 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = File Browser
  * 
  * */
-class Slick_App_CMS_Files_Controller extends Slick_App_ModControl
+class Files_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
     
     function __construct()
     {
-        parent::__construct();
-        
-        $this->model = new Slick_App_CMS_Files_Model;
-        
-        
+        parent::__construct();    
+        $this->model = new Files_Model;
     }
     
     public function init()
     {
-
 		$output = parent::init();
         $output['view'] = 'index';
         $output['template'] = 'admin';
@@ -35,8 +32,4 @@ class Slick_App_CMS_Files_Controller extends Slick_App_ModControl
 
         return $output;
     }
-
-
 }
-
-?>

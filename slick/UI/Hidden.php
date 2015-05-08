@@ -1,5 +1,6 @@
- <?php
-class Slick_UI_Hidden extends Slick_UI_FormObject
+<?php
+namespace UI;
+class Hidden extends FormObject
 {
 	function __construct($name, $id = '')
 	{
@@ -27,7 +28,7 @@ class Slick_UI_Hidden extends Slick_UI_FormObject
 		$output = $this->label.'<input type="hidden" name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.' value="'.$this->value.'" />';
 		
 		if($elemWrap != ''){
-			$misc = new Slick_UI_Misc;
+			$misc = new Misc;
 			$output = $misc->wrap($elemWrap, $output);
 		}
 		
@@ -36,5 +37,3 @@ class Slick_UI_Hidden extends Slick_UI_FormObject
 	
 	
 }
- 
- ?>

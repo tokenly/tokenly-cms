@@ -1,15 +1,13 @@
 <?php
-class Slick_App_Profile_Members_Controller extends Slick_App_ModControl
+namespace App\Profile;
+use App\Account;
+class Members_Controller extends \App\ModControl
 {
-	public $args;
-	public $data;
-	
+
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Profile_Members_Model;
-        
-        
+        $this->model = new Members_Model;
     }
     
     public function init()
@@ -17,7 +15,7 @@ class Slick_App_Profile_Members_Controller extends Slick_App_ModControl
 		$output = parent::init();
 		$output['view'] = 'list';
 		
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new User_Model;
 		$max = 20;
 		$page = 1;
 		if(isset($_GET['page'])){
@@ -72,12 +70,9 @@ class Slick_App_Profile_Members_Controller extends Slick_App_ModControl
 		$output['members'] = $users;
 		$output['title'] = 'Community Directory';
 		$output['numUsers'] = $this->model->count('users');
-		$output['numOnline'] = Slick_App_Account_Home_Model::getUsersOnline();
-		$output['mostOnline'] = Slick_App_Account_Home_Model::getMostOnline();		
+		$output['numOnline'] = Account\Home_Model::getUsersOnline();
+		$output['mostOnline'] = Account\Home_Model::getMostOnline();		
 		
 		return $output;
 	}
-	
 }
-
-?>

@@ -1,22 +1,24 @@
 <?php
+namespace App\Blog;
 /*
  * @module-type = dashboard
  * @menu-label = Newsroom
  * 
  * */
-class Slick_App_Blog_Newsroom_Controller extends Slick_App_ModControl
+use Util, Core;
+class Newsroom_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Blog_Newsroom_Model;
-		$this->submitModel = new Slick_App_Blog_Submissions_Model;
+		$this->model = new Newsroom_Model;
+		$this->submitModel = new Submissions_Model;
 	}
 	
 	public function init()
 	{
 		$output = parent::init();
-		$this->data['perms'] = Slick_App_Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
+		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				default:
@@ -37,7 +39,6 @@ class Slick_App_Blog_Newsroom_Controller extends Slick_App_ModControl
 		$output['view'] = 'index';
 		$output['blog_rooms'] = $this->model->getBlogRooms($this->data);
 		$output['blogs'] = $this->model->getBlogs($this->data);
-		
 		if(posted()){
 			if(isset($_POST['update-categories'])){
 				return $this->updateCategories($output);
@@ -115,7 +116,6 @@ class Slick_App_Blog_Newsroom_Controller extends Slick_App_ModControl
 												    array(':postId' => $getPost['postId'], ':categoryId' => $reject['categoryId']));
 												    
 				//send contributors a notification
-				
 				if($delete){
 					$success++;
 				}
@@ -130,16 +130,12 @@ class Slick_App_Blog_Newsroom_Controller extends Slick_App_ModControl
 			}
 			
 			if($success < $numChange){
-				Slick_Util_Session::flash('blog-message', 'Failed updating '.($numChange - $success).'/'.$numChange.' categories for post "'.$getPost['title'].'"', 'error');
+				Util\Session::flash('blog-message', 'Failed updating '.($numChange - $success).'/'.$numChange.' categories for post "'.$getPost['title'].'"', 'error');
 			}
 			else{
-				Slick_Util_Session::flash('blog-message', 'Categories for post "'.$getPost['title'].'" updated!', 'success');
+				Util\Session::flash('blog-message', 'Categories for post "'.$getPost['title'].'" updated!', 'success');
 			}
-			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);	
-			die();			
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);			
 		}
-		
-
 	}
-	
 }

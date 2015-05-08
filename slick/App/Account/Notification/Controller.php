@@ -1,14 +1,16 @@
 <?php
+namespace App\Account;
+use Core;
 /*
  * @module-type = dashboard
  * @menu-label = Notifications
  * */
-class Slick_App_Account_Notification_Controller extends Slick_App_ModControl
+class Notification_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_Core_Model;
+		$this->model = new Core\Model;
 		
 	}
 	
@@ -17,8 +19,7 @@ class Slick_App_Account_Notification_Controller extends Slick_App_ModControl
 		$output = parent::init();
 
 		if(!$this->data['user']){
-			$this->redirect($this->data['site']['url']);
-			return false;
+			redirect($this->data['site']['url']);
 		}
 		
 		if(isset($this->args[2])){
@@ -49,8 +50,7 @@ class Slick_App_Account_Notification_Controller extends Slick_App_ModControl
 			$this->model->sendQuery('DELETE FROM user_notifications WHERE userId = :id',
 									array(':id' => $this->data['user']['userId']));
 			
-			$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-			die();
+			redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
 		}
 
 		$output['view'] = 'index';
@@ -85,6 +85,4 @@ class Slick_App_Account_Notification_Controller extends Slick_App_ModControl
 		
 		return $output;	
 	}
-	
-	
 }

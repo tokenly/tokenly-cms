@@ -1,5 +1,5 @@
 <?php
-$model = new Slick_Core_Model;
+$model = new \Core\Model;
 $boardToken = '';
 if($isAll){
 	$board = array('name' => 'Recent Posts', 'description' => '', 'slug' => 'all');
@@ -33,7 +33,7 @@ if(!$isAll AND $user){
 	$subscribeText = 'Subscribe to Board';
 	$subscribeClass = 'subscribe';
 
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$getSubs = $model->getAll('board_subscriptions',
 				array('userId' => $user['userId'], 'boardId' => $board['boardId']));
 	if(count($getSubs) > 0){
@@ -51,7 +51,7 @@ if(!$isAll AND $user){
 <h1><?= $board['name'] ?></h1>
 <?php
 if(trim($board['description']) != ''){
-	echo '<div class="board-description">'.Slick_App_Page_View_Model::parsePageTags(markdown($board['description'])).'</div>';
+	echo '<div class="board-description">'.\App\Page\View_Model::parsePageTags(markdown($board['description'])).'</div>';
 }
 if(!$isAll){
 	if(count($moderators) > 0){
@@ -92,9 +92,9 @@ if($isAll){
 	<div class="Slick_UI_CheckboxList checkboxList">
 		<?php
 	
-			$model = new Slick_Core_Model;
+			$model = new \Core\Model;
 			$getfCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
-			$tca = new Slick_App_Tokenly_TCA_Model;
+			$tca = new \App\Tokenly\TCA_Model;
 			foreach($getfCats as $fcat){
 				$checkTCA = $tca->checkItemAccess($user, $module['moduleId'], $fcat['categoryId'], 'category');
 				if(!$checkTCA){

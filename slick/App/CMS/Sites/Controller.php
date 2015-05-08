@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Sub-sites
  * 
  * */
-class Slick_App_CMS_Sites_Controller extends Slick_App_ModControl
+class Sites_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_CMS_Sites_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_CMS_Sites_Model;
-        
-        
+        $this->model = new Sites_Model;
     }
     
     public function init()
@@ -55,9 +53,7 @@ class Slick_App_CMS_Sites_Controller extends Slick_App_ModControl
 		$getSites = $this->model->getAll('sites');
 		$output['siteList'] = $getSites;
 
-		
 		return $output;
-		
 	}
 	
 	
@@ -72,35 +68,27 @@ class Slick_App_CMS_Sites_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addSite($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
-		
 	}
-	
-
 	
 	private function editSite()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getSite = $this->model->get('sites', $this->args[3]);
 		if(!$getSite){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		$getSite['apps'] = $this->model->getSiteApps($this->args[3]);
 		
@@ -114,51 +102,29 @@ class Slick_App_CMS_Sites_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editSite($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getSite);
-		
 		return $output;
-		
 	}
-	
-
-	
 	
 	private function deleteSite()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			if($this->model->count('sites') > 1){
+				$getSite = $this->model->get('sites', $this->args[3]);
+				if($getSite AND $getSite['isDefault'] != 1){
+					$delete = $this->model->delete('sites', $this->args[3]);
+				}				
+			}
 		}
-		
-		if($this->model->count('sites') <= 1){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$getSite = $this->model->get('sites', $this->args[3]);
-		if(!$getSite OR $getSite['isDefault'] == 1){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('sites', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
-	
-
-
 }
-
-?>

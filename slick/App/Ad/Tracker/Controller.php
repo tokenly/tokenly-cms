@@ -1,15 +1,17 @@
 <?php
+namespace App\Ad;
+use Util;
 /*
  * @module-type = dashboard
  * @menu-label = URL Tracker
  * 
  * */
-class Slick_App_Ad_Tracker_Controller extends Slick_App_ModControl
+class Tracker_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Ad_Tracker_Model;
+		$this->model = new Tracker_Model;
 	}
 	
 	public function init()
@@ -61,14 +63,13 @@ class Slick_App_Ad_Tracker_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addTrackingURL($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$add = false;
-				Slick_Util_Session::flash('message', $e->getMessage(), 'error');
+				Utl\Session::flash('message', $e->getMessage(), 'error');
 			}
 			if($add){
-				Slick_Util_Session::flash('message', 'Tracking URL created!', 'success');
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);	
-				die();
+				Util\Session::flash('message', 'Tracking URL created!', 'success');
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);	
 			}
 		}
 		return $output;
@@ -94,14 +95,13 @@ class Slick_App_Ad_Tracker_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->editTrackingURL($getURL['urlId'], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$add = false;
-				Slick_Util_Session::flash('message', $e->getMessage(), 'error');
+				Util\Session::flash('message', $e->getMessage(), 'error');
 			}
 			if($add){
-				Slick_Util_Session::flash('message', 'Tracking URL edited!', 'success');
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);	
-				die();
+				Util\Session::flash('message', 'Tracking URL edited!', 'success');
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);	
 			}
 		}
 		$output['form']->setValues($getURL);
@@ -118,14 +118,13 @@ class Slick_App_Ad_Tracker_Controller extends Slick_App_ModControl
 		if($getURL AND $getURL['siteId'] == $this->data['site']['siteId']){
 			$delete = $this->model->delete('tracking_urls', $getURL['urlId']);
 			if($delete){
-				Slick_Util_Session::flash('message', 'URL deleted!', 'success');
+				Util\Session::flash('message', 'URL deleted!', 'success');
 			}
 			else{
-				Slick_Util_Session::flash('message', 'Error deleting tracking URL.', 'error');
+				Util\Session::flash('message', 'Error deleting tracking URL.', 'error');
 			}
 		}
-		$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);	
-		die();
+		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);	
 	}
 	
 	public function viewURL($output)
@@ -152,7 +151,6 @@ class Slick_App_Ad_Tracker_Controller extends Slick_App_ModControl
 			}
 		}
 		$output['view'] = 'stats';
-		
 		return $output;
 	}
 }

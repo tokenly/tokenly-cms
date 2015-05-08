@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
+namespace App\Blog;
+use App\Tokenly, App\Account;
+class Post_Controller extends \App\ModControl
 {
 	public $args;
 	public $data;
@@ -7,8 +9,8 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        $this->model = new Slick_App_Blog_Post_Model;
-        $this->submitModel = new Slick_App_Blog_Submissions_Model;
+        $this->model = new Post_Model;
+        $this->submitModel = new Submissions_Model;
     }
     
     public function init()
@@ -17,8 +19,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		
 		if($this->itemId == null){
 			if(!isset($this->args[2])){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url']);
-				return false;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url']);
 			}
 		
 			$getPost = $this->model->getPost($this->args[2], $this->data['site']['siteId']);
@@ -26,9 +27,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 				//check for indexed version
 				$getIndex = $this->model->getAll('page_index', array('itemId' => $getPost['postId'], 'moduleId' => $this->data['module']['moduleId']));
 				if($getIndex AND count($getIndex) > 0){
-					$this->redirect($this->data['site']['url'].'/'.$getIndex[count($getIndex) - 1]['url']);
-					die();
-					return false;
+					redirect($this->data['site']['url'].'/'.$getIndex[count($getIndex) - 1]['url']);
 				}
 			}
 		}
@@ -46,7 +45,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$checkTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getPost['postId'], 'blog-post');
 		if(!$checkTCA){
@@ -80,7 +79,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		$output['comments'] = $this->model->getPostComments($getPost['postId']);
 		$output['commentError'] = '';
 		$output['disableComments'] = false;
-		$output['user'] = Slick_App_Account_Home_Model::userInfo();
+		$output['user'] = Account\Home_Model::userInfo();
 		$output['canonical'] = $this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url'];
 		
 		$metaDesc = $getPost['excerpt'];
@@ -120,8 +119,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 								$this->model->edit('blog_comments', $commentId, array('buried' => 1, 'message' => '[deleted]'));
 							}
 						}
-						$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
-						return $output;
+						redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
 					}
 					break;
 				case 'edit-comment':
@@ -145,8 +143,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 										<a href="'.$this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url'].'#comment-'.$getComment['commentId'].'">blog comment.</a>',
 										$this->data['user']['userId'], $getComment['commentId'], 'blog-reply');
 								$this->model->edit('blog_comments', $commentId, array('message' => $data['message'], 'editTime' => timestamp()));
-								$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
-								return $output;
+								redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
 							}
 							
 						}
@@ -156,8 +153,7 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 						}
 					}
 					else{
-						$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
-						return $output;
+						redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
 					}
 					break;
 				
@@ -172,14 +168,13 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 				$this->data['post'] = $getPost;
 				$comment = $this->model->postComment($data, $this->data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['commentError'] = $e->getMessage();
 				$comment = false;
 			}
 			
 			if($comment){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url']);
 			}
 
 		}
@@ -194,12 +189,9 @@ class Slick_App_Blog_Post_Controller extends Slick_App_ModControl
 		}
 
 		if($this->data['user']){
-			Slick_App_Tokenly_POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getPost['postId']);
+			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getPost['postId']);
 		}
 
-		
 		return $output;
 	}
-	
-	
 }

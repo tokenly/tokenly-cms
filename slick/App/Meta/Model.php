@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Meta_Model extends Slick_Core_Model
+namespace App;
+use Core, Util;
+class Meta_Model extends Core\Model
 {
 	public static $appMeta = array();
 	public static $userMeta = array();
@@ -212,7 +214,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 	
 	public static function getUserAppPerms($userId, $appId)
 	{
-		$model = new Slick_App_Meta_Model;
+		$model = new \App\Meta_Model;
 		$app = $model->get('apps',$appId, array('appId'));
 		if(!$app){
 			$app = $model->get('apps', $appId, array('appId'), 'slug');
@@ -264,9 +266,9 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 	
 	public static function notifyUser($userId, $message, $itemId = 0, $type = '', $allowDupe = false, $data = array())
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		if($itemId != 0 AND $type != '' AND !$allowDupe){
-			$checkItem = Slick_App_Meta_Model::checkItemNotified($userId, $itemId, $type);
+			$checkItem = Meta_Model::checkItemNotified($userId, $itemId, $type);
 			if($checkItem){
 				return false;
 			}
@@ -300,7 +302,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 			}
 		}
 	
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$notifyEmail = $meta->getUserMeta($userId, 'emailNotify');
 		if($notifyEmail AND $notifyEmail == 1){
 			$getUser = $model->get('users', $userId, array('username', 'email'));
@@ -315,7 +317,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 					ob_end_clean();
 				}
 				$body = str_replace('[MESSAGE]', $messageOutput, $template);
-				$mail = new Slick_Util_Mail;
+				$mail = new Util\Mail;
 				$mail->addTo($getUser['email']);
 				$mail->setFrom('noreply@'.$getSite['domain']);
 				$mail->setSubject('['.$getSite['name'].'] New notification received');
@@ -334,7 +336,7 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 	
 	public static function checkItemNotified($userId, $itemId, $type)
 	{
-		$model = new SLick_Core_Model;
+		$model = new Core\Model;
 		$get = $model->fetchSingle('SELECT * FROM user_notifications WHERE userId = :userId AND type = :type AND itemId = :itemId',
 									array(':userId' => $userId, ':itemId' => $itemId, ':type' => $type), 0, true);
 		if(!$get){
@@ -425,9 +427,6 @@ class Slick_App_Meta_Model extends Slick_Core_Model
 		foreach($getAll as $key => $row){
 			$output[$row['metaKey']] = $row['value'];
 		}
-		
 		return $output;
 	}	
 }
-
-?>

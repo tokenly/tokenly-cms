@@ -1,4 +1,5 @@
 <?php
+namespace API;
 //hex input must be in uppercase, with no leading 0x
 //This Script has been Modified by CrazyRabbit with help from Pooler to Validate LTC address
 //Original Version by theymos
@@ -7,7 +8,7 @@
 
 define("LTC_ADDRESSVERSION","30"); //this is a hex byte (changed from 00 to 30 to validate LTC)
 
-class Slick_API_LTCValidate
+class LTCValidate
 {
 
 	function decodeHex($hex)

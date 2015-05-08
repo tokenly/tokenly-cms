@@ -1,5 +1,6 @@
 <?php
-class Slick_UI_CascadingCheckboxList extends Slick_UI_CheckboxList
+namespace UI;
+class CascadingCheckboxList extends CheckboxList
 {
 	protected $options = array();
 	protected $selected = array();
@@ -156,6 +157,4 @@ class Slick_UI_CascadingCheckboxList extends Slick_UI_CheckboxList
 		ob_end_clean();
 		return $output;
 	}
-	
 }
-?>

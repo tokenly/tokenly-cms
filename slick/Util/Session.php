@@ -1,4 +1,5 @@
 <?php
+namespace Util;
 /**
 * Session Utility
 *
@@ -8,7 +9,7 @@
 * @author Nick Rathman <nrathman@ironcladtech.ca>
 * 
 */
-class Slick_Util_Session
+class Session
 {
 	protected static $flashKey = 'flash';
 	

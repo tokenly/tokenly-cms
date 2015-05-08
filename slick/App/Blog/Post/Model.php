@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Blog_Post_Model extends Slick_Core_Model
+namespace App\Blog;
+use UI, Util, App\Profile, Core;
+class Post_Model extends Core\Model
 {
 	public static $postMetaTypes = false;
 	
@@ -17,10 +19,8 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		
 		$get['modifiedDate'] = $get['editTime'];
 		unset($get['editTime']);
-		
-		
 		$output = $get;
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new \App\Profile\User_Model;
 		$output['author'] = $profModel->getUserProfile($get['userId'], $siteId);
 		$getMeta = $this->getPostMeta($get['postId']);
 		foreach($getMeta as $key => $val){
@@ -28,16 +28,14 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 				$output[$key] = $val;
 			}
 		}
-	
 		return $output;
-		
 	}
 	
 	public function getCommentForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$message = new Slick_UI_Markdown('message', 'markdown');
+		$message = new UI\Markdown('message', 'markdown');
 		$message->setLabel('Message');
 		$form->add($message);
 		
@@ -50,7 +48,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		$siteId = $getSite['siteId'];
 		
 		$getComments = $this->getAll('blog_comments', array('postId' => $postId, 'buried' => 0, 'editorial' => $editorial), array(), 'commentId', 'asc');
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new Profile\User_Model;
 		foreach($getComments as $key => $comment){
 			if($comment['buried'] == 1){
 				$getComments[$key]['author'] = 'null';
@@ -74,7 +72,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		if(!$getComment){
 			return false;
 		}
-		$profModel = new Slick_App_Profile_User_Model;
+		$profModel = new User_Model;
 		if($getComment['buried'] == 1){
 			$getComment['author'] = 'null';
 		}
@@ -89,7 +87,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 	public function postComment($data, $appData, $editorial = 0)
 	{
 		if(!isset($data['message']) AND trim($data['message']) == ''){
-			throw new Exception('Message required');
+			throw new \Exception('Message required');
 		}
 		$useData = array();
 		$useData['userId'] = $data['userId'];
@@ -99,7 +97,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		$useData['commentDate'] = timestamp();
 		$post = $this->insert('blog_comments', $useData);
 		if(!$data){
-			throw new Exception('Error posting comment');
+			throw new \Exception('Error posting comment');
 		}
 		
 		if($editorial == 1){
@@ -121,7 +119,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		$notifyData['user'] = $appData['user'];
 		if($appData['user']['userId'] != $appData['post']['userId']){
 			if($editorial == 1){
-				$meta = new Slick_App_Meta_Model;
+				$meta = new \App\Meta_Model;
 				$getDiscussions = $meta->getUserMeta($appData['user']['userId'], 'editorial_discussions');
 				if($getDiscussions){
 					$discussList = explode(',', $getDiscussions);
@@ -134,17 +132,17 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 					$meta->updateUserMeta($appData['user']['userId'], 'editorial_discussions', join(',', $discussList));
 				}
 				
-				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
+				\App\Meta_Model::notifyUser($appData['post']['userId'], 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
 			}
 			else{
-				Slick_App_Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
+				\App\Meta_Model::notifyUser($appData['post']['userId'], 'emails.blogCommentNotice', $post, 'new-reply', false, $notifyData);
 			}
 		}
 		
 		$noticeList = $this->getEditorialDiscussionUsers($appData['post']['postId']);
 		foreach($noticeList as $extraNotice){
 			if($extraNotice != $appData['user']['userId'] AND $extraNotice != $appData['post']['userId']){
-				Slick_App_Meta_Model::notifyUser($extraNotice, 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
+				\App\Meta_Model::notifyUser($extraNotice, 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
 			}
 		}		
 		
@@ -183,7 +181,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 	
 	public function getPostBlogTeam($postId)
 	{
-		$multiblog = new Slick_App_Blog_Multiblog_Model;
+		$multiblog = new Multiblog_Model;
 		$getCats = $this->fetchAll('SELECT c.blogId
 									FROM blog_postCategories pc
 									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -208,7 +206,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 	{
 		$output = array();
 		
-		$submitModel = new Slick_App_Blog_Submissions_Model;
+		$submitModel = new Submissions_Model;
 		$getContribs = $submitModel->getPostContributors($postId);
 		foreach($getContribs as $contrib){
 			$output[] = $contrib['userId'];
@@ -360,7 +358,7 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 		
 		$output['num_pages'] = false;
 		if($perPage !== false){
-			$pager = new Slick_Util_Paging;
+			$pager = new Util\Paging;
 			$pagePosts = $pager->pageArray($output['posts'], $perPage);
 			$output['num_pages'] = count($pagePosts);
 			
@@ -371,8 +369,6 @@ class Slick_App_Blog_Post_Model extends Slick_Core_Model
 				$output['posts'] = $pagePosts[$page];
 			}
 		}
-				
-		
 		return $output;
 	}
 }

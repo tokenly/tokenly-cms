@@ -6,10 +6,10 @@ session_start();
 mb_internal_encoding('UTF-8');
 
 
-$coreModel = new Slick_Core_Model;
+$coreModel = new \Core\Model;
 $filesModule = $coreModel->get('modules', 'files', array(), 'slug');
 if($filesModule){
-	Slick_App_AppControl::checkModuleAccess($filesModule['moduleId']);
+	\App\AppControl::checkModuleAccess($filesModule['moduleId']);
 }
 
 //------------------------------------------------------------------------------

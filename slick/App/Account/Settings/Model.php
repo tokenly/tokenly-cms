@@ -1,31 +1,33 @@
 <?php
-class Slick_App_Account_Settings_Model extends Slick_Core_Model
+namespace App\Account;
+use Core, UI, Util, API, App\Tokenly;
+class Settings_Model extends Core\Model
 {
 	public function getSettingsForm($user, $adminView = false)
 	{
 		$app = get_app('account');
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		$form->setFileEnc();
 		
 		if($adminView){
-			$username = new Slick_UI_Textbox('username');
+			$username = new UI\Textbox('username');
 			$username->setLabel('Username');
 			$username->addAttribute('required');
 			$form->add($username);
 		}
 		
-		$email = new Slick_UI_Textbox('email');
+		$email = new UI\Textbox('email');
 		$email->setLabel('Email Address');
 		$form->add($email);
 		
 		
 		if(!$adminView){
-			$pass = new Slick_UI_Password('password');
+			$pass = new UI\Password('password');
 			$pass->setLabel('New Password');
 			$pass->addAttribute('autocomplete', 'off');
 			$form->add($pass);
 			
-			$pass2 = new Slick_UI_Password('password2');
+			$pass2 = new UI\Password('password2');
 			$pass2->setLabel('New Password (repeat)');
 			$pass2->addAttribute('autocomplete', 'off');
 			$form->add($pass2);
@@ -52,13 +54,13 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 				}
 			}	
 			
-			$token = new Slick_UI_Textbox('field-'.PRIMARY_TOKEN_FIELD);
+			$token = new UI\Textbox('field-'.PRIMARY_TOKEN_FIELD);
 			$token->setLabel($getTokenField['label']);
 			$form->add($token);
 		}
 		
 		
-		$ref = new Slick_UI_Textbox('refUser');
+		$ref = new UI\Textbox('refUser');
 		$ref->setLabel('Referred By (enter referral username)');
 		if(isset($user['affiliate']) AND $user['affiliate']){
 			$ref->addAttribute('disabled');
@@ -66,45 +68,45 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		}
 		$form->add($ref);				
 		
-		$showEmail = new Slick_UI_Checkbox('showEmail');
+		$showEmail = new UI\Checkbox('showEmail');
 		$showEmail->setLabel('Show email address in profile?');
 		$showEmail->setBool(1);
 		$showEmail->setValue(1);
 		$form->add($showEmail);
 		
-		$pubProf = new Slick_UI_Checkbox('pubProf');
+		$pubProf = new UI\Checkbox('pubProf');
 		$pubProf->setLabel('Make profile public?');
 		$pubProf->setBool(1);
 		$pubProf->setValue(1);
 		$form->add($pubProf);
 		
-		$emailNotify = new Slick_UI_Checkbox('emailNotify');
+		$emailNotify = new UI\Checkbox('emailNotify');
 		$emailNotify->setLabel('Email me when notification is received?');
 		$emailNotify->setBool(1);
 		$emailNotify->setValue(1);
 		$form->add($emailNotify);
 		
-		$dropList = new Slick_UI_Checkbox('dropList');
+		$dropList = new UI\Checkbox('dropList');
 		$dropList->setLabel('Receive <a href="/forum/post/counterwallet-asset-drop-list-signup" target="_blank">occasional free tokens</a> to my Counterparty compatible address?');
 		$dropList->setBool(1);
 		$dropList->setValue(1);
 		$form->add($dropList);		
 		
-		$btcAccess = new Slick_UI_Checkbox('btc_access');
+		$btcAccess = new UI\Checkbox('btc_access');
 		$btcAccess->setLabel('Enable API account access via verified bitcoin address?');
 		$btcAccess->setBool(1);
 		$btcAccess->setValue(1);
 		$form->add($btcAccess);
 		
 		if(!$adminView){
-			$pass = new Slick_UI_Password('curPassword');
+			$pass = new UI\Password('curPassword');
 			$pass->setLabel('Enter current password to complete changes');
 			$pass->addAttribute('required');
 			$form->add($pass);
 		}
 		
 		if($adminView){
-			$activate = new Slick_UI_Checkbox('activated');
+			$activate = new UI\Checkbox('activated');
 			$activate->setBool(1);
 			$activate->setValue(1);
 			$activate->setLabel('Account Active?');
@@ -119,24 +121,24 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		$app = get_app('account');
 		$getUser = $this->get('users', $user['userId']);
 		if(!$adminView AND !isset($data['curPassword'])){
-			throw new Exception('Current password required to complete changes');
+			throw new \Exception('Current password required to complete changes');
 		}
 		
 		if(!$adminView){
 			$checkPass = hash('sha256', $getUser['spice'].$data['curPassword']);
 			if($checkPass != $getUser['password']){
-				throw new Exception('Incorrect password!');
+				throw new \Exception('Incorrect password!');
 			}
 		}
 		$useData = array();
 			
 		if(isset($data['email']) AND trim($data['email']) != ''){
 			if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
-				throw new Exception('Invalid email address');
+				throw new \Exception('Invalid email address');
 			}
 			$checkEmail = $this->checkEmailInUse($user['userId'], $data['email']);
 			if($checkEmail){
-				throw new Exception('Email address already in use');
+				throw new \Exception('Email address already in use');
 			}
 			
 			$useData['email'] = $data['email'];
@@ -144,11 +146,11 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		
 		if($adminView AND isset($data['username'])){
 			if(trim($data['username']) == ''){
-				throw new Exception('Username required');
+				throw new \Exception('Username required');
 			}
 			$getUser = $this->get('users', $data['username'], array('userId'), 'username');
 			if($getUser AND $getUser['userId'] != $user['userId']){
-				throw new Exception('Username already taken');
+				throw new \Exception('Username already taken');
 			}
 			$useData['username'] = $data['username'];
 			$useData['slug'] = genURL($data['username']);
@@ -157,7 +159,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		if(!$adminView){
 			if(isset($data['password']) AND isset($data['password2']) AND trim($data['password']) != ''){
 				if($data['password'] != $data['password2']){
-					throw new Exception('Passwords do not match');
+					throw new \Exception('Passwords do not match');
 				}
 				$genPass = genPassSalt($data['password']);
 				$useData['password'] = $genPass['hash'];
@@ -183,22 +185,22 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 				$getRef2 = $this->fetchSingle('SELECT referralId FROM user_referrals WHERE userId = :refId AND affiliateId = :userId',
 											array(':refId' => $getRef['userId'], ':userId' => $user['userId']));
 				if($getRef2){
-					throw new Exception('You cannot be a referral of someone you already referred!');
+					throw new \Exception('You cannot be a referral of someone you already referred!');
 				}
 				$refVals = array('userId' => $user['userId'], 'affiliateId' => $getRef['userId'], 'refTime' => timestamp());
 				$this->insert('user_referrals', $refVals);
 			
 			}
 			else{
-				throw new Exception('Invalid referral username');
+				throw new \Exception('Invalid referral username');
 			}
 		}
 		
 		if(isset($data['field-'.PRIMARY_TOKEN_FIELD]) AND trim($data['field-'.PRIMARY_TOKEN_FIELD]) != ''){
 			$val = $data['field-'.PRIMARY_TOKEN_FIELD];
-			$validate = new Slick_API_BTCValidate;
+			$validate = new API\BTCValidate;
 			if(!$validate->checkAddress($val)){
-				throw new Exception('Invalid bitcoin address!');
+				throw new \Exception('Invalid bitcoin address!');
 			}
 			$getVal = $this->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
 										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
@@ -217,7 +219,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 				}
 				
 				if($update){
-					$addressModel = new Slick_App_Tokenly_Address_Model;
+					$addressModel = new Tokenly\Address_Model;
 					//change or insert new primary coin address
 					$getAddress = $this->getAll('coin_addresses', array('userId' => $user['userId'], 'address' => $val));
 				
@@ -240,11 +242,11 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		if(count($useData) > 0){
 			$update = $this->edit('users', $user['userId'], $useData);
 			if(!$update){
-				throw new Exception('Error updating account settings');
+				throw new \Exception('Error updating account settings');
 			}
 		}
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		if(isset($data['pubProf'])){
 			$meta->updateUserMeta($user['userId'], 'pubProf', $data['pubProf']);
 		}
@@ -267,7 +269,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 		if(!$isAPI){
 			if(isset($_FILES['avatar']['tmp_name']) AND trim($_FILES['avatar']['tmp_name']) != ''){
 				$picName = md5($user['username'].$_FILES['avatar']['name']).'.jpg';
-				$upload = Slick_Util_Image::resizeImage($_FILES['avatar']['tmp_name'], SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
+				$upload = Util\Image::resizeImage($_FILES['avatar']['tmp_name'], SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
 				if($upload){
 					$meta->updateUserMeta($user['userId'], 'avatar', $picName);
 				}
@@ -281,7 +283,7 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 					$getMime = @getimagesize('/tmp/'.$tmpName);
 					if($getMime){
 						$picName = md5($user['username'].$tmpName).'.jpg';
-						$upload = Slick_Util_Image::resizeImage('/tmp/'.$tmpName, SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
+						$upload = Util\Image::resizeImage('/tmp/'.$tmpName, SITE_PATH.'/files/avatars/'.$picName, $avWidth, $avHeight);
 						if($upload){
 							$meta->updateUserMeta($user['userId'], 'avatar', $picName);
 						}
@@ -316,13 +318,12 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 				}
 			}
 		}
-		
 		return true;
 	}
 	
 	public function getSettingsInfo($user)
 	{
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$output = array('email' => $user['email']);
 		$output['pubProf'] = $meta->getUserMeta($user['userId'], 'pubProf');
 		$output['showEmail'] = $meta->getUserMeta($user['userId'], 'showEmail');
@@ -339,9 +340,9 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 	
 	public function getDeleteForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 
-		$pass = new Slick_UI_Password('password');
+		$pass = new UI\Password('password');
 		$pass->setLabel('Enter your password to close and delete your account');
 		$pass->addAttribute('required');
 		$form->add($pass);
@@ -353,17 +354,17 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 	{
 		$getUser = $this->get('users', $user['userId']);
 		if(!isset($data['password'])){
-			throw new Exception('Current password required to complete deletion');
+			throw new \Exception('Current password required to complete deletion');
 		}
 		
 		$checkPass = hash('sha256', $getUser['spice'].$data['password']);
 		if($checkPass != $getUser['password']){
-			throw new Exception('Incorrect password!');
+			throw new \Exception('Incorrect password!');
 		}
 		
 		$delete = $this->delete('users', $getUser['userId']);
 		if(!$delete){
-			throw new Exception('Error deleting account, please try again');
+			throw new \Exception('Error deleting account, please try again');
 		}
 		
 		unset($_SESSION['accountAuth']);
@@ -386,7 +387,4 @@ class Slick_App_Account_Settings_Model extends Slick_Core_Model
 
 		return false;
 	}
-
 }
-
-?>

@@ -1,4 +1,5 @@
 <?php
+namespace App\API\V1;
 /**
 * Forum API Model
 * 
@@ -6,7 +7,7 @@
 * @package [App][API][V1][Forum]
 *
 */
-class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
+class Forum_Model extends \App\Forum\Board_Model
 {
 	/**
 	* Gets a list of recent threads based on data parameters
@@ -129,7 +130,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		else{
 			$output['next'] = $start + $max;
 		}
-		$profile = new Slick_App_Profile_User_Model;
+		$profile = new \App\Profile\User_Model;
 		//check for no-profiles field
 		$noProfiles = false;
 		if(isset($data['no-profiles']) AND (intval($data['no-profiles']) === 1 OR $data['no-profiles'] == 'true')){
@@ -452,7 +453,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$thread['replies'] = $countReplies['total'];				
 		//get OP profile
 		if(!isset($data['no-profiles']) OR ($data['no-profiles'] != 'true' AND intval($data['no-profiles']) !== 1)){
-			$profile = new Slick_App_Profile_User_Model;
+			$profile = new \App\Profile\User_Model;
 			$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId']);
 			unset($thread['author']['pubProb']);
 			unset($thread['author']['showEmail']);
@@ -531,7 +532,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				ORDER BY '.$sort.'
 				'.$limit;
 		$getPosts = $this->fetchAll($sql, array(':topicId' => $thread['topicId']));
-		$profile = new Slick_App_Profile_User_Model;
+		$profile = new \App\Profile\User_Model;
 		foreach($getPosts as &$post){
 			//get profile data
 			if(!isset($data['no-profiles']) OR ($data['no-profiles'] != 'true' AND intval($data['no-profiles']) !== 1)){
@@ -608,7 +609,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	*/
 	public function editThread($data)
 	{
-		$postModel = new Slick_App_Forum_Post_Model;
+		$postModel = new \App\Forum\Post_Model;
 		$appData = array();
 		$appData['user'] = $data['user'];
 		$appData['site'] = $data['site'];
@@ -637,10 +638,10 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	*/
 	public function postReply($data)
 	{
-		$postModel = new Slick_App_Forum_Post_Model;
-		$meta = new Slick_App_Meta_Model;
+		$postModel = new \App\Forum\Post_Model;
+		$meta = new \App\Meta_Model;
 		if(!isset($data['content'])){
-			throw new Exception('content required');
+			throw new \Exception('content required');
 		}
 		$useData = array();
 		$useData['topicId'] = $data['thread']['topicId'];
@@ -675,10 +676,10 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	*/
 	public function editReply($data)
 	{
-		$postModel = new Slick_App_Forum_Post_Model;
-		$meta = new Slick_App_Meta_Model;
+		$postModel = new \App\Forum\Post_Model;
+		$meta = new \App\Meta_Model;
 		if(!isset($data['content'])){
-			throw new Exception('content required');
+			throw new \Exception('content required');
 		}
 		$useData = array();
 		$useData['content'] = $data['content'];		
@@ -715,12 +716,12 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$req = array('type', 'id');
 		foreach($req as $required){
 			if(!isset($data[$required]) OR trim($data[$required]) == ''){
-				throw new Exception($required.' required');
+				throw new \Exception($required.' required');
 			}
 		}
 
-		$meta = new Slick_App_Meta_Model;
-		$postModel = new Slick_App_Forum_Post_Model;
+		$meta = new \App\Meta_Model;
+		$postModel = new \App\Forum\Post_Model;
 		$reportedPosts = $meta->getUserMeta($data['user']['userId'], 'reportedPosts');
 		if(!$reportedPosts){
 			$reportedPosts = array();
@@ -737,7 +738,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$validTypes = array('post', 'thread', 'topic');
 		
 		if(!isset($data['id']) OR !isset($data['type']) OR !in_array($data['type'], $validTypes)){
-			throw new Exception('Invalid parameters');
+			throw new \Exception('Invalid parameters');
 		}
 		
 		$getItem = false;
@@ -763,11 +764,11 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		}
 		
 		if(!$getItem){
-			throw new Exception('Item not found');
+			throw new \Exception('Item not found');
 		}
 		
 		if($getItem['userId'] == $data['user']['userId']){
-			throw new Exception('Cannot flag your own content');
+			throw new \Exception('Cannot flag your own content');
 		}
 		
 		foreach($reportedPosts as $report){
@@ -786,7 +787,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 					break;
 			}
 			if($hasReported){
-				throw new Exception('Item already reported');
+				throw new \Exception('Item already reported');
 			}
 		}
 		
@@ -826,14 +827,14 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				$nofityData['reportMessage'] = $reportMessage;
 				$notifyData['item'] = $getItem;
 				$notifyData['notifyUser'] = $notifyUser;
-				$notify = Slick_App_Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $data['id'], 'report-'.$data['type'], true, $notifyData);
+				$notify = \App\Meta_Model::notifyUser($notifyUser, 'emails.flagPostNotice', $data['id'], 'report-'.$data['type'], true, $notifyData);
 			}
 		}
 		
 		$reportedPosts[] = array('type' => $data['type'], 'itemId' => $data['id']);
 		$update = $meta->updateUserMeta($data['user']['userId'], 'reportedPosts', json_encode($reportedPosts));
 		if(!$update){
-			throw new Exception('Error reporting item');
+			throw new \Exception('Error reporting item');
 
 		}
 		
@@ -851,12 +852,12 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	public function likePost($data)
 	{
 		if(!isset($data['id'])){
-			throw new Exception('id required');
+			throw new \Exception('id required');
 		}
 		
 		$validTypes = array('topic', 'thread', 'post');
 		if(!isset($data['type']) OR !in_array($data['type'], $validTypes)){
-			throw new Exception('Invalid post type');
+			throw new \Exception('Invalid post type');
 		}
 		$type = $data['type'];
 		$getItem = false;
@@ -880,7 +881,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				break;
 		}
 		if(!$itemId){
-			throw new Exception('Item not found');
+			throw new \Exception('Item not found');
 		}
 		
 
@@ -889,11 +890,11 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 											  WHERE userId = :userId AND itemId = :id AND type = :type',
 											 array(':userId' => $data['user']['userId'], ':id' => $itemId, ':type' => $typeCat));
 		if($getLike){
-			throw new Exception('Already liked');
+			throw new \Exception('Already liked');
 		}
 		
 
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$app = $this->get('apps', 'forum', array(), 'slug');
 		$app['meta'] = $meta->appMeta($app['appId']);
 		$module = $this->get('modules', 'forum-post', array(), 'slug');
@@ -901,7 +902,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$data['module'] = $module;
 		
 		$notifyData = $data;
-		$postModel = new Slick_App_Forum_Post_Model;
+		$postModel = new \App\Forum\Post_Model;
 		switch($type){
 			case 'topic':
 			case 'thread':
@@ -930,10 +931,10 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		$like = $this->insert('user_likes', array('userId' => $data['user']['userId'],
 														'itemId' => $itemId, 'type' => $typeCat, 'likeTime' => timestamp()));											
 		if(!$like){
-			throw new Exception('Error adding like');
+			throw new \Exception('Error adding like');
 		}
 		
-		Slick_App_Meta_Model::notifyUser($getItem['userId'], $emailView, $itemId, 
+		\App\Meta_Model::notifyUser($getItem['userId'], $emailView, $itemId, 
 										 'like-'.$typeCat.'-'.$data['user']['userId'], false, $notifyData);
 		
 		return true;
@@ -951,10 +952,10 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	public function checkLikePost($data, $returnID = false)
 	{
 		if(!isset($data['type'])){
-			throw new Exception('type required');
+			throw new \Exception('type required');
 		}
 		if(!isset($data['id'])){
-			throw new Exception('id required');
+			throw new \Exception('id required');
 		}
 		$getItem = false;
 		$itemId = false;
@@ -977,7 +978,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				break;
 		}
 		if(!$getItem){
-			throw new Exception('Item not found');
+			throw new \Exception('Item not found');
 		}
 		$getLike = $this->getAll('user_likes', array('userId' => $data['user']['userId'], 'itemId' => $itemId, 'type' => $useType));
 		if(is_array($getLike) AND count($getLike) > 0){
@@ -1001,11 +1002,11 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	{
 		$getLike = $this->checkLikePost($data, true);
 		if(!$getLike){
-			throw new Exception('Item not liked');
+			throw new \Exception('Item not liked');
 		}
 		$unlike = $this->delete('user_likes', $getLike);
 		if(!$unlike){
-			throw new Exception('Error removing like on item');
+			throw new \Exception('Error removing like on item');
 		}		
 		return true;
 	}
@@ -1024,24 +1025,24 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	{
 		if(!$data['user']){
 			http_response_code(401);
-			throw new Exception('Not authorized');
+			throw new \Exception('Not authorized');
 		}		
 		$req = array('from-type', 'from-id', 'to-type', 'to-id');
 		foreach($req as $required){
 			if(!isset($data[$required]) OR trim($data[$required]) == ''){
 				http_response_code(400);
-				throw new Exception($required.' required');
+				throw new \Exception($required.' required');
 			}
 		}
 		$validFrom = array('topic', 'thread');
 		$validTo = array('board');
 		if(!in_array($data['from-type'], $validFrom)){
 			http_response_code(400);
-			throw new Exception('Invalid from-type');
+			throw new \Exception('Invalid from-type');
 		}
 		if(!in_array($data['to-type'], $validTo)){
 			http_response_code(400);
-			throw new Exception('Invalid to-type');
+			throw new \Exception('Invalid to-type');
 		}
 		$getItem = false;
 		$getItem2 = false;
@@ -1057,32 +1058,32 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 				if($getItem2){
 					if($getItem AND isset($getItem['boardId']) AND $getItem['boardId'] == $getItem2['boardId']){
 						http_response_code(400);
-						throw new Exception('Item already exists in this board');
+						throw new \Exception('Item already exists in this board');
 					}
 					$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
-					$tca = new Slick_App_Tokenly_TCA_Model;
+					$tca = new \App\Tokenly\TCA_Model;
 					$checkCat = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['categoryId'], 'category');
 					$checkBoard = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['boardId'], 'board');
 					
 					if(!$checkCat OR !$checkBoard){
 						http_response_code(403);
-						throw new Exception('You do not have permission to move into that board');
+						throw new \Exception('You do not have permission to move into that board');
 					}					
 				}
 				break;
 		}
 		if(!$getItem){
 			http_response_code(400);
-			throw new Exception($data['from-type'].' not found');
+			throw new \Exception($data['from-type'].' not found');
 		}
 		if(!$getItem2){
 			http_response_code(400);
-			throw new Exception($data['to-type'].' not found');
+			throw new \Exception($data['to-type'].' not found');
 		}
 		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canMoveOther'])
 			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canMoveSelf']))){
 			http_response_code(403);
-			throw new Exception('You do not have permission for this');
+			throw new \Exception('You do not have permission for this');
 		}
 		$edit = false;
 		switch($data['from-type']){
@@ -1097,7 +1098,7 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		}
 		if(!$edit){
 			http_response_code(400);
-			throw new Exception('Error moving '.$data['from-type']);
+			throw new \Exception('Error moving '.$data['from-type']);
 		}		
 		return true;
 	}
@@ -1114,26 +1115,26 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	{
 		if(!$data['user']){
 			http_response_code(401);
-			throw new Exception('Not authorized');
+			throw new \Exception('Not authorized');
 		}
 		if(!isset($data['id'])){
 			http_response_code(400);
-			throw new Exception('id required');
+			throw new \Exception('id required');
 		}
 		$validStates = array(0, 1);
 		if(!in_array($state, $validStates)){
 			http_response_code(400);
-			throw new Exception('Invalid state');
+			throw new \Exception('Invalid state');
 		}
 		$getItem = $this->get('forum_topics', $data['id']);
 		if(!$getItem){
 			http_response_code(400);
-			throw new Exception('Thread not found');
+			throw new \Exception('Thread not found');
 		}
 		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canLockOther'])
 			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canLockSelf']))){
 			http_response_code(403);
-			throw new Exception('You do not have permission for this');
+			throw new \Exception('You do not have permission for this');
 		}
 		$stateMessage = '';
 		$responseMessage = '';
@@ -1153,12 +1154,12 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		}
 		if($getItem['locked'] == $state){
 			http_response_code(400);
-			throw new Exception('Thread already '.$stateMessage);
+			throw new \Exception('Thread already '.$stateMessage);
 		}
 		$lock = $this->edit('forum_topics', $getItem['topicId'], array('locked' => $state, 'lockTime' => $lockStamp, 'lockedBy' => $lockBy));	
 		if(!$lock){
 			http_response_code(400);
-			throw new Exception('Error '.$responseMessage.' thread');
+			throw new \Exception('Error '.$responseMessage.' thread');
 		}
 		return true;
 	}
@@ -1175,26 +1176,26 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 	{
 		if(!$data['user']){
 			http_response_code(401);
-			throw new Exception('Not authorized');
+			throw new \Exception('Not authorized');
 		}
 		if(!isset($data['id'])){
 			http_response_code(400);
-			throw new Exception('id required');
+			throw new \Exception('id required');
 		}
 		$validStates = array(0, 1);
 		if(!in_array($state, $validStates)){
 			http_response_code(400);
-			throw new Exception('Invalid state');
+			throw new \Exception('Invalid state');
 		}
 		$getItem = $this->get('forum_topics', $data['id']);
 		if(!$getItem){
 			http_response_code(400);
-			throw new Exception('Thread not found');
+			throw new \Exception('Thread not found');
 		}
 		if((($getItem['userId'] != $data['user']['userId'] AND !$data['perms']['canStickyOther'])
 			OR ($getItem['userId'] == $data['user']['userId'] AND !$data['perms']['canStickySelf']))){
 			http_response_code(403);
-			throw new Exception('You do not have permission for this');
+			throw new \Exception('You do not have permission for this');
 		}
 		$stateMessage = '';
 		$responseMessage = '';
@@ -1210,12 +1211,12 @@ class Slick_App_API_V1_Forum_Model extends Slick_App_Forum_Board_Model
 		}
 		if($getItem['sticky'] == $state){
 			http_response_code(400);
-			throw new Exception('Thread already '.$stateMessage);
+			throw new \Exception('Thread already '.$stateMessage);
 		}
 		$lock = $this->edit('forum_topics', $getItem['topicId'], array('sticky' => $state));	
 		if(!$lock){
 			http_response_code(400);
-			throw new Exception($responseMessage);
+			throw new \Exception($responseMessage);
 		}
 		return true;
 	}	

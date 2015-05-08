@@ -1,9 +1,8 @@
 <?php
-class Slick_App_Blog_Archive_Model extends Slick_Core_Model
+namespace App\Blog;
+use Core, App\Profile;
+class Archive_Model extends Core\Model
 {
-	
-
-	
 	public function getArchivePosts($siteId, $limit = 10, $year, $month, $day, $useMonth, $useDay)
 	{
 		$start = 0;
@@ -69,8 +68,8 @@ class Slick_App_Blog_Archive_Model extends Slick_Core_Model
 									LIMIT '.$start.', '.$limit,
 									 array(':siteId' => $siteId));
 		
-		$profModel = new Slick_App_Profile_User_Model;
-		$postModel = new Slick_App_Blog_Post_Model;
+		$profModel = new Profile\User_Model;
+		$postModel = new Post_Model;
 		foreach($getPosts as $key => $post){
 			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $siteId);
 			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
@@ -157,7 +156,6 @@ class Slick_App_Blog_Archive_Model extends Slick_Core_Model
 		
 		$numPages = ceil($count['total'] / $limit);
 		
-		return $numPages;
-									 
+		return $numPages;							 
 	}
 }

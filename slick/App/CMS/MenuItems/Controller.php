@@ -1,10 +1,11 @@
 <?php
+namespace App\CMS;
 /*
  * @module-type = dashboard
  * @menu-label = Menu Items
  * 
  * */
-class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
+class MenuItems_Controller extends \App\ModControl
 {
     public $data = array();
     public $args = array();
@@ -12,10 +13,7 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
     function __construct()
     {
         parent::__construct();
-        
-        $this->model = new Slick_App_CMS_MenuItems_Model;
-        
-        
+        $this->model = new MenuItems_Model;
     }
     
     public function init()
@@ -61,22 +59,18 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
     {
 		$output = array();
 		$output['view'] = 'list';
-		
 		$getMenus = $this->model->getAll('menus', array('siteId' => $this->data['site']['siteId']));
 		foreach($getMenus as $key => $menu){
-			$items = Slick_App_View::getMenu($menu['menuId']);
+			$items = \App\View::getMenu($menu['menuId']);
 			$getSite = $this->model->get('sites', $menu['siteId']);
 			
 			foreach($items as $iKey => $item){	
 				$items[$iKey]['url'] = str_replace($getSite['url'], '', $item['url']);
 			}
 			$getMenus[$key]['items'] = $items;
-			
 		}
 		$output['menus'] = $getMenus;
-		
-		 return $output;
-		
+		return $output;
 	}
 	
 	private function addMenuPage()
@@ -91,16 +85,14 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addMenuPage($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		
 		return $output;
@@ -109,15 +101,13 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
 	private function editMenuPage()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getPage = $this->model->get('menu_pages', $this->args[3]);
 		$getPage['parentId'] = $getPage['menuId'].'-'.$getPage['parentId'].'-'.$getPage['parentLink'];
 		if(!$getPage){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'pageForm');
@@ -130,39 +120,32 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editMenuPage($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getPage);
-		
 		return $output;
 	}
 	
 	private function deleteMenuPage()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+
 		}
 		
-		
 		$getPage = $this->model->get('menu_pages', $this->args[3]);
-		if(!$getPage){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if($getPage){
+
 		}
 		
 		$delete = $this->model->delete('menu_pages', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
+		redirect($this->site.$this->moduleUrl);
 	}
 	
 	private function addMenuLink()
@@ -177,33 +160,28 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addMenuLink($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
-		
 		return $output;
 	}
 	
 	private function editMenuLink()
 	{
 		if(!isset($this->args[3])){
-			$this->redirect('/');
-			return false;
+			redirect($this->site);
 		}
 		
 		$getLink = $this->model->get('menu_links', $this->args[3]);
 		$getLink['parentId'] = $getLink['menuId'].'-'.$getLink['parentId'].'-'.$getLink['parentLink'];
 		if(!$getLink){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+			redirect($this->site.$this->moduleUrl);
 		}
 		
 		$output = array('view' => 'linkForm');
@@ -216,44 +194,27 @@ class Slick_App_CMS_MenuItems_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editMenuLink($this->args[3], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['error'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->site.'/'.$this->moduleUrl);
-				return true;
+				redirect($this->site.$this->moduleUrl);
 			}
-			
 		}
 		$output['form']->setValues($getLink);
-		
 		return $output;
 	}
 	
 	private function deleteMenuLink()
 	{
-		if(!isset($this->args[3])){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
+		if(isset($this->args[3])){
+			$getLink = $this->model->get('menu_links', $this->args[3]);
+			if($getLink){
+				$delete = $this->model->delete('menu_links', $this->args[3]);
+			}
 		}
-		
-		
-		$getLink = $this->model->get('menu_links', $this->args[3]);
-		if(!$getLink){
-			$this->redirect($this->site.'/'.$this->moduleUrl);
-			return false;
-		}
-		
-		$delete = $this->model->delete('menu_links', $this->args[3]);
-		$this->redirect($this->site.'/'.$this->moduleUrl);
-		return true;
-		
+		redirect($this->site.$this->moduleUrl);
 	}
-
-	
-
 }
-
-?>

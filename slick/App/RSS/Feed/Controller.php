@@ -1,18 +1,17 @@
 <?php
-class Slick_App_RSS_Feed_Controller extends Slick_App_ModControl
+namespace App\RSS;
+class Feed_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_RSS_Model;
-		
+		$this->model = new Model;
 	}
 	
 	public function init()
 	{
 		$output = parent::init();
 		ob_end_clean();
-		
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'blog':
@@ -41,24 +40,19 @@ class Slick_App_RSS_Feed_Controller extends Slick_App_ModControl
 		$getApp = $this->model->get('apps', $getModule['appId']);
 		$appId = $getApp['appId'];
 		
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$meta->updateAppMeta($appId, 'blog-feed-title', '', 'Blog Feed Title', 1);
 		$meta->updateAppMeta($appId, 'blog-feed-description', '', 'Blog Feed Description', 1, 'textarea');
-		
 	}
 	
 	private function blogFeed()
 	{
 		ob_end_clean();
-		
 		header('Content-type: application/xml');
 		$data = $_REQUEST;
 		unset($data['params']);
 		$data['site'] = $this->data['site'];
-
 		$this->model->getBlogFeed($data);
-
 		die();
 	}
-	
 }

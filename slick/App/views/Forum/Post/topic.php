@@ -4,7 +4,7 @@ $thisURL = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
 
 function checkUserTCA($userId, $profUserId)
 {
-	$tca = new Slick_App_Tokenly_TCA_Model;
+	$tca = new \App\Tokenly\TCA_Model;
 	$module = $tca->get('modules', 'user-profile', array(), 'slug');
 	if(!$userId OR ($userId AND $userId != $profUserId)){
 		$checkTCA = $tca->checkItemAccess($userId, $module['moduleId'], $profUserId, 'user-profile');
@@ -24,7 +24,7 @@ if($user AND $topic['locked'] == 0){
 	<?php
 	$subscribeText = 'Subscribe';
 	$subscribeClass = 'subscribe';
-	$model = new Slick_Core_Model;
+	$model = new \Core\Model;
 	$getSubs = $model->getAll('forum_subscriptions',
 				array('userId' => $user['userId'], 'topicId' => $topic['topicId']));
 	if(count($getSubs) > 0){
@@ -93,7 +93,7 @@ if($page == 1){
 			<?= $avImage ?>
 		</div>
 		<div class="post-author-info">
-			Posts: <?= Slick_App_Account_Home_Model::getUserPostCount($topic['userId']) ?>
+			Posts: <?= \App\Account\Home_Model::getUserPostCount($topic['userId']) ?>
 			<?php
 			if(isset($topic['author']['profile']['location'])){
 				echo '<br>Location: '.$topic['author']['profile']['location']['value'];
@@ -152,7 +152,7 @@ if($page == 1){
 	$likeList = join(', ', $likeList);
 	
 	if($user){
-		$model = new Slick_Core_Model;
+		$model = new \Core\Model;
 		$likeLink = '';
 		if($perms['canUpvoteDownvote']){
 			$hasLiked = $model->getAll('user_likes', array('userId' => $user['userId'], 'itemId' => $topic['topicId'], 'type' => 'topic'));
@@ -277,7 +277,7 @@ if(count($replies) == 0){
 			</div>
 			
 			<div class="post-author-info">
-				Posts: <?= Slick_App_Account_Home_Model::getUserPostCount($reply['userId']) ?>
+				Posts: <?= \App\Account\Home_Model::getUserPostCount($reply['userId']) ?>
 				<?php
 				if(isset($reply['author']['profile']['location'])){
 					echo '<br>Location: '.$reply['author']['profile']['location']['value'];
@@ -429,7 +429,7 @@ if(!$user OR $perms['canPostReply']){
 	if($user){
 
 		if($topic['locked'] != 0){
-			$model = new Slick_Core_Model;
+			$model = new \Core\Model;
 			$getLockedUser = $model->get('users', $topic['lockedBy'], array('username', 'slug'));
 			$lockedUser = '';
 			if($getLockedUser){

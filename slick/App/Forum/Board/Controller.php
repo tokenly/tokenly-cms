@@ -1,12 +1,13 @@
 <?php
-class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
+namespace App\Forum;
+use App\Tokenly, App\Account, UI;
+class Board_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Forum_Board_Model;
-		$this->tca = new Slick_App_Tokenly_TCA_Model;
-		
+		$this->model = new Board_Model;
+		$this->tca = new Tokenly\TCA_Model;
 	}
 	
 	public function init()
@@ -35,7 +36,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		}
 		
 		if($this->data['user']){
-			$postControl = new Slick_App_Forum_Post_Controller;
+			$postControl = new Post_Controller;
 			$output['perms'] = $postControl->checkModPerms($getBoard['boardId'], $this->data);
 			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
 			$this->data['perms'] = $output['perms'];
@@ -65,7 +66,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 			return $output;
 		}
 		
-		$dashModel = new Slick_App_Forum_Boards_Model;
+		$dashModel = new Boards_Model;
 		
 		$output['board'] = $getBoard;
 		$output['title'] = $getBoard['name'];
@@ -86,7 +87,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 
 
 		if($this->data['user']){
-			Slick_App_Tokenly_POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getBoard['boardId']);
+			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getBoard['boardId']);
 		}
 
 		return $output;
@@ -107,12 +108,12 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		$output['title'] = 'New Topic - '.$this->board['name'];
 		$output['message'] = '';
 		
-		$postCount = Slick_App_Account_Home_Model::getUserPostCount($this->data['user']['userId']);
+		$postCount = Account\Home_Model::getUserPostCount($this->data['user']['userId']);
 		$checkCaptcha = false;
 		if(isset($this->data['app']['meta']['min-posts-captcha'])){
 			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
 			if($postCount <= $minPosts){
-				$captcha = new Slick_UI_Captcha();
+				$captcha = new UI\Captcha();
 				$output['form']->add($captcha);
 				$checkCaptcha = true;
 			}
@@ -127,15 +128,14 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 			try{
 				$post = $this->model->postTopic($data, $this->data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$output['form']->setValues($data);
 				$post = false;
 			}
 			
 			if($post){
-				$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/post/'.$post['url']);
-				return $output;
+				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/post/'.$post['url']);
 			}
 			
 		}
@@ -152,8 +152,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 		
 		if(posted() AND isset($_POST['boardFilters'])){
 			$update = $this->model->updateBoardFilters($this->data['user'], $_POST['boardFilters']);
-			$this->redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/all');
-			die();
+			redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/all');
 		}
 		
 		$output['boardFilters'] = $this->model->getBoardFilters($this->data['user']);
@@ -183,9 +182,9 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 												WHERE b.siteId = :siteId', array(':siteId' => $this->data['site']['siteId']));
 		$output['numReplies'] = $numReplies['total'];
 		$output['numUsers'] = $this->model->count('users');
-		$output['numOnline'] = Slick_App_Account_Home_Model::getUsersOnline();
-		$output['mostOnline'] = Slick_App_Account_Home_Model::getMostOnline();
-		$output['onlineUsers'] = Slick_App_Account_Home_Model::getOnlineUsers();		
+		$output['numOnline'] = Account\Home_Model::getUsersOnline();
+		$output['mostOnline'] = Account\Home_Model::getMostOnline();
+		$output['onlineUsers'] = Account\Home_Model::getOnlineUsers();		
 		
 		return $output;
 	}
@@ -248,11 +247,7 @@ class Slick_App_Forum_Board_Controller extends Slick_App_ModControl
 				$output['result'] = 'success';
 			}
 		}
-		
-		
 		echo json_encode($output);
 		die();
 	}
-	
 }
-

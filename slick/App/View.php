@@ -1,5 +1,7 @@
 <?php
-class Slick_App_View extends Slick_Core_View
+namespace App;
+use Core, App\Tokenly, App\Account, App\Page, Util, UI;
+class View extends Core\View
 {
 	public static $menuData = array();
 	
@@ -90,7 +92,7 @@ class Slick_App_View extends Slick_Core_View
      * */
     public static function getMenu($id, $parentId = 0, $parentLink = 0, $apiMode = 0)
     {
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$get = $model->fetchSingle('SELECT * FROM menus WHERE slug = :id AND siteId = :siteId', array(':id' => $id, ':siteId' => $curSite['siteId']));
 		if(!$get){
@@ -101,8 +103,8 @@ class Slick_App_View extends Slick_Core_View
 			return false;
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
-		$accountModel = new Slick_App_Account_Home_Model;
+		$tca = new Tokenly\TCA_Model;
+		$accountModel = new Account\Home_Model;
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
 		if(isset($_SESSION['accountAuth'])){
@@ -175,7 +177,7 @@ class Slick_App_View extends Slick_Core_View
 			if($addOutput['isLink']){
 				$isLink = 1;
 			}
-			$getChildren = Slick_App_View::getMenu($id, $addOutput['itemId'], $isLink, $apiMode);
+			$getChildren = View::getMenu($id, $addOutput['itemId'], $isLink, $apiMode);
 			if(count($getChildren)){
 				$addOutput['children'] = $getChildren;
 			}
@@ -260,7 +262,7 @@ class Slick_App_View extends Slick_Core_View
 	
 	public static function getBlock($id)
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$curSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		$get = $model->fetchSingle('SELECT * FROM content_blocks WHERE slug = :id AND siteId = :siteId',
 									array(':siteId' => $curSite['siteId'], ':id' => $id));		
@@ -282,15 +284,15 @@ class Slick_App_View extends Slick_Core_View
 	
 	public static function displayBlock($id)
 	{
-		$block = Slick_App_View::getBlock($id);
+		$block = View::getBlock($id);
 		if(!$block OR $block['active'] == 0){
 			return false;
 		}
 		
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
-		$accountModel = new Slick_App_Account_Home_Model;
+		$accountModel = new Account\Home_Model;
 		if(isset($_SESSION['accountAuth'])){
 			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
 			if($getUser){
@@ -306,8 +308,8 @@ class Slick_App_View extends Slick_Core_View
 		$block['content'] = str_replace('[BLOCK:'.$block['blockId'].']', '', $block['content']);
 		$block['content'] = str_replace('[BLOCK:'.$block['slug'].']', '', $block['content']);
 		
-		$block['content'] = Slick_App_Page_View_Model::parseContentBlocks($block['content'], $block['siteId']);
-		$block['content'] = Slick_App_Page_View_Model::parsePageTags($block['content']);
+		$block['content'] = Page\View_Model::parseContentBlocks($block['content'], $block['siteId']);
+		$block['content'] = Page\View_Model::parsePageTags($block['content']);
 		
 		return $block['content'];
 		
@@ -315,20 +317,20 @@ class Slick_App_View extends Slick_Core_View
 	
 	public static function displayFlash($name, $type = true)
 	{
-		$getFlash = Slick_Util_Session::getFlash($name);
+		$getFlash = Util\Session::getFlash($name);
 		if(!$getFlash){
 			return false;
 		}
 		$class = '';
 		if($type){
-			$class = Slick_Util_Session::getFlash($name.'-type');
+			$class = Util\Session::getFlash($name.'-type');
 		}
 		return '<p class="'.$class.'">'.$getFlash.'</p>';
 	}
 	
 	public static function displayTag($tag, $params = array())
 	{
-		$model = new Slick_Core_Model;
+		$model = new Core\Model;
 		$getTag = $model->get('page_tags', $tag, array(), 'tag');
 		if(!$getTag){
 			return false;
@@ -338,6 +340,3 @@ class Slick_App_View extends Slick_Core_View
 		return $class->display();
 	}
 }
-
-
-?>

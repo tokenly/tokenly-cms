@@ -1,5 +1,7 @@
 <?php
-class Slick_App_CMS_AppSettings_Model extends Slick_App_Meta_Model
+namespace App\CMS;
+use Core, UI;
+class AppSettings_Model extends \App\Meta_Model
 {
 	function __construct()
 	{
@@ -8,11 +10,11 @@ class Slick_App_CMS_AppSettings_Model extends Slick_App_Meta_Model
 
 	public function getSettingsForm($settings)
 	{
-		$form = new Slick_UI_Form;	
+		$form = new UI\Form;	
 		foreach($settings as $setting){		
 			switch($setting['type']){
 				case 'bool':
-					$value = new Slick_UI_Select($setting['appMetaId'].'-value');
+					$value = new UI\Select($setting['appMetaId'].'-value');
 					$value->addOption(1, 'Yes');
 					$value->addOption(0, 'No');
 					
@@ -24,15 +26,15 @@ class Slick_App_CMS_AppSettings_Model extends Slick_App_Meta_Model
 					}
 					break;
 				case 'textbox':
-					$value = new Slick_UI_Textbox($setting['appMetaId'].'-value');
+					$value = new UI\Textbox($setting['appMetaId'].'-value');
 					$value->setValue($setting['metaValue']);
 					break;
 				case 'textarea':
-					$value = new Slick_UI_Textarea($setting['appMetaId'].'-value');
+					$value = new UI\Textarea($setting['appMetaId'].'-value');
 					$value->setValue($setting['metaValue']);
 					break;
 				case 'select':
-					$value = new Slick_UI_Select($setting['appMetaId'].'-value');
+					$value = new UI\Select($setting['appMetaId'].'-value');
 					$options = explode("\n", $setting['options']);
 					foreach($options as $option){
 						$value->addOption($option, $option);
@@ -67,12 +69,12 @@ class Slick_App_CMS_AppSettings_Model extends Slick_App_Meta_Model
 			}
 		}
 		if(count($validSettings) == 0){
-			throw new Exception('No settings updated');
+			throw new \Exception('No settings updated');
 		}
 		foreach($validSettings as $itemId => $value){
 			$edit = $this->updateAppMeta($value['appId'], $value['key'], $value['value'], '', 1);
 			if(!$edit){
-				throw new Exception('Failed updating setting ('.$value['key'].')');
+				throw new \Exception('Failed updating setting ('.$value['key'].')');
 			}
 		}
 		return true;

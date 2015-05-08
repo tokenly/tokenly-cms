@@ -1,15 +1,16 @@
 <?php
+namespace App\Tokenly;
 /*
  * @module-type = dashboard
  * @menu-label = Address Manager
  * 
  * */
-class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
+class Address_Controller extends \App\ModControl
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Slick_App_Tokenly_Address_Model;
+		$this->model = new Address_Model;
 	}
 	
 	public function init()
@@ -66,13 +67,13 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 			try{
 				$add = $this->model->addAddress($data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$add = false;
 			}
 			
 			if($add){
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/verify/'.$data['address']);
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/verify/'.$data['address']);
 			}
 		}
 		
@@ -93,10 +94,8 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		$getAddress = $getAddress[0];
 		
 		if($getAddress['verified'] != 0){
-			$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-			return $output;
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 		}
-		
 		
 		$output['view'] = 'verify';
 		$output['unverifiable'] = $this->model->checkAddressUnverifiable($getAddress);
@@ -134,20 +133,17 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 			try{
 				$edit = $this->model->editAddress($getAddress['addressId'], $data);
 			}
-			catch(Exception $e){
+			catch(\Exception $e){
 				$output['message'] = $e->getMessage();
 				$edit = false;
 			}
 			
 			if($edit){
-				$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-				return $output;
+				redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 			}
 			
 		}
 		$output['form']->setValues($getAddress);
-		
-		
 		return $output;
 	}
 	
@@ -174,9 +170,7 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 			}	
 		}
 		
-		$this->redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
-		
-		return $output;
+		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
 	private function checkPayment($output)
@@ -237,7 +231,7 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		try{
 			$check = $this->model->checkAddressBroadcast($getAddress);
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			http_response_code(400);
 			$json['error'] = $e->getMessage();
 			$check = false;
@@ -248,5 +242,4 @@ class Slick_App_Tokenly_Address_Controller extends Slick_App_ModControl
 		echo json_encode($json);
 		die();
 	}
-	
 }

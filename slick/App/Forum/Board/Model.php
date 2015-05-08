@@ -1,5 +1,7 @@
 <?php
-class Slick_App_Forum_Board_Model extends Slick_Core_Model
+namespace App\Forum;
+use Core, UI, Util, App\Tokenly, App\Profile;
+class Board_Model extends Core\Model
 {
 	public static $boards = array();
 	public static $boardMeta = array();
@@ -20,14 +22,14 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function getTopicForm()
 	{
-		$form = new Slick_UI_Form;
+		$form = new UI\Form;
 		
-		$title = new Slick_UI_Textbox('title');
+		$title = new UI\Textbox('title');
 		$title->setLabel('Post Title');
 		$title->addAttribute('required');
 		$form->add($title);
 		
-		$content = new Slick_UI_Markdown('content', 'markdown');
+		$content = new UI\Markdown('content', 'markdown');
 		$content->setLabel('Post Body');
 		$form->add($content);
 		
@@ -62,7 +64,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
 				if($required){
-					throw new Exception($key.' required');
+					throw new \Exception($key.' required');
 				}
 				else{
 					$useData[$key] = '';
@@ -75,10 +77,10 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		
 		if(isset($data['check_captcha']) AND $data['check_captcha']){
 			require_once(SITE_PATH.'/resources/recaptchalib2.php');
-			$recaptcha = new Recaptcha(CAPTCHA_PRIV);
+			$recaptcha = new API\Recaptcha(CAPTCHA_PRIV);
 			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], @$_POST['g-recaptcha-response']);
 			if($resp == null OR !$resp->success){
-				throw new Exception('Captcha invalid!');
+				throw new \Exception('Captcha invalid!');
 			}			
 		}
 		
@@ -91,20 +93,20 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		}		
 		
 		if(trim($useData['content']) == ''){
-			throw new Exception('Post body required');
+			throw new \Exception('Post body required');
 		}
 		
 		$getBoard = $this->get('forum_boards', $useData['boardId']);
 		if(!$getBoard OR $getBoard['active'] == 0){
-			throw new Exception('Board does not exist');
+			throw new \Exception('Board does not exist');
 		}
 		
 		//check their tokens for access controls
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
 		$checkTCA = $tca->checkItemAccess($useData['userId'], $boardModule['moduleId'], $useData['boardId'], 'board');
 		if(!$checkTCA){
-			throw new Exception('You cannot post to this board');
+			throw new \Exception('You cannot post to this board');
 		}		
 		
 		$useData['content'] = strip_tags($useData['content']);
@@ -124,7 +126,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		
 		$post = $this->insert('forum_topics', $useData);
 		if(!$post){
-			throw new Exception('Error posting topic');
+			throw new \Exception('Error posting topic');
 		}
 		
 		if(!isset($useData['trollPost'])){
@@ -150,7 +152,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 				}
 
 				// notify the user
-				Slick_App_Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $post, 'topic-subscription', false, $notifyData);
+				\App\Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $post, 'topic-subscription', false, $notifyData);
 			}
 			
 		}
@@ -286,7 +288,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function checkTopicTCA($user, $row)
 	{
-		$tca = new Slick_App_Tokenly_TCA_Model;
+		$tca = new Tokenly\TCA_Model;
 		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
 		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
 		$getBoard = extract_row(self::$boards, array('boardId' =>  $row['boardId']));
@@ -326,10 +328,10 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 	
 	public function parseTopics($topics, $data, $all = false)
 	{
-		$tca = new Slick_App_Tokenly_TCA_Model;
-		$profModel = new Slick_App_Profile_User_Model;
+		$tca = new Tokenly\TCA_Model;
+		$profModel = new Profile\User_Model;
 		$profileModule = $this->get('modules', 'user-profile', array(), 'slug');
-		$meta = new Slick_App_Meta_Model;
+		$meta = new \App\Meta_Model;
 		$tokenApp = $this->get('apps', 'tokenly', array(), 'slug'); 
 		$tokenSettings = $meta->appMeta($tokenApp['appId']); 
 		
@@ -464,9 +466,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 				}
 			}
 		}
-
 		return $topics;
-		
 	}
 	
 	public function getBoardFilters($user = false)
@@ -486,7 +486,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			}
 		}
 		else{
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$userFilters = $meta->getUserMeta($user['userId'], 'boardFilters');
 			$userAntiFilters = $meta->getUserMeta($user['userId'], 'boardAntiFilters');
 			if($userFilters){
@@ -523,7 +523,7 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 			$set = setcookie('boardAntiFilters', $antiFilterList, time()+5184000, '/', $_SERVER['HTTP_HOST']);
 		}
 		else{
-			$meta = new Slick_App_Meta_Model;
+			$meta = new \App\Meta_Model;
 			$set = $meta->updateUserMeta($user['userId'], 'boardFilters', $filterList);
 			$set2 = $meta->updateUserMeta($user['userId'], 'boardAntiFilters', $antiFilterList);
 		}
@@ -556,8 +556,5 @@ class Slick_App_Forum_Board_Model extends Slick_Core_Model
 		}
 		
 		return $count['total'];
-		
 	}
 }
-
-?>
