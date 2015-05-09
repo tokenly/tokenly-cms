@@ -230,7 +230,7 @@ class POP_Model extends Core\Model
 	
 	protected function setPublishedPosts($timeframe)
 	{
-		$submitModel = new Submissions_Model;
+		$submitModel = new Blog\Submissions_Model;
 		$getSite = currentSite();
 		
 		$sql = 'SELECT postId, userId, title, url, publishDate, views, commentCount FROM blog_posts WHERE status="published" AND siteId = :siteId ';
