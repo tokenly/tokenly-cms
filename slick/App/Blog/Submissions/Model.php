@@ -826,9 +826,10 @@ class Submissions_Model extends Core\Model
 		\App\Meta_Model::notifyUser($invite['sendUser'], 'emails.invites.'.$invite['type'].'_accept', $invite['inviteId'], 'user-invite-accept', false, $invite);
 		
 		$site = currentSite();
-		$dashApp = $this->get('apps', 'dashboard', array(), 'slug');
+		$dashApp = get_app('dashboard');
+		$blogApp = get_app('blog');
 		$submitModule = $this->get('modules', 'blog-submissions', array(), 'slug');
-		$redirect = $site['url'].'/'.$dashApp['url'].'/'.$submitModule['url'].'/edit/'.$getPost['postId'];
+		$redirect = $site['url'].'/'.$dashApp['url'].'/'.$blogApp['url'].'/'.$submitModule['url'].'/edit/'.$getPost['postId'];
 		return $redirect;
 	}
 	
