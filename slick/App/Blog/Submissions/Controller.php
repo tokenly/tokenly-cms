@@ -1230,13 +1230,13 @@ class Submissions_Controller extends \App\ModControl
 			$inviteData = array('userId' => $this->data['user']['userId'], 'acceptUser' => $output['post']['userId'], 'sendUser' => $this->data['user']['userId'],
 						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'request',
 						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
-						  'class' => 'Submissions_Model');	
+						  'class' => '\\App\\Blog\\Submissions_Model');	
 		}
 		else{
 			$inviteData = array('userId' => $getUser['userId'], 'acceptUser' => $getUser['userId'], 'sendUser' => $this->data['user']['userId'],
 						  'type' => 'blog_contributor', 'itemId' => $output['post']['postId'], 'info' => array('request_type' => 'invite',
 						  'post_title' => $output['post']['title'], 'request_role' => $role, 'request_share' => $share),
-						  'class' => 'Submissions_Model');	
+						  'class' => '\\App\\Blog\\Submissions_Model');	
 		}
 		
 		$invite = $this->invite->sendInvite($inviteData);
