@@ -35,7 +35,7 @@ class Post_Model extends Core\Model
 		
 		if(isset($data['check_captcha']) AND $data['check_captcha']){
 			require_once(SITE_PATH.'/resources/recaptchalib2.php');
-			$recaptcha = new API\Recaptcha(CAPTCHA_PRIV);
+			$recaptcha = new \Recaptcha(CAPTCHA_PRIV);
 			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], @$_POST['g-recaptcha-response']);
 			if($resp == null OR !$resp->success){
 				throw new \Exception('Captcha invalid!');
