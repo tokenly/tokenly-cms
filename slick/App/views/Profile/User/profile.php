@@ -108,7 +108,7 @@
 						<ul>';
 				
 				foreach($activity['tokenly']['addresses'] as $address){
-					echo '<li><a href="http://blockscan.com/address?q='.$address['address'].'" target="_blank">'.$address['address'].'</a></li>';
+					echo '<li><span class="companion-tip-button" data-address="'.$address['address'].'" data-label="">'.$address['address'].'</span></li>';
 				}
 						
 				echo '</ul></li>';
