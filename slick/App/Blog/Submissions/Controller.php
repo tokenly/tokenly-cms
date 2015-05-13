@@ -918,7 +918,7 @@ class Submissions_Controller extends \App\ModControl
 		$output['force-view'] = 'Blog/Post/post';
 		$output['post'] = $getPost;
 		$output['disableComments'] = true;
-		$output['user'] = Home_Model::userInfo();
+		$output['user'] = Account\Home_Model::userInfo();
 		$output['title'] = $getPost['title'];
 		$output['commentError'] = '';
 		$output['comments'] = array();
