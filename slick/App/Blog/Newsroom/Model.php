@@ -221,12 +221,16 @@ class Newsroom_Model extends Core\Model
 				$blogPost['table_status'][$blogId] = $blogPost['status'];
 				
 				$pendingCats = 0;
+				$approveCats = 0;
 				foreach($cat as $c){
 					if($c['approved'] == 0){
 						$pendingCats++;
 					}
+					else{
+						$approveCats++;
+					}
 				}
-				if($blogPost['status'] == 'published' AND $pendingCats > 0){
+				if($blogPost['status'] == 'published' AND $approveCats == 0){
 					$blogPost['table_status'][$blogId] = 'finish-pending';
 				}
 				$output[$blogId][] = $blogPost;
