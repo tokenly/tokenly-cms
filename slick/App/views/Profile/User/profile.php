@@ -109,7 +109,7 @@
 						<ul>';
 				
 				foreach($activity['tokenly']['addresses'] as $address){
-					echo '<li><a href="https://blockchain.info/address/'.$address['address'].'" target="_blank">'.$address['address'].'</a></li>';
+					echo '<li><span class="companion-tip-button" data-address="'.$address['address'].'" data-label="'.$profile['username'].'" data-tokens="btc"><a href="https://blockchain.info/address/'.$address['address'].'" target="_blank">'.$address['address'].'</a></span></li>';
 				}
 						
 				echo '</ul></li>';
