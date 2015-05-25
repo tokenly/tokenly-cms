@@ -40,6 +40,15 @@ class Multiblog_Model extends Core\Model
 		$active->setValue(1);
 		$form->add($active);		
 		
+		$theme = new UI\Select('themeId');
+		$theme->setLabel('Choose Theme');
+		$theme->addOption(0, '[use default]');
+		$getThemes = $this->getAll('themes');
+		foreach($getThemes as $item){
+			$theme->addOption($item['themeId'], $item['name']);
+		}
+		$form->add($theme);
+		
 		return $form;
 	}
 	
@@ -47,7 +56,7 @@ class Multiblog_Model extends Core\Model
 
 	public function addBlog($data)
 	{
-		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'description' => false, 'active' => false);
+		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'description' => false, 'active' => false, 'themeId' => false);
 		$useData = array();
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
@@ -74,6 +83,14 @@ class Multiblog_Model extends Core\Model
 		
 		if(isset($data['userId'])){
 			$useData['userId'] = $data['userId'];
+		}
+		
+		$useData['themeId'] = 0;
+		if(isset($data['themeId'])){
+			$getTheme = $this->get('themes', $data['themeId']);
+			if($getTheme){
+				$useData['themeId'] = $getTheme['themeId'];
+			}
 		}
 		
 		$add = $this->insert('blogs', $useData);
@@ -108,7 +125,7 @@ class Multiblog_Model extends Core\Model
 		
 	public function editBlog($id, $data)
 	{
-		$req = array('name' => true, 'slug' => false, 'description' => false, 'active' => false);
+		$req = array('name' => true, 'slug' => false, 'description' => false, 'active' => false, 'themeId' => false);
 		$useData = array();
 		foreach($req as $key => $required){
 			if(!isset($data[$key])){
@@ -135,6 +152,14 @@ class Multiblog_Model extends Core\Model
 		if(isset($data['userId'])){
 			$useData['userId'] = $data['userId'];
 		}
+		
+		$useData['themeId'] = 0;
+		if(isset($data['themeId'])){
+			$getTheme = $this->get('themes', $data['themeId']);
+			if($getTheme){
+				$useData['themeId'] = $getTheme['themeId'];
+			}
+		}		
 		
 		$edit = $this->edit('blogs', $id, $useData);
 		if(!$edit){

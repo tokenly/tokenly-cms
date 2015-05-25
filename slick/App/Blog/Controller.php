@@ -5,6 +5,7 @@ class Controller extends \App\AppControl
     function __construct()
     {
         parent::__construct();
+        $this->catModel = new Category_Model;
     }
     
     public function init()
@@ -13,18 +14,40 @@ class Controller extends \App\AppControl
 		
 		if(!$output['module']){
 			if(isset($this->args[1]) AND $this->args[1] != ''){
-				$output['view'] = '404';
+				//attempt to find a valid blog
+				$getBlog = $this->catModel->get('blogs', $this->args[1], array(), 'slug');
+				if($getBlog AND $getBlog['active'] == 1){
+					//show blog home page
+					$output['view'] = 'list';
+					$output['title'] = $getBlog['name'];
+					$output['blog'] = $getBlog;
+					$postLimit = $this->app['meta']['postsPerPage'];
+					$output['commentsEnabled'] = $this->app['meta']['enableComments'];
+					
+					$output['posts'] = $this->catModel->getBlogHomePosts($getBlog['blogId'], $postLimit);
+					$output['numPages'] = $this->catModel->getBlogHomePages($getBlog['blogId'], $postLimit);					
+					
+					if($getBlog['themeId'] != 0){
+						$getTheme = $this->catModel->get('themes', $getBlog['themeId']);
+						if($getTheme){
+							$output['theme'] = $getTheme['location'];
+						}
+					}
+					$output['template'] = 'blog';
+					
+				}
+				else{	
+					$output['view'] = '404';
+				}
 				return $output;
 			}
 			$output['view'] = 'list';
 			$output['title'] = 'Latest Blog Posts';
-			$catModel = new Category_Model;
-			$settings = new \App\CMS\Settings_Model;
 			$postLimit = $this->app['meta']['postsPerPage'];
 			$output['commentsEnabled'] = $this->app['meta']['enableComments'];
 
-			$output['posts'] = $catModel->getHomePosts($output['site']['siteId'], $postLimit);
-			$output['numPages'] = $catModel->getHomePages($output['site']['siteId'], $postLimit);
+			$output['posts'] = $this->catModel->getHomePosts($output['site']['siteId'], $postLimit);
+			$output['numPages'] = $this->catModel->getHomePages($output['site']['siteId'], $postLimit);
 
 		}
 		$output['template'] = 'blog';

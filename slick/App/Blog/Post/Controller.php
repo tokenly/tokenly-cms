@@ -191,6 +191,16 @@ class Post_Controller extends \App\ModControl
 		if($this->data['user']){
 			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getPost['postId']);
 		}
+		
+		$getBlog = $this->model->getPostFirstBlog($getPost['postId']);
+		if($getBlog){
+			if($getBlog['themeId'] != 0){
+				$getTheme = $this->model->get('themes', $getBlog['themeId']);
+				if($getTheme){
+					$output['theme'] = $getTheme['location'];
+				}
+			}
+		}
 
 		return $output;
 	}

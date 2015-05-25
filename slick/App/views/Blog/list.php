@@ -10,9 +10,15 @@ if(isset($category)){
 <?php
 if(isset($category)){
 	if(trim($category['description']) != ''){
-		echo '<div class="blog-description">'.$category['description'].'</div>';
+		echo '<div class="blog-description">'.markdown($category['description']).'</div>';
 	}
 }
+elseif(isset($blog)){
+	if(trim($blog['description']) != ''){
+		echo '<div class="blog-description">'.markdown($blog['description']).'</div>';
+	}
+}
+
 $tca = new \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 $postModule = $tca->get('modules', 'blog-post', array(), 'slug');

@@ -49,6 +49,19 @@ class Category_Controller extends \App\ModControl
 		if($this->data['user']){
 			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $output['category']['categoryId']);
 		}
+		
+		$getBlog = $this->model->get('blogs', $output['category']['blogId']);
+		if($getBlog){
+			if($getBlog['themeId'] != 0){
+				$getTheme = $this->model->get('themes', $getBlog['themeId']);
+				if($getTheme){
+					$output['theme'] = $getTheme['location'];
+				}
+			}
+		}
+		
+		$output['metaDescription'] = $output['category']['description'];
+		
 		return $output;
 	}
 }

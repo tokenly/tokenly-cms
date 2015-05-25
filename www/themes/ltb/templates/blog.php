@@ -12,7 +12,7 @@ foreach($categories as $ck => $cv){
 		continue;
 	}
 	if(!isset($splitCats[$cv['blogId']])){
-		$splitCats[$cv['blogId']] = array('url' => '#', 'label' => '<strong>'.$cv['blog']['name'].'</strong>', 'children' => array(), 'no_link' => true);
+		$splitCats[$cv['blogId']] = array('url' => '#', 'label' => '<a href="'.SITE_URL.'/blog/'.$cv['blog']['slug'].'"><strong>'.$cv['blog']['name'].'</strong></a>', 'children' => array(), 'no_link' => true);
 	}
 	$splitCats[$cv['blogId']]['children'][] = $cv;
 }

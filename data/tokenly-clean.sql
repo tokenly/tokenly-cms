@@ -433,6 +433,7 @@ CREATE TABLE `blogs` (
   `active` int(1) DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
+  `themeId` INT(11) unsigned DEFAULT 0,
   PRIMARY KEY (`blogId`),
   KEY `siteId` (`siteId`),
   KEY `userId` (`userId`),

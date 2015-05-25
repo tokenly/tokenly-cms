@@ -70,7 +70,7 @@ class AppControl extends Core\Controller
             $class->data = $output;
             $class->site = $this->site['url'].'/';
             $class->itemId = $this->itemId;
-            $class->moduleUrl = '/'.$this->app['url'].'/'.$this->module['url'];
+            $class->moduleUrl = $this->app['url'].'/'.$this->module['url'];
             
             $initClass = $class->init();
             if(!is_array($initClass)){

@@ -371,4 +371,19 @@ class Post_Model extends Core\Model
 		}
 		return $output;
 	}
+	
+	public function getPostFirstBlog($postId)
+	{
+		$getBlogs = $this->fetchAll('SELECT b.*
+									FROM blog_postCategories pc
+									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									LEFT JOIN blogs b ON b.blogId = c.blogId
+									WHERE b.active = 1 AND pc.postId = :postId
+									GROUP BY b.blogId',
+									array(':postId' => $postId));
+		if(!isset($getBlogs[0])){
+			return false;
+		}
+		return $getBlogs[0];
+	}
 }
