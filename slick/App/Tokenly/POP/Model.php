@@ -219,7 +219,7 @@ class POP_Model extends Core\Model
 	public function getNumPublishedPosts($userId, $timeframe = false)
 	{
 		$values = array(':id' => $userId);
-		$sql = 'SELECT postId FROM blog_posts WHERE userId = :id AND published = 1';
+		$sql = 'SELECT postId FROM blog_posts WHERE userId = :id AND published = "published" AND featured = 1';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
 		}
@@ -233,7 +233,7 @@ class POP_Model extends Core\Model
 		$submitModel = new Blog\Submissions_Model;
 		$getSite = currentSite();
 		
-		$sql = 'SELECT postId, userId, title, url, publishDate, views, commentCount FROM blog_posts WHERE status="published" AND siteId = :siteId ';
+		$sql = 'SELECT postId, userId, title, url, publishDate, views, commentCount FROM blog_posts WHERE status="published" AND featured = 1 AND siteId = :siteId ';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
 		}
@@ -585,7 +585,7 @@ class POP_Model extends Core\Model
 	public function getNumUserPublishedPosts($userId, $timeframe = false)
 	{
 		$sql = 'SELECT userId FROM blog_posts
-				WHERE userId = :userId AND published = 1';
+				WHERE userId = :userId AND status="published" AND featured = 1';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
 		}				
@@ -598,7 +598,7 @@ class POP_Model extends Core\Model
 	public function getNumUserEditedPosts($userId, $timeframe = false)
 	{
 		$sql = 'SELECT userId FROM blog_posts
-				WHERE (editedBy = :editId OR (userId = :userId AND editedBy = 0)) AND published = 1';
+				WHERE (editedBy = :editId OR (userId = :userId AND editedBy = 0)) AND status="published" AND featured = 1';
 		if(is_array($timeframe)){
 			$sql .= ' AND publishDate >= "'.$timeframe['start'].'" AND publishDate <= "'.$timeframe['end'].'"';
 		}				

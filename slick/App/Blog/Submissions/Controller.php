@@ -240,10 +240,10 @@ class Submissions_Controller extends \App\ModControl
 		$this->data['user']['perms'] = $this->data['perms'];
 		$output['form'] = $this->model->getPostForm(0, $this->data['site']['siteId'], true, $this->data['user']);
 		$output['formType'] = 'Submit';
-
+		$output['form']->remove('featured');
 		if(!$this->data['perms']['canPublishPost']){
 			$output['form']->field('status')->removeOption('published');
-			$output['form']->remove('featured');
+			//$output['form']->remove('featured');
 		}
 
 		if(isset($this->data['perms']['canUseMagicWords']) AND !$this->data['perms']['canUseMagicWords']){
@@ -418,6 +418,7 @@ class Submissions_Controller extends \App\ModControl
 					$output['form']->field('status')->addAttribute('disabled');
 					$output['form']->field('publishDate')->addAttribute('disabled');	
 					$output['form']->field('categories')->addAttribute('disabled');		
+					$output['form']->remove('featured');
 					foreach($output['form']->fields as $fkey => $field){
 						if(strpos($fkey, 'meta_') === 0){
 							$output['form']->field($fkey)->addAttribute('disabled');
@@ -432,6 +433,7 @@ class Submissions_Controller extends \App\ModControl
 				$output['form']->field('publishDate')->addAttribute('disabled');	
 				$output['form']->field('coverImage')->addAttribute('disabled');
 				$output['form']->field('categories')->addAttribute('disabled');
+				$output['form']->remove('featured');
 			}		
 		}
 		
@@ -457,7 +459,7 @@ class Submissions_Controller extends \App\ModControl
 			else{
 				$output['form']->field('status')->removeOption('published');
 			}
-			$output['form']->remove('featured');
+			//$output['form']->remove('featured');
 		}
 
 		if(!$this->data['perms']['canChangeAuthor']){

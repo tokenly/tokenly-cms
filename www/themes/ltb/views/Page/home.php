@@ -28,8 +28,7 @@
 	echo '<ul class="home-posts">';
 	if(count($posts) > 0){
 		foreach($posts as $post){
-			if((trim($post['image']) == '' AND $post['featured'] == 1)
-                OR (trim($post['coverImage']) == '' AND $post['featured'] != 1)){
+			if((trim($post['coverImage']) == '')){
 				continue;
 			}
 			
@@ -50,9 +49,9 @@
 				$class .= ' show';
 				
 			}
-			if($post['featured'] == 1){
+			/*if($post['featured'] == 1){
 				$class .= ' featured';
-			}
+			}*/
 			$avatar = '';
 			$author = $post['author'];
 			

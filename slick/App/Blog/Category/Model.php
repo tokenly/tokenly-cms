@@ -26,6 +26,7 @@ class Category_Model extends Core\Model
 									 AND p.publishDate <= "'.timestamp().'"
 									 AND pc.approved = 1
 									 AND b.active = 1
+									 AND p.featured = 1
 									 GROUP BY p.postId
 									 ORDER BY p.publishDate DESC
 									 LIMIT '.$start.', '.$limit,
@@ -79,6 +80,7 @@ class Category_Model extends Core\Model
 									 AND p.publishDate <= "'.timestamp().'"
 									 AND pc.approved = 1
 									 AND b.active = 1
+									 AND p.featured = 1
 									 GROUP BY p.postId',
 									 array(':siteId' => $siteId));
 		if(!$count){

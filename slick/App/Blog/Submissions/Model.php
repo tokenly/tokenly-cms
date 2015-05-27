@@ -74,11 +74,11 @@ class Submissions_Model extends Core\Model
 		$formatType->setLabel('Formatting Type (Save/Submit to change)');
 		$form->add($formatType);
 
-		/*$featured = new UI\Checkbox('featured');
+		$featured = new UI\Checkbox('featured');
 		$featured->setLabel('Featured');
 		$featured->setBool(1);
 		$featured->setValue(1);
-		$form->add($featured);*/
+		$form->add($featured);
 
 		$pubTime = new UI\Textbox('publishDate', 'datetimepicker');
 		$pubTime->setLabel('Publish Date/Time');
