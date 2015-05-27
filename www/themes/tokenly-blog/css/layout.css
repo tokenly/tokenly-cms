@@ -189,6 +189,7 @@
 .blog-avatar{
 	float: right;
 	vertical-align: top;
+	width: 150px;
 }
 
 .blog-description{
