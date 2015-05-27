@@ -6,6 +6,7 @@ class Controller extends \App\AppControl
     {
         parent::__construct();
         $this->catModel = new Category_Model;
+        $this->blogModel = new Multiblog_Model;
     }
     
     public function init()
@@ -17,12 +18,13 @@ class Controller extends \App\AppControl
 				//attempt to find a valid blog
 				$getBlog = $this->catModel->get('blogs', $this->args[1], array(), 'slug');
 				if($getBlog AND $getBlog['active'] == 1){
+					$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
 					//show blog home page
 					$output['view'] = 'list';
 					$output['title'] = $getBlog['name'];
 					$output['blog'] = $getBlog;
-					$postLimit = $this->app['meta']['postsPerPage'];
-					$output['commentsEnabled'] = $this->app['meta']['enableComments'];
+					$postLimit = intval($getBlog['settings']['postsPerPage']);
+					$output['commentsEnabled'] = intval($getBlog['settings']['enableComments']);;
 					
 					$output['posts'] = $this->catModel->getBlogHomePosts($getBlog['blogId'], $postLimit);
 					$output['numPages'] = $this->catModel->getBlogHomePages($getBlog['blogId'], $postLimit);					
@@ -70,6 +72,14 @@ class Controller extends \App\AppControl
 		$meta->updateAppMeta($appId, 'featuredHeight', 1, 'Featured Image Height', 1);
 		$meta->updateAppMeta($appId, 'coverWidth', 1, 'Cover Image Width', 1);
 		$meta->updateAppMeta($appId, 'coverHeight', 1, 'Cover Image Height', 1);
+		$meta->updateAppMeta($appId, 'category-image-width', 1, 'Category Image Width', 1);
+		$meta->updateAppMeta($appId, 'category-image-height', 1, 'Category Image Height', 1);
+		$meta->updateAppMeta($appId, 'submission-fee', 1, 'Article Submission Fee', 1);
+		$meta->updateAppMeta($appId, 'submission-fee-token', 1, 'Submission Fee Token', 1);
+		$meta->updateAppMeta($appId, 'header_html', 1, 'Header Custom HTML', 1, 'textarea');
+		$meta->updateAppMeta($appId, 'footer_html', 1, 'Footer Custom HTML', 1, 'textarea');
+		$meta->updateAppMeta($appId, 'blog_tagline', 1, 'Blog Tagline/Slogan', 1);
+		$meta->updateAppMeta($appId, 'meta_description', 1, 'Meta Tag Description', 1, 'textarea');
 
 		$meta->addAppPerm($appId, 'canPostComment');
 		$meta->addAppPerm($appId, 'canEditSelfComment');
@@ -81,5 +91,15 @@ class Controller extends \App\AppControl
 		$meta->addAppPerm($appId, 'canEditOtherPost');
 		$meta->addAppPerm($appId, 'canDeleteOtherPost');
 		$meta->addAppPerm($appId, 'canChangeAuthor');
+		$meta->addAppPerm($appId, 'canUseMagicWords');
+		$meta->addAppPerm($appId, 'canSetEditStatus');
+		$meta->addAppPerm($appId, 'canBypassSubmitFee');
+		$meta->addAppPerm($appId, 'canDeleteSelfPostVersion');
+		$meta->addAppPerm($appId, 'canDeleteOtherPostVersion');
+		$meta->addAppPerm($appId, 'canEditAfterPublished');
+		$meta->addAppPerm($appId, 'canManageAllBlogs');
+		$meta->addAppPerm($appId, 'canChangeBlogOwner');
+		$meta->addAppPerm($appId, 'canCreateBlogs');
+
 	}
 }

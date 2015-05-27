@@ -22,6 +22,7 @@ if(isset($blogRoles)){
 	<ul class="ltb-stat-tabs blog-tabs" data-tab-type="blog-form">
 		<li><a href="#" class="tab active" data-tab="blog-info">Blog Info</a></li>
 		<li><a href="#" class="tab" data-tab="blog-roles">User Roles</a></li>
+		<li><a href="#" class="tab" data-tab="blog-settings">Settings</a></li>
 	</ul>
 	<div class="clear"></div>	
 	<div class="blog-form">
@@ -91,6 +92,13 @@ if(isset($blogRoles)){
 		<li><strong>Editor:</strong> Can see submissions for this blog in the editorial queue, permissions to edit and publish posts.</li>
 		<li><strong>Admin:</strong> Has access to manage blog title, description, image and user roles, as well as manage available categories (but cannot delete the blog).</li>
 	</ul>
+	</div>
+	<div class="ltb-data-tab" id="blog-settings" style="display: none;">
+		<h3>Blog Settings</h3>
+		<?php
+		$settingForm->setSubmitText('Update Settings');
+		echo $settingForm->display();
+		?>
 	</div>
 	<div class="clear"></div>
 	</div>

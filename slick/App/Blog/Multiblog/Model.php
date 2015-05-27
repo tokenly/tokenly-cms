@@ -102,6 +102,7 @@ class Multiblog_Model extends Core\Model
 		
 		return $add;
 	}
+
 	
 	public function checkURLExists($url, $ignore = 0, $count = 0)
 	{
@@ -370,5 +371,80 @@ class Multiblog_Model extends Core\Model
 				$this->edit('blogs', $categoryId, array('image' => $fileName));
 			}
 		}
+	}
+	
+	public function updateBlogSettings($blogId, $data)
+	{
+		$getBlog = $this->get('blogs', $blogId);
+		if(!$getBlog){
+			throw new \Exception('Invalid blog ID');
+		}
+		$getBlog['settings'] = json_decode($getBlog['settings'], true);
+		$blogApp = get_app('blog');
+		$defaultSettings = $this->getAll('app_meta', array('isSetting' => 1, 'appId' => $blogApp['appId']));
+		
+		$newSettings = array();
+		foreach($data as $k => $val){
+			$expkey = explode('-', $k);
+			if(isset($expkey[1]) AND $expkey[1] == 'value'){
+				$itemId = $expkey[0];
+				$getSetting = $this->get('app_meta', $itemId);
+				foreach($defaultSettings as $setting){
+					if($setting['appMetaId'] == $itemId){
+						$newSettings[$setting['metaKey']] = $val;
+						break;
+					}
+				}
+			}
+		}
+		$encode = json_encode($newSettings);
+		$update = $this->edit('blogs', $blogId, array('settings' => $encode));
+		if(!$update){
+			throw new \Exception('Error updating settings');
+		}
+		
+		return true;
+	}
+	
+	public function getBlogSettingFormDataFromKeys($settings)
+	{
+		$output = array();
+		$blogApp = get_app('blog');
+		$defaultSettings = $this->getAll('app_meta', array('isSetting' => 1, 'appId' => $blogApp['appId']));
+		foreach($defaultSettings as $field){
+			$foundVal = false;
+			$found = false;
+			foreach($settings as $k => $v){
+				if($k == $field['metaKey']){
+					$found = true;
+					$foundVal = $v;
+				}
+			}
+			if($found){
+				$field['metaValue'] = $foundVal;
+			}
+			$output[] = $field;
+		}
+		return $output;
+	}
+	
+	public function getSingleBlogSettings($blog)
+	{
+		$blogApp = get_app('blog');
+		$settings = json_decode($blog['settings'], true);
+		if(!is_array($settings) OR count($settings) == 0){
+			$defaultSettings = $this->getAll('app_meta', array('isSetting' => 1, 'appId' => $blogApp['appId']));
+			$output = array();
+			foreach($defaultSettings as $setting){
+				$output[$setting['metaKey']] = $setting['metaValue'];
+			}
+			return $output;
+		}
+		return $settings;
+	}
+	
+	public function getCurrentBlog($data)
+	{
+	dd($data);	
 	}
 }

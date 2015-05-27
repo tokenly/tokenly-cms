@@ -25,7 +25,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 	}
 	$avImage = '<img src="'.$avImage.'" alt="" />';
 	if($authorTCA){
-		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$avImage.'</a>';
+		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'" target="_blank">'.$avImage.'</a>';
 	}
 	echo $avImage;
 	
@@ -38,7 +38,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 		$displayName =  $post['author']['profile']['real-name']['value'];
 	}
 	if($authorTCA){
-		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$displayName.'</a>';
+		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'" target="_blank">'.$displayName.'</a>';
 	}
 ?>
 		<div class="blog-date">

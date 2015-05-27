@@ -5,7 +5,7 @@ namespace App\Blog;
  * @menu-label = My Blogs
  * 
  * */
-use Util, App\Tokenly;
+use Util, App\Tokenly, App\CMS;
 class Multiblog_Controller extends \App\ModControl
 {
     public $data = array();
@@ -15,6 +15,7 @@ class Multiblog_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Multiblog_Model;
+        $this->settingModel = new CMS\AppSettings_Model;
     }
     
     public function init()
@@ -142,6 +143,15 @@ class Multiblog_Controller extends \App\ModControl
 
 		$output['formType'] = 'Edit';
 		$output['roleForm'] = $this->model->getBlogRoleForm();
+		
+		$getBlog['settings'] = $this->model->getSingleBlogSettings($getBlog);
+		$settingFormData = $this->model->getBlogSettingFormDataFromKeys($getBlog['settings']);
+		$output['settingForm'] = $this->settingModel->getSettingsForm($settingFormData);
+		$settingTrigger = new \UI\Hidden('settingUpdate');
+		$settingTrigger->setValue(1);
+		$output['settingForm']->add($settingTrigger);
+
+		
 		$output['getBlog'] = $getBlog;
 		
 		if(posted()){
@@ -155,8 +165,22 @@ class Multiblog_Controller extends \App\ModControl
 				}
 				if($add){
 					Util\Session::flash('blog-message', 'Blog role added!', 'success');	
-					redirect($this->site.$this->moduleUrl.'/edit/'.$getBlog['blogId']);
+					redirect($this->data['site']['url'].$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 				}							
+			}
+			elseif(isset($_POST['settingUpdate'])){
+				$data = $output['settingForm']->grabData();
+				try{
+					$update = $this->model->updateBlogSettings($getBlog['blogId'], $data);
+				}
+				catch(\Exception $e){
+					$output['error'] = $e->getMessage();
+					$update = false;
+				}
+				if($update){
+					Util\Session::flash('blog-message', 'Blog settings updated!', 'success');	
+					redirect($this->data['site']['url'].$this->moduleUrl.'/edit/'.$getBlog['blogId']);
+				}
 			}
 			else{			
 				$data = $output['form']->grabData();
@@ -170,7 +194,7 @@ class Multiblog_Controller extends \App\ModControl
 				}
 				if($edit){
 					Util\Session::flash('blog-message', 'Blog edited!', 'success');	
-					redirect($this->site.$this->moduleUrl);
+					redirect($this->data['site']['url'].$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 				}				
 			}			
 		}

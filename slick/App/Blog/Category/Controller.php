@@ -10,6 +10,7 @@ class Category_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Category_Model;
+        $this->blogModel = new Multiblog_Model;
     }
     
     public function init()
@@ -34,22 +35,6 @@ class Category_Controller extends \App\ModControl
 			return $output;
 		}
 		
-		$output['view'] = '../list';
-		$output['title'] = $output['category']['name'];
-		$postLimit = $this->data['app']['meta']['postsPerPage'];
-		$output['commentsEnabled'] = $this->data['app']['meta']['enableComments'];
-		if(!$postLimit){
-			$postLimit = 10;
-		}
-		
-		$output['posts'] = $this->model->getCategoryPosts($output['category']['categoryId'], $this->data['site']['siteId'], $postLimit);
-		$output['numPages'] = $this->model->getCategoryPages($output['category']['categoryId'], $this->data['site']['siteId'], $postLimit);
-
-
-		if($this->data['user']){
-			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $output['category']['categoryId']);
-		}
-		
 		$getBlog = $this->model->get('blogs', $output['category']['blogId']);
 		if($getBlog){
 			if($getBlog['themeId'] != 0){
@@ -59,8 +44,23 @@ class Category_Controller extends \App\ModControl
 				}
 			}
 		}
+		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
+		$output['blog'] = $getBlog;		
+		
+		$output['view'] = '../list';
+		$output['title'] = $output['category']['name'];
+		$postLimit = intval($getBlog['settings']['postsPerPage']);
+		$output['commentsEnabled'] = intval($getBlog['settings']['enableComments']);
+
+		$output['posts'] = $this->model->getCategoryPosts($output['category']['categoryId'], $this->data['site']['siteId'], $postLimit);
+		$output['numPages'] = $this->model->getCategoryPages($output['category']['categoryId'], $this->data['site']['siteId'], $postLimit);
+
+		if($this->data['user']){
+			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $output['category']['categoryId']);
+		}
 		
 		$output['metaDescription'] = $output['category']['description'];
+		$output['blog']['settings']['meta_description'] = $output['category']['description'];
 		
 		return $output;
 	}

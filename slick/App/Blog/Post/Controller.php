@@ -11,6 +11,7 @@ class Post_Controller extends \App\ModControl
         parent::__construct();
         $this->model = new Post_Model;
         $this->submitModel = new Submissions_Model;
+        $this->blogModel = new Multiblog_Model;
     }
     
     public function init()
@@ -57,6 +58,17 @@ class Post_Controller extends \App\ModControl
 			$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $this->data['module']['moduleId'], $getPost['postId'], 'blog-post');
 		}
 		
+		$getBlog = $this->model->getPostFirstBlog($getPost['postId']);
+		if($getBlog){
+			if($getBlog['themeId'] != 0){
+				$getTheme = $this->model->get('themes', $getBlog['themeId']);
+				if($getTheme){
+					$output['theme'] = $getTheme['location'];
+				}
+			}
+		}
+		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
+		
 		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
 		$cats = array();
 		foreach($getCats as $cat){
@@ -72,7 +84,8 @@ class Post_Controller extends \App\ModControl
 			return $output;
 			}
 		}
-
+		
+		$output['blog'] = $getBlog;		
 		$output['post'] = $getPost;
 		$output['view'] = 'post';
 		$output['title'] = $getPost['title'];
@@ -84,6 +97,7 @@ class Post_Controller extends \App\ModControl
 		
 		$metaDesc = $getPost['excerpt'];
 		if(trim($metaDesc) == ''){
+			//auto gen a meta description based on content
 			$metaDesc = shortenMsg(strip_tags($getPost['content']), 500);
 		}
 		if($getPost['formatType'] == 'markdown'){
@@ -91,9 +105,9 @@ class Post_Controller extends \App\ModControl
 		}
 		$metaDesc = strip_tags($metaDesc);
 		$output['metaDescription'] = $metaDesc;
+		$output['blog']['settings']['meta_description'] = $metaDesc;
 		
-		
-		$commentsEnabled = $this->data['app']['meta']['enableComments'];
+		$commentsEnabled = intval($getBlog['settings']['enableComments']);
 		if(!$output['user'] OR (intval($commentsEnabled) == 0)){
 			$output['commentForm'] = false;
 			if(intval($commentsEnabled) == 0){
@@ -190,16 +204,6 @@ class Post_Controller extends \App\ModControl
 
 		if($this->data['user']){
 			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getPost['postId']);
-		}
-		
-		$getBlog = $this->model->getPostFirstBlog($getPost['postId']);
-		if($getBlog){
-			if($getBlog['themeId'] != 0){
-				$getTheme = $this->model->get('themes', $getBlog['themeId']);
-				if($getTheme){
-					$output['theme'] = $getTheme['location'];
-				}
-			}
 		}
 
 		return $output;

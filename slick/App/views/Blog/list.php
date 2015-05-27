@@ -32,10 +32,10 @@ if($module){
 	$extraUrl = '/'.$module['url'];
 }
 
-$settings = new \App\CMS\Settings_Model;
-$maxChars = $settings->getSetting('blog-excerptChars');
-if(!$maxChars){
-	$maxChars = 250;
+$model = new \Core\Model;
+$maxChars = intval($app['meta']['maxExcerpt']);
+if(isset($blog) AND $blog){
+	$maxChars = intval($blog['settings']['maxExcerpt']);
 }
 
 if(count($posts) == 0){
@@ -54,7 +54,7 @@ foreach($posts as $post){
 		continue;
 	}
 
-	$getIndex = $settings->getAll('page_index', array('itemId' => $post['postId'], 'moduleId' => 28, 'siteId' => $site['siteId']));
+	$getIndex = $model->getAll('page_index', array('itemId' => $post['postId'], 'moduleId' => 28, 'siteId' => $site['siteId']));
 
 	if($getIndex AND count($getIndex) > 0){
 		$post['url'] = SITE_URL.'/'.$getIndex[count($getIndex) - 1]['url'];
@@ -71,8 +71,10 @@ foreach($posts as $post){
 		$displayName =  $post['author']['profile']['real-name']['value'];
 	}
 	if($authorTCA){
-		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'">'.$displayName.'</a>';
+		$displayName = '<a href="'.SITE_URL.'/profile/user/'.$post['author']['slug'].'" target="_blank">'.$displayName.'</a>';
 	}
+	
+	$post['excerpt'] = shortenMsg($post['excerpt'], $maxChars);
 	
 	if($post['formatType'] == 'markdown'){
 		$post['excerpt'] = markdown($post['excerpt']);

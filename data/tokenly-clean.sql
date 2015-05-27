@@ -434,6 +434,7 @@ CREATE TABLE `blogs` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   `themeId` INT(11) unsigned DEFAULT 0,
+  `settings` LONGTEXT COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`blogId`),
   KEY `siteId` (`siteId`),
   KEY `userId` (`userId`),
