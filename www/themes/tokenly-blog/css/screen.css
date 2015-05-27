@@ -512,6 +512,10 @@ a:hover, a:focus, a:active {
 li p{
 	line-height: 1.4;
 }
+
+.blog-post img{
+	margin: 10px;
+}
 /* #Media Queries
 ================================================== */
 

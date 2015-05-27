@@ -1,5 +1,5 @@
 		<div class="footer">
-			&copy; <?= date('Y') ?> Tokenly
+			<?= $blog['settings']['footer_html'] ?>
 		</div><!-- footer -->
 	</div><!-- main -->
 	<div class="clear"></div>
