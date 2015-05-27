@@ -922,6 +922,17 @@ class Submissions_Controller extends \App\ModControl
 		$output['title'] = $getPost['title'];
 		$output['commentError'] = '';
 		$output['comments'] = array();
+		
+		$getBlog = $this->postModel->getPostFirstBlog($getPost['postId']);
+		if($getBlog){
+			if($getBlog['themeId'] != 0){
+				$getTheme = $this->model->get('themes', $getBlog['themeId']);
+				if($getTheme){
+					$output['theme'] = $getTheme['location'];
+				}
+			}
+		}
+		
 		return $output;
 	}
 	
