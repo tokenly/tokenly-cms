@@ -265,7 +265,7 @@ class Post_Controller extends \App\ModControl
 		}
 		
 		if($post){
-			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].$page.'#post-'.$post['postId']);
+			redirect($this->site.'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$this->topic['url'].$page.'#post-'.$post['postId']);
 		}
 		
 		return $output;
