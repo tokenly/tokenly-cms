@@ -86,7 +86,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 					$btcAddress = $post['author']['profile']['bitcoin-address']['value'];
 				}
 			?>
-			Tip this post: <span class="companion-tip-button" data-address="<?= $btcAddress ?>" data-label="<?= $post['title'] ?>" data-tokens="btc"><?= $btcAddress ?></span>
+			Tip this post: <span class="companion-tip-button" data-address="<?= $btcAddress ?>" data-label="<?= $post['title'] ?>" data-tokens="btc"></span><?= $btcAddress ?>
 			<br>
 			<?php
 			}//endif

@@ -92,7 +92,7 @@
 							continue;
 						}
 					}
-					$field['value'] = '<span class="companion-tip-button" data-address="'.$field['value'].'" data-label="'.$profile['username'].'" data-tokens="all">'.$field['value'].'</span>';
+					$field['value'] = '<span class="companion-tip-button" data-address="'.$field['value'].'" data-label="'.$profile['username'].'" data-tokens="all"></span>'.$field['value'];
 				}
 				if($field['type'] == 'textarea'){
 					echo '<li class="profile-area"><strong>'.$field['label'].':</strong><br/>
@@ -109,7 +109,7 @@
 						<ul>';
 				
 				foreach($activity['tokenly']['addresses'] as $address){
-					echo '<li><span class="companion-tip-button" data-address="'.$address['address'].'" data-label="'.$profile['username'].'" data-tokens="btc"><a href="https://blockchain.info/address/'.$address['address'].'" target="_blank">'.$address['address'].'</a></span></li>';
+					echo '<li><span class="companion-tip-button" data-address="'.$address['address'].'" data-label="'.$profile['username'].'" data-tokens="btc"></span><a href="https://blockchain.info/address/'.$address['address'].'" target="_blank">'.$address['address'].'</a></li>';
 				}
 						
 				echo '</ul></li>';
