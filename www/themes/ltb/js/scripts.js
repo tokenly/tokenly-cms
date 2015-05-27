@@ -12,15 +12,13 @@ $(document).ready(function(){
 		}
 	});
 	
-	tinymce.baseURL = window.siteURL + '/resources/tinymce/js/tinymce';
-	tinymce.init({selector:'#html-editor', skin: 'light', plugins: 'anchor,hr,image,link,media,table,lists,code', forced_root_block: false,
-		extended_valid_elements : "a[class|name|href|target|title|onclick|rel],script[type|src],iframe[src|style|width|height|scrolling|marginwidth|marginheight|frameborder],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|onmouseover|onmouseout|name]"}
-	);
-
-	tinymce.baseURL = window.siteURL + '/resources/tinymce/js/tinymce';
-	tinymce.init({selector:'#mini-editor', skin: 'light', plugins: 'anchor,link,lists', forced_root_block: false,
-	extended_valid_elements : "a[class|name|href|target|title|onclick|rel],script[type|src],iframe[src|style|width|height|scrolling|marginwidth|marginheight|frameborder],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|onmouseover|onmouseout|name]"});
-
+	if($('#html-editor').length > 0){
+		CKEDITOR.replace( 'html-editor' );
+	}
+	if($('#mini-editor').length > 0){	
+		CKEDITOR.replace( 'mini-editor' );
+	}
+	
 	$('.header-top .menu').find('li').hover(function(){
 		$(this).find('ul').show();
 	},function(){

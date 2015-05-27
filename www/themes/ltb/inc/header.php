@@ -82,7 +82,6 @@
 	<![endif]-->
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/migrate.js"></script>
-	<script type="text/javascript" src="<?= SITE_URL ?>/resources/tinymce/js/tinymce/tinymce.min.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery-ui.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jcycle.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.fancybox.pack.js"></script>
@@ -90,6 +89,7 @@
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/mobile-tabls.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.jplayer.min.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/jplayer.playlist.min.js"></script>
+	<script type="text/javascript" src="<?= SITE_URL ?>/resources/ckeditor/ckeditor.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function(){
 			window.sc = '<?= SOUNDCLOUD_ID ?>';
@@ -124,7 +124,6 @@
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/scripts.js"></script>
 	<script type="text/javascript" src="<?= THEME_URL ?>/js/player.js"></script>
 	<?= $scripts ?>
-	<!-- google analytics code -->
 </head>
 <body class="body-<?= $template ?>">
 	<div class="header">
