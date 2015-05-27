@@ -17,6 +17,7 @@ class Submissions_Controller extends \App\ModControl
 		$this->tca = new Tokenly\TCA_Model;
 		$this->inventory = new Tokenly\Inventory_Model;
 		$this->meta = new \App\Meta_Model;
+		$this->blogModel = new Multiblog_Model;
 		$this->postModule = $this->model->get('modules', 'blog-post', array(), 'slug');
 		$this->catModule = $this->model->get('modules', 'blog-category', array(), 'slug');        
 		$this->blogApp = $this->model->get('apps', 'blog', array(), 'slug');
@@ -934,6 +935,9 @@ class Submissions_Controller extends \App\ModControl
 				}
 			}
 		}
+		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
+		$output['blog'] = $getBlog;
+		
 		
 		return $output;
 	}
