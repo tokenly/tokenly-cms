@@ -72,16 +72,11 @@
 				<div class="post-pic">
 					<a href="<?= SITE_URL ?>/blog/post/<?= $post['url'] ?>">
 					<?php
-                    if($post['featured'] == 1){
-                        if(trim($post['image']) != ''){
-                            echo '<img src="'.SITE_URL.'/files/blogs/'.$post['image'].'" alt="" />';
-                        }
-                    }
-                    else{
-                        if(trim($post['coverImage']) != ''){
-                            echo '<img src="'.SITE_URL.'/files/blogs/'.$post['coverImage'].'" alt="" />';
-                        }
-                    }
+
+					if(trim($post['coverImage']) != ''){
+						echo '<img src="'.SITE_URL.'/files/blogs/'.$post['coverImage'].'" alt="" />';
+					}
+
             
 					?>
 					</a>
