@@ -64,7 +64,7 @@ input:disabled:hover{
 	position: fixed;
 	background: url('../images/header-stretch.jpg') top left repeat-x;
 	width: 100%;
-	z-index: 100000;
+	z-index: 1000;
 	top: 0px;
 }
 
