@@ -118,13 +118,17 @@
 
 .blog-image{
   margin-bottom: 4%;
-  display: inline-block;
-  width: 100%;
+  display: block;
+  float: left;
   text-align: center;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  width: 260px;
 }
 
-.blog-image img{
+.blog-post .blog-image img{
 	width: 100%;
+	margin: 0px;
 }
 
 .blog-date{
