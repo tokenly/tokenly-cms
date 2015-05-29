@@ -112,7 +112,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 			if($data['featured'] > 0){
 				$featured = 1;
 			}
-			$andFeatured = ' AND p.featured = 1 ';
+			$andFeatured = ' AND p.featured = '.$featured.' ';
 		}
 		
 		$metaFields = $this->getAll('blog_postMetaTypes', array('siteId' => $data['site']['siteId']));
