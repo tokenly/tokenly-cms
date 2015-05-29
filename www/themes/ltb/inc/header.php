@@ -108,7 +108,7 @@
 			//grab last 10 posts with soundcloud ids
 			$scModel = new \App\API\V1\Blog_Model;
 			$scPosts = $scModel->getAllPosts(array('page' => 1, 'limit' => 10, 'soundcloud-id' => 'true', 'site' => $site, 'noProfiles' => true,
-													'noCategories' => true, 'noComments' => true, 'minimize' => true));
+													'noCategories' => true, 'noComments' => true, 'minimize' => true, 'featured' => 1));
 			$mediaPlayer = array();
 			foreach($scPosts as $scKey => $scPost){
 				$scPost['title'] = '<a href="'.SITE_URL.'/blog/post/'.$scPost['url'].'" title="'.$scPost['title'].'" target="_blank">'.$scPost['title'].'</a>';

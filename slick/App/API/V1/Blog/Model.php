@@ -105,6 +105,15 @@ class Blog_Model extends \App\Blog\Submissions_Model
 			}
 		}
 		
+		$andFeatured = '';
+		if(isset($data['featured'])){
+			$data['featured'] = intval($data['featured']);
+			$featured = 0;
+			if($data['featured'] > 0){
+				$featured = 1;
+			}
+			$andFeatured = ' AND p.featured = 1 ';
+		}
 		
 		$metaFields = $this->getAll('blog_postMetaTypes', array('siteId' => $data['site']['siteId']));
 		$metaFilters = array('true' => array(), 'false' => array());
@@ -226,6 +235,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
 					 '.$andUsers.'
+					 '.$andFeatured.'
 					 '.$andMeta.'
 					 '.$andWhen.'
 					 GROUP BY p.postId
