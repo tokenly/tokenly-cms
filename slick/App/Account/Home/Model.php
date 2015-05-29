@@ -243,7 +243,7 @@ class Home_Model extends Core\Model
 	
 	public function usernameExists($username)
 	{
-		$get = $this->get('users', $username, array('userId'), 'username');
+		$get = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => strtolower(trim($username))));
 		if($get){
 			return true;
 		}
