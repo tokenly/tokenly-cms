@@ -85,7 +85,7 @@ class Multiblog_Controller extends \App\ModControl
 		$output['form'] = $this->model->getBlogForm($this->data['site']['siteId']);
 
 		if(!$this->data['perms']['canChangeBlogOwner']){
-			$output['form']->remove('userId');
+			$output['form']->remove('user');
 		}
 
 		$output['formType'] = 'Add';
@@ -94,7 +94,7 @@ class Multiblog_Controller extends \App\ModControl
 			$data = $output['form']->grabData();
 			$data['siteId'] = $this->data['site']['siteId'];
 			if(!$this->data['perms']['canChangeBlogOwner']){
-				$data['userId'] = $this->data['user']['userId'];
+				$data['user'] = $this->data['user']['username'];
 			}
 			try{
 				$add = $this->model->addBlog($data);
@@ -138,7 +138,13 @@ class Multiblog_Controller extends \App\ModControl
 		
 		$output['form'] = $this->model->getBlogForm($this->data['site']['siteId']);
 		if(!$this->data['perms']['canChangeBlogOwner']){
-			$output['form']->remove('userId');
+			$output['form']->remove('user');
+		}
+		
+		$getBlog['user'] = '';
+		$getBlogUser = $this->model->get('users', $getBlog['userId']);
+		if($getBlogUser){
+			$getBlog['user'] = $getBlogUser['username'];
 		}
 
 		$output['formType'] = 'Edit';
@@ -150,7 +156,6 @@ class Multiblog_Controller extends \App\ModControl
 		$settingTrigger = new \UI\Hidden('settingUpdate');
 		$settingTrigger->setValue(1);
 		$output['settingForm']->add($settingTrigger);
-
 		
 		$output['getBlog'] = $getBlog;
 		
@@ -185,6 +190,11 @@ class Multiblog_Controller extends \App\ModControl
 			else{			
 				$data = $output['form']->grabData();
 				$data['siteId'] = $this->data['site']['siteId'];
+				if(!$this->data['perms']['canChangeBlogOwner']){
+					if(isset($data['user'])){
+						unset($data['user']);
+					}
+				}
 				try{
 					$edit = $this->model->editBlog($this->args[3], $data);
 				}

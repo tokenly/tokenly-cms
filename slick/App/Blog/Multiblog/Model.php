@@ -17,13 +17,9 @@ class Multiblog_Model extends Core\Model
 		$slug->setLabel('Slug (leave blank to auto generate)');
 		$form->add($slug);		
 				
-		$ownerId = new UI\Select('userId');
+		$ownerId = new UI\Textbox('user');
 		$ownerId->setLabel('Blog Owner');
-		$ownerId->addOption(0, '[nobody]');
-		$getUsers = $this->getAll('users');
-		foreach($getUsers as $user){
-			$ownerId->addOption($user['userId'], $user['username']);
-		}
+		$ownerId->addAttribute('placeholder', 'Enter username, or blank for no owner');
 		$form->add($ownerId);
 		
 		$description = new UI\Markdown('description', 'markdown');
@@ -81,8 +77,17 @@ class Multiblog_Model extends Core\Model
 		$useData['created_at'] = timestamp();
 		$useData['updated_at'] = $useData['created_at'];
 		
-		if(isset($data['userId'])){
-			$useData['userId'] = $data['userId'];
+		if(isset($data['user'])){
+			if(trim($data['user']) == ''){
+				$useData['userId'] = 0;
+			}
+			else{
+				$getBlogUser = $this->get('users', $data['user'], array(), 'username');
+				if(!$getBlogUser){
+					throw new \Exception('Invalid blog owner username');
+				}
+				$useData['userId'] = $getBlogUser['userId'];
+			}
 		}
 		
 		$useData['themeId'] = 0;
@@ -150,8 +155,17 @@ class Multiblog_Model extends Core\Model
 		$useData['name'] = strip_tags($useData['name']);
 		$useData['description'] = strip_tags($useData['description']);
 		
-		if(isset($data['userId'])){
-			$useData['userId'] = $data['userId'];
+		if(isset($data['user'])){
+			if(trim($data['user']) == ''){
+				$useData['userId'] = 0;
+			}
+			else{
+				$getBlogUser = $this->get('users', $data['user'], array(), 'username');
+				if(!$getBlogUser){
+					throw new \Exception('Invalid blog owner username');
+				}				
+				$useData['userId'] = $getBlogUser['userId'];
+			}
 		}
 		
 		$useData['themeId'] = 0;
@@ -443,8 +457,4 @@ class Multiblog_Model extends Core\Model
 		return $settings;
 	}
 	
-	public function getCurrentBlog($data)
-	{
-	dd($data);	
-	}
 }
