@@ -47,10 +47,10 @@ class View_Model extends Core\Model
 				
 				foreach($blockTags[2] as $foundTag){
 					if($foundTag == $block['slug']){
-						$newStr = str_replace('[BLOCK:'.$foundTag.']', App\View::displayBlock($block['slug']), $newStr);
+						$newStr = str_replace('[BLOCK:'.$foundTag.']', \App\View::displayBlock($block['slug']), $newStr);
 					}
 					elseif($foundTag == $block['blockId']){
-						$newStr = str_replace('[BLOCK:'.$foundTag.']', App\View::displayBlock($block['blockId']), $newStr);
+						$newStr = str_replace('[BLOCK:'.$foundTag.']', \App\View::displayBlock($block['blockId']), $newStr);
 					}
 				}
 			}
