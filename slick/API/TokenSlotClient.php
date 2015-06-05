@@ -8,7 +8,7 @@ class TokenSlotClient
 		if(!$url){
 			$url = TOKENSLOT_URL;
 		}
-		if($key){
+		if(!$key){
 			$key = TOKENSLOT_KEY;
 		}
 		$this->apiURL = $url;
@@ -45,7 +45,7 @@ class TokenSlotClient
 				$curl = curl_init();
 				curl_setopt($curl, CURLOPT_URL, $url);
 				curl_setopt($curl, CURLOPT_POST, count($params));
-				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));
+				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));		
 				$get = curl_exec($curl);
 				curl_close($curl);
 				$get = ob_get_contents();
@@ -56,7 +56,7 @@ class TokenSlotClient
 				$curl = curl_init();
 				curl_setopt($curl, CURLOPT_URL, $url);
 				curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PATCH');
-				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));
+				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));					
 				$get = curl_exec($curl);
 				curl_close($curl);
 				$get = ob_get_contents();
@@ -67,14 +67,13 @@ class TokenSlotClient
 				$curl = curl_init();
 				curl_setopt($curl, CURLOPT_URL, $url);
 				curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));
+				curl_setopt($curl, CURLOPT_POSTFIELDS, join('&', $params));				
 				$get = curl_exec($curl);
 				curl_close($curl);
 				$get = ob_get_contents();
 				ob_end_clean();			
 				break;
 		}
-		
 		$decode =  json_decode(trim($get), true);
 		return $decode;
 	}
