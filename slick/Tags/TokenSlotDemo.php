@@ -93,7 +93,7 @@ Thank you for redeeming your '.$this->token.' tokens with us! *high five*
 						die();
 					}
 				}
-				$getAddress = $this->slots->newPayment($this->slot_name, 1*SATOSHI_MOD);
+				$getAddress = $this->slots->newPayment($this->slot_name, $this->token, 1*SATOSHI_MOD);
 				if(isset($getAddress['address'])){
 					$output = $getAddress;
 					$payment_info = $getAddress;
