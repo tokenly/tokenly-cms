@@ -27,6 +27,9 @@ class TokenSlotClient
 		$url = $this->apiURL;
 		$params = array();
 		foreach($args as $key => $val){
+			if(is_array($val)){
+				$val = json_encode($val);
+			}			
 			$params[] = $key.'='.urlencode($val);
 			$args[$key] = urlencode($val);
 		}
