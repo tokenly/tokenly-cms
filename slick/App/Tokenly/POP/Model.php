@@ -416,7 +416,12 @@ class POP_Model extends Core\Model
 		$output = array();
 		$scores = array();
 		$totalScore = 0;
+		$usedAddresses = array();
 		foreach($getUsers as $user){
+			if(isset($usedAddresses[$user['value']])){
+				continue;
+			}
+			$usedAddresses[$user['value']] = 1;
 			$getScore = $this->getPopScore($user['userId'], $timeframe, $fields);
 			$getScore['address'] = $user['value'];
 			$getScore['username'] = $user['username'];
