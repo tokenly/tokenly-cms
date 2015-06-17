@@ -28,6 +28,7 @@ class PodProxy_Controller extends \App\ModControl
 					$audio = 'http://api.soundcloud.com/tracks/'.$getMeta['soundcloud-id'].'/stream?client_id='.SOUNDCLOUD_ID.'&ltb.mp3';
 				}
 				if($audio !== false){
+					header("HTTP/1.1 301 Moved Permanently"); 
 					header('Location: '.$audio);
 					die();
 				}
