@@ -2854,6 +2854,29 @@ a.purchase-credits.collapse{
 	font-weight: 700;
 }
 
+.blog-avatar{
+	display: block;
+	vertical-align: middle;
+	position: relative;
+	width: 100px;
+	float: right;
+}
+.blog-avatar img{
+	max-width: 100%;
+}
+
+.load-posts{
+	
+}
+
+.newsroom-cont label{
+	width: 120px;
+}
+
+.newsroom-cont input{
+	max-width: 100%;
+}
+
 /* Tablet Portrait size to standard 960 (devices and browsers) */
 @media only screen and (min-width: 768px) and (max-width: 959px) {
 

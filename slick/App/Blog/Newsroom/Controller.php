@@ -13,6 +13,7 @@ class Newsroom_Controller extends \App\ModControl
 		parent::__construct();
 		$this->model = new Newsroom_Model;
 		$this->submitModel = new Submissions_Model;
+		$this->postModel = new Post_Model;
 	}
 	
 	public function init()
@@ -20,11 +21,7 @@ class Newsroom_Controller extends \App\ModControl
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
         if(isset($this->args[2])){
-			switch($this->args[2]){
-				default:
-					$output = $output['view'] = '404';
-					break;
-			}
+			$output = $this->showBlogNewsroom($output);
 		}
 		else{
 			$output = $this->showNewsroom($output);
@@ -34,17 +31,66 @@ class Newsroom_Controller extends \App\ModControl
         return $output;
 	}
 	
-	protected function showNewsroom($output)
+	protected function showBlogNewsroom($output)
 	{
-		$output['view'] = 'index';
-		$output['blog_rooms'] = $this->model->getBlogRooms($this->data);
+		$output['view'] = 'newsroom';
+		
+		$getBlog = $this->model->get('blogs', strtolower($this->args[2]), array(), 'slug');
+		if(!$getBlog){
+			Util\Session::flash('blog-message', 'Invalid blog', 'error');
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);	
+		}
+		
+		$max_load = 25; //default number of posts to load
+		if(isset($_GET['load'])){
+			if($_GET['load'] == 'all'){
+				$max_load = false; //load everything
+			}
+			else{
+				$new_load = intval($_GET['load']);
+				if($new_load > 0){
+					$max_load = $new_load;
+				}
+			}
+		}
+		$output['max_load'] = $max_load;
+		
+		$output['blog_rooms'] = $this->model->getBlogRooms($this->data, $getBlog['blogId'], $max_load);
 		$output['blogs'] = $this->model->getBlogs($this->data);
+		$output['blog'] = false;
+		foreach($output['blogs'] as $blog){
+			if($blog['slug'] == strtolower($this->args[2])){
+				$output['blog'] = $blog;
+				break;
+			}
+		}
+		$output['blog_room'] = false;
+		if($output['blog'] AND isset($output['blog_rooms'][$output['blog']['blogId']])){
+			$output['blog_room'] = $output['blog_rooms'][$output['blog']['blogId']];
+		}
+		if(!$output['blog'] OR !$output['blog_room']){
+			Util\Session::flash('blog-message', 'Invalid blog', 'error');
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);			
+		}
 		if(posted()){
 			if(isset($_POST['update-categories'])){
 				return $this->updateCategories($output);
 			}
 		}
 		
+		return $output;
+	}
+	
+	protected function showNewsroom($output)
+	{
+		$output['view'] = 'index';
+		$output['blogs'] = $this->model->getBlogs($this->data);
+		
+		if(count($output['blogs']) == 1){
+			$output['blogs'] = array_values($output['blogs']);
+			redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$output['blogs'][0]['slug']);
+		}
+	
 		return $output;
 	}
 	
@@ -135,7 +181,13 @@ class Newsroom_Controller extends \App\ModControl
 			else{
 				Util\Session::flash('blog-message', 'Categories for post "'.$getPost['title'].'" updated!', 'success');
 			}
-			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);			
+			
+			$andBlog = '';
+			if(isset($_GET['blog']) AND trim($_GET['blog']) != ''){
+				$andBlog = '/'.$_GET['blog'];
+			}
+			
+			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].$andBlog);			
 		}
 	}
 }

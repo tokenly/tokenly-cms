@@ -88,7 +88,13 @@ class Newsroom_Model extends Core\Model
 		}
 	}
 	
-	public function getBlogRooms($data)
+	public function initBlogData()
+	{
+		
+		
+	}
+	
+	public function getBlogRooms($data, $useBlog = false, $min_load = false)
 	{
 		$model = new Multiblog_Model;
 		$submitModel = new Submissions_Model;
@@ -104,16 +110,31 @@ class Newsroom_Model extends Core\Model
 		}
 		
 		$output = array();
+		$postNum = 0;
+		$blogPostNum = 0;
 		foreach($getPosts as $post){
-			
 			$post['published'] = 0;
 			$getCats = extract_row(self::$post_cats, array('postId' => $post['postId']), true, 'blog_postCategories');
+			$foundInBlog = true;
+			if($useBlog){
+				$foundInBlog = false;
+			}
 			foreach($getCats as $cat){
+				if($useBlog AND $useBlog == $cat['blogId']){
+					$foundInBlog = true;
+				}
 				if($cat['approved'] == 1){
 					$post['published'] = 1;
 					break;
 				}
 			}
+			if($foundInBlog){
+				$blogPostNum++;
+			}
+			if(!$foundInBlog OR ($min_load AND $postNum >= $min_load)){
+				continue; //skip this item, not part of correct blog
+			}
+			$postNum++;
 			//$post['published'] = $submitModel->checkPostApproved($post['postId']);
 
 			$splitCats = array();
@@ -236,6 +257,10 @@ class Newsroom_Model extends Core\Model
 				$output[$blogId][] = $blogPost;
 			}
 		}
+		
+		if($useBlog){
+			$output['num_posts'] = $blogPostNum;
+		}
 
 		return $output;
 	}
@@ -349,16 +374,21 @@ class Newsroom_Model extends Core\Model
 		$multiblogs = new Multiblog_Model;
 		$getRoles = $multiblogs->getBlogUserRoles($blog['blogId']);
 		//$getRoles = $this->getAll('blog_roles', array('blogId' => $blog['blogId']), array(), 'type', 'ASC');
-
+		$usedUsers = array();
 		$output = array();
 		if($blog['userId'] != 0){
 			$getOwner = $this->get('users', $blog['userId'], array('userId', 'username', 'slug', 'email'));
 			$getOwner['role'] = 'owner';
 			$getOwner['role_nice'] = 'Owner, Chief Admin';
+			$usedUsers[] = $getOwner['userId'];
 			$output[] = $getOwner;
 		}
 		foreach($getRoles as $role){
 			$getUser = $this->get('users', $role['userId'], array('userId', 'username', 'slug', 'email'));
+			if(in_array($getUser['userId'], $usedUsers)){
+				continue;
+			}
+			$usedUsers[] = $getUser['userId'];
 			if($getUser){
 				$getUser['role'] = $role['type'];
 				$getUser['role_nice'] = $role['type'];
