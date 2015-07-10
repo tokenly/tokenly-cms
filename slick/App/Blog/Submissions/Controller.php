@@ -571,9 +571,7 @@ class Submissions_Controller extends \App\ModControl
 						$output['post']['formatType'] = $oldVersion['formatType'];
 						$getPost['formatType'] = $oldVersion['formatType'];
 						if($oldVersion['formatType'] == 'wysiwyg'){
-							$output['form']->field('content')->setLivePreview(false);
 							$output['form']->field('content')->setID('html-editor');
-							$output['form']->field('excerpt')->setLivePreview(false);
 							$output['form']->field('excerpt')->setID('mini-editor');							
 						}
 					}
