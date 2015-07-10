@@ -502,6 +502,10 @@ class Submissions_Model extends Core\Model
 			$useData['content'] = markdown($useData['content']);
 			$useData['excerpt'] = markdown($useData['excerpt']);
 		}
+		if($getPost['formatType'] == 'wysiwyg' AND $useData['formatType'] == 'markdown'){
+			$useData['content'] = strip_tags($useData['content']);
+			$useData['excerpt'] = strip_tags($useData['excerpt']);
+		}
 
 		//legacy status stuff, get rid of this later
 		$useData['published'] = 0;
