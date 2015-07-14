@@ -36,13 +36,23 @@ else{
 				<th>Unique Clicks</th>
 				<th>Impressions</th>
 				<th title="Click-Thru Rate">CTR</th>
+				<th>Created At</th>
 				<th class="no-sort"></th>
 			</tr>
 		</thead>
 		<tbody>
 		<?php
 		foreach($urls as $item){
-		?>
+			$start_date = strtotime($item['created_at']);
+			$end_date = false;
+			if($item['last_click'] != NULL AND $item['last_click'] != '0000-00-00 00:00:00'){
+				$end_date = strtotime($item['last_click']);
+			}
+			$days = 0;
+			if($end_date){
+				$days = round(($end_date - $start_date) / 86400, 2);
+			}
+			?>
 			<tr>
 				<td><?= $item['urlId'] ?></td>
 				<td class="url-field"><a href="<?= $item['url'] ?>" target="_blank"><?= $item['url'] ?></a></td>
@@ -50,6 +60,9 @@ else{
 				<td><?= number_format($item['unique_clicks']) ?></td>
 				<td><?= number_format($item['impressions']) ?></td>
 				<td><?= number_format(($item['clicks'] / $item['impressions'])*100, 2) ?>%</td>
+				<td>
+					<?= date('Y/m/d', $start_date) ?>
+				</td>
 				<td class="table-actions">
 					<a href="<?= SITE_URL.'/'.$app['url'].'/'.$module['url'].'/view/'.$item['urlId'] ?>">View Stats</a>
 					<a href="<?= SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$item['urlId'] ?>">Edit</a>
