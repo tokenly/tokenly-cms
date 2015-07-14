@@ -11,7 +11,22 @@ if(count($urls) == 0){
 	echo '<p>No tracking URLs created.</p>';
 }
 else{
+	$total_clicks = 0;
+	$total_impressions = 0;
+	$total_ctr = 0;
+	foreach($urls as $item){
+		$total_clicks += $item['clicks'];
+		$total_impressions += $item['impressions'];
+		$total_ctr += ($item['clicks'] / $item['impressions']) * 100;
+	}
+	$average_ctr = round($total_ctr / count($urls), 2);
 	?>
+	<ul>
+		<li><strong># Tracking URLs:</strong> <?= number_format(count($urls)) ?></li>
+		<li><strong>Total Clicks:</strong> <?= number_format($total_clicks) ?></li>
+		<li><strong>Total Ad Impressions:</strong> <?= number_format($total_impressions) ?></li>
+		<li><strong>Average CTR:</strong> <?= $average_ctr ?>%</li>
+	</ul>
 	<table class="admin-table data-table mobile-table submissions-table tracking-stats-table">
 		<thead>
 			<tr>
@@ -20,6 +35,7 @@ else{
 				<th>Clicks</th>
 				<th>Unique Clicks</th>
 				<th>Impressions</th>
+				<th title="Click-Thru Rate">CTR</th>
 				<th class="no-sort"></th>
 			</tr>
 		</thead>
@@ -33,6 +49,7 @@ else{
 				<td><?= number_format($item['clicks']) ?></td>
 				<td><?= number_format($item['unique_clicks']) ?></td>
 				<td><?= number_format($item['impressions']) ?></td>
+				<td><?= number_format(($item['clicks'] / $item['impressions'])*100, 2) ?>%</td>
 				<td class="table-actions">
 					<a href="<?= SITE_URL.'/'.$app['url'].'/'.$module['url'].'/view/'.$item['urlId'] ?>">View Stats</a>
 					<a href="<?= SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$item['urlId'] ?>">Edit</a>

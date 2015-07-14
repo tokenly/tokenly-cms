@@ -12,6 +12,7 @@
 	<li><strong>Impressions:</strong> <?= number_format($tracking_url['impressions']) ?></li>
 	<li><strong>Clicks:</strong> <?= number_format($tracking_url['clicks']) ?></li>
 	<li><strong>Unique Clicks:</strong> <?= number_format($tracking_url['unique_clicks']) ?></li>
+	<li><strong>Click-Thru Rate (CTR):</strong> <?= number_format(($tracking_url['clicks'] / $tracking_url['impressions'])*100, 2) ?>%</li>
 	<li><strong>Last Click:</strong>
 	<?php
 	if($tracking_url['last_click'] != NULL AND $tracking_url['last_click'] != '0000-00-00 00:00:00'){
