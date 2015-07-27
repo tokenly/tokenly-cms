@@ -1,6 +1,6 @@
 <?php
 namespace App\Account;
-use Core, App\Meta_Model;
+use Core, \App\Meta_Model;
 class Invite_Model extends Core\Model
 {
 	

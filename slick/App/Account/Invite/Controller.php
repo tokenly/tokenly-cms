@@ -1,6 +1,6 @@
 <?php
 namespace App\Account;
-use App\Meta_Model;
+use \App\Meta_Model;
 class Invite_Controller extends \App\ModControl
 {
 	function __construct()

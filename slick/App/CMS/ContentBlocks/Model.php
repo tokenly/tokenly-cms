@@ -25,6 +25,7 @@ class ContentBlocks_Model extends Core\Model
 		$formatType = new UI\Select('formatType');
 		$formatType->addOption('markdown', 'Markdown');
 		$formatType->addOption('wysiwyg', 'WYSIWYG');
+		$formatType->addOption('raw', 'Raw Text');
 		$formatType->setLabel('Formatting Type (Save/Submit to change)');
 		$form->add($formatType);
 
@@ -39,8 +40,13 @@ class ContentBlocks_Model extends Core\Model
 			$content->setLabel('Content');
 			$form->add($content);
 		}
-		else{
+		elseif($getBlock['formatType'] == 'wysiwyg'){
 			$content = new UI\Textarea('content', 'html-editor');
+			$content->setLabel('Content');
+			$form->add($content);
+		}
+		else{
+			$content = new UI\Textarea('content');
 			$content->setLabel('Content');
 			$form->add($content);
 		}

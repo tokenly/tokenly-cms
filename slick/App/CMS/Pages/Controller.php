@@ -113,6 +113,8 @@ class Pages_Controller extends \App\ModControl
 			}
 			
 		}
+		
+		$getPage['content'] = htmlentities($getPage['content']);
 		$output['form']->setValues($getPage);
 		return $output;
 	}

@@ -108,6 +108,10 @@ function getCategoryParent($parentId, $blogs, $output = array())
 		<?php
 		}
 		
+		if(!$blog_room){
+			echo '<p>No blog posts submitted yet!</p></div><hr>';
+		}
+		else{
 		$time = time();
 		echo '<table class="admin-table data-table '.$blog['slug'].'_posts submissions-table">
 				<thead>
@@ -367,6 +371,7 @@ function getCategoryParent($parentId, $blogs, $output = array())
 		}//endforeach
 		echo '</tbody></table></div>';
 		echo '<hr>';
+	}//endif
 ?>
 </div><!-- newsroom-cont -->
 <link href="//cdn.datatables.net/1.10.3/css/jquery.dataTables.css" rel="stylesheet" />

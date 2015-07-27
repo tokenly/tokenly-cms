@@ -68,7 +68,7 @@ class Newsroom_Controller extends \App\ModControl
 		if($output['blog'] AND isset($output['blog_rooms'][$output['blog']['blogId']])){
 			$output['blog_room'] = $output['blog_rooms'][$output['blog']['blogId']];
 		}
-		if(!$output['blog'] OR !$output['blog_room']){
+		if(!$output['blog']){
 			Util\Session::flash('blog-message', 'Invalid blog', 'error');
 			redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);			
 		}

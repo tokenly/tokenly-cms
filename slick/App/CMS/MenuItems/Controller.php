@@ -129,6 +129,7 @@ class MenuItems_Controller extends \App\ModControl
 				redirect($this->site.$this->moduleUrl);
 			}
 		}
+		$getPage['label'] = htmlentities($getPage['label']);
 		$output['form']->setValues($getPage);
 		return $output;
 	}
@@ -203,6 +204,7 @@ class MenuItems_Controller extends \App\ModControl
 				redirect($this->site.$this->moduleUrl);
 			}
 		}
+		$getLink['label'] = htmlentities($getLink['label']);
 		$output['form']->setValues($getLink);
 		return $output;
 	}
