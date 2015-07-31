@@ -5,7 +5,7 @@ namespace App\CMS;
  * @menu-label = Manage Accounts
  * 
  * */
-use App\Profile;
+use App\Profile, App\Account;
 class Accounts_Controller extends \App\ModControl
 {
     public $data = array();
