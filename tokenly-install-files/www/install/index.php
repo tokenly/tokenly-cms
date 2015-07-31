@@ -2,7 +2,7 @@
 require_once('../../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
 
-class Tokenly_Install extends Slick_Core_Model
+class Tokenly_Install extends \Core\Model
 {
 	public function installForm()
 	{
@@ -17,7 +17,7 @@ class Tokenly_Install extends Slick_Core_Model
 	
 	public function getSiteForm()
 	{
-		$model = new Slick_App_Dashboard_Sites_Model;
+		$model = new \App\CMS\Sites_Model;
 		$form = $model->getSiteForm(1);
 		$form->remove('isDefault');
 		$form->remove('image');
@@ -30,7 +30,7 @@ class Tokenly_Install extends Slick_Core_Model
 	
 	public function getUserForm()
 	{
-		$model = new Slick_App_Account_Home_Model;
+		$model = new \App\Account\Home_Model;
 		$form = $model->getRegisterForm();
 		return $form;
 	}
