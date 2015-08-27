@@ -41,8 +41,12 @@ class Inventory_Model extends Core\Model
 		$timeDiff = $time - $lastChecked;
 		$newChecked = false;
 		$balances = array();
+		$skip_check = false;
+		if(defined('ENABLE_TOKEN_BALANCE_CHECK') AND !ENABLE_TOKEN_BALANCE_CHECK){
+			$skip_check = true;
+		}
 		foreach($getAddresses as $address){
-			if($timeDiff >= $this->addressCacheRate OR $forceRefresh){
+			if(($timeDiff >= $this->addressCacheRate OR $forceRefresh) AND !$skip_check){
 				$balances[$address['address']] = $this->checkAddressBalances($address['addressId']);
 				$newChecked = true;
 			}
