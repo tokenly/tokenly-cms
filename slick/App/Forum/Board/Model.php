@@ -140,6 +140,7 @@ class Board_Model extends Core\Model
 			$boardId = $useData['boardId'];
 			$notifyData['topic'] = $useData;
 			$notifyData['page'] = '';
+			$notifyData['postId'] = $post;
 			$getBoardSubs = $this->getAll('board_subscriptions', array('boardId' => $boardId));
 			foreach($getBoardSubs as $sub) {
 				// don't notify self

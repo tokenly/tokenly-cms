@@ -371,11 +371,15 @@ class Blog_Model extends \App\Blog\Submissions_Model
 				//}
 			}
 			
-			if(trim($getPosts[$key]['audio-url']) == ''){
-				$getPosts[$key]['audio-url'] = null;
+			if(isset($getPosts[$key]['audio-url'])){
+				if(trim($getPosts[$key]['audio-url']) == ''){
+					$getPosts[$key]['audio-url'] = null;
+				}
 			}
-			if(trim($getPosts[$key]['soundcloud-id']) == ''){
-				$getPosts[$key]['soundcloud-id'] = null;
+			if(isset($getPosts[$key]['soundcloud-id'])){
+				if(trim($getPosts[$key]['soundcloud-id']) == ''){
+					$getPosts[$key]['soundcloud-id'] = null;
+				}
 			}
 			
 			if($post['formatType'] == 'markdown'){
