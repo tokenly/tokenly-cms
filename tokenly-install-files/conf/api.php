@@ -37,3 +37,6 @@ define('AWS_DEFAULT_BUCKET', '');
 
 define('STOPFORUMSPAM_KEY', '');
 define('STOPFORUMSPAM_API', 'http://api.stopforumspam.org/api');
+
+define('DEFAULT_MAIL_DRIVER', 'local'); //options: local, mandrill
+define('MANDRILL_API_KEY', '');

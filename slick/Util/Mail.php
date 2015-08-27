@@ -24,6 +24,8 @@ class Mail
 	private $multipartMessage=false;
 	private $htmlTemplate='';
 	private $htmlTemplateTag='[%-CONTENT-%]';
+	private $driver = 'local';
+	private $valid_drivers = array('local', 'mandrill');
 		
 	public function __construct()
 	{
@@ -39,9 +41,12 @@ class Mail
 		$this->headers=array();
 		$this->addHeader('Date',date('D, j M Y H:i:s O'));
 		$this->addHeader('MIME-Version','1.0');
-		$this->addHeader('X-Mailer','Net Shift Mailer Version '.$this->version.' using PHP Version '.phpversion());		
+		$this->addHeader('X-Mailer','IronClad Mailer Version '.$this->version.' using PHP Version '.phpversion());		
 		$this->boundarySection='MIME_Boundary_Section_'.md5(time());
 		$this->boundary='MIME_Boundary_'.md5(time());		
+		if(defined('DEFAULT_MAIL_DRIVER') AND in_array(DEFAULT_MAIL_DRIVER, $this->valid_drivers)){
+			$this->driver = DEFAULT_MAIL_DRIVER;
+		}
 	}
 		
 	public function parseHeaders()
@@ -86,7 +91,7 @@ class Mail
 		$subject=$this->subject;
 		$to=$this->to;
 		$body=$this->prepareBody();	
-		
+
 		return $this->sendMail($to,$subject,$body,$headers);		
 	}
 	
@@ -97,6 +102,8 @@ class Mail
 		//will add functionality to use SMTP server through sockets instead of mail function
 		//for performance reasons
 		
+		
+		//if debug mode set, save mail to local log instead of actually sending
 		if (defined('DEBUG_EMAIL_LOG') AND strlen(DEBUG_EMAIL_LOG)) {
 			$implodeHeader = $headers;
 			if(is_array($headers)){
@@ -111,8 +118,34 @@ class Mail
 			fclose($fd);
 			return true;
 		}
-
-		return mail($to,$subject,$body,$headers,"-f ".$this->sendmailFrom);	
+		
+		$send_mail = false;
+		switch($this->driver){
+			case 'local':
+				$send_mail = mail($to,$subject,$body,$headers,"-f ".$this->sendmailFrom);
+				break;
+			case 'mandrill':
+				$mandrill = new \API\Mandrill(MANDRILL_API_KEY);
+				if(!is_array($to)){
+					$to = array(array('email' => $to, 'type' => 'to', 'name' => $to));
+				}
+				$data = array();
+				$data['subject'] = $subject;
+				$data['from_email'] = $this->sendmailFrom;
+				$data['html'] = $body;
+				$data['to'] = $to;
+				//$data['headers'] = $headers;
+				//$data['merge_vars'] = array();
+				try{
+					$send_mail = $mandrill->messages->send($data, false);
+				}
+				catch(\Exception $e){
+					$send_mail = false;
+				}
+				break;
+		}
+		return $send_mail;
+		
 	}
 	
 	public function prepareBody()
@@ -351,6 +384,19 @@ class Mail
 	public function getTo()
 	{
 		return $this->to;
+	}
+	
+	public function getDriver()
+	{
+		return $this->driver;
+	}
+	
+	public function setDriver($driver = 'local')
+	{
+		if(!in_array($driver, $this->valid_drivers)){
+			throw new \Exception($driver.' driver not supported');
+		}
+		$this->driver = $driver;
 	}
 	
 } 
