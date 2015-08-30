@@ -625,6 +625,8 @@ function linkify_username($username)
 	return '<a href="'.$url.'" target="_blank">'.$get['username'].'</a>';
 }
 
+
+
 function dd($var)
 {
 	debug($var);
@@ -842,4 +844,120 @@ function redirect($url)
 	die();
 }
 
-?>
+function human_time_diff($since, $time = false)
+{
+	if(!$time){
+		$time = time();
+	}
+	if(!is_int($time)){
+		$time = strtotime($time);
+	}
+	if(!is_int($since)){
+		$since = strtotime($since);
+	}
+	$diff = $time - $since;
+	return $diff;
+}
+
+function human_days_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return round($diff / 60 / 60 / 24, 2);
+}
+
+function human_hours_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return round($diff / 60 / 60, 2);
+}
+
+function human_minutes_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return round($diff / 60, 2);
+}
+
+function human_seconds_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return $diff;
+}
+
+function human_months_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return round($diff / 60 / 60 / 24 / 30, 2);
+}
+
+function human_years_since($since, $time = false)
+{
+	$diff = human_time_diff($since, $time);
+	return round($diff / 60 / 60 / 24 / 365, 2);
+}
+
+function human_time_since($since, $time = false, $short = false, $func = false)
+{
+	$diff = human_time_diff($since, $time);
+	$final_time = false;
+	$time_name = false;
+	if($diff < 60){
+		//use seconds
+		$final_time = human_seconds_since($since, $time);
+		$time_name = 'second';
+		if($short){
+			$time_name = 's';
+		}
+	}
+	elseif($diff < (60*60)){
+		//use minutes
+		$final_time = human_minutes_since($since, $time);
+		$time_name = 'minute';
+		if($short){
+			$time_name = 'm';
+		}		
+	}
+	elseif($diff < (60*60*24)){
+		//use hours
+		$final_time = human_hours_since($since, $time);
+		$time_name = 'hour';
+		if($short){
+			$time_name = 'h';
+		}		
+		
+	}
+	elseif($diff < (60*60*24*30)){
+		//use days
+		$final_time = human_days_since($since, $time);
+		$time_name = 'day';
+		if($short){
+			$time_name = 'd';
+		}		
+		
+	}
+	elseif($diff < (60*60*24*365)){
+		//use months
+		$final_time = human_months_since($since, $time);
+		$time_name = 'month';
+		if($short){
+			$time_name = 'mo';
+		}		
+		
+	}
+	else{
+		//use years
+		$final_time = human_years_since($since, $time);
+		$time_name = 'year';
+		if($short){
+			$time_name = 'y';
+		}		
+	}
+	$final_name = $time_name;
+	if(!$short){
+		$final_name = ' '.pluralize($final_name, $final_time);
+	}
+	if($func){
+		$final_time = $func($final_time);
+	}
+	$output = $final_time.$final_name;
+	return $output;
+}
