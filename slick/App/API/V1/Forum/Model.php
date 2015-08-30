@@ -368,6 +368,14 @@ class Forum_Model extends \App\Forum\Board_Model
 				$andFilters .= ' AND t.boardId != '.$b.' ';
 			}
 		}
+		$userFilters = $this->getBoardFilters($data['user']);
+		if(count($userFilters['antifilters']) > 0){
+			foreach($userFilters['antifilters'] as &$filter){
+				$filter = intval($filter);
+				$andFilters .= ' AND';
+				$andFilters .= ' t.boardId != '.$filter.' ';
+			}
+		}
 		return $andFilters;
 	}
 	
