@@ -1,0 +1,46 @@
+
+@media only screen and (max-width: 767px) {
+
+    .table-mobile, .table-mobile thead, .table-mobile tbody, .table-mobile th, .table-mobile td, .table-mobile tr { 
+        display: block; 
+    }
+    
+    /* Hide table headers (but not display: none;, for accessibility) */
+    .table-mobile thead tr { 
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+     
+     
+    }
+    
+    .table-mobile tr { background: #fff; }
+
+    .table-mobile tr:nth-of-type(odd) { 
+      background: #E5EAEC;
+    }
+
+    .table-mobile td { 
+        /* Behave  like a "row" */
+        border: none;
+     
+        position: relative;
+        padding-left: 40%; 
+        background: none;
+        min-height: 25px;
+        padding-top: 10px;
+		font-size: 12px;
+    }		
+    
+    .table-mobile .mobile-tableHeading{ 
+        display: block;
+        width: 30%;
+        margin-top: 11px;
+        margin-left: 15px;
+        font-weight: 700;
+        position: absolute;
+		font-size: 12px;
+    }
+    
+
+}

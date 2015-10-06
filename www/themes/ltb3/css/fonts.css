@@ -1,0 +1,31 @@
+@font-face {
+	font-family: 'din-bold';
+	src: url('fonts/din-bold.eot');
+	src: local('☺'), url('fonts/din-bold.woff') format('woff'), url('fonts/din-bold.ttf') format('truetype'), url('fonts/din-bold.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'din-reg';
+	src: url('fonts/din-regular.eot');
+	src: local('☺'), url('fonts/din-regular.woff') format('woff'), url('fonts/din-regular.ttf') format('truetype'), url('fonts/din-regular.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'din-med';
+	src: url('fonts/din-medium.eot');
+	src: local('☺'), url('fonts/din-medium.woff') format('woff'), url('fonts/din-medium.ttf') format('truetype'), url('fonts/din-medium.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'din-bold-alt';
+	src: url('fonts/din-boldalternate.eot');
+	src: local('☺'), url('fonts/din-boldalternate.woff') format('woff'), url('fonts/din-boldalternate.ttf') format('truetype'), url('fonts/din-boldalternate.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
