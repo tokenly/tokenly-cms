@@ -322,10 +322,11 @@ class Meta_Model extends Core\Model
 				$mail->setFrom('noreply@'.$getSite['domain']);
 				$mail->setSubject('['.$getSite['name'].'] New notification received');
 				$mail->setHTML($body);
-				$mail->send();
+				$send = $mail->send();
+
 			}
 		}
-		
+
 		$add = $model->insert('user_notifications', array('userId' => $userId, 'message' => $notificationMessageOutput,
 													'noteDate' => timestamp(), 'itemId' => $itemId, 'type' => $type));
 		if(!$add){
