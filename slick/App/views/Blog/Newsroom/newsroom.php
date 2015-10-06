@@ -11,72 +11,78 @@ function getCategoryParent($parentId, $blogs, $output = array())
 	}
 	return $output;
 }
+$blogImage = '';
+if(trim($blog['image']) != '' AND file_exists(SITE_PATH.'/files/blogs/'.$blog['image'])){
+	$blogImage = '<span class="blog-avatar"><img src="'.SITE_URL.'/files/blogs/'.$blog['image'].'" alt="" /></span>';
+}
+
 ?>
 <p class="pull-right text-center" style="width: 150px; font-size: 12px;">
+	<?= $blogImage ?>
 	<strong>Server Time:</strong><br> <span class="server-time"><?= date('Y/m/d  H:i') ?></span>
 </p>
 <h2>The Newsroom</h2>
 <div class="newsroom-cont">
 <?php echo $this->displayBlock('dashboard-newsroom'); ?>
 <?php
-	$blogImage = '';
-	if(trim($blog['image']) != '' AND file_exists(SITE_PATH.'/files/blogs/'.$blog['image'])){
-		$blogImage = '<span class="blog-avatar"><img src="'.SITE_URL.'/files/blogs/'.$blog['image'].'" alt="" /></span>';
-	}
 
-	echo $blogImage.'<div class="newsroom-filter">
-							<label>Filter All Posts:</label>
-							<select class="status_filter">
-								<option value="pending">Pending Review / Category Approval</option>
-								<option value="draft">Drafts</option>
-								<option value="published">Finished & Published</option>
-								<option value="all">Show All</option>
-							</select>';
-	echo '<label>Load More Posts:</label>
+	echo '<div class="newsroom-filter">
+							<div class="form-group">
+								<label>Filter Posts:</label>
+								<select class="status_filter">
+									<option value="pending">Pending Review / Category Approval</option>
+									<option value="draft">Drafts</option>
+									<option value="published">Finished & Published</option>
+									<option value="all">Show All</option>
+								</select>
+							</div>';
+	echo '<div class="form-group"><label>Load More Posts:</label>
 	<select id="load_posts">';			
 	for($i = 25; $i <= 200; $i=$i*2){
 		$selected = '';
 		if(isset($_GET['load']) AND $_GET['load'] == $i){
 			$selected = 'selected';
 		}
-		echo '<option '.$selected.'>'.$i.'</option>';
+		echo '<option '.$selected.' >'.$i.'</option>';
 	}
 	$allSelect = '';
-	if(isset($_GET['load']) AND $_GET['load'] = 'all'){
+	if(isset($_GET['load']) AND $_GET['load'] == 'all'){
 		$allSelect = 'selected';
 	}
-	echo '<option '.$allSelect.'">all</option>';
-	echo '</select>';
+	echo '<option '.$allSelect.'>all</option>';
+	echo '</select></div>';
 	echo '</div>';
 	echo '<hr>';
 	
 	if(count($blogs) > 1){
 		echo '<p><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'"><i class="fa fa-mail-reply"></i> Back to Blog newsroom list</a></p>';
 	}
-	
-	if(isset($blog_rooms['num_posts'])){
 
-		$numLoaded = count($blog_room);
-
-		echo '<p><strong>Loaded '.$numLoaded.' '.pluralize('post', $numLoaded).' out of '.$blog_rooms['num_posts'].'</strong></p>';
-	}
-	
 	echo $this->displayFlash('blog-message');		
 	$profModel = new \App\Profile\User_Model;
 
 
 		echo '<h3>'.$blog['name'].'</h3>';
 		
+	if(isset($blog_rooms['num_posts'])){
+
+		$numLoaded = count($blog_room);
+
+		echo '<p><strong>Loaded '.$numLoaded.' '.pluralize('post', $numLoaded).' out of '.$blog_rooms['num_posts'].'</strong></p>';
+	}		
+		
 		echo '<div class="'.$blog['slug'].'_posts">';
 		?>
-		<ul class="ltb-pop-stats">
-			<li><strong>Posts Published:</strong> <?= number_format($blog['stats']['posts_published']) ?></li>
-			<li><strong>Posts Submitted:</strong> <?= number_format($blog['stats']['posts_submitted']-1) ?></li>
-			<li><strong>Total Participants:</strong> <?= number_format($blog['stats']['total_contribs']) ?></li>
-			<li><strong>Total Views:</strong> <?= number_format($blog['stats']['total_views']) ?></li>
-			<li><strong>Total Comments:</strong> <?= number_format($blog['stats']['total_comments']) ?></li>
-		</ul>
-		<div class="clear"></div>
+		<div class="newsroom-stats-cont">
+			<ul class="ltb-pop-stats">
+				<li><strong>Posts Published:</strong> <?= number_format($blog['stats']['posts_published']) ?></li>
+				<li><strong>Posts Submitted:</strong> <?= number_format($blog['stats']['posts_submitted']-1) ?></li>
+				<li><strong>Total Participants:</strong> <?= number_format($blog['stats']['total_contribs']) ?></li>
+				<li><strong>Total Views:</strong> <?= number_format($blog['stats']['total_views']) ?></li>
+				<li><strong>Total Comments:</strong> <?= number_format($blog['stats']['total_comments']) ?></li>
+			</ul>
+			<div class="clear"></div>
+		</div>
 		<?php
 		$teamList = array();
 		foreach($blog['team'] as $member){
@@ -370,7 +376,6 @@ function getCategoryParent($parentId, $blogs, $output = array())
 <?php
 		}//endforeach
 		echo '</tbody></table></div>';
-		echo '<hr>';
 	}//endif
 ?>
 </div><!-- newsroom-cont -->

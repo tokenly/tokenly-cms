@@ -13,9 +13,32 @@ class Category_Model extends Core\Model
 			}
 		}
 		
+		$orderDir = 'DESC';
+		$extraOrder = '';
+		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+			$useSort = false;
+			if(isset($_SESSION['blog-sort'])){
+				$useSort = $_SESSION['blog-sort'];
+			}				
+			if(isset($_GET['sort'])){
+				$useSort = $_GET['sort'];
+			}		
+			if($useSort == 'old'){
+				$orderDir = 'ASC';
+			}
+			elseif($useSort == 'top'){
+				$extraOrder = 'popular_score DESC, ';
+			}
+			
+			$_SESSION['blog-sort'] = $useSort;
+		}		
+		$time = time();		
+		
 		$getPosts = $this->fetchAll('SELECT p.postId, p.content, p.title, p.url, p.userId, p.siteId, p.postDate, p.publishDate, p.published,
 											p.image, p.excerpt, p.views, p.featured, p.coverImage, p.ready, p.commentCount, p.commentCheck,
-											p.formatType, p.editTime, p.editedBy, p.status, p.version
+											p.formatType, p.editTime, p.editedBy, p.status, p.version,
+									 ((((IFNULL(p.views,0) * 10) + (IFNULL(p.commentCount, 0) * 50)) * 10000000) / ('.$time.' - UNIX_TIMESTAMP(p.publishDate))) as popular_score
+											
 									 FROM blog_posts p
 									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -27,8 +50,9 @@ class Category_Model extends Core\Model
 									 AND pc.approved = 1
 									 AND b.active = 1
 									 AND p.featured = 1
+									 AND p.coverImage != ""
 									 GROUP BY p.postId
-									 ORDER BY p.publishDate DESC
+									 ORDER BY '.$extraOrder.' p.publishDate '.$orderDir.'
 									 LIMIT '.$start.', '.$limit,
 									 array(':siteId' => $siteId));
 		
@@ -69,7 +93,7 @@ class Category_Model extends Core\Model
 	
 	public function getHomePages($siteId, $limit = 10)
 	{
-		$count = $this->fetchSingle('SELECT COUNT(*) as total 
+		$count = $this->fetchSingle('SELECT COUNT(DISTINCT(p.postId)) as total 
 									 FROM blog_posts p
 									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -81,7 +105,7 @@ class Category_Model extends Core\Model
 									 AND pc.approved = 1
 									 AND b.active = 1
 									 AND p.featured = 1
-									 GROUP BY p.postId',
+									 GROUP BY b.blogId',
 									 array(':siteId' => $siteId));
 		if(!$count){
 			return false;
@@ -110,8 +134,29 @@ class Category_Model extends Core\Model
 		$api = new \App\API\V1\Blog_Model;
 		$childCats = $api->getChildCategories($categoryId);
 		$catList = array_merge(array($categoryId), $childCats);
-
-		$getPosts = $this->fetchAll('SELECT p.*
+		
+		$orderDir = 'DESC';
+		$extraOrder = '';
+		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+			$useSort = false;
+			if(isset($_SESSION['blog-sort'])){
+				$useSort = $_SESSION['blog-sort'];
+			}				
+			if(isset($_GET['sort'])){
+				$useSort = $_GET['sort'];
+			}		
+			if($useSort == 'old'){
+				$orderDir = 'ASC';
+			}
+			elseif($useSort == 'top'){
+				$extraOrder = 'popular_score DESC, ';
+			}
+			
+			$_SESSION['blog-sort'] = $useSort;
+		}		
+		$time = time();
+		$getPosts = $this->fetchAll('SELECT p.*,
+									 ((((IFNULL(p.views,0) * 10) + (IFNULL(p.commentCount, 0) * 50)) * 10000000) / ('.$time.' - UNIX_TIMESTAMP(p.publishDate))) as popular_score
 									FROM blog_postCategories pc
 									LEFT JOIN blog_posts p ON p.postId = pc.postId
 									LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -124,7 +169,7 @@ class Category_Model extends Core\Model
 									 AND b.active = 1
 									 AND pc.approved = 1
 									 GROUP BY p.postId
-									 ORDER BY p.publishDate DESC
+									 ORDER BY '.$extraOrder.' p.publishDate '.$orderDir.'
 									 LIMIT '.$useLimit,
 									 array(':siteId' => $siteId));
 		
@@ -203,9 +248,32 @@ class Category_Model extends Core\Model
 			}
 		}
 		
+		$orderDir = 'DESC';
+		$extraOrder = '';
+		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+			$useSort = false;
+			if(isset($_SESSION['blog-sort'])){
+				$useSort = $_SESSION['blog-sort'];
+			}				
+			if(isset($_GET['sort'])){
+				$useSort = $_GET['sort'];
+			}		
+			if($useSort == 'old'){
+				$orderDir = 'ASC';
+			}
+			elseif($useSort == 'top'){
+				$extraOrder = 'popular_score DESC, ';
+			}
+			
+			$_SESSION['blog-sort'] = $useSort;
+		}		
+		$time = time();	
+		
 		$getPosts = $this->fetchAll('SELECT p.postId, p.content, p.title, p.url, p.userId, p.siteId, p.postDate, p.publishDate, p.published,
 											p.image, p.excerpt, p.views, p.featured, p.coverImage, p.ready, p.commentCount, p.commentCheck,
-											p.formatType, p.editTime, p.editedBy, p.status, p.version
+											p.formatType, p.editTime, p.editedBy, p.status, p.version,
+									((((IFNULL(p.views,0) * 10) + (IFNULL(p.commentCount, 0) * 50)) * 10000000) / ('.$time.' - UNIX_TIMESTAMP(p.publishDate))) as popular_score
+
 									 FROM blog_posts p
 									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -217,7 +285,7 @@ class Category_Model extends Core\Model
 									 AND pc.approved = 1
 									 AND b.active = 1
 									 GROUP BY p.postId
-									 ORDER BY p.publishDate DESC
+									 ORDER BY '.$extraOrder.' p.publishDate '.$orderDir.'
 									 LIMIT '.$start.', '.$limit,
 									 array(':blogId' => $blogId));
 		$site = currentSite();
@@ -259,7 +327,7 @@ class Category_Model extends Core\Model
 	
 	public function getBlogHomePages($blogId, $limit = 10)
 	{
-		$count = $this->fetchSingle('SELECT COUNT(*) as total 
+		$count = $this->fetchSingle('SELECT count(DISTINCT(p.postId)) as total
 									 FROM blog_posts p
 									 LEFT JOIN blog_postCategories pc ON pc.postId = p.postId
 									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
@@ -270,7 +338,8 @@ class Category_Model extends Core\Model
 									 AND p.publishDate <= "'.timestamp().'"
 									 AND pc.approved = 1
 									 AND b.active = 1
-									 GROUP BY p.postId',
+									 GROUP BY b.blogId
+									 ',
 									 array(':blogId' => $blogId));
 		if(!$count){
 			return false;

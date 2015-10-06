@@ -98,7 +98,9 @@ class Submissions_Controller extends \App\ModControl
 		}
 		$output['postModule'] = $this->postModule;
 		$output['blogApp'] = $this->blogApp;
-		$output['template'] = 'admin';
+		if(!isset($output['template'])){
+			$output['template'] = 'admin';
+		}
         $output['perms'] = $this->data['perms'];
         		
         return $output;
@@ -129,6 +131,8 @@ class Submissions_Controller extends \App\ModControl
 		$output['totalViews'] = 0;
 		$output['totalComments'] = 0;
 		$output['totalContributed'] = 0;
+		$time = time();
+		$comment_updates = array();
 		$disqus = new API\Disqus;
 		foreach($getPosts as $key => $row){
 			$row['published'] = $this->model->checkPostApproved($row['postId']);
@@ -143,42 +147,28 @@ class Submissions_Controller extends \App\ModControl
 				}
 			}
 			$output['totalViews']+=$row['views'];	
-			$pageIndex = \App\Controller::$pageIndex;
-			$getIndex = extract_row($pageIndex, array('itemId' => $row['postId'], 'moduleId' => $this->postModule['moduleId']));
-			$postURL = $this->data['site']['url'].'/blog/post/'.$row['url'];
-			if($getIndex AND count($getIndex) > 0){
-				$postURL = $this->data['site']['url'].'/'.$getIndex[count($getIndex) - 1]['url'];
-			}			
-			
-			$comDiff = time() - strtotime($row['commentCheck']);
+
+			$comDiff = $time - strtotime($row['commentCheck']);
 			$commentThread = false;
 			if($comDiff > 1800){
-				$commentThread = $disqus->getThread($postURL, false);
+				$comment_updates[] = $row['postId'];
 			}
-			if($commentThread){
-				$getPosts[$key]['commentCount'] = $commentThread['thread']['posts'];
-				$this->model->edit('blog_posts', $row['postId'], array('commentCheck' => timestamp(), 'commentCount' => $commentThread['thread']['posts']));
-				$output['totalComments'] += $commentThread['thread']['posts'];
-			}
-			else{
-				$this->model->edit('blog_posts', $row['postId'], array('commentCheck' => timestamp()));
-				$output['totalComments'] += $row['commentCount'];
-			}
+			$output['totalComments'] += $row['commentCount'];
 			
+			//editorial comments
 			$post['new_comments'] = false;
-			$getLastComment = $this->model->fetchSingle('SELECT commentId FROM blog_comments
-												  WHERE postId = :postId AND userId != :userId AND editorial = 1
-												  ORDER BY commentId DESC',
-												array(':postId' => $row['postId'], ':userId' => $this->data['user']['userId']));
-												
+			$getLastComment = extract_row(Submissions_Model::$editorComments, array('postId' => $row['postId']));					
 			if($getLastComment){
-				$post['new_comments'] = true;
-				if($viewedComments){
-					foreach($viewedComments as $viewed){
-						$expViewed = explode(':', $viewed);
-						if($expViewed[0] == $row['postId']){
-							if($expViewed[1] == $getLastComment['commentId']){
-								$post['new_comments'] = false;
+				$getLastComment = $getLastComment[0];
+				if($getLastComment['userId'] != $this->data['user']['userId']){
+					$post['new_comments'] = true;
+					if($viewedComments){
+						foreach($viewedComments as $viewed){
+							$expViewed = explode(':', $viewed);
+							if($expViewed[0] == $row['postId']){
+								if($expViewed[1] == $getLastComment['commentId']){
+									$post['new_comments'] = false;
+								}
 							}
 						}
 					}
@@ -189,7 +179,13 @@ class Submissions_Controller extends \App\ModControl
 				$output['totalContributed']++;
 			}
 		}
+		
 		$output['postList'] = $getPosts;
+		
+		//trigger comment count updating
+		if(count($comment_updates) > 0){
+			exec('nohup php '.SITE_BASE.'/scripts/updateBlogPostCommentCounts.php \''.join(',',$comment_updates).'\' > /dev/null &');
+		}
 		
 		$output['submission_fee'] = $this->blogSettings['submission-fee'];
 		$getDeposit = $this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-address');

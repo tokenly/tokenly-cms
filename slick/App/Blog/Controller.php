@@ -27,8 +27,8 @@ class Controller extends \App\AppControl
 					$output['commentsEnabled'] = intval($getBlog['settings']['enableComments']);;
 					
 					$output['posts'] = $this->catModel->getBlogHomePosts($getBlog['blogId'], $postLimit);
-					$output['numPages'] = $this->catModel->getBlogHomePages($getBlog['blogId'], $postLimit);					
-					
+					$output['numPages'] = $this->catModel->getBlogHomePages($getBlog['blogId'], $postLimit);	
+
 					if($getBlog['themeId'] != 0){
 						$getTheme = $this->catModel->get('themes', $getBlog['themeId']);
 						if($getTheme){

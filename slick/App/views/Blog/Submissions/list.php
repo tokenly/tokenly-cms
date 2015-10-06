@@ -53,6 +53,7 @@ if($perms['canWritePost']){
 <?php
 if($trashMode == 0){
 ?>
+<div class="newsroom-stats-cont">
 <ul class="ltb-pop-stats">
 	<li><strong>Posts Submitted:</strong> <?= number_format($totalPosts) ?></li>
 	<li><strong>Posts Published:</strong> <?= number_format($totalPublished) ?></li>
@@ -61,6 +62,8 @@ if($trashMode == 0){
 	<li><strong>Total Comments:</strong> <?= number_format($totalComments) ?></li>
 </ul>
 <div class="clear"></div>
+</div>
+<br>
 <?=  $this->displayFlash('blog-message') ?>
 <?php
 	echo '<p class="blog-trash-link"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash">View Trash ('.$trashCount.')</a></p>';

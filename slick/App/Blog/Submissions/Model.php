@@ -3,10 +3,24 @@ namespace App\Blog;
 use Core, UI, Util, API, App\Tokenly, App\Profile;
 class Submissions_Model extends Core\Model
 {
+	public static $approvedCategories = false;
+	public static $editorComments = false;
 	
 	function __construct()
 	{
 		parent::__construct();
+		if(!self::$approvedCategories){
+			self::$approvedCategories = $this->fetchAll('SELECT pc.categoryId, pc.postId
+									 FROM blog_postCategories pc
+									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
+									 LEFT JOIN blogs b ON b.blogId = c.blogId
+									 LEFT JOIN blog_posts p ON p.postId = pc.postId
+									 WHERE pc.approved = 1 AND b.active = 1 AND p.status = "published"
+									 GROUP BY pc.categoryId, pc.postId');
+		}
+		if(!self::$editorComments){
+			self::$editorComments = $this->fetchAll('SELECT commentId, postId, userId FROM blog_comments WHERE editorial  = 1 ORDER BY commentId DESC');
+		}
 	}
 
 	public function getPostForm($postId = 0, $siteId, $andUseMeta = true, $user = array())
@@ -870,7 +884,7 @@ class Submissions_Model extends Core\Model
 	{
 		$get = $this->fetchAll('SELECT p.postId, p.userId, p.url, p.title, p.status, p.views, p.commentCount, p.commentCheck,
 									   p.postDate, p.publishDate, p.excerpt, p.published, p.status, p.ready,
-									   p.siteId, p.version, p.editTime, p.editedBy, p.coverImage, p.formatType, c.role
+									   p.siteId, p.version, p.editTime, p.editedBy, p.coverImage, p.formatType, c.role, p.content
 								FROM blog_contributors c
 								LEFT JOIN user_invites i ON i.inviteId = c.inviteId
 								LEFT JOIN blog_posts p ON p.postId = c.postId
@@ -878,6 +892,28 @@ class Submissions_Model extends Core\Model
 								GROUP BY c.postId', array(':siteId' => $data['site']['siteId'], ':userId' => $data['user']['userId']));
 		
 		return $get;
+	}
+	
+	public function getUserPostsWithContributed($data)
+	{
+		$contribs = $this->getUserContributedPosts($data);
+		$posts = $this->getAll('blog_posts', array('userId' => $data['user']['userId'], 'trash' => 0));
+		if(!$posts){
+			$posts = array();
+		}
+		foreach($posts as $k => $post){
+			$posts[$k]['time_num'] = strtotime($post['postDate']);
+		}
+		if(!$contribs){
+			$contribs = array();
+		}
+		foreach($contribs as $k => $post){
+			$contribs[$k]['time_num'] = strtotime($post['postDate']);
+		}
+		$output = array_merge($contribs, $posts);
+		aasort($output, 'time_num');
+		$output = array_reverse($output);
+		return $output;
 	}
 	
 	public function checkPostCategoryApproved($postId, $categoryId)
@@ -912,15 +948,8 @@ class Submissions_Model extends Core\Model
 	}
 	public static function checkPostApproved($postId)
 	{
-		$model = new \Core\Model;
-		$check = $model->fetchSingle('SELECT count(*) as total
-									 FROM blog_postCategories pc
-									 LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
-									 LEFT JOIN blogs b ON b.blogId = c.blogId
-									 LEFT JOIN blog_posts p ON p.postId = pc.postId
-									 WHERE pc.approved = 1 AND pc.postId = :postId AND b.active = 1 AND p.status = "published"
-									 GROUP BY pc.categoryId', array(':postId' => $postId));
-		if($check AND $check['total'] > 0){
+		$check = extract_row(self::$approvedCategories, array('postId' => $postId));
+		if($check AND count($check) > 0){
 			return 1;
 		}
 		return 0;

@@ -280,7 +280,7 @@ class Post_Model extends Core\Model
 		$time = time();
 		$site = currentSite();
 		$usedPosts = array();
-		
+
 		foreach($getPosts as $k => $post){
 			$checkApproved = $submitModel->checkPostApproved($post['postId']);
 			if(!$checkApproved){
@@ -355,7 +355,7 @@ class Post_Model extends Core\Model
 		
 		aasort($output['posts'], 'time');
 		$output['posts'] = array_reverse($output['posts']);
-		
+		$output['count'] = count($output['posts']);
 		$output['num_pages'] = false;
 		if($perPage !== false){
 			$pager = new Util\Paging;

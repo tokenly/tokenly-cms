@@ -2,7 +2,7 @@
 namespace App\Blog;
 /*
  * @module-type = dashboard
- * @menu-label = My Blogs
+ * @menu-label = Manage Blogs
  * 
  * */
 use Util, App\Tokenly, App\CMS;

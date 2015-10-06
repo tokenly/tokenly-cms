@@ -48,7 +48,7 @@ class Category_Controller extends \App\ModControl
 		$output['blog'] = $getBlog;		
 		
 		$output['view'] = '../list';
-		$output['title'] = $output['category']['name'];
+		$output['title'] = $getBlog['name'].' - '.$output['category']['name'];
 		$postLimit = intval($getBlog['settings']['postsPerPage']);
 		$output['commentsEnabled'] = intval($getBlog['settings']['enableComments']);
 

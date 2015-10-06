@@ -3,7 +3,7 @@
 ?>
 <div class="pull-right blog-submit-actions">
 	<p>
-		<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/add" class="btn btn-large">Create Category</a>
+		<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/add" class="btn">Create Category</a>
 	</p>
 </div>
 <h2>Blog Categories</h2>

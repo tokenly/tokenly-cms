@@ -222,13 +222,13 @@ if(isset($post) AND $post['published'] == 1){
 			}
 		}
 		?>
-		<?= $form->field('title')->display() ?>
-		<?= $form->field('url')->display() ?>
-		<?= $form->field('formatType')->display() ?>		
-		<?= $form->field('content')->display() ?>
-		<?= $form->field('autogen-excerpt')->display() ?>
+		<?= $form->field('title')->display('div') ?>
+		<?= $form->field('url')->display('div') ?>
+		<?= $form->field('formatType')->display('div') ?>		
+		<?= $form->field('content')->display('div') ?>
+		<?= $form->field('autogen-excerpt')->display('div') ?>
 		<div id="excerpt-cont" style="<?= $excpStyle ?>">
-			<?= $form->field('excerpt')->display() ?>
+			<?= $form->field('excerpt')->display('div') ?>
 		</div>
 		<div class="clear"></div>
 		<div class="pull-right">
@@ -248,11 +248,11 @@ if(isset($post) AND $post['published'] == 1){
 			?>
 		</div>			
 		<h4>Step 2: Status & Category</h4>
-		<?= $form->field('status')->display() ?>
-		<?= $form->field('publishDate')->display() ?>
+		<?= $form->field('status')->display('div') ?>
+		<?= $form->field('publishDate')->display('div') ?>
 		<?php
 		if($form->field('featured')){
-			echo $form->field('featured')->display();
+			echo $form->field('featured')->display('div');
 		}
 		?>
 		<div class="clear"></div>
@@ -271,11 +271,11 @@ if(isset($post) AND $post['published'] == 1){
 		?>
 		<?php
 			if($form->field('image')){
-				echo $form->field('image')->display();
+				echo $form->field('image')->display('div');
 			}
 		?>
-		<?= $form->field('coverImage')->display() ?>
-		<?= $form->field('categories')->display() ?>
+		<?= $form->field('coverImage')->display('div') ?>
+		<?= $form->field('categories')->display('div') ?>
 		<p>
 			<small>
 				* Categories are automatically approved for users with self-publishing permissions (e.g editors and independent writers),<br>

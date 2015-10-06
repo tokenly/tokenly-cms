@@ -1,3 +1,8 @@
+<?php
+if(isset($getBlog) AND $getBlog['image'] != '' AND file_exists(SITE_PATH.'/files/blogs/'.$getBlog['image'])){
+	echo '<div class="pull-right"><p><img src="'.SITE_URL.'/files/blogs/'.$getBlog['image'].'" style="max-width: 100px;" alt="" /></p></div>';
+}	
+?>
 <h2><?= $formType ?> Blog
 <?php
 if($formType == 'Edit'){
@@ -27,11 +32,6 @@ if(isset($blogRoles)){
 	<div class="clear"></div>	
 	<div class="blog-form">
 	<div class="ltb-data-tab" id="blog-info" style="">
-		<?php
-		if($getBlog['image'] != '' AND file_exists(SITE_PATH.'/files/blogs/'.$getBlog['image'])){
-			echo '<div class="pull-right"><p><img src="'.SITE_URL.'/files/blogs/'.$getBlog['image'].'" style="max-width: 150px;" alt="" /></p></div>';
-		}	
-		?>
 		<?= $form->display() ?>
 	</div>
 	<div class="ltb-data-tab" id="blog-roles" style="display: none;">
@@ -44,8 +44,8 @@ if(isset($blogRoles)){
 		echo '<table class="admin-table">
 				<thead>
 					<tr>
-						<th></th>
-						<th></th>
+						<th>User</th>
+						<th>Role</th>
 						<th></th>
 					</tr>
 				</thead>

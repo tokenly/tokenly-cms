@@ -5,14 +5,15 @@
 <hr>
 <?php
 if(isset($category)){
+	echo '<p class="pull-right">
+			<a href="'.SITE_URL.'/blog/'.$category['blog']['slug'].'/'.$category['slug'].'" target="_blank" class="btn">View Category</a>
+		</p>';	
 	if($category['image'] != '' AND file_exists(SITE_PATH.'/files/blogs/'.$category['image'])){
 		echo '<div class="pull-right"><p><img src="'.SITE_URL.'/files/blogs/'.$category['image'].'" style="max-width: 150px;" alt="" /></p></div>';
 	}
-	
-	echo '<p><strong>Blog: </strong>'.$category['blog']['name'].'<br>
-			<strong><a href="'.SITE_URL.'/blog/'.$category['blog']['slug'].'/'.$category['slug'].'" target="_blank">View Category</a></strong>
-		</p>';
-	
+	echo '<p>
+		<strong>Blog: </strong>'.$category['blog']['name'].'	
+	</p>';
 }
 if(isset($error) AND $error != null){
 	echo '<p class="error">'.$error.'</p>';
