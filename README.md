@@ -7,10 +7,10 @@ Outstanding tasks, bugs, enhancements etc. can be found on the [issues](https://
 ##Requirements
 
 * PHP 5.4+ (will not work on older versions)
-* PHP extensions: php5-json, php5-gd, php5-curl, php5-mysql, php5-mcrypt
+* PHP extensions: php5-json, php5-gd, php5-curl, php5-mysql, php5-mcrypt, php5-intl
 * MySQL 5.5
 * Apache2
-* Python3 (if using token distributor)
+* Python3 (if using token distributor v1)
 
 *recommended to use a linux distro*
 
