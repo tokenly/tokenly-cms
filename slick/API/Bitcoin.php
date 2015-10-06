@@ -371,7 +371,7 @@ class Bitcoin
 				for($i = 0; $i < $num_batches; $i++){	
 					$raw_outputs = array();
 					for($i2 = 0; $i2 < $per_batch; $i2++){
-						$raw_outputs[] = array('address' => $address, 'value' => $per_input);
+						$raw_outputs[] = array('address' => $address, 'value' => $per_input - ($this->min_fee / 2));
 					}
 
 					$raw_inputs = array();
