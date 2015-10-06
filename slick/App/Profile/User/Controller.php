@@ -31,12 +31,14 @@ class User_Controller extends \App\ModControl
 				return $output;
 			}
 		}
-
+		$meta = new \App\Meta_Model;
 		$output['profile_views'] = $this->model->getProfileViews($getProfile['userId'], true);
 		$output['profile'] = $getProfile;
+		$output['profile'] = array_merge($output['profile'], user($getProfile['userId']));
 		$output['activity'] = $this->model->getUserActivity($getProfile['userId'], $this->data['user']);
 		$output['view'] = 'profile';
 		$output['title'] = 'User Info - '.$getProfile['username'];
+		$output['template'] = 'profile';
 		
 		return $output;
 	}

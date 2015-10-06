@@ -37,8 +37,8 @@ class User_Model extends Core\Model
 		$output['pubProf'] = $meta->getUserMeta($get['userId'], 'pubProf');
 		$output['showEmail'] = $meta->getUserMeta($get['userId'], 'showEmail');
 		$output['avatar'] = $meta->getUserMeta($get['userId'], 'avatar');
-		
-		
+		$output['custom_status'] = $meta->getUserMeta($get['userId'], 'custom_status');
+		$output['real_avatar'] = $output['avatar'];
 		if(trim($output['avatar']) == ''){
 			$output['avatar'] = 'https://www.gravatar.com/avatar/'.md5(strtolower($get['email'])).'?d='.urlencode($getSite['url'].'/files/avatars/default.jpg');
 			//$output['avatar'] = 'default.jpg';
@@ -83,24 +83,16 @@ class User_Model extends Core\Model
 	
 	public function getUsersWithProfile($fieldId)
 	{
-		$get = $this->getAll('user_profileVals', array('fieldId' => $fieldId));
-		$users = array();
-		$used = array();
-		foreach($get as $row){
-			if(trim($row['value']) != ''){
-				$getUser = $this->get('users', $row['userId'], array('userId', 'username', 'email'));
-				if($getUser){
-					if(in_array($row['userId'], $used)){
-						continue;
-					}
-					
-					$getUser['lastUpdate'] = $row['lastUpdate'];
-					$getUser['value'] = $row['value'];
-					$users[] = $getUser;
-					array_push($used, $row['userId']);
-				}
-			}
+		$get = static_cache($fieldId.'_profileVals');
+		if(!$get){
+			$get = static_cache($fieldId.'_profileVals',
+					$this->fetchAll('SELECT p.userId, p.value, p.lastUpdate, u.username, u.email
+									 FROM user_profileVals p
+									 LEFT JOIN users u ON u.userId = p.userId
+									 WHERE p.fieldId = :fieldId
+									 GROUP BY p.userId', array(':fieldId' => $fieldId)));
 		}
+		$users = $get;
 		return $users;
 	}
 	

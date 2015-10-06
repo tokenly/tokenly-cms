@@ -30,6 +30,7 @@ class Members_Controller extends \App\ModControl
 		
 		
 		$output['query'] = '';
+		$output['sort_query'] = '';
 		if(isset($_GET['q']) AND trim($_GET['q']) != ''){
 			$_GET['q'] = htmlentities($_GET['q']);
 			$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
@@ -47,14 +48,32 @@ class Members_Controller extends \App\ModControl
 			}
 		}
 		else{
+			$orderBy = 'lastActive DESC';
+			if(isset($_GET['sort'])){
+				switch($_GET['sort']){
+					case 'active':
+						$orderBy = 'lastActive DESC';
+						break;
+					case 'alph':
+						$orderBy = 'username ASC';
+						break;
+					case 'new':
+						$orderBy = 'userId DESC';
+						break;
+					case 'old':
+						$orderBy = 'userId ASC';
+						break;
+				}
+				$output['sort_query'] = '&sort='.$_GET['sort'];
+			}
+			
 			$users = $this->model->fetchAll('SELECT userId, username, email, regDate, lastActive, slug
 											FROM users
-											ORDER BY lastActive DESC
+											ORDER BY '.$orderBy.'
 											LIMIT '.$start.', '.$max);
 			$totalUsers = $this->model->count('users');											
 		}
 		
-
 		foreach($users as $key => $user){
 			$profile = $profModel->getUserProfile($user['userId'], $this->data['site']['siteId']);
 			if($profile['pubProf'] == 0){
@@ -72,6 +91,7 @@ class Members_Controller extends \App\ModControl
 		$output['numUsers'] = $this->model->count('users');
 		$output['numOnline'] = Account\Home_Model::getUsersOnline();
 		$output['mostOnline'] = Account\Home_Model::getMostOnline();		
+		$output['template'] = 'profile';
 		
 		return $output;
 	}

@@ -1,14 +1,31 @@
-<h2>Active Members</h2>
-<p>
-	Below you can find a directory of all community members, ranked by most recently active.<br>
-	Try using the search tool to find a specific user.
-</p>
+<h1 class="large">Community Directory</h1>
+<hr>
 <div class="pull-right member-search">
+	<form action="" method="get">
+		<label for="sort">Sort members by:</label>
+		<?php
+		$sortSelect = array('active' => '', 'alph' => '', 'new' => '', 'old' => '');
+		if(isset($_GET['sort'])){
+			$sortSelect[$_GET['sort']] = 'selected';
+		}
+		?>
+		<select name="sort" id="sort">
+			<option value="active" <?= $sortSelect['active'] ?>>Recently Active</option>
+			<option value="alph" <?= $sortSelect['alph'] ?>>Alphabetical</option>
+			<option value="new" <?= $sortSelect['new'] ?>>Newest</option>
+			<option value="old" <?= $sortSelect['old'] ?>>Oldest</option>
+		</select>
+		<input type="submit" value="Go" />
+	</form>
 	<form action="" method="get">
 		<input type="textbox" id="search" name="q" placeholder="Enter a username" <?php if(isset($_GET['q'])){ echo 'value="'.$_GET['q'].'"'; } ?> />
 		<input type="submit" value="Search">
-	</form>
+	</form>	
 </div>
+<p>
+	Below you can find a directory of all community members.<br>
+	Try using the search tool to find a specific user.
+</p>
 <ul>
 	<li><strong>Total Members:</strong> <?= number_format($numUsers) ?></li>
 	<li><strong>Users Online:</strong> <?= number_format($numOnline) ?></li>
@@ -26,20 +43,33 @@ if(count($members) == 0){
 <ul class="member-list">
 	<?php
 	$time = time();
+	$real_user = $user;
+	$tca = new \App\Tokenly\TCA_Model;	
+	$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');	
 	foreach($members as $user){
+		$checkTCA = true;
+		if($real_user AND $user['userId'] != $real_user['userId']){
+			$checkTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $user['userId'], 'user-profile');
+		}
 		
 		$avImage = $user['profile']['avatar'];
-		if(!isExternalLink($user['profile']['avatar'])){
-			$avImage = SITE_URL.'/files/avatars/'.$user['profile']['avatar'];
+		if(isset($user['profile']['real_avatar']) AND trim($user['profile']['real_avatar']) == ''){
+			$avImage = SITE_URL.'/files/avatars/default.jpg';
 		}
-	
-	
-		$avatar = '<a href="'.SITE_URL.'/profile/user/'.$user['slug'].'"><img src="'.$avImage.'" alt="" /></a>';
+		else{				
+			if(!isExternalLink($user['profile']['avatar'])){
+				$avImage = SITE_URL.'/files/avatars/'.$user['profile']['avatar'];
+			}
+		}
 		
+		if($checkTCA){
+			$avatar = '<a href="'.SITE_URL.'/profile/user/'.$user['slug'].'"><img src="'.$avImage.'" alt="" /></a>';
+		}	
+
 
 		$user['sub-name'] = '';
 		if(isset($user['profile']['profile']['real-name']) AND trim($user['profile']['profile']['real-name']['value']) != ''){
-			$user['sub-name'] = '<p><strong>'.$user['profile']['profile']['real-name']['value'].'</strong></p>';
+			$user['sub-name'] = '<p><strong>Name:</strong> '.$user['profile']['profile']['real-name']['value'].'</p>';
 		}
 		$bio = '';
 		if(isset($user['profile']['profile']['bio']) AND trim($user['profile']['profile']['bio']['value']) != ''){
@@ -47,19 +77,46 @@ if(count($members) == 0){
 		}
 		
 			
-		$online_icon = 'fa-circle-o text-error';
+		$online_icon = 'fa-circle';
 		$online_title = 'Offline';
 		$activeTime = strtotime($user['lastActive']);
 		$diff = $time - $activeTime;
 		if($diff < 7200){
-			$online_icon = 'fa-circle text-success';
-			$online_title = 'Recently Online';
+			if(isset($user['profile']['custom_status'])){
+				switch($user['profile']['custom_status']){
+					case 'away':
+						$online_icon .= ' text-pending';
+						$online_title = 'Away';							
+						break;	
+					case 'busy':
+						$online_icon .= ' text-progress';
+						$online_title = 'Busy';							
+						break;												
+					case 'offline':
+						$online_icon .= ' text-error';
+						$online_title = 'Offline';							
+						break;					
+					default:
+						$online_icon .= ' text-success';
+						$online_title = 'Online';							
+						break;
+				}
+			}
+			else{
+				$online_icon .= ' text-success';
+				$online_title = 'Online';				
+			}
+		}
+		else{
+			$online_icon .= ' text-error';
 		}
 		
 		$lastActive = '';
 		if($user['lastActive'] != '0000-00-00 00:00:00' AND $user['lastActive'] != null){
-			$lastActive = '<small><em>Last Active: '.formatDate($user['lastActive']).'</em> <i class="fa '.$online_icon.'" title="'.$online_title.'"></i></small>';
+			$lastActive = ' - Last active: '.formatDate($user['lastActive']);
 		}
+		
+		$status = '<small><strong>Status:</strong> '.$online_title.' <i class="fa '.$online_icon.'" title="'.$online_title.$lastActive.'"></i></small>';
 					
 		echo '<li>
 				<div class="member-avatar">
@@ -73,7 +130,7 @@ if(count($members) == 0){
 					<p>
 						<strong><a href="'.SITE_URL.'/profile/user/'.$user['slug'].'" class="btn btn-small btn-blue">View Profile</a></strong>
 					</p>
-					'.$lastActive.'
+					'.$status.'
 					</div>
 				</div>
 				<div class="clear"></div>';
@@ -110,7 +167,7 @@ if(count($members) == 0){
 			if((isset($_GET['page']) AND $_GET['page'] == $i) OR (!isset($_GET['page']) AND $i == 1)){
 				$active = 'active';
 			}
-			echo '<a href="?page='.$i.'&q='.$query.'" class="'.$active.'">'.$i.'</a> ';
+			echo '<a href="?page='.$i.'&q='.$query.$sort_query.'" class="'.$active.'">'.$i.'</a> ';
 		}
 		echo '</div>';
 	}
