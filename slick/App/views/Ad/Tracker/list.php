@@ -19,7 +19,10 @@ else{
 		$total_impressions += $item['impressions'];
 		$total_ctr += ($item['clicks'] / $item['impressions']) * 100;
 	}
-	$average_ctr = round($total_ctr / count($urls), 2);
+	$average_ctr = 0;
+	if(count($urls) > 0){
+		$average_ctr = round($total_ctr / count($urls), 2);
+	}
 	?>
 	<ul>
 		<li><strong># Tracking URLs:</strong> <?= number_format(count($urls)) ?></li>
