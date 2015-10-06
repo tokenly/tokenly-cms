@@ -50,6 +50,19 @@ class Model extends Core\Model
 		return true;
 	}
 	
+	public function getModuleDashName($moduleId)
+	{
+		$getModule = $this->get('modules', $moduleId);
+		if(!$getModule){
+			return false;
+		}
+		$get = $this->checkModuleIsDash($moduleId, true);
+		if(isset($get['menu-label']) AND trim($get['menu-label']) != ''){
+			return $get['menu-label'];
+		}
+		return $getModule['name'];
+	}
+	
 	public function getDashModules($siteId = 0)
 	{
 		if($siteId == 0){
