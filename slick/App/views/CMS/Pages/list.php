@@ -9,7 +9,8 @@ $table = $this->generateTable($pageList, array('fields' => array('pageId' => 'ID
 																		 'data' => 'pageId', 'heading' => '',
 																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/')
 																	),
-												'options' => array(array('field' => 'active', 'params' => array('functionWrap' => 'boolToText'))
+												'options' => array(array('field' => 'active', 'params' => array('functionWrap' => 'boolToText')),
+																   array('field' => 'url', 'params' => array('preText' => '<a href="'.SITE_URL.'/', 'postText' => '" target="_blank">View page</a>'))
 												)));
 
 ?>

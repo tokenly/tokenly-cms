@@ -2,7 +2,7 @@
 namespace App\Account;
 /*
  * @module-type = dashboard
- * @menu-label = My Profile
+ * @menu-label = Profile
  * 
  * */
 class Profile_Controller extends \App\ModControl
