@@ -1,6 +1,6 @@
 <?php
 namespace Tags;
-use Core;
+use Core, API;
 class Test
 {
 	public function display()
@@ -24,5 +24,6 @@ class Test
 		return $output;
 	
 	}
+	
 
 }

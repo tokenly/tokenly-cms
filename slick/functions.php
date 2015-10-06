@@ -816,9 +816,9 @@ function parse_fileComments($path)
 	return $info;
 }
 
-function user()
+function user($userId = false)
 {
-	return \App\Account\Home_Model::userInfo();
+	return \App\Account\Home_Model::userInfo($userId);
 }
 
 function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', $end = '-----END BITCOIN SIGNATURE-----')
@@ -951,13 +951,29 @@ function human_time_since($since, $time = false, $short = false, $func = false)
 			$time_name = 'y';
 		}		
 	}
+	if($func){
+		$final_time = $func($final_time);
+	}	
 	$final_name = $time_name;
 	if(!$short){
 		$final_name = ' '.pluralize($final_name, $final_time);
 	}
-	if($func){
-		$final_time = $func($final_time);
-	}
 	$output = $final_time.$final_name;
 	return $output;
+}
+
+function static_cache($key, $value = false)
+{
+	if(!$value){
+		return \Util\StaticCache::retrieveData($key);
+	}
+	return \Util\StaticCache::cacheData($key, $value);
+}
+
+function remove_tags($str, $tags = array())
+{
+	foreach($tags as $tag){
+		$str = preg_replace('#\<'.addslashes($tag).'(.*?)>(.*?)</'.addslashes($tag).'>#is', "", $str);
+	}
+	return $str;
 }
