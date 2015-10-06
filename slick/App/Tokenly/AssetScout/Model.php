@@ -16,7 +16,7 @@ class AssetScout_Model extends Core\Model
 		
 		$name = new UI\Textbox('asset');
 		$name->addAttribute('required');
-		$name->addAttribute('placeholder', 'Enter an asset name or a username');
+		$name->addAttribute('placeholder', 'Enter an asset name, BTC address or a username');
 		$form->add($name);
 		
 		return $form;
@@ -30,17 +30,31 @@ class AssetScout_Model extends Core\Model
 		
 		$getAsset = $this->inventory->getAssetData(strtoupper($data['asset']));
 		$isUser = false;
+		$isAddress = false;
 		if(!$getAsset){
 			$getUser = $this->get('users', trim($data['asset']), array('userId', 'username', 'slug'), 'username');
 			if(!$getUser){
-				throw new \Exception('Error getting asset or user data');
+				$getAddress = $this->getAll('coin_addresses', array('address' => $data['asset']));
+				if(!$getAddress OR count($getAddress) == 0){
+					throw new \Exception('No results found');
+				}
+				$isAddress = $getAddress;
 			}
-			$isUser = $getUser;
+			else{
+				$isUser = $getUser;
+			}
 		}
 		
 		if($isUser){
 			$balances =  $this->inventory->getUserBalances($getUser['userId'], false, 'btc', true);
-			return array('isUser' => true, 'user' => $getUser, 'balances' => $balances);
+			return array('isUser' => true, 'user' => $getUser, 'balances' => $balances, 'isAddress' => false);
+		}
+		elseif($isAddress){
+			$users = array();
+			foreach($isAddress as $address){
+				$users[] = $this->get('users', $address['userId'], array('userId', 'slug', 'username', 'email'));
+			}
+			return array('isUser' => false, 'isAddress' => true, 'users' => $users, 'address' => $address['address']);
 		}
 		else{
 			$getBalances = $this->getAll('xcp_balances', array('asset' => $getAsset['asset']));
@@ -80,7 +94,7 @@ class AssetScout_Model extends Core\Model
 				}
 				
 			}
-			return array('isUser' => false, 'asset' => $getAsset['asset'], 'users' => $totalUsers, 'addresses' => $totalAddresses, 'balance' => $totalBalance, 'list' => $balanceList);
+			return array('isUser' => false, 'isAddress' => false, 'asset' => $getAsset['asset'], 'users' => $totalUsers, 'addresses' => $totalAddresses, 'balance' => $totalBalance, 'list' => $balanceList);
 		}
 	}
 }

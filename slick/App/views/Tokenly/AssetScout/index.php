@@ -66,6 +66,20 @@ if($scout){
 	</script>		
 		<?php
 	}
+	elseif($scout['isAddress']){
+		echo '<h3>Users with address '.$scout['address'].'</h3>';
+		echo '<p><strong>Total Users:</strong> '.number_format(count($scout['users'])).'</p>';
+		if(count($scout['users']) == 0){
+			echo '<p>No users found...</p>';
+		}
+		else{
+			echo '<ul class="address-users">';
+			foreach($scout['users'] as $scoutUser){
+				echo '<li><strong><a href="'.SITE_URL.'/profile/user/'.$scoutUser['slug'].'" target="_blank">'.$scoutUser['username'].'</a></strong></li>';
+			}
+			echo '</ul>';
+		}
+	}
 	else{
 ?>
 	<ul>
