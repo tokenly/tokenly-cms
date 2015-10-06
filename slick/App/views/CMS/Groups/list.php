@@ -4,7 +4,10 @@ $table = $this->generateTable($groupList, array('fields' => array('groupId' => '
 												'class' => 'admin-table mobile-table',
 												'actions' => array( array('text' => 'Edit',
 																		 'data' => 'groupId', 'heading' => '',
-																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'),																		 
+																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'),
+																   array('text' => 'View Members',
+																		 'data' => 'groupId', 'heading' => '',
+																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/members/'),
 																		array('text' => 'Delete', 'class' => 'delete',
 																		 'data' => 'groupId', 'heading' => '',
 																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/')

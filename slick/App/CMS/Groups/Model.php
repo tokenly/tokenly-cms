@@ -23,6 +23,27 @@ class Groups_Model extends Core\Model
 		$isDefault->setLabel('Default group?');
 		$form->add($isDefault);
 		
+		$isSilent = new UI\Checkbox('isSilent');
+		$isSilent->setBool(1);
+		$isSilent->setValue(1);
+		$isSilent->setLabel('Hide group name on profiles?');
+		$form->add($isSilent);
+		
+		$displayName = new UI\Textbox('displayName');
+		$displayName->setValue(0);
+		$displayName->setLabel('Display Name');
+		$form->add($displayName);		
+		
+		$displayRank = new UI\Textbox('displayRank');
+		$displayRank->setValue(0);
+		$displayRank->addClass('numeric');
+		$displayRank->setLabel('Display Rank');
+		$form->add($displayRank);
+		
+		$displayView = new UI\Textbox('displayView');
+		$displayView->setLabel('Display Color #');
+		$form->add($displayView);		
+		
 
 		if($groupId != 0){
 			$getSites = $this->getAll('sites');
@@ -139,6 +160,22 @@ class Groups_Model extends Core\Model
 			$useData['slug'] = genURL($useData['name']);
 		}
 		
+		$useData['isSilent'] = 0;
+		if(isset($data['isSilent'])){
+			if(intval($data['isSilent']) == 1){
+				$useData['isSilent'] = 1;
+			}
+		}
+		if(isset($data['displayName'])){
+			$useData['displayName'] = trim($data['displayName']);
+		}			
+		if(isset($data['displayRank'])){
+			$useData['displayRank'] = intval($data['displayRank']);
+		}
+		if(isset($data['displayView'])){
+			$useData['displayView'] = trim($data['displayView']);
+		}
+		
 		$add = $this->insert('groups', $useData);
 		if(!$add){
 			throw new \Exception('Error adding group');
@@ -163,6 +200,22 @@ class Groups_Model extends Core\Model
 		if(trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
+		
+		$useData['isSilent'] = 0;
+		if(isset($data['isSilent'])){
+			if(intval($data['isSilent']) == 1){
+				$useData['isSilent'] = 1;
+			}
+		}
+		if(isset($data['displayName'])){
+			$useData['displayName'] = trim($data['displayName']);
+		}		
+		if(isset($data['displayRank'])){
+			$useData['displayRank'] = intval($data['displayRank']);
+		}
+		if(isset($data['displayView'])){
+			$useData['displayView'] = trim($data['displayView']);
+		}		
 
 		$edit = $this->edit('groups', $id, $useData);
 		if(!$edit){
@@ -198,4 +251,15 @@ class Groups_Model extends Core\Model
 
 		return true;
 	}
+	
+	public function getGroupMembers($groupId)
+	{
+		$get = $this->fetchAll('SELECT u.userId, u.username, u.slug, u.email
+								FROM group_users g
+								LEFT JOIN users u ON u.userId = g.userId
+								WHERE g.groupId = :groupId', array(':groupId' => $groupId));
+		return $get;
+	}
+	
+
 }

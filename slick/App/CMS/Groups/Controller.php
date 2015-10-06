@@ -34,6 +34,9 @@ class Groups_Controller extends \App\ModControl
 				case 'delete':
 					$output = $this->deleteGroup();
 					break;
+				case 'members':
+					$output = $this->showMembers();
+					break;
 				default:
 					$output = $this->showGroups();
 					break;
@@ -74,7 +77,7 @@ class Groups_Controller extends \App\ModControl
 			}
 			
 			if($add){
-				redirect($this->site.$this->moduleUrl);
+				redirect($this->site.$this->moduleUrl.'/edit/'.$add);
 			}
 		}	
 		return $output;
@@ -111,7 +114,7 @@ class Groups_Controller extends \App\ModControl
 			}
 			
 			if($add){
-				redirect($this->site.$this->moduleUrl);
+				redirect($this->site.$this->moduleUrl.'/edit/'.$this->args[3]);
 			}
 		}
 		$getPerms = $this->model->getAll('group_perms', array('groupId' => $getGroup['groupId']));
@@ -138,5 +141,21 @@ class Groups_Controller extends \App\ModControl
 			}
 		}
 		redirect($this->site.$this->moduleUrl);
+	}
+	
+	private function showMembers()
+	{
+		$output = array();
+		$output['view'] = 'members';
+		$getGroup = $this->model->get('groups', $this->args[3]);
+		if(!$getGroup){
+			$output['view'] = '404';
+			return $output;
+		}		
+		$output['group'] = $getGroup;
+		$output['members'] = $this->model->getGroupMembers($getGroup['groupId']);
+		
+		return $output;
+		
 	}
 }
