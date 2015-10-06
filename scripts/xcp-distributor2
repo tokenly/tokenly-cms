@@ -318,9 +318,3 @@ while(true){
 
 	sleep(60);
 }
-/**
-to do for this
-	- make it so priming transactions can be in multiple transactions
-	- do some final testing
-	- load it up on LTB server
-*/
