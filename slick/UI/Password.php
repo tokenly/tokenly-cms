@@ -29,7 +29,7 @@ class Password extends FormObject
 		
 		if($elemWrap != ''){
 			$misc = new Misc;
-			$output = $misc->wrap($elemWrap, $output);
+			$output = $misc->wrap($elemWrap, $output, $this->wrap_class);
 		}
 		
 		return $output;

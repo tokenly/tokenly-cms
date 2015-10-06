@@ -39,7 +39,7 @@ class Form
 		return '</form>';	
 	}
 	
-	public function displayFields($elemWrap = '')
+	public function displayFields($elemWrap = 'div')
 	{
 		$output = '';
 		foreach($this->fields as $name => $object)
@@ -69,7 +69,7 @@ class Form
 		
 	}
 	
-	public function display($elemWrap = '')
+	public function display($elemWrap = 'div')
 	{
 		$output = $this->open();
 		$output .= $this->displayFields($elemWrap);

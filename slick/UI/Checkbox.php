@@ -30,11 +30,11 @@ class Checkbox extends FormObject
 		
 		$attributeText = $this->getAttributeText();
 		
-		$output = $this->label.'<input type="checkbox" name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.' value="'.$this->value.'" />';
+		$output = '<input type="checkbox" name="'.$this->name.'" '.$idText.' '.$classText.' '.$attributeText.' value="'.$this->value.'" /> '.$this->label;
 		
 		if($elemWrap != ''){
 			$misc = new Misc;
-			$output = $misc->wrap($elemWrap, $output);
+			$output = $misc->wrap($elemWrap, $output, $this->wrap_class);
 		}
 		
 		return $output;

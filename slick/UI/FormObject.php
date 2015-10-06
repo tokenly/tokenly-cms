@@ -6,6 +6,7 @@ class FormObject extends Object
 	protected $value = '';
 	protected $label = '';
 	protected $label_raw = '';
+	protected $wrap_class = 'form-group';
 	
 	function __construct()
 	{
@@ -68,5 +69,15 @@ class FormObject extends Object
 	public function getRawLabel()
 	{
 		return $this->label_raw;
+	}
+	
+	public function getWrapClass()
+	{
+		return $this->wrap_class;
+	}
+	
+	public function setWrapClass($class)
+	{
+		$this->wrap_class = $class;
 	}
 }
