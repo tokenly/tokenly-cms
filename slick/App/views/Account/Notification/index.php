@@ -1,12 +1,15 @@
-<h1>Notifications</h1>
-<hr>
+<?php
+if($totalNotes > 0){
+	echo '<p class="pull-right"><strong><a href="?clear=1" class="btn">Clear Notifications</a></strong></p>';
+}
+?>
+<h2>Notifications</h2>
 <?php
 
 if($totalNotes == 0){
 	echo '<p>No notifications</p>';
 }
 else{
-	echo '<p><strong><a href="?clear=1">Clear Notifications</a></strong></p>';
 	echo '<ul class="notification-list">';
 	foreach($notes as $note){
 		echo '<li>
