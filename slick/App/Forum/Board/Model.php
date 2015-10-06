@@ -362,9 +362,10 @@ class Board_Model extends Core\Model
 				$linkExtra .= ' <i class="fa fa-bullhorn" title="Sticky Thread"></i> ';
 			}
 			$topics[$key]['link'] = '<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$row['url'].'" title="'.str_replace('"', '', shorten(strip_tags($row['content']), 150)).'" class="'.$linkClass.'">'.$linkExtra.$row['title'].'</a>';
+			$getBoard = extract_row(self::$boards, array('boardId' => $row['boardId']));
+			$getBoard = $getBoard[0];			
+			$topics[$key]['board'] = $getBoard;
 			if($all){
-				$getBoard = extract_row(self::$boards, array('boardId' => $row['boardId']));
-				$getBoard = $getBoard[0];
 				$extraBoardClass = '';
 				$boardImage = '';
 				if($getBoard['categoryId'] == $tokenSettings['tca-forum-category']){
@@ -417,33 +418,39 @@ class Board_Model extends Core\Model
 			$topics[$key]['numReplies'] = $row['count'];
 			
 			$topics[$key]['lastPost'] = '';
+			$topics[$key]['paging'] = '';
+			$topics[$key]['mostRecent'] = false;
 			if($topics[$key]['numReplies'] > 0){
-				$lastPost = $this->fetchSingle('SELECT userId, postTime
+				$lastPost = $this->fetchSingle('SELECT postId, userId, postTime, content
 												FROM forum_posts
 												WHERE topicId = :id AND buried = 0
 												'.$andTroll.'
 												ORDER BY postId DESC
 												LIMIT 1', array(':id' => $row['topicId']));
 				if($lastPost){
+					$topics[$key]['mostRecent'] = $lastPost;
 					$lastAuthor = $profModel->getUserProfile($lastPost['userId'], $data['site']['siteId']);
+					$topics[$key]['mostRecent']['author'] = $lastAuthor;
 					$lastAuthorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $lastAuthor['userId'], 'user-profile');
 					$andPage = '';
 					$numPages = ceil($topics[$key]['numReplies'] / $data['app']['meta']['postsPerPage']);
+					$topics[$key]['numPages'] = $numPages;
 					if($numPages > 1){
 						$andPage = '?page='.$numPages;
-						$topics[$key]['link'] .= '<div class="paging"><strong>Pages:</strong> ';
+						$topics[$key]['paging'] .= '<div class="paging"><strong>Pages:</strong> ';
 						for($i = 1; $i <= $numPages; $i++){
 							if($numPages > 10){
 								if($i == 5){
-									$topics[$key]['link'] .= ' ... ';
+									$topics[$key]['paging'] .= ' ... ';
 								}
 								if($i < ($numPages - 3)){
 									continue;
 								}
 							}
-							$topics[$key]['link'] .= '<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$row['url'].'?page='.$i.'">'.$i.'</a>';
+							$topics[$key]['paging'] .= '<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$row['url'].'?page='.$i.'">'.$i.'</a>';
 						}
-						$topics[$key]['link'] .= '</div>';
+						$topics[$key]['paging'] .= '</div>';
+						$topics[$key]['link'] .= $topics[$key]['paging'];
 					}
 					$avatar = '';
 					$avImage = $lastAuthor['avatar'];
@@ -483,8 +490,11 @@ class Board_Model extends Core\Model
 			}
 			else{
 				//turn this into a setting at some point
-				$output['antifilters'] = array(31,47,57,48,50,49,51); //non english boards	
-			}
+				$output['antifilters'] = array(31,47,57,48,50,49,51, //non english boards	
+											   40,56,78,79 //other off topic boards
+											);
+			}								
+			
 		}
 		else{
 			$meta = new \App\Meta_Model;
@@ -497,7 +507,9 @@ class Board_Model extends Core\Model
 				$output['antifilters'] = explode(',', $userAntiFilters);
 			}
 			else{
-				$output['antifilters'] = array(31,47,57,48,50,49,51); //non english boards
+				$output['antifilters'] = array(31,47,57,48,50,49,51, //non english boards	
+											   40,56,78,79 //other off topic boards
+											);
 			}
 		}
 		
@@ -558,4 +570,157 @@ class Board_Model extends Core\Model
 		
 		return $count['total'];
 	}
+	
+	public function getUserSubscribedThreads($userId = false, $limit = false, $start = 0)
+	{
+		$site = currentSite();
+		$user = user($userId);
+		$profModel = new Profile\User_Model;
+		$board_subs = array();
+		$topic_subs = array();
+		$get_boardSubs = $this->getAll('board_subscriptions', array('userId' => $user['userId']));
+		$get_topicSubs = $this->getAll('forum_subscriptions', array('userId' => $user['userId']));
+		foreach($get_boardSubs as $sub){
+			if(!in_array($sub['boardId'], $board_subs)){
+				$board_subs[] = $sub['boardId'];
+			}
+		}
+		foreach($get_topicSubs as $sub){
+			if(!in_array($sub['topicId'], $topic_subs)){
+				$topic_subs[] = $sub['topicId'];
+			}
+		}
+		$sql = 'SELECT t.*
+				FROM forum_topics t
+				WHERE';
+		if(count($topic_subs) > 0){
+			$sql .= ' t.topicId IN('.join(',', $topic_subs).') ';
+			if(count($board_subs) > 0){
+				$sql .= ' OR ';
+			}
+		} 
+		if(count($board_subs) > 0){
+			$sql .= ' t.boardId IN('.join(',',$board_subs).') ';
+		}
+		$sql .= '
+				GROUP BY t.topicId
+				ORDER BY t.lastPost DESC, t.topicId DESC';
+		if($limit){
+			$sql .= ' LIMIT '.$start.', '.$limit;
+		}
+
+		$get = $this->fetchAll($sql);
+		foreach($get as $k => $row){
+			$row['mostRecent'] = $this->fetchSingle('SELECT *
+													FROM forum_posts
+													WHERE topicId = :id AND buried = 0
+													ORDER BY postId DESC
+													LIMIT 1', array(':id' => $row['topicId']));
+			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			if($row['mostRecent']){
+				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+			}
+			$get[$k] = $row;
+		}
+		return $get;
+	}
+	
+	public function countUserSubscribedTopics($userId = false)
+	{
+		$site = currentSite();
+		$user = user($userId);
+		$profModel = new Profile\User_Model;
+		$board_subs = array();
+		$topic_subs = array();
+		$get_boardSubs = $this->getAll('board_subscriptions', array('userId' => $user['userId']));
+		$get_topicSubs = $this->getAll('forum_subscriptions', array('userId' => $user['userId']));
+		foreach($get_boardSubs as $sub){
+			if(!in_array($sub['boardId'], $board_subs)){
+				$board_subs[] = $sub['boardId'];
+			}
+		}
+		foreach($get_topicSubs as $sub){
+			if(!in_array($sub['topicId'], $topic_subs)){
+				$topic_subs[] = $sub['topicId'];
+			}
+		}
+
+		$sql = 'SELECT t.topicId
+				FROM forum_topics t
+				WHERE';
+		if(count($topic_subs) > 0){
+			$sql .= ' t.topicId IN('.join(',', $topic_subs).') ';
+			if(count($board_subs) > 0){
+				$sql .= ' OR ';
+			}
+		} 
+		if(count($board_subs) > 0){
+			$sql .= ' t.boardId IN('.join(',',$board_subs).') ';
+		}
+		$sql .= 'GROUP BY t.topicId';
+		
+		$get = $this->fetchAll($sql);
+		return count($get);
+	}
+	
+
+	public function getUserTCAThreads($userId = false, $limit = false, $start = 0)
+	{
+		$site = currentSite();
+		$user = user($userId);
+		$profModel = new Profile\User_Model;
+		$tokenly = get_app('tokenly');
+		$tca_category = 0;
+		if(isset($tokenly['meta']['tca-forum-category'])){
+			$tca_category = $tokenly['meta']['tca-forum-category'];
+		}
+		$sql = 'SELECT t.*
+				FROM forum_topics t
+				LEFT JOIN forum_boards b ON t.boardId = b.boardId
+				WHERE
+				b.categoryId = :categoryId';
+				
+		$sql .= '
+				GROUP BY t.topicId
+				ORDER BY t.lastPost DESC, t.topicId DESC';
+		if($limit){
+			$sql .= ' LIMIT '.$start.', '.$limit;
+		}
+
+		$get = $this->fetchAll($sql, array(':categoryId' => $tca_category));
+		foreach($get as $k => $row){
+			$row['mostRecent'] = $this->fetchSingle('SELECT *
+													FROM forum_posts
+													WHERE topicId = :id AND buried = 0
+													ORDER BY postId DESC
+													LIMIT 1', array(':id' => $row['topicId']));
+			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			if($row['mostRecent']){
+				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+			}
+			$get[$k] = $row;
+		}
+		return $get;
+	}
+	
+	public function countUserTCATopics($userId = false)
+	{
+		$site = currentSite();
+		$user = user($userId);
+		$profModel = new Profile\User_Model;
+		$tokenly = get_app('tokenly');
+		$tca_category = 0;
+		if(isset($tokenly['meta']['tca-forum-category'])){
+			$tca_category = $tokenly['meta']['tca-forum-category'];
+		}
+		$sql = 'SELECT t.*
+				FROM forum_topics t
+				LEFT JOIN forum_boards b ON t.boardId = b.boardId
+				WHERE
+				b.categoryId = :categoryId';
+		$sql .= 'GROUP BY t.topicId';
+		$get = $this->fetchAll($sql, array(':categoryId' => $tca_category));
+		return count($get);
+	}	
+
 }

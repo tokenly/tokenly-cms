@@ -6,11 +6,11 @@ if(isset($mode) AND $mode == 'edit'){
 	$backLink = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
 }
 ?>
-<h1><?= $formTitle ?></h1>
-<h2><?= $board['name'] ?></h2>
+<h1 class="large"><?= $app['meta']['forum-title'] ?></h1>
 <hr>
+<h2><?= $formTitle ?> - <?= $board['name'] ?></h2>
 <p>
-	<a href="<?= $backLink ?>">Go Back</a>
+	<a href="<?= $backLink ?>"><i class="fa fa-mail-reply"></i> Go Back</a>
 </p>
 <?php
 if($message != ''){

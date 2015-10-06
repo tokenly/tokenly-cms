@@ -173,6 +173,7 @@ class Post_Controller extends \App\ModControl
 
 		$output['reportedPosts'] = false;
 		if($this->data['user']){
+			//reply form
 			$output['form'] = $this->model->getReplyForm();
 			$postCount = Account\Home_Model::getUserPostCount($this->data['user']['userId']);
 			$checkCaptcha = false;
@@ -185,7 +186,7 @@ class Post_Controller extends \App\ModControl
 				}
 			}
 			
-			
+			//post reporting
 			$meta = new \App\Meta_Model;
 			$output['reportedPosts'] = $meta->getUserMeta($this->data['user']['userId'], 'reportedPosts');
 			if($output['reportedPosts']){
@@ -200,6 +201,19 @@ class Post_Controller extends \App\ModControl
 						$reply['isReported'] = true;
 					}
 				}
+			}
+			
+			//record new topic replices
+			$viewed_topics = array();
+			if(isset($this->data['user']['meta']['viewed_forum_replies'])){
+				$viewed_topics = json_decode($this->data['user']['meta']['viewed_forum_replies'], true);
+				if(!is_array($viewed_topics)){
+					$viewed_topics = array();
+				}
+			}
+			if(!isset($viewed_topics[$getTopic['topicId']]) OR $viewed_topics[$getTopic['topicId']] != $output['totalReplies']){
+				$viewed_topics[$getTopic['topicId']] = $output['totalReplies'];
+				$meta->updateUserMeta($this->data['user']['userId'], 'viewed_forum_replies', json_encode($viewed_topics));
 			}
 		}
 		

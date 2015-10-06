@@ -36,6 +36,7 @@ class Controller extends \App\AppControl
 			$output['numOnline'] = Account\Home_Model::getUsersOnline();
 			$output['mostOnline'] = Account\Home_Model::getMostOnline();
 			$output['onlineUsers'] = Account\Home_Model::getOnlineUsers();
+			$output['forum_home'] = true;
 		}
 		
 		if(!isset($output['template'])){

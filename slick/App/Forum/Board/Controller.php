@@ -22,6 +22,12 @@ class Board_Controller extends \App\ModControl
 		if($this->args[2] == 'all'){
 			return $this->showAllTopics($output);
 		}
+		if($this->args[2] == 'subscriptions'){
+			return $this->showSubscribedTopics($output);
+		}
+		if($this->args[2] == 'tca-posts'){
+			return $this->showTCATopics($output);
+		}
 		
 		$getBoard = $this->model->get('forum_boards', $this->args[2], array(), 'slug');
 		if(!$getBoard OR $getBoard['siteId'] != $this->data['site']['siteId'] OR $getBoard['active'] == 0){
@@ -148,6 +154,7 @@ class Board_Controller extends \App\ModControl
 		$output['board'] = false;
 		$output['isAll'] = true;
 		$output['title'] = 'Recent Posts';
+		$output['slug'] = 'all';
 		$output['view'] = 'board';
 		
 		if(posted() AND isset($_POST['boardFilters'])){
@@ -188,6 +195,66 @@ class Board_Controller extends \App\ModControl
 		
 		return $output;
 	}
+	
+	private function showSubscribedTopics($output)
+	{
+		$output['board'] = false;
+		$output['isAll'] = true;
+		$output['title'] = 'Subscribed Topics';
+		$output['slug'] = 'subscriptions';
+		$output['view'] = 'board';
+		$per_page = $this->data['app']['meta']['topicsPerPage'];
+		$output['totalTopics'] = $this->model->countUserSubscribedTopics();
+
+		$output['numPages'] = ceil($output['totalTopics'] / $per_page);
+		$output['page'] = 1;
+		$page_start = 0;
+		if(isset($_GET['page'])){
+			$page = intval($_GET['page']);
+			if($page > 1 AND $page <= $output['numPages']){
+				$output['page'] = $page;
+				$page_start = floor(($per_page * $page) - $per_page);
+			}
+		}
+		$output['stickies'] = array();
+		$output['topics'] = $this->model->getUserSubscribedThreads(false, $per_page, $page_start);
+		$output['topics'] = $this->model->checkTopicsTCA($output['topics'], $this->data);
+								
+		$output['topics'] = $this->model->parseTopics($output['topics'], $this->data, true);
+		
+
+		return $output;
+	}	
+	
+	private function showTCATopics($output)
+	{
+		$output['board'] = false;
+		$output['isAll'] = true;
+		$output['title'] = 'Token Controlled Access Posts';
+		$output['slug'] = 'tca-posts';
+		$output['view'] = 'board';
+		$per_page = $this->data['app']['meta']['topicsPerPage'];
+		$output['totalTopics'] = $this->model->countUserTCATopics();
+
+		$output['numPages'] = ceil($output['totalTopics'] / $per_page);
+		$output['page'] = 1;
+		$page_start = 0;
+		if(isset($_GET['page'])){
+			$page = intval($_GET['page']);
+			if($page > 1 AND $page <= $output['numPages']){
+				$output['page'] = $page;
+				$page_start = floor(($per_page * $page) - $per_page);
+			}
+		}
+		$output['stickies'] = array();
+		$output['topics'] = $this->model->getUserTCAThreads(false, $per_page, $page_start);
+		$output['topics'] = $this->model->checkTopicsTCA($output['topics'], $this->data);
+								
+		$output['topics'] = $this->model->parseTopics($output['topics'], $this->data, true);
+		
+
+		return $output;
+	}		
 
 
 	private function subscribeBoard()

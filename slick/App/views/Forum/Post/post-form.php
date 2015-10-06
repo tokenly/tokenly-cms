@@ -4,10 +4,11 @@ $formTitle = 'Edit Post - '.$topic['title'];
 $backLink = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'].$permaPage;
 
 ?>
-<h1><?= $formTitle ?></h1>
+<h1 class="large"><?= $app['meta']['forum-title'] ?></h1>
 <hr>
+<h2><?= $formTitle ?></h2>
 <p>
-	<a href="<?= $backLink ?>">Go Back</a>
+	<a href="<?= $backLink ?>"><i class="fa fa-mail-reply"></i> Go Back</a>
 </p>
 <?php
 if($message != ''){

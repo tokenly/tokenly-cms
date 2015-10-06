@@ -1,3 +1,6 @@
+<h1 class="large"><?= $app['meta']['forum-title'] ?></h1>
+<hr>
+<div class="forum-thread">
 <?php
 $thisURL = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
 
@@ -19,7 +22,7 @@ function checkUserTCA($userId, $profUserId)
 <?php
 if($user AND $topic['locked'] == 0){
 ?>
-<p style="float: right; vertical-align: top; margin-top: 10px; width: 120px; text-align: center;">
+<p class="thread-top-controls">
 	<?php if($perms['canPostReply']){ ?><a class="board-control-link" href="#post-reply">Post Reply</a><?php }//endif ?>
 	<?php
 	$subscribeText = 'Subscribe';
@@ -31,21 +34,26 @@ if($user AND $topic['locked'] == 0){
 		$subscribeClass = 'unsubscribe';
 		$subscribeText = 'Unsubscribe';
 	}
-	echo '<br><a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
+	echo '<a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
 	?>
 </p>
 <?php
     }//endif
 ?>
-<h1><?= $topic['title'] ?></h1>
+<h2><?= $topic['title'] ?></h2>
 <?php
 if(isset($replyMessage) AND $replyMessage != ''){
 	echo '<p class="error">'.$replyMessage.'</p>';
 }
 ?>
+<a name="top"></a>
 <p>
-	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/board/<?= $board['slug'] ?>" class="board-back-link">Back to <?= $board['name'] ?></a>
+	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/board/<?= $board['slug'] ?>" class="board-back-link"><i class="fa fa-mail-reply"></i> Back to <?= $board['name'] ?></a>
 </p>
+<div class="clear"></div>
+<span class="pull-right">
+	<a href="#bottom"><strong>Jump to bottom <i class="fa fa-chevron-down"></i></strong></a>
+</span>
 <div class="topic-paging paging">
 	<?php
 	if($numPages > 1){
@@ -62,6 +70,7 @@ if(isset($replyMessage) AND $replyMessage != ''){
 </div>
 <h2 class="topic-heading">Comments</h2>
 <?php
+$time = time();
 if($page == 1){
 	
 ?>
@@ -74,13 +83,18 @@ if($page == 1){
 	$checkUserTCA = checkUserTCA($userId, $topic['userId']);
 	
 	$avImage = $topic['author']['avatar'];
-	if(!isExternalLink($topic['author']['avatar'])){
-		$avImage = SITE_URL.'/files/avatars/'.$topic['author']['avatar'];
+	if(trim($topic['author']['real_avatar']) == ''){
+		$avImage = SITE_URL.'/files/avatars/default.jpg';
+	}
+	else{				
+		if(!isExternalLink($topic['author']['avatar'])){
+			$avImage = SITE_URL.'/files/avatars/'.$topic['author']['avatar'];
+		}
 	}
 	$avImage = '<img src="'.$avImage.'" alt="" />';
 	if($checkUserTCA){
-		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$topic['author']['slug'].'">'.$avImage.'</a>';	
-	}
+		$avImage = '<a href="'.SITE_URL.'/profile/user/'.$topic['author']['slug'].'">'.$avImage.'</a>';
+	}	
 	
 	$topicUsername = $topic['author']['username'];
 	if($checkUserTCA){
@@ -93,6 +107,45 @@ if($page == 1){
 			<?= $avImage ?>
 		</div>
 		<div class="post-author-info">
+			<?php
+			$use_status = '';
+			$online_icon = 'fa-circle';
+			$online_title = 'Offline';
+			$activeTime = strtotime($topic['author']['lastActive']);
+			$diff = $time - $activeTime;
+			if($diff < 7200){
+				if(isset($topic['author']['custom_status'])){
+					switch($topic['author']['custom_status']){
+						case 'away':
+							$online_icon .= ' text-pending';
+							$online_title = 'Away';							
+							break;	
+						case 'busy':
+							$online_icon .= ' text-progress';
+							$online_title = 'Busy';							
+							break;												
+						case 'offline':
+							$online_icon .= ' text-error';
+							$online_title = 'Offline';							
+							break;					
+						default:
+							$online_icon .= ' text-success';
+							$online_title = 'Online';							
+							break;
+					}
+				}
+				else{
+					$online_icon .= ' text-success';
+					$online_title = 'Online';				
+				}
+			}
+			else{
+				$online_icon .= ' text-error';
+			}			
+			
+			$use_status = '<span title="Last active: '.formatDate($topic['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';;
+			?>
+			<?= $use_status ?><br>
 			Posts: <?= \App\Account\Home_Model::getUserPostCount($topic['userId']) ?>
 			<?php
 			if(isset($topic['author']['profile']['location'])){
@@ -102,7 +155,7 @@ if($page == 1){
 			
 			if($user AND $user['userId'] != $topic['userId']){
 				if($checkUserTCA){
-					echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+					echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message"><i class="fa fa-envelope"></i> Message</a>';
 				}
 			}
 			?>
@@ -129,6 +182,7 @@ if($page == 1){
 	}
 	?>
 	</span>
+	<div class="post-extras">
 	<?php
 	if($user AND $perms['canReportPost'] AND $topic['userId'] != $user['userId']){
 		echo '<div class="report-link">';
@@ -144,7 +198,7 @@ if($page == 1){
 	if($user AND $perms['canRequestBan']){
 		echo '<div class="report-link"><a class="request-ban" data-id="'.$topic['userId'].'" href="#">Request Ban</a></div>';
 	}	
-	
+	echo '</div>'; //post-extras
 	$likeList = array();
 	foreach($topic['likeUsers'] as $likeUser){
 		$likeList[] = str_replace('"', '', $likeUser['username']);
@@ -168,7 +222,7 @@ if($page == 1){
 		else{
 			$likeLink = '<em title="'.$likeList.'">'.$topic['likes'].' '.pluralize('like', $topic['likes'], true).'</em>';
 		}
-		echo '	<div class="post-controls">
+		echo '	<div class="clear"></div><div class="post-controls">
 					<span class="post-action" style="float: right;">
 					'.$likeLink;
 					
@@ -215,7 +269,7 @@ if($page == 1){
 		
 	}//endif
 	else{
-		echo '<div class="post-controls">
+		echo '<div class="clear"></div><div class="post-controls">
 					<span class="post-action" style="float: right;"><em title="'.$likeList.'">'.$topic['likes'].' '.pluralize('like', $topic['likes'], true).'</em></span>
 				<div class="clear"></div>
 			  </div>';
@@ -234,7 +288,7 @@ if(count($replies) == 0){
 ?>
 <ul class="reply-list">
 	<?php
-	foreach($replies as $reply){
+	foreach($replies as $k => $reply){
 		$postClass = '';
 		if($reply['buried'] != 0){
 			$postClass = 'buried';
@@ -253,14 +307,20 @@ if(count($replies) == 0){
 				}
 				$checkUserTCA = checkUserTCA($userId, $reply['userId']);
 				
+
 				$avImage = $reply['author']['avatar'];
-				if(!isExternalLink($reply['author']['avatar'])){
-					$avImage = SITE_URL.'/files/avatars/'.$reply['author']['avatar'];
+				if(trim($reply['author']['real_avatar']) == ''){
+					$avImage = SITE_URL.'/files/avatars/default.jpg';
+				}
+				else{				
+					if(!isExternalLink($reply['author']['avatar'])){
+						$avImage = SITE_URL.'/files/avatars/'.$reply['author']['avatar'];
+					}
 				}
 				$avImage = '<img src="'.$avImage.'" alt="" />';
 				if($checkUserTCA){
-					$avImage = '<a href="'.SITE_URL.'/profile/user/'.$reply['author']['slug'].'">'.$avImage.'</a>';	
-				}
+					$avImage = '<a href="'.SITE_URL.'/profile/user/'.$reply['author']['slug'].'">'.$avImage.'</a>';
+				}					
 				
 				$replyUsername = $reply['author']['username'];
 				if($checkUserTCA){
@@ -277,6 +337,45 @@ if(count($replies) == 0){
 			</div>
 			
 			<div class="post-author-info">
+				<?php
+			$use_status = '';
+			$online_icon = 'fa-circle';
+			$online_title = 'Offline';
+			$activeTime = strtotime($reply['author']['lastActive']);
+			$diff = $time - $activeTime;
+			if($diff < 7200){
+				if(isset($reply['author']['custom_status'])){
+					switch($reply['author']['custom_status']){
+						case 'away':
+							$online_icon .= ' text-pending';
+							$online_title = 'Away';							
+							break;	
+						case 'busy':
+							$online_icon .= ' text-progress';
+							$online_title = 'Busy';							
+							break;												
+						case 'offline':
+							$online_icon .= ' text-error';
+							$online_title = 'Offline';							
+							break;					
+						default:
+							$online_icon .= ' text-success';
+							$online_title = 'Online';							
+							break;
+					}
+				}
+				else{
+					$online_icon .= ' text-success';
+					$online_title = 'Online';				
+				}
+			}
+			else{
+				$online_icon .= ' text-error';
+			}			
+			
+			$use_status = '<span title="Last active: '.formatDate($reply['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';
+			?>
+			<?= $use_status ?><br>			
 				Posts: <?= \App\Account\Home_Model::getUserPostCount($reply['userId']) ?>
 				<?php
 				if(isset($reply['author']['profile']['location'])){
@@ -284,7 +383,7 @@ if(count($replies) == 0){
 				}
 				if($user AND $user['userId'] != $reply['userId']){
 					if($checkUserTCA){					
-						echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message">Message</a>';
+						echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$reply['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message"><i class="fa fa-envelope"></i> Message</a>';
 					}
 				}				
 				?>
@@ -313,6 +412,7 @@ if(count($replies) == 0){
 		}
 		?>
 		</span>
+		<div class="post-extras">
 		<?php
 		if($user AND $perms['canReportPost'] AND $reply['userId'] != $user['userId']){
 			echo '<div class="report-link">';
@@ -335,6 +435,7 @@ if(count($replies) == 0){
 		}
 		?>
 		<span class="post-permalink"><a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/<?= $topic['url'] ?><?= $permaPage ?>#post-<?= $reply['postId'] ?>">Permalink</a></span>
+		</div>
 		<?php
 			$likeList = array();
 			foreach($reply['likeUsers'] as $likeUser){
@@ -357,7 +458,7 @@ if(count($replies) == 0){
 				else{
 					$likeLink = '<em title="'.$likeList.'">'.$reply['likes'].' '.pluralize('like', $reply['likes'], true).'</em>';
 				}
-				echo '	<div class="post-controls">
+				echo '	<div class="clear"></div><div class="post-controls">
 					<span class="post-action" style="float: right;">
 					'.$likeLink;
 				
@@ -379,7 +480,7 @@ if(count($replies) == 0){
 			
 		}
 		elseif($reply['buried'] != 1){
-			echo '<div class="post-controls">
+			echo '<div class="clear"></div><div class="post-controls">
 						<span class="post-action" style="float: right;"><em title="'.$likeList.'">'.$reply['likes'].' '.pluralize('like', $reply['likes'], true).'</em></span>
 					<div class="clear"></div>
 				  </div>';
@@ -393,6 +494,10 @@ if(count($replies) == 0){
 	}
 	?>
 </ul>
+<a name="bottom"></a>
+<span class="pull-right">
+	<a href="#top"><strong>Jump to top <i class="fa fa-chevron-up"></i></strong></a>
+</span>
 <div class="topic-paging paging">
 	<?php
 	if($numPages > 1){
@@ -418,9 +523,11 @@ if(!$user OR $perms['canPostReply']){
 	<a name="post-reply"></a>
 	<?php
 	if($user){
+		if(isset($subscribeClass)){
 			echo '<p style="float: right; vertical-align: top; margin-top: 10px; width: 120px; text-align: center;">';
 			echo '<a href="#" class="board-control-link '.$subscribeClass.'">'.$subscribeText.'</a>';	
 			echo '</p>';	
+		}
 	}
 	?>
 	<h2>Post Reply</h2>
@@ -461,7 +568,7 @@ if(!$user OR $perms['canPostReply']){
 	echo '</div>';
 }
 ?>
-
+</div><!-- forum-thread -->
 <script type="text/javascript">
 	$(document).ready(function(){
 		$('.quote-post').click(function(e){

@@ -1,8 +1,7 @@
-<h1><?= $app['meta']['forum-title'] ?></h1>
+<h1 class="large"><?= $app['meta']['forum-title'] ?></h1>
+<hr>
 <?php
-if(trim($app['meta']['forum-description']) != ''){
-	echo '<div class="forum-description"><p>'.$app['meta']['forum-description'].'</p></div>';
-}
+	echo '<div class="forum-description">'.$this->displayBlock('main-forum-description').'</div>';
 ?>
 
 <div class="forum-categories">
