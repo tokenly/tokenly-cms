@@ -3,6 +3,7 @@ namespace App\Account;
 use App\CMS;
 /*
  * @module-type = dashboard
+ * @menu-label = Settings
  * 
  * */
 class Settings_Controller extends \App\ModControl

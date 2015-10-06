@@ -247,8 +247,11 @@ class Settings_Model extends Core\Model
 		}
 		
 		$meta = new \App\Meta_Model;
-		if(isset($data['pubProf'])){
-			$meta->updateUserMeta($user['userId'], 'pubProf', $data['pubProf']);
+		if(isset($data['pubProf']) AND intval($data['pubProf']) === 1){
+			$meta->updateUserMeta($user['userId'], 'pubProf', 1);
+		}
+		else{
+			$meta->updateUserMeta($user['userId'], 'pubProf', 0);
 		}
 		if(isset($data['showEmail'])){
 			$meta->updateUserMeta($user['userId'], 'showEmail', $data['showEmail']);
