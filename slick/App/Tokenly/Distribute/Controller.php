@@ -124,7 +124,21 @@ class Distribute_Controller extends \App\ModControl
 		//headings
 		$infoData[] = array('Address', 'Username', 'Asset', 'Asset Amount', 'TX ID');
 		foreach($txInfo as $tx){
-			if($tx['result']['code'] == 200){
+			if(isset($tx['code']) AND $tx['code'] == 200 AND isset($tx['send_data'])){
+				//new format
+				if($distribute['divisible'] == 1){
+					$tx['send_data']['quantity'] = round($tx['send_data']['quantity'] / SATOSHI_MOD, 8);
+				}
+				$andUserName = '';
+				$lookup = $this->model->lookupAddress($tx['address']);
+				if($lookup){
+					$andUserName = $lookup['names'];
+				}
+				
+				//address, username, asset, asset amount, txId
+				$infoData[] = array($tx['address'], $andUserName, $distribute['asset'], 'amount' => $tx['send_data']['quantity'], $tx['send_tx']);				
+			}
+			elseif(isset($tx['result']['code']) AND $tx['result']['code'] == 200){
 				if($distribute['divisible'] == 1){
 					$tx['details'][3] = $tx['details'][3] / SATOSHI_MOD;
 				}

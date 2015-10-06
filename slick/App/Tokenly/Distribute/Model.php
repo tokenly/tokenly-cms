@@ -79,15 +79,16 @@ class Distribute_Model extends Core\Model
 		$getAsset = $getAsset[0];
 		
 		$usePercents = false;
+		$totalToSend = false;
 		if(isset($data['valueType']) AND $data['valueType'] == 'percent'){
 			if(!isset($data['amount']) OR trim($data['amount']) == ''){
 				throw new \Exception('Must enter total sending amount when using percentage values');
 			}
 			
 			$usePercents = true;
-			$totalToSend = (int)intval($data['amount']);
+			$totalToSend = intval($data['amount']);
 			if($getAsset['divisible']){
-				$totalToSend = $totalToSend * SATOSHI_MOD;
+				$totalToSend = (int)bcmul((string)$totalToSend, (string)SATOSHI_MOD);
 			}
 		}
 
@@ -102,13 +103,13 @@ class Distribute_Model extends Core\Model
 		foreach($appSettings as $setting){
 			switch($setting['metaKey']){
 				case 'distribute-fee':
-					$distributeFee = round(floatval($setting['metaValue']) * SATOSHI_MOD);
+					$distributeFee = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD);
 					break;
 				case 'distribute-dust':
-					$distributeDust = round((floatval($setting['metaValue']) * 2) * SATOSHI_MOD);
+					$distributeDust = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD) * 2;
 					break;
 				case 'distribute-cut':
-					$distributeCut = round(floatval($setting['metaValue']) * SATOSHI_MOD);
+					$distributeCut = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD);
 					break;
 				case 'distribute-decimals':
 					$distributeDecimals = intval($setting['metaValue']);
@@ -136,7 +137,6 @@ class Distribute_Model extends Core\Model
 				$check = $this->obtainAddress($csvAddr);
 				if(!$check){
 					continue;
-					//throw new \Exception('Invalid bitcoin address or system user: '.$csvAddr);
 				}
 				
 				if(!isset($expRow[1])){
@@ -147,14 +147,15 @@ class Distribute_Model extends Core\Model
 				if(!$usePercents){
 					$csvAmount = $expRow[1];
 					if($getAsset['divisible']){
-						$csvAmount = round(round(floatval($csvAmount), $distributeDecimals, PHP_ROUND_HALF_DOWN) * SATOSHI_MOD); //convert to satoshis
+						$csvAmount = (int)bcmul(bcmul((string)$csvAmount, "1", (string)$distributeDecimals), (string)SATOSHI_MOD); //convert to satoshis
 					}
 					else{
 						$csvAmount = intval($csvAmount);
 					}
 				}
 				else{
-					$percent = floatval($expRow[1]) / 100;
+					$percent = (float)bcdiv((string)$expRow[1], "100", "30");
+					$csvAmount = (int)bcmul((string)$totalToSend, (string)$percent);
 					$csvAmount = round($totalToSend * $percent);
 				}
 				if(!isset($addressList[$check])){
@@ -177,7 +178,6 @@ class Distribute_Model extends Core\Model
 				$check = $this->obtainAddress($address);
 				if(!$check){
 					continue;
-					//throw new \Exception('Invalid bitcoin address or system user: '.$address);
 				}
 								
 				if(!isset($expAmount[1]) OR trim($expAmount[1]) == ''){
@@ -187,7 +187,7 @@ class Distribute_Model extends Core\Model
 				
 				if(!$usePercents){
 					if($getAsset['divisible']){
-						$amount = round(round(floatval($expAmount[1]), $distributeDecimals, PHP_ROUND_HALF_DOWN) * SATOSHI_MOD); //convert to satoshis
+						$amount = (int)bcmul(bcmul((string)$expAmount[1], "1", (string)$distributeDecimals), (string)SATOSHI_MOD);
 					}
 					else{
 						$amount = intval($expAmount[1]);
@@ -197,18 +197,18 @@ class Distribute_Model extends Core\Model
 					$percent = floatval($expAmount[1]) / 100;
 					$amount = $totalToSend * $percent;
 					if($getAsset['divisible']){
-						$amount = round(round($csvAmount, $distributeDecimals, PHP_ROUND_HALF_DOWN) * SATOSHI_MOD);
+						$amount = (int)bcmul(bcmul((string)$csvAmount, "1", (string)$distributeDecimals), (string)SATOSHI_MOD);
 					}
 					else{
-						$amount = round($csvAmount, 0, PHP_ROUND_HALF_DOWN);
+						$amount = (int)round($csvAmount, 0, PHP_ROUND_HALF_DOWN);
 					}
 				}
 				
 				if(!isset($addressList[$check])){
-					$addressList[$check] = (int)$amount;
+					$addressList[$check] = $amount;
 				}
 				else{
-					$addressList[$check] += (int)$amount;
+					$addressList[$check] += $amount;
 				}
 			}
 		}
@@ -223,7 +223,6 @@ class Distribute_Model extends Core\Model
 		}
 		
 		if($totalSending > $getAsset['supply']){
-
 			if($getAsset['divisible']){
 				$newSupply = (($totalSending - $getAsset['supply']) / SATOSHI_MOD);
 			}
@@ -243,9 +242,18 @@ class Distribute_Model extends Core\Model
 			throw new \Exception('Error retreiving payment address');
 		}
 		
-		$fee = (count($addressList) * $distributeFee);
-		$fee += (count($addressList) * $distributeDust);
-		$fee = round($fee / SATOSHI_MOD, 8);
+		$address_count = count($addressList);
+		
+		$fee = bcmul((string)$address_count, (string)$distributeFee);
+		$fee = bcadd(bcmul((string)$address_count, (string)$distributeDust), $fee);
+		$per_prime = bcdiv((string)($distributeFee + $distributeDust), (string)SATOSI_MOD, "8");
+		$max_batch = 100;
+		$num_batches = ceil($address_count / $max_batch);
+		$per_batch = floor($address_count / $num_batches);		
+		$prime_fee = bcmul((string)$btc->getprimingfee($address_count, (float)$per_prime, $per_batch), (string)SATOSHI_MOD);
+		$prime_fee = bcadd(bcmul((string)$distributeFee, (string)$num_batches), $prime_fee);
+		$fee = bcadd($fee, $prime_fee);
+		$fee = (float)bcdiv($fee, (string)SATOSHI_MOD, "8");
 		$useData = array('addressList' => json_encode($addressList), 'address' => $getAddress, 'account' => $xcpAccount,
 						'initDate' => $time, 'asset' => $data['asset'], 'status' => 'processing', 'userId' => $data['userId'], 'fee' => $fee,
 						'valueType' => $data['valueType']);
@@ -308,7 +316,7 @@ class Distribute_Model extends Core\Model
 		$output = array('users' => array());
 		$names = array();
 		foreach($get as $row){
-			$getUser = $this->get('users', $row['userId'], array('userId', 'username', 'email'));
+			$getUser = $this->get('users', $row['userId'], array('userId', 'username', 'email','slug'));
 			if($getUser){
 				$output['users'][] = $getUser;
 				$names[] = $getUser['username'];
@@ -331,6 +339,7 @@ class Distribute_Model extends Core\Model
 		$status->setLabel('Status');
 		$status->addOption('processing', 'Processing');
 		$status->addOption('receiving', 'Receiving');
+		$status->addOption('priming', 'Priming');
 		$status->addOption('sending', 'Sending');
 		$status->addOption('complete', 'Complete');
 		$status->addOption('hold', 'On Hold');

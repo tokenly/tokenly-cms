@@ -1,0 +1,326 @@
+#!/usr/bin/php5
+<?php
+$_SERVER['HTTP_HOST'] = 'letstalkbitcoin.com';
+ini_set('display_errors', 1);
+require_once('../conf/config.php');
+include(FRAMEWORK_PATH.'/autoload.php');
+
+$model = new \App\Tokenly\Distribute_Model;
+$btc = new \API\Bitcoin(BTC_CONNECT);
+$xcp = new \API\Bitcoin(XCP_CONNECT);
+
+while(true){
+	try{
+		$btc->updateutxoset();
+	}
+	catch(\Exception $e){
+		echo 'Error updating utxoset: '.$e->getMessage()."\n";
+		sleep(300);
+		continue;
+	}
+	$model::$cacheMode = false;
+	$getApp = $model->get('apps', 'tokenly', array(), 'slug');
+	$appSettings = $model->getAll('app_meta', array('appId' => $getApp['appId'], 'isSetting' => 1)); 
+	$getAll = $model->getAll('xcp_distribute', array('complete' => 0));
+	$distributeFee = XCP_BASE_FEE;
+	$distributeDust = XCP_FEE_MOD;
+	$distributeCut = 0;
+	$distributeDecimals = 8;
+	foreach($appSettings as $setting){
+		switch($setting['metaKey']){
+			case 'distribute-fee':
+				$distributeFee = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD);
+				break;
+			case 'distribute-dust':
+				$distributeDust = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD) * 2;
+				break;
+			case 'distribute-cut':
+				$distributeCut = (int)bcmul((string)$setting['metaValue'], (string)SATOSHI_MOD);
+				break;
+			case 'distribute-decimals':
+				$distributeDecimals = intval($setting['metaValue']);
+				break;
+			case 'distribute-batch-size':
+				$batchSize = intval($setting['metaValue']);
+				break;
+		}
+	}
+
+	//loop through incomplete distros
+	foreach($getAll as $row){
+		try{
+			$validate_address = $btc->validateaddress($row['address']);
+			$pubKey = null;
+			if($validate_address AND $validate_address['ismine']){
+				$pubKey = $validate_address['pubkey'];
+			}	
+			$row['addressList'] = json_decode($row['addressList'], true);
+			$row['txInfo'] = json_decode($row['txInfo'], true);
+			if(!is_array($row['txInfo'])){
+				$row['txInfo'] = array();
+			}		
+			$row['primeData'] = json_decode($row['primeData'], true);
+			$row['total'] = "0";
+			foreach($row['addressList'] as $val){
+				$row['total'] = bcadd((string)$val, $row['total'], "8");
+			}	
+			$row['total'] = (float)$row['total'];
+			$updateData = array();
+			switch($row['status']){
+				case 'processing':
+				case 'receiving':
+					//check bitcoin fee
+					$btc_balance = $btc->getaddressbalance($row['address'], 0);
+					$received = $btc_balance;
+					if($received > $row['fee']){
+						$received = $row['fee'];
+					}
+
+					//check tokens
+					$balances = $xcp->get_balances(array('filters'=> array('field' => 'address', 'op' => '==', 'value' => $row['address'])));
+					$tokenReceived = 0;
+					foreach($balances as $balance){
+						if($balance['asset'] == $row['asset']){
+							$tokenReceived += $balance['quantity'];
+						}
+					}
+					
+					if($received <= 0){
+						continue;
+					}
+					
+					//update received balances
+					$updateData = array('feeReceived' => $received, 'tokenReceived' => round($tokenReceived / SATOSHI_MOD, 8), 'status' => 'receiving');
+					$updateData['fee'] = $row['fee'];
+					
+					if(($received <= $row['feeReceived'] AND $tokenReceived <= (round($row['tokenReceived'] * SATOSHI_MOD)))){
+						break;
+					}
+					
+					//if full amount of tokens + fee are sent, set to priming status
+					if(floatval(convertFloat($received)) >= floatval(convertFloat($row['fee'])) AND $tokenReceived >= $row['total']){
+						$updateData['status'] = 'priming';
+					}
+					
+					$showTokenReceived = $tokenReceived;
+					if($row['divisible'] == 1){
+						$showTokenReceived = round($tokenReceived / SATOSHI_MOD, 8);
+					}
+					
+					echo 'Distribution #'.$row['distributeId'].' updated ['.$row['address'].'] - BTC: '.$received.' / '.$row['asset'].' '.$showTokenReceived.' - '.timestamp()."\n";
+					break;
+				case 'priming':
+					//prime some outputs for this distribution to use instead of chaining unconfirmed transactions
+					$per_input = (float)bcdiv(bcadd((string)$distributeFee, (string)$distributeDust), (string)SATOSHI_MOD, "8");
+					$address_count = count($row['addressList']);
+					$success_count = 0;
+					if(is_array($row['txInfo'])){
+						foreach($row['txInfo'] as $tx){
+							if((isset($tx['result']['code']) AND $tx['result']['code'] == 200) OR (isset($tx['code']) AND $tx['code'] == 200)){
+								$success_count++;
+							}
+						}
+					}
+					$address_count = $address_count - $success_count;					
+					$max_batch = 100;
+					$num_batches = ceil($address_count / $max_batch);
+					$per_batch = floor($address_count / $num_batches);
+					$check_priming = $btc->checkaddresspriming($row['address']);
+					if(!$check_priming){
+						if(isset($row['primeData']) AND isset($row['primeData']['stage1'])){
+							//make sure there is no unconfirmed transactions waiting on this address
+							$btc_txs = $btc->listtransactions($row['account'], 0);
+							$has_unconf = false;
+							foreach($btc_txs as $btx){
+								if($btx['address'] == $row['address'] AND $btx['confirmations'] == 0){
+									$has_unconf = true;
+								}
+							}
+							if(!$has_unconf){
+								if(!$row['primeData']['stage2']){
+									//initiate second stage or priming
+									$second_prime = $btc->primeaddressinputs($row['address'], $address_count, $per_input, $per_batch, 2);
+									if(is_array($second_prime)){
+										$row['primeData']['stage2'] = $second_prime;
+										$updateData['primeData'] = json_encode($row['primeData']);
+										echo 'Priming second stage outputs for #'.$row['distributeId'].' ['.$row['address']."]\n";
+									}
+									else{
+										echo 'Error priming (secondary) outputs for #'.$row['distributeId'].' ['.$row['address']."]\n";
+									}									
+								}
+								else{
+									$updateData['status'] = 'sending';
+									echo 'Finished priming outputs for #'.$row['distributeId'].' ['.$row['address']."]\n";
+								}
+							}
+							else{
+								echo 'Priming #'.$row['distributeId'].' in progress'."\n";
+							}
+						}
+						else{
+							if($address_count <= 0){
+								echo 'No primed inputs needed for #'.$row['distributeId'].' ['.$row['address']."]\n";
+								$updateData['status'] = 'sending';
+							}
+							else{
+								$begin_prime = $btc->primeaddressinputs($row['address'], $address_count, $per_input, $per_batch);
+								if(is_array($begin_prime)){
+									$primeData = array('stage1' => false, 'stage2' => array());
+									$primeData['stage'.$begin_prime['stage']] = $begin_prime;
+									$updateData['primeData'] = json_encode($primeData);
+									echo 'Priming outputs for #'.$row['distributeId'].' ['.$row['address']."]\n";
+								}
+								else{
+									echo 'Error priming outputs for #'.$row['distributeId'].' ['.$row['address']."]\n";
+								}
+							}
+						}
+					}
+					else{
+						echo 'Priming #'.$row['distributeId'].' in progress'."\n";
+					}
+					break;
+				case 'sending':
+					//assign inputs to each individual address we need to send to
+					$send_list = array();
+					$used_addresses = array();
+					$unspent = $btc->getaddressunspent($row['address']);
+					$per_item = (float)bcdiv(bcadd((string)$distributeFee, (string)$distributeDust), (string)SATOSHI_MOD, "8");
+					foreach($row['addressList'] as $addr => $amnt){
+						if(!in_array($addr, $used_addresses)){
+							$used_addresses[] = $addr;
+							$send_item = array('address' => $addr, 'amount' => $amnt, 'asset' => $row['asset'], 'inputs' => array(), 'input_total' => 0);
+							foreach($unspent['utxos'] as $k => $tx){
+								$send_item['inputs'][] = $tx;
+								$send_item['input_total'] += $tx['amount'];
+								unset($unspent['utxos'][$k]);
+								if($send_item['input_total'] >= $per_item){
+									break;
+								}
+							}
+							if($send_item['input_total'] < $per_item){
+								throw new \Exception('Not enough inputs available for all addresses');
+							}
+							$send_list[] = $send_item;
+						}
+					}
+					$btc->walletpassphrase(XCP_WALLET, (count($send_list) * 60));
+					
+					//build and sign raw transactions
+					foreach($send_list as $k => $new_send){
+						foreach($row['txInfo'] as $tx_row){
+							if(isset($tx_row['address']) AND $tx_row['address'] == $row['address']){
+								if($tx_row['signed_tx']){
+									//we have already built a transaction for this, skip row
+									unset($send_list[$k]);
+									continue 2;
+								}
+							}
+						}
+						$send_data = array('source' => $row['address'],
+														'destination' => $new_send['address'],
+														'asset' => $new_send['asset'],
+														'quantity' => $new_send['amount'],
+														'encoding' => 'multisig',
+														'allow_unconfirmed_inputs' => false,
+														'pubkey' => $pubKey,
+														'fee' => $distributeFee,
+														'regular_dust_size' => $distributeDust / 2,
+														'multisig_dust_size' => $distributeDust / 2,
+														'custom_inputs' => array($new_send['inputs']) //requires customized counterparty-lib
+														);
+						
+						$create = $xcp->create_send($send_data);
+						$sign = $btc->signrawtransaction($create);
+						$send_list[$k]['raw_tx'] = $create;
+						$send_list[$k]['signed_tx'] = $sign['hex'];
+						$send_list[$k]['send_data'] = $send_data;
+						$send_list[$k]['code'] = false;
+						sleep(1);
+					}
+					$btc->walletlock();
+					
+					//broadcast transactions
+					foreach($send_list as $k => $new_send){
+						$broadcast = $btc->sendrawtransaction($new_send['signed_tx']);
+						$send_list[$k]['send_tx'] = $broadcast;
+						if($broadcast){
+							$send_list[$k]['code'] = 200; //OK
+						}
+						sleep(3); //give it a couple seconds breathing room in between broadcasts
+					}
+					
+					$row['txInfo'] = array_merge($row['txInfo'], $send_list);
+					$updateData['txInfo'] = json_encode($row['txInfo']);
+					
+					$completed = 0;
+					foreach($row['txInfo'] as $tx_row){
+						if(isset($tx_row['code']) AND $tx_row['code'] == 200){
+							$completed++;
+						}
+					}
+					
+					//mark complete and send notifications
+					if($completed >= count($row['addressList'])){
+						$updateData['status'] = 'complete';
+						$updateData['complete'] = 1;
+						$updateData['completeDate'] = timestamp();
+						echo 'Distribution #'.$row['distributeId'].' ['.$row['address'].'] completed! '.number_format($completed).' transactions - '.timestamp()."\n";
+						//notify creator
+						if($row['userId'] != 0){
+							$_SERVER['HTTP_HOST'] = SITE_DOMAIN;
+							$site = currentSite();
+							$message = 'Your distribution of '.$row['asset'].' [#'.$row['distributeId'].'] has been completed. <a href="'.$site['url'].'/dashboard/tokenly/xcp-distribute/tx/'.$row['address'].'" target="_blank">Click here to view details</a>';
+							$notify = \App\Meta_Model::notifyUser($row['userId'], $message, $row['distributeId'], 'distribute-complete');
+						}
+						//notify users
+						foreach($row['addressList'] as $addr => $amnt){
+							$lookup = $model->lookupAddress($addr);
+							if($lookup){
+								foreach($lookup['users'] as $xcpuser){
+									if($row['divisible'] == 1){
+										$amnt = round($amnt / SATOSHI_MOD, 8);
+									}
+									$message = 'You have received a distribution of '.$amnt.' '.$row['asset'].' to '.$addr;
+									if(trim($row['name']) != ''){
+										$message .= ' - '.$row['name'];
+									}
+									$notify = \App\Meta_Model::notifyUser($xcpuser['userId'], $message, $row['distributeId'], 'distribute-notify');
+								}
+							}
+						}						
+					}
+					else{
+						//not all transactions complete
+						echo 'Distribution #'.$row['distributeId'].' ['.$row['address'].'] in process - '.number_format($completed).' transactions - '.timestamp()."\n";
+					}
+
+					break;
+				case 'hold':
+					//do nothing
+					break;
+				
+			}
+			//update distribution data
+			if(count($updateData) > 0){
+				$update = $model->edit('xcp_distribute', $row['distributeId'], $updateData);
+				if(!$update){
+					echo 'Failed updating distribution: #'.$row['distributeId'].' '.$row['address']."\n";
+					continue;
+				}
+			}
+		}
+		catch(\Exception $e){
+			echo 'Error: '.$e->getMessage()."\n";
+		}
+	}
+
+	sleep(60);
+}
+/**
+to do for this
+	- make it so priming transactions can be in multiple transactions
+	- do some final testing
+	- load it up on LTB server
+*/

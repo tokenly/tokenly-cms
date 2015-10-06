@@ -19,7 +19,7 @@ if(trim($distribute['name']) != ''){
 <ul class="asset-info">
 	<li><strong>Status</strong>: <?= $distribute['status'] ?></li>
 	<li><strong>Asset Name</strong>: <?= $distribute['asset'] ?></li>
-	<li><strong>Payment Address</strong>: <a href="https://blockchain.info/address/<?= $distribute['address'] ?>" target="_blank"><?= $distribute['address'] ?></a></li>
+	<li><strong>Payment Address</strong>: <a href="https://www.blocktrail.com/BTC/address/<?= $distribute['address'] ?>" target="_blank"><?= $distribute['address'] ?></a> <a href="https://blockscan.com/address/<?= $distribute['address'] ?>" target="_blank"><i class="fa fa-info-circle"></i></a></li>
 	<li><strong>Initilization Date:</strong> <?= formatDate($distribute['initDate']) ?></li>
 	<?php
 	if($distribute['complete'] != 0){
@@ -96,7 +96,7 @@ foreach($distribute['addressList'] as $addr => $amount){
 	}
 	
 	
-	$tableData[] = array('address' => '<a href="https://blockchain.info/address/'.$addr.'" target="_blank">'.$addr.'</a> '.$andUserName, 'amount' => $amount);
+	$tableData[] = array('address' => '<a href="https://www.blocktrail.com/BTC/address/'.$addr.'" target="_blank">'.$addr.'</a> '.$andUserName, 'amount' => $amount);
 }
 
 $table = new \UI\Table;
@@ -111,26 +111,46 @@ if(trim($distribute['txInfo']) != ''){
 	$txInfo = json_decode($distribute['txInfo'], true);
 	$infoData = array();
 	foreach($txInfo as $tx){
-		if($tx['result']['code'] == 200){
-			if($distribute['divisible'] == 1){
-				$tx['details'][3] = $tx['details'][3] / SATOSHI_MOD;
-				$tx['details'][3] = number_format($tx['details'][3], 8);
+		if((isset($tx['result']) AND $tx['result']['code'] == 200) OR (isset($tx['code']) AND $tx['code'] == 200)){
+			
+			if(isset($tx['code']) AND isset($tx['send_data'])){
+				//new version
+				if($distribute['divisible'] == 1){
+					$tx['send_data']['quantity'] = $tx['send_data']['quantity'] / SATOSHI_MOD;
+					$tx['send_data']['quantity'] = number_format($tx['send_data']['quantity'], 8);
+				}
+				else{
+					$tx['send_data']['quantity'] = number_format($tx['send_data']['quantity']);
+				}
+				
+				$andUserName = '';
+				$lookup = $xcpModel->lookupAddress($tx['address']);
+				if($lookup){
+					$andUserName = ' - ('.$lookup['names'].')';
+				}
+			
+				$infoData[] = array('address' => $tx['address'].$andUserName, 'txId' => '<a href="https://www.blocktrail.com/BTC/tx/'.$tx['send_tx'].'" target="_blank">'.$tx['send_tx'].'</a>',
+									'amount' => $tx['send_data']['quantity']);				
 			}
 			else{
-				$tx['details'][3] = number_format($tx['details'][3]);
+				//old style tx info
+				if($distribute['divisible'] == 1){
+					$tx['details'][3] = $tx['details'][3] / SATOSHI_MOD;
+					$tx['details'][3] = number_format($tx['details'][3], 8);
+				}
+				else{
+					$tx['details'][3] = number_format($tx['details'][3]);
+				}
+				
+				$andUserName = '';
+				$lookup = $xcpModel->lookupAddress($tx['details'][1]);
+				if($lookup){
+					$andUserName = ' - ('.$lookup['names'].')';
+				}
+			
+				$infoData[] = array('address' => $tx['details'][1].$andUserName, 'txId' => '<a href="https://www.blocktrail.com/BTC/tx/'.$tx['result']['txId'].'" target="_blank">'.$tx['result']['txId'].'</a>',
+									'amount' => $tx['details'][3]);
 			}
-			
-			$andUserName = '';
-			$lookup = $xcpModel->lookupAddress($tx['details'][1]);
-			if($lookup){
-				$andUserName = ' - ('.$lookup['names'].')';
-			}
-			
-			
-			
-			
-			$infoData[] = array('address' => $tx['details'][1].$andUserName, 'txId' => '<a href="http://blockchain.info/tx/'.$tx['result']['txId'].'" target="_blank">'.$tx['result']['txId'].'</a>',
-								'amount' => $tx['details'][3]);
 		}
 	}
 	
