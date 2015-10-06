@@ -26,32 +26,10 @@ class LTBStats
 		
 		$getUser = Account\Home_Model::userInfo();
 		$model = $this->model;
-		$xcp = new API\Bitcoin(XCP_CONNECT);
-		
 		$stats = array();
 		try{
-			$getAsset = $xcp->get_asset_info(array('assets' => array('LTBCOIN')));
-			$asset = $getAsset[0];
-			$stats['totalIssued'] = $asset['supply'] / SATOSHI_MOD;
-			
-			$balances = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN')));
-			$balances2 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 1000));
-			$balances3 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 2000));
-			$balances4 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 3000));
-			$balances5 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 4000));
-			$balances6 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 5000));
-			$balances7 = $xcp->get_balances(array('filters' => array('field' => 'asset', 'op' => '==', 'value' => 'LTBCOIN'), 'offset' => 6000));
-			$balances = array_merge($balances, $balances2, $balances3, $balances4, $balances5, $balances6, $balances7);
-			$uniqueBalances = array();
-			foreach($balances as $balance){
-				if($balance['quantity'] == 0){
-					continue;
-				}
-				if(!isset($uniqueBalances[$balance['address']])){
-					$uniqueBalances[] = $balance;
-				}
-			}
-			$stats['totalHolders'] = count($uniqueBalances);
+			$stats['totalIssued'] = $this->getTokenSupply('LTBCOIN');
+			$stats['totalHolders'] = $this->countTokenHolders('LTBCOIN');
 			
 		}
 		catch(\Exception $e){
@@ -64,18 +42,14 @@ class LTBStats
 		$diff = time() - $launchTime;		
 		$stats['launchDays'] = ceil($diff / 60 / 60 / 24);
 		$stats['launchWeeks'] = round(($stats['launchDays'] / 7), 1);		
-		
-		$getExchange = json_decode(file_get_contents('https://poloniex.com/public?command=returnTicker'), true);
-		$getDEX = json_decode(file_get_contents('http://xcp.blockscan.com/api2.aspx?module=price&asset1=LTBCOIN&asset2=BTC'), true);
-		if(isset($getExchange['BTC_LTBC'])){
-			$getExchange = $getExchange['BTC_LTBC'];
-		}
-		else{
-			$getExchange = false;
-		}
+		$tokenly = get_app('tokenly');
+		$getExchange = $this->getExchangeRate('BTC_LTBC');
 		if($getExchange){
-			$stats['latestPrice'] = convertFloat($getExchange['last']);
-			$stats['volume'] = $getExchange['baseVolume'];
+			$stats['latestPrice'] = convertFloat($getExchange);
+			$stats['volume'] = 0;
+			if(isset($tokenly['meta']['BTC_LTBC_poloniex_volume'])){
+				$stats['volume'] = $tokenly['meta']['BTC_LTBC_poloniex_volume'];
+			}
 			
 			if($stats['totalIssued'] != 'N/A'){
 				$stats['marketCap'] = round(floatval($stats['latestPrice'] * $stats['totalIssued']), 3).' BTC';	
@@ -101,11 +75,6 @@ class LTBStats
 			<h4>Quick Links</h4>
 			<p>
 				<a href="#stats">General</a><br>
-				<?php
-				if($getUser){
-					echo '<a href="#my-stats">My Stats</a><br>';
-				}
-				?>
 				<a href="#weekly">Weekly Distributions</a><br>
 				<a href="#metrics">Earning Metrics</a><br>
 				<a href="#leaderboard">Leaderboard</a>
@@ -119,7 +88,6 @@ class LTBStats
 			<li><strong>Latest BTC/LTBcoin Price:</strong>
 				<ul>
 						<li><?= $stats['latestPrice'] ?> BTC / 1 LTBc (Poloniex)</li>
-						<li><?= $getDEX['result'] ?> BTC / 1 LTBc (DEX)</li>
 				</ul>
 			</li>
 			<li><strong>24h Exchange Volume:</strong>
@@ -131,12 +99,9 @@ class LTBStats
 			<li><strong>Days Since Launch:</strong> <?= $stats['launchDays'] ?> (<?= $stats['launchWeeks'] ?> weeks)</li>
 			<li><a href="https://docs.google.com/spreadsheets/d/1GzytNblMx8xBmUczX7sPC8QitkJrrRirNrh2AJtjy1Q/edit#gid=508171322" target="_blank">Distribution Schedule</a></li>
 			<li><a href="http://blockscan.com/assetInfo.aspx?q=LTBCOIN" target="_blank">Blockscan</a></li>
-			<li><a href="http://joelooney.org/ltbcoin/" target="_blank">LTBc Toolbox</a></li>
-			<li><a href="/trade-ltbcoin" target="_blank"><strong>Trade LTBCOIN</strong></a></li>
+			<li><a href="http://coinmarketcap.com/assets/ltbcoin/" target="_blank"><strong>Trade LTBCOIN</strong></a></li>
 		</ul>
 		<br>
-		<hr>
-		<?= $this->showPersonalStats() ?>
 		<a name="weekly"></a>
 		<h2>Weekly Distributions</h2>
 			<ul class="ltb-stat-tabs" data-tab-type="distro-list">
@@ -319,7 +284,6 @@ class LTBStats
 			</div>
 			
 		<br>
-		<hr>
 		<a name="metrics"></a>
 		<h2>Earning Metrics</h2>
 		<p>
@@ -443,12 +407,13 @@ class LTBStats
 						$getDist['addressList'] = json_decode($getDist['addressList'], true);
 						$getDist['txInfo'] = json_decode($getDist['txInfo'], true);
 						$row['info'] = json_decode($row['info'], true);
-						$reports[] = array('reportId' => $row['reportId'], 'report' => $row, 'distribute' => $getDist);
+						$reports[] = array('reportId' => $row['reportId'], 'report' => $row, 'distribute' => $getDist, 'time' => strtotime($getDist['completeDate']));
 					}
 				}
 			}
 		}
-		
+		aasort($reports, 'time');
+		$reports = array_reverse($reports);
 		if($fullData){
 			return $reports;
 		}
@@ -943,7 +908,7 @@ class LTBStats
 							<td><?= $user['displayname'] ?></td>
 							<td><?= number_format($user['score'], 2) ?></td>
 							<td><?= number_format($user['coin'], 2) ?></td>
-							<td><?= $user['metrics']['blog-posts'] ?></td>
+							<td><?= @$user['metrics']['blog-posts'] ?></td>
 							<td><?= $numEdited ?></td>
 						</tr>
 						<?php
@@ -1122,10 +1087,15 @@ class LTBStats
 		return $leaders;
 	}
 	
-	public function showPersonalStats()
+	public function getUserPopScore($userId = false)
+	{
+		return $this->showPersonalStats(true, $userId);
+	}
+	
+	public function showPersonalStats($return_data = false, $userId = false)
 	{
 		$output = '';
-		$user = Account\Home_Model::userInfo();
+		$user = user($userId);
 		if(!$user){
 			return $output;
 		}
@@ -1144,6 +1114,10 @@ class LTBStats
 		$popModel = new Tokenly\POP_Model;
 		$getScore = $popModel->getPopScore($user['userId'], $timeframe,
 											array('comments', 'posts', 'threads', 'views', 'register', 'magic-words', 'likes'));
+		
+		if($return_data){
+			return $getScore;
+		}
 											
 		$popLeaders = $this->getLeaderboardData('pop');
 		$userLeader = false;
@@ -1204,5 +1178,132 @@ class LTBStats
 		ob_end_clean();
 		
 		return $output;
+	}
+	
+	public function getExchangeRate($pair, $exchange = 'poloniex')
+	{
+		$tokenly_app = get_app('tokenly');
+		if(!$tokenly_app){
+			return false;
+		}
+		$last_update = 0;
+		if(isset($tokenly_app['meta'][$pair.'_'.$exchange.'_update'])){
+			$last_update = $tokenly_app['meta'][$pair.'_'.$exchange.'_update'];
+		}
+		$time = time();
+		$diff = $time - $last_update;
+		$price = false;
+		$volume = false;
+		if(!isset($tokenly_app['meta'][$pair.'_'.$exchange.'_rate']) OR $diff > 1800){
+			switch($exchange){
+				case 'poloniex':
+					$tickers = json_decode(file_get_contents('https://poloniex.com/public?command=returnTicker'), true);
+					if(is_array($tickers)){
+						if(isset($tickers[$pair])){
+							$price = $tickers[$pair]['last'];
+							$volume = $tickers[$pair]['baseVolume'];
+						}
+					}
+					break;
+				
+			}	
+			if($price){
+				$this->model->updateAppMeta($tokenly_app['appId'], $pair.'_'.$exchange.'_update', $time);
+				$this->model->updateAppMeta($tokenly_app['appId'], $pair.'_'.$exchange.'_rate', $price);
+				$this->model->updateAppMeta($tokenly_app['appId'], $pair.'_'.$exchange.'_volume', $volume);
+			}
+		}
+		elseif(isset($tokenly_app['meta'][$pair.'_'.$exchange.'_rate'])){
+			$price = $tokenly_app['meta'][$pair.'_'.$exchange.'_rate'];			
+		}
+		return $price;
+	}
+	
+	public function getBTCPrice()
+	{
+		$tokenly_app = get_app('tokenly');
+		if(!$tokenly_app){
+			return false;
+		}
+		$last_update = 0;
+		if(isset($tokenly_app['meta']['BTC_average_update'])){
+			$last_update = $tokenly_app['meta']['BTC_average_update'];
+		}		
+		$time = time();
+		$diff = $time - $last_update;
+		$price = false;
+		if(!isset($tokenly_app['meta']['BTC_average_rate']) OR $diff > 1800){
+			$get = json_decode(file_get_contents('https://api.bitcoinaverage.com/ticker/global/USD/'), true);
+			if(!is_array($get) OR count($get) == 0){
+				return false;
+			}	
+			$price = $get['last'];
+			$this->model->updateAppMeta($tokenly_app['appId'], 'BTC_average_update', $time);
+			$this->model->updateAppMeta($tokenly_app['appId'], 'BTC_average_rate', $price);			
+		}		
+		elseif(isset($tokenly_app['meta']['BTC_average_rate'])){
+			$price = $tokenly_app['meta']['BTC_average_rate'];
+		}
+
+		return $price;
+	}
+	
+	public function countTokenHolders($token)
+	{
+		$tokenly_app = get_app('tokenly');
+		if(!$tokenly_app){
+			return false;
+		}
+		$last_update = 0;
+		if(isset($tokenly_app['meta'][$token.'_holders_update'])){
+			$last_update = $tokenly_app['meta'][$token.'_holders_update'];
+		}
+		$time = time();
+		$diff = $time - $last_update;
+		$count = false;
+		if(!isset($tokenly_app['meta'][$token.'_holders_update']) OR $diff > 1800){
+			$holders = json_decode(file_get_contents('http://xcp.blockscan.com/api2?module=asset&action=holders&name='.strtolower($token)), true);
+			if($holders){
+				$this->model->updateAppMeta($tokenly_app['appId'], $token.'_holders_update', $time);
+				$this->model->updateAppMeta($tokenly_app['appId'], $token.'_holders_count', $holders['totalcount']);
+				$count = $holders['totalcount'];
+			}
+		}
+		elseif(isset($tokenly_app['meta'][$token.'_holders_count'])){
+			$count = $tokenly_app['meta'][$token.'_holders_count'];			
+		}
+		return $count;		
+	}
+	
+	public function getTokenSupply($token)
+	{
+		$tokenly_app = get_app('tokenly');
+		if(!$tokenly_app){
+			return false;
+		}
+		$last_update = 0;
+		if(isset($tokenly_app['meta'][$token.'_supply_update'])){
+			$last_update = $tokenly_app['meta'][$token.'_supply_update'];
+		}
+		$time = time();
+		$diff = $time - $last_update;
+		$count = false;		
+		if(!isset($tokenly_app['meta'][$token.'_supply_update']) OR $diff > 1800){
+			$xcp = new API\Bitcoin(XCP_CONNECT);
+
+			$getAsset = $xcp->get_asset_info(array('assets' => array(strtoupper($token))));
+			$asset = $getAsset[0];
+		
+			if($asset){
+				$this->model->updateAppMeta($tokenly_app['appId'], $token.'_supply_update', $time);
+				$this->model->updateAppMeta($tokenly_app['appId'], $token.'_supply_count', $asset['supply']);
+				$count = $asset['supply'];
+			}
+		}
+		elseif(isset($tokenly_app['meta'][$token.'_supply_count'])){
+			$count = $tokenly_app['meta'][$token.'_supply_count'];			
+		}
+		$count = $count / SATOSHI_MOD;
+		return $count;
 	}
 }
