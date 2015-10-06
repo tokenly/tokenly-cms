@@ -46,6 +46,7 @@ class Accounts_Controller extends \App\ModControl
 		$output = array('view' => 'list');
 		$output['searchForm'] = $this->model->getSearchForm();
 		$output['message'] = '';
+		$output['numPages'] = 1;
 		if(posted()){
 			$data = $output['searchForm']->grabData();
 			$getUser = $this->model->fetchAll('SELECT userId, username, email, regDate,
@@ -68,6 +69,18 @@ class Accounts_Controller extends \App\ModControl
 			}
 		}
 		$get = $this->model->getAll('users', array(), array('userId', 'username', 'email', 'regDate', 'lastAuth', 'lastActive'), 'userId');
+		$paging = new \Util\Paging;
+		$page_data = $paging->pageArray($get, 50);
+		$numPages = count($page_data);
+		$page = 1;
+		if(isset($_GET['page'])){
+			$new_page = intval($_GET['page']);
+			if($new_page > 1 AND $new_page <= $numPages){
+				$page = $new_page;
+			}
+		}
+		$get = $page_data[$page];
+		$output['numPages'] = $numPages;
 		$output['users'] = $get;
 		
 		return $output;

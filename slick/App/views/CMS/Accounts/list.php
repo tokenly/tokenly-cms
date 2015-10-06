@@ -1,9 +1,6 @@
 <h2>User Accounts</h2>
 <hr>
 <p>
-	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>">Go Back</a>
-</p>
-<p>
 	View details to change user groups and view and/or change other info.
 </p>
 <h3>Find User</h3>
@@ -25,7 +22,8 @@ $table = $this->generateTable($users, array('fields' => array('userId' => 'ID','
 																			   'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/'))));
 
 echo $table->display();
-
+$pager = new \UI\Pager;
+echo $pager->display($numPages, '?page=');
 ?>
 <script type="text/javascript">
 	$(document).ready(function(){
