@@ -14,6 +14,12 @@ class Controller extends Core\Controller
 		else{
 			$this->args = explode('/', $_REQUEST['params']);	
 		}
+		foreach($this->args as $k => $arg){
+			if(trim($arg) == '' AND $k != 0){
+				unset($this->args[$k]);
+			}
+		}
+		$this->args = array_values($this->args);
         $this->model = new Core\Model;
         $this->view = new View;
 
