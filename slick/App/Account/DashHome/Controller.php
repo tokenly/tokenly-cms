@@ -3,7 +3,7 @@ namespace App\Account;
 use App\API\V1;
 /*
  * @module-type = dashboard
- * @menu-label = Account Dashboard Home
+ * @menu-label = Dashboard
  * 
  * */
 class DashHome_Controller extends \App\ModControl

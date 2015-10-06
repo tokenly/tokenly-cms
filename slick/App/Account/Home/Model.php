@@ -446,17 +446,22 @@ class Home_Model extends Core\Model
 		return $getAttempts;	
 	}
 	
-	public static function userInfo()
+	public static function userInfo($userId = false)
 	{
 		$model = new Home_Model;
-		if(!isset($_SESSION['accountAuth'])){
+		if(!$userId AND !isset($_SESSION['accountAuth'])){
 			if(isset($_COOKIE['rememberAuth'])){
 				Home_Controller::logRemembered();
 			}
 			return false;
 		}
 		
-		$get = $model->checkSession($_SESSION['accountAuth']);
+		if(!$userId){
+			$get = $model->checkSession($_SESSION['accountAuth']);
+		}
+		else{
+			$get = $model->get('users', $userId);
+		}
 												
 		if(!$get){
 			return false;
@@ -492,11 +497,24 @@ class Home_Model extends Core\Model
 			}
 		} 
 		
-		$user['groups'] = $model->fetchAll('SELECT g.name, g.groupId	
+		$user['groups'] = $model->fetchAll('SELECT g.name, g.groupId, g.displayName, g.displayView, g.displayRank, g.isSilent as silent
 										   FROM group_users u
 										   LEFT JOIN groups g ON g.groupId = u.groupId
 										   LEFT JOIN group_sites s ON s.groupId = g.groupId
-										   WHERE u.userId = :id AND s.siteId = :siteId', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
+										   WHERE u.userId = :id AND s.siteId = :siteId
+										   ORDER  BY g.displayRank DESC, g.displayName ASC, g.name ASC
+										   ', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
+		$user['primary_group'] = false;
+		$primary_found = false;
+		foreach($user['groups'] as $gk => $gv){
+			if(trim($gv['displayName']) == ''){
+				$user['groups'][$gk]['displayName'] = $gv['name'];
+			}
+			if(!$primary_found AND $gv['silent'] == 0){
+				$user['primary_group'] = $gv;
+				$primary_found = true;
+			}
+		}
 		
 		Home_Model::updateLastActive($get['userId']);
 		
@@ -615,6 +633,7 @@ class Home_Model extends Core\Model
 		if(!$getSesh){
 			return false;
 		}
+		$this->edit('users', $getSesh['userId'], array('lastActive' => null));
 		return $this->delete('user_sessions', $getSesh['sessionId']);
 	}
 	
