@@ -8,6 +8,9 @@
 <p>
 	Go to your <a href="<?= SITE_URL ?>/<?= $app['url'] ?>/address-manager">Address Manager</a> to add and verify new bitcoin addresses.
 </p>
+<p>
+	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/inventory/transactions">Click here</a> to view your recent inventory transactions.
+</p>
 <form action="" method="post">
 <input type="submit" name="forceRefresh" style="font-size: 14px;" id="forceRefresh" value="Force Balance Refresh" />
 </form>
@@ -91,8 +94,9 @@ else{
 			echo '<p><strong>Description:</strong><br>'.markdown($usedAsset['description']).'</p>';
 		}
 		if(trim($usedAsset['link']) != ''){
-			echo '<p><strong>More Information:</strong> <a href="'.$usedAsset['link'].'" target="_blank">'.$usedAsset['link'].'</a></p>';
+			echo '<p><strong>Project Information:</strong> <a href="'.$usedAsset['link'].'" target="_blank">'.$usedAsset['link'].'</a></p>';
 		}
+		echo '<p><strong>View token data on <a href="http://blockscan.com/assetInfo/'.$usedAsset['asset'].'" target="_blank">Blockscan</a></strong> </p>';
 		echo '</div>';
 	}
 }

@@ -7,6 +7,15 @@ class Inventory_Model extends Core\Model
 	public static $assets = array();
 	public $addressCacheRate = 1800; //half an hour
 	
+	function __construct()
+	{
+		parent::__construct();
+		$get_assets = $this->getAll('xcp_assetCache');
+		foreach($get_assets as $asset){
+			self::$assets[$asset['asset']] = $asset;
+		}
+	}
+	
 	public function getAddressBalances($addressId)
 	{
 		if(isset(self::$addresses[$addressId])){
@@ -230,4 +239,52 @@ class Inventory_Model extends Core\Model
 		
 		return array('score' => $score, 'user' => $userTokens, 'op' => $opTokens);
 	}	
+	
+	public function getUserInventoryTransactions($userId, $limit = false, $andUpdate = false)
+	{
+		 $get_all = $this->getAll('coin_addresses', array('userId' => $userId, 'verified' => 1));
+		 $tx_list = array();
+		 foreach($get_all as $address){
+			 $address_tx = $this->getUserAddressTransactions($userId, $address['address'], $andUpdate);
+			 if(is_array($address_tx)){
+				 foreach($address_tx as $tx){
+					 $tx_list[] = $tx;
+				 }
+			 }
+		 }
+		 if(count($tx_list) == 0){
+			 return false;
+		 }
+		 aasort($tx_list, 'time');
+		 $tx_list = array_reverse($tx_list);
+		 if($limit){
+			 $new_list = array();
+			 $num = 0;
+			 foreach($tx_list as $tx){
+				 $num++;
+				 if($num > $limit){
+					 break;
+				 }
+				 $new_list[] = $tx;
+			 }
+			 return $new_list;
+		 }
+		 return $tx_list;
+	}
+	
+	public function getUserAddressTransactions($userId, $address, $andUpdate = false)
+	{
+		 $get = $this->getAll('coin_addresses', array('userId' => $userId, 'address' => $address));
+		 if(!$get OR count($get) == 0){
+			 return false;
+		 }
+		 $get = $get[0];
+		 if($get['verified'] == 0){
+			 return false;
+		 }
+		 
+		 $model = new Address_Model;
+		 $get_tx = $model->getAddressTransactions($get['addressId'], $andUpdate);
+		 return $get_tx;
+	}
 }

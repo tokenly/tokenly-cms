@@ -16,9 +16,18 @@ class Inventory_Controller extends \App\ModControl
 	public function init()
 	{
 		$output = parent::init();
+		$output['template'] = 'admin';	
+		if(isset($this->args[2])){
+			switch($this->args[2]){
+				case 'transactions':
+					$output = $this->showInventoryTransactions($output);
+					break;
+				default:
+					$output['view'] = '404';
+			}
+			return $output;
+		}
 		$output['view'] = 'index';
-		$output['template'] = 'admin';
-		
 		$output['grouped'] = false;
 		if(isset($_GET['grouped']) AND $_GET['grouped'] == 1){
 			$output['grouped'] = true;
@@ -30,6 +39,19 @@ class Inventory_Controller extends \App\ModControl
 		}
 		
 		$output['addressBalances'] = $this->model->getUserBalances($this->data['user']['userId'], $output['grouped'], 'btc', $forceRefresh);
+		
+		return $output;
+	}
+	
+	private function showInventoryTransactions($output)
+	{
+		$output['transactions'] = $this->model->getUserInventoryTransactions($this->data['user']['userId']);
+		$output['view'] = 'transactions';
+		
+		$output['last_address_update'] = false;
+		if(isset($this->data['user']['meta']['address_tx_update'])){
+			$output['last_address_update'] = intval($this->data['user']['meta']['address_tx_update']);
+		}
 		
 		return $output;
 	}

@@ -2264,6 +2264,26 @@ CREATE TABLE `xcp_distribute` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `coin_addressTx`
+--
+
+CREATE TABLE `coin_addressTx` (
+  `addressTxId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `addressId` int(11) unsigned NOT NULL,
+  `txId` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `type` varchar(255) COLLATE utf8_unicode_ci DEFAULT 'btc',
+  `txInfo` longtext COLLATE utf8_unicode_ci,
+  `amount` decimal(20,8) DEFAULT '0.00000000',
+  `asset` varchar(255) COLLATE utf8_unicode_ci DEFAULT 'btc',
+  PRIMARY KEY (`addressTxId`),
+  KEY `addressId` (`addressId`),
+  KEY `txId` (`txId`),
+  KEY `type` (`type`),
+  CONSTRAINT `coin_addressTx_ibfk_1` FOREIGN KEY (`addressId`) REFERENCES `coin_addresses` (`addressId`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4330 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--
 -- Dumping data for table `xcp_distribute`
 --
 

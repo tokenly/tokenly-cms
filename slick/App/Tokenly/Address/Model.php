@@ -338,4 +338,209 @@ class Address_Model extends Core\Model
 		}
 		return $found;
 	}
+	
+	public function getAddressTransactions($addressId, $andUpdate = false)
+	{
+		$get = $this->get('coin_addresses', $addressId);
+		if(!$get OR $get['verified'] == 0){
+			return false;
+		}
+		$meta = new \App\Meta_Model;
+		\Core\Model::$cacheMode = false;
+		$last_update = $meta->getUserMeta($get['userId'], 'address_tx_update_'.$addressId);
+		\Core\Model::$cacheMode = true;
+		$get_tx = $this->getAll('coin_addressTx', array('addressId' => $addressId));
+		if($andUpdate){
+			if($andUpdate === 2){
+				//trigger script in background instead of normal retrieve&update
+				$update_pid = exec('nohup php '.SITE_BASE.'/scripts/updateUserTransactions.php '.$get['userId'].' > /dev/null &');
+				$meta->updateUserMeta($get['userId'], 'tx_list_updating', 1);
+			}
+			else{
+				$diff = false;
+				$trigger = 1800; //half an hour
+				if($last_update){
+					$diff = time() - intval($last_update);
+				}		
+				if(!$diff OR $diff > $trigger){
+					$update_tx = $this->updateAddressTransactions($addressId);
+					if(is_array($update_tx)){
+						$get_tx =  array_merge($update_tx, $get_tx);
+					}			
+				}
+			}
+		}
+		foreach($get_tx as $k => $row){
+			$txInfo = $row['txInfo'];
+			if(!is_array($txInfo)){
+				$txInfo = json_decode($row['txInfo'], true);
+			}
+			$txInfo['to_user'] = false;
+			if(isset($txInfo['to'])){
+				$lookup_to = $this->lookupAddress($txInfo['to'], false, $get['userId']);
+				if($lookup_to){
+					$txInfo['to_user'] = $lookup_to;
+				}
+			}
+			$txInfo['from_user'] = false;
+			if(isset($txInfo['from'])){
+				$lookup_from = $this->lookupAddress($txInfo['from'], false, $get['userId']);
+				if($lookup_from){
+					$txInfo['from_user'] = $lookup_from;
+				}
+			}
+			$get_tx[$k]['txInfo'] = $txInfo;
+			$time = 0;
+			if(isset($txInfo['time'])){
+				$time = $txInfo['time'];
+			}
+			$get_tx[$k]['time'] = $time;
+			$get_tx[$k]['address'] = $get['address'];
+		}
+		aasort($get_tx, 'time');
+		$get_tx = array_reverse($get_tx);
+		return $get_tx;
+	}
+	
+	public function updateAddressTransactions($addressId)
+	{
+		$get = $this->get('coin_addresses', $addressId);
+		if(!$get OR $get['verified'] == 0){
+			return false;
+		}
+		$meta = new \App\Meta_Model;		
+		$meta->updateUserMeta($get['userId'], 'address_tx_update_'.$get['addressId'], time());
+		$btc = new \API\Bitcoin(BTC_CONNECT);
+		$xcp_parse = new \Tokenly\CounterpartyTransactionParser\Parser;
+		$raw_txParser = new \BitWasp\BitcoinLib\RawTransaction;
+		$xcp = new \API\Bitcoin(XCP_CONNECT);
+		$inventory = new Inventory_Model;		
+	
+		$get_btc = $btc->getaddresstxlist($get['address'],0, 10);
+		if(!is_array($get_btc)){
+			return false;
+		}
+		$tx_list = array();
+		foreach($get_btc as $tx){
+			$tx_list[] = array('address' => $get['address'], 'txId' => $tx['txId'], 'time' => intval($tx['time']),
+							   'amount' => $tx['amount']/SATOSHI_MOD, 'asset' => 'BTC', 'info' => array(), 'type' => 'btc', 'inputs' => $tx['inputs'],
+							   'outputs' => $tx['outputs']);
+		}
+		foreach($tx_list as $k => $tx){
+			$check_exists = $this->get('coin_addressTx', $tx['txId'], array(), 'txId');
+			if($check_exists){
+				unset($tx_list[$k]);
+				continue;
+			}		
+			try{
+				$get_raw = $btc->getrawtransaction($tx['txId']);
+				//$decode = $raw_txParser->decode($get_raw);
+				$decode = $btc->decoderawtransaction($get_raw);
+				$info = array();
+				$use_n = $tx['outputs'][0]['index'];
+				$info['to'] = false;
+				$info['from'] = false;
+				foreach($tx['outputs'] as $vout){
+					if(isset($vout['type']) AND $vout['type'] == 'pubkeyhash'){
+						$info['to'] = $vout['address'];
+						break;
+					}
+				}
+				
+				foreach($tx['inputs'] as $vout){
+					if($vout['index'] == $use_n){
+						$info['from'] = $vout['address'];
+					}
+				}
+				
+				foreach($decode['vin'] as &$vin){
+					$vin['addr'] = $info['from'];
+				}
+				$info['raw_tx'] = $get_raw;
+				$tx_list[$k]['info'] = $info;
+				$decode['addr'] = $get['address'];
+				$tx_list[$k]['raw_decoded'] = $decode;
+			}
+			catch(\Exception $e){
+				unset($tx_list[$k]);				
+				continue;
+			}
+		}
+		
+		if($get['isXCP'] == 1){
+			foreach($tx_list as $k => $tx){
+				if(!isset($tx['raw_decoded'])){
+					continue;
+				}				
+				$unpack = $xcp_parse->parseBitcoinTransaction($tx['raw_decoded']);
+				if(is_array($unpack) AND isset($unpack['type'])){
+					$tx_list[$k]['type'] = 'xcp';
+					$tx_list[$k]['info']['xcp_data'] = $unpack;
+					$getAsset = false;
+					if(isset($unpack['asset'])){
+						$tx_list[$k]['asset'] = $unpack['asset'];
+						$getAsset = $inventory->getAssetData($unpack['asset']);
+						$tx_list[$k]['info']['asset_divisible'] = $getAsset['divisible'];
+					}
+					if(isset($unpack['quantity'])){
+						$quantity = $unpack['quantity'];
+						if($getAsset AND $getAsset['divisible'] == 1){
+							$quantity = round($quantity / SATOSHI_MOD, 8);
+						}
+						$tx_list[$k]['amount'] = $quantity;
+					}					
+				}
+			}
+		}
+		$output_items = array();
+		\Core\Model::$cacheMode = false;
+		$current_transactions = $this->getAll('coin_addressTx', array('addressId' => $get['addressId']));
+		foreach($tx_list as $tx){
+			$check_exists = false;
+			foreach($current_transactions as $ctx){
+				if($tx['txId'] == $ctx['txId']){
+					$check_exists = true;
+					break;
+				}
+			}
+			if(!$check_exists){
+				$new_item = array();
+				$new_item['addressId'] = $get['addressId'];
+				$new_item['txId'] = $tx['txId'];
+				$new_item['type'] = $tx['type'];
+				$new_item['amount'] = $tx['amount'];
+				$new_item['asset'] = $tx['asset'];
+				$tx['info']['time'] = $tx['time'];
+				$new_item['txInfo'] = json_encode($tx['info']);
+				$save = $this->insert('coin_addressTx', $new_item);
+				$item = $new_item;
+				$item['addressTxId'] = $save;
+				$item['txInfo'] = $tx['info'];
+				$output_items[] = $item;
+			}
+		}
+		\Core\Model::$cacheMode = true;
+		$meta->updateUserMeta($get['userId'], 'address_tx_update', time());
+		$meta->updateUserMeta($get['userId'], 'address_tx_update_'.$get['addressId'], time());
+		return $output_items;
+	}
+	
+	public function lookupAddress($address, $public = false, $includeUser = false)
+	{
+		$values = array(':address' => $address, ':public' => intval($public));
+		$orUser = '';
+		if($includeUser){
+			$values[':userId'] = $includeUser;
+			$orUser = ' OR userId = :userId ';
+		}
+		$get = $this->fetchAll('SELECT * FROM coin_addresses WHERE address = :address AND (public = :public '.$orUser.')',
+								$values);
+		if($get AND count($get) > 0){
+			$getUser = $this->get('users', $get[0]['userId'], array('userId', 'slug', 'username', 'email'));
+			if($getUser){
+				return $getUser;
+			}
+		}
+		return false;
+	}
 }
