@@ -1,11 +1,4 @@
 <?php
-if(isset($avatar) AND trim($avatar) != ''){
-	?>
-	<div class="profile-pic">
-		<img src="<?= SITE_URL ?>/files/avatars/<?= $avatar ?>" alt="<?= $user['username'] ?>" />
-	</div>
-	<?php
-}
 
 if($adminView){
 	echo '<h2>Edit Profile - '.$thisUser['username'].'</h2>';
