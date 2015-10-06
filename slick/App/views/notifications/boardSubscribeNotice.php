@@ -2,7 +2,7 @@
 $tca = new \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 
-$checkTCA = $tca->checkItemAccess($data['sub']['userId'], $profileModule['moduleId'], $data['user']['userId'], 'user-profile');
+$checkTCA = $tca->checkItemAccess($data['sub'], $profileModule['moduleId'], $data['user']['userId'], 'user-profile');
 $culprit = $data['user']['username'];
 if($checkTCA){
 	$culprit = '<a href="'.$data['site']['url'].'/profile/user/'.$data['user']['slug'].'">'.$culprit.'</a>';
