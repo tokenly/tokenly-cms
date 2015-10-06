@@ -22,55 +22,9 @@ class ForumBuilder
 	public function display()
 	{
 		ob_start();
+		$view = new \App\View;
+		echo $view->displayBlock('token-societies-content');
 		?>
-		<p>
-			<strong>Token Societies</strong> is a new initiative from Let's Talk Bitcoin that lets anyone create a private community 
-			with access controlled by whether or not a given person has the right Access Token in their inventory. 
-		</p>
-		<p>
-			Our initial offering is instantly created, token controlled private forums. The experience while visiting Let's 
-			Talk Bitcoin will not change if you do not have any Access tokens.  But if you do, you will see the societies you
-			have access to listed as Token Access Boards above the normal forums.
-		</p>
-		<p>
-			<strong>Use the form below to create yours now.</strong> Give out your token to friends or confidants and collaborate without distraction.
-			Create a "Backers Only" area for individuals with your crowdfunding coin. 
-		</p>
-		<ul>
-			<li>
-				Turning your coin into an Access Token gives your coin value on the Let's Talk Bitcoin! platform.  Use it to start 
-				your own conversation, and receive a discount when you pay with LTBCOIN!
-			</li>
-			<li>
-				The cost is one time and gets you one private board attached to the Counterparty (XCP) based coin of your designation.  
-			</li>
-			<li>
-				The board creation process is automated, and the board creator is automatically made the Moderator. You may designate
-				additional moderators. 
-			</li>
-			<li>
-				Access token forums are secure;  without the access token, content is only visible to platform admins and only via the database
-				directly. 				
-			</li>
-		</ul>
-		<p>
-			Technologies like Counterparty have made it easy to create a token, but they don't do too much of anything on their own.  With
-			the Tokenly platform, on which Let's Talk Bitcoin! is built, you can give your token utility for its holders, and we're not
-			done yet.
-		</p>
-		<p>
-			This product is an experimental, minimum viable product;  it's not perfect and might not even be that interesting. It is the 
-			first in a series developing Token Controlled Access technologies. 
-		</p>
-		<p>
-			We do not guarantee performance or uptime and the service may be terminated if that is the most prudent thing to do, but so 
-			long as Let's Talk Bitcoin! is up, these forums likely will be too.
-		</p>
-		<p>
-			These boards cannot be used to do anything illegal and although they're not being monitored by staff, they are still being 
-			stored on a central server along with the rest of the Let's Talk Bitcoin! forums and website.  Please act accordingly.
-		</p>
-		<h2>Create a Society</h2>
 		<?php
 		if(!$this->user){
 			//user not logged in
@@ -138,10 +92,10 @@ class ForumBuilder
 			echo '<p><strong>Notice: Another user already has administrative control over the token <em>'.$orderData['token'].'</em>.
 							You cannot customize the description, logo or information link for it. However your private board will still be created.</strong></p>
 				<ul>
-					<li><strong>Board Name:</strong> '.$orderData['board'].'</li>';
+					<li><strong>Forum Name:</strong> '.$orderData['board'].'</li>';
 			
 			if(trim($orderData['board_desc']) != ''){
-				echo '<li><strong>Board Description:</strong> '.markdown($orderData['board_desc']).'</li>';
+				echo '<li><strong>Forum Description:</strong> '.markdown($orderData['board_desc']).'</li>';
 			}
 			echo '
 					<li><strong>Access Token:</strong> '.$orderData['token'].'</li>					
@@ -149,9 +103,9 @@ class ForumBuilder
 		}
 		else{
 			echo '<ul>';
-				echo '<li><strong>Board Name:</strong> '.$orderData['board'].'</li>';
+				echo '<li><strong>Forum Name:</strong> '.$orderData['board'].'</li>';
 			if(trim($orderData['board_desc']) != ''){
-				echo '<li><strong>Board Description:</strong> '.markdown($orderData['board_desc']).'</li>';
+				echo '<li><strong>Forum Description:</strong> '.markdown($orderData['board_desc']).'</li>';
 			}
 				echo '<li><strong>Access Token:</strong> '.$orderData['token'].'</li>';
 			if(trim($orderData['token_desc']) != ''){
@@ -211,9 +165,6 @@ class ForumBuilder
 			echo '<p class="error">'.$error.'</p>';
 		}
 		?>
-		<p>
-			<strong>Note:</strong> After submitting your order, please stay on the page until your payment confirms.
-		</p>	
 		<?php
 		echo $form->display();		
 	}
@@ -242,11 +193,11 @@ class ForumBuilder
 		
 		$boardName = new UI\Textbox('board_name');
 		$boardName->addAttribute('required');
-		$boardName->setLabel('Message Board Name *');
+		$boardName->setLabel('Forum Name *');
 		$form->add($boardName);
 		
 		$boardDesc = new UI\Textarea('board_description');
-		$boardDesc->setLabel('Message Board Description');
+		$boardDesc->setLabel('Forum Description');
 		$form->add($boardDesc);
 		
 		$payType = new UI\Select('payment_type');
@@ -264,7 +215,7 @@ class ForumBuilder
 			throw new \Exception('Token Name Required');
 		}
 		if(trim($data['board_name']) == ''){
-			throw new \Exception('Board Name Required');
+			throw new \Exception('Forum Name Required');
 		}
 	
 		$xcp = new API\Bitcoin(XCP_CONNECT);
