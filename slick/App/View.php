@@ -207,7 +207,7 @@ class View extends Core\View
 	 *  Menu can be an ID or slug to grab from menu table, or can be array of custom 
 	 * 
 	 * */
-	public function displayMenu($menu, $children = 1, $class = '', $urlParam = '')
+	public function displayMenu($menu, $children = 1, $class = '', $urlParam = '', $subClass = 'sub')
 	{
 		if(!is_array($menu)){
 			$getMenu = $this->getMenu($menu);
@@ -226,12 +226,27 @@ class View extends Core\View
 				if(isset($item['target']) AND $item['target'] != ''){
 					$target = 'target="'.$item['target'].'"';
 				}
-				
 				$itemClass = '';
+				if(isset($item['class'])){
+					$itemClass = $item['class'];
+				}
 				if($urlParam != ''){
 					if($item['url'] == SITE_URL.'/'.$urlParam){
 						$itemClass .= ' active';
 					}
+					else{
+						//search children
+						if(isset($item['children'])){
+							$checkActive = $this->findMenuChildrenActive($item['children'], $urlParam);
+							if($checkActive){
+								$itemClass .= ' active';
+							}
+						}
+					}
+				}
+
+				if(isset($item['children']) AND $children == 1){
+					$itemClass .= ' children';
 				}
 				//debug($item['url']);
 				
@@ -246,7 +261,7 @@ class View extends Core\View
 	
 				if(isset($item['children']) AND $children == 1){
 					
-					$output .= $this->displayMenu($item['children'], 1);
+					$output .= $this->displayMenu($item['children'], 1, $subClass, $urlParam, $subClass);
 				}	
 				
 				$output .= '</li>';
@@ -258,6 +273,24 @@ class View extends Core\View
 		}
 		return false;
 		
+	}
+	
+	protected function findMenuChildrenActive($items, $url)
+	{
+		if(is_array($items)){
+			foreach($items as $item){
+				if($item['url'] == SITE_URL.'/'.$url){
+					return true;
+				}
+				if(isset($item['children'])){
+					$check = $this->findMenuChildrenActive($item['children'], $url);
+					if($check){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 	
 	public static function getBlock($id)
