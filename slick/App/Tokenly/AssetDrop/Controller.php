@@ -21,7 +21,6 @@ class AssetDrop_Controller extends \App\ModControl
 		
 		$output['error'] = '';
 		$output['form'] = $this->model->getDropperForm($this->data);
-			
 		if(posted()){
 			$data = $output['form']->grabData();
 			try{

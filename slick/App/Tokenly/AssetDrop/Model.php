@@ -8,7 +8,6 @@ class AssetDrop_Model extends Core\Model
 	public function getDropperForm($appData)
 	{
 		$form = new UI\Form;
-		
 		$asset = new UI\Textbox('asset');
 		$asset->setLabel('Asset Name:');
 		$asset->addAttribute('required');
@@ -24,13 +23,27 @@ class AssetDrop_Model extends Core\Model
 		$profModel = new Profile\User_Model;
 		$xcpUsers = $profModel->getUsersWithProfile($this->coinFieldId);
 		$groups->addOption(0, 'All ('.count($xcpUsers).')');
+		$groupUsers = static_cache('group_users');
+		if(!$groupUsers){
+			$groupUsers = static_cache('group_users', $this->getAll('group_users'));
+		}
+		$userIds = array();
+		foreach($xcpUsers as $user){
+			$userIds[$user['userId']] = $user['userId'];
+		}
+		$groupCounts = array();
+		foreach($groupUsers as $g){
+			if(isset($userIds[$g['userId']])){
+				if(!isset($groupCounts[$g['groupId']])){
+					$groupCounts[$g['groupId']] = 0;
+				}
+				$groupCounts[$g['groupId']]++;
+			}
+		}
 		foreach($getGroups as $group){
 			$numInGroup = 0;
-			foreach($xcpUsers as $user){
-				$checkGroup = $this->getAll('group_users', array('userId' => $user['userId'], 'groupId' => $group['groupId']));
-				if($checkGroup AND count($checkGroup) > 0){
-					$numInGroup++;
-				}
+			if(isset($groupCounts[$group['groupId']])){
+				$numInGroup = $groupCounts[$group['groupId']];
 			}
 			if($numInGroup == 0){
 				continue;
@@ -40,6 +53,11 @@ class AssetDrop_Model extends Core\Model
 		$groups->setLabel('Choose Groups:');
 		$groups->setLabelDir('R');
 		$form->add($groups);
+		
+		$token = new UI\Textbox('token', 'token');
+		$token->setLabel('OR distribute to asset holders');
+		$token->addAttribute('placeholder', 'Asset name');
+		$form->add($token);
 		
 		return $form;
 		
@@ -57,33 +75,70 @@ class AssetDrop_Model extends Core\Model
 		if(!isset($data['amount']) OR trim($data['amount']) == ''){
 			throw new \Exception('Please enter in a total amount to send');
 		}
-		
-		if(!isset($data['groups']) OR !is_array($data['groups']) OR count($data['groups']) == 0){
-			throw new \Exception('Please select what user groups to send to');
-		}
-		
-		$getAll = false;
-		if(in_array(0, $data['groups'])){
-			$getAll = true;
-		}
-		
-		
+			
 		$users = array();
-		foreach($xcpUsers as $user){
-			if($getAll){
-				$users[] = $user;
-			}
-			else{
-				$getGroups = $this->getAll('group_users', array('userId' => $user['userId']));
-				foreach($getGroups as $group){
-					if(in_array($group['groupId'], $data['groups'])){
+		if(isset($data['token']) AND trim($data['token']) != ''){
+			//distribute to token holders
+			$scout = new AssetScout_Model;
+			$scout_asset = $scout->scoutAsset(array('asset' => $data['token']));
+			if(is_array($scout_asset) AND isset($scout_asset['list'])){
+				$token_holders = array();
+				foreach($scout_asset['list'] as $k => $row){
+					$token_holders[$row['userId']] = $k;
+				}
+				foreach($xcpUsers as $user){
+					if(isset($token_holders[$user['userId']])){
 						$users[] = $user;
-						continue 2;
 					}
 				}
 			}
 		}
+		else{
+			//distribute to group members
+			if(!isset($data['groups']) OR !is_array($data['groups']) OR count($data['groups']) == 0){
+				throw new \Exception('Please select what user groups to send to');
+			}			
+			$getAll = false;
+			$groupIds = array();
+			if(in_array(0, $data['groups'])){
+				$getAll = true;
+			}
+			else{
+				foreach($data['groups'] as $groupId){
+					$groupIds[] = $groupId;
+				}
+			}			
+			$groupUsers = static_cache('group_users_'.md5(json_encode($groupIds)));
+			if(!$groupUsers){
+				$groupUsers = static_cache('group_users_'.md5(json_encode($groupIds)), $this->fetchAll('SELECT * FROM group_users WHERE groupId IN('.join(',',$groupIds).')'));
+			}		
+			$useUsers = array();
+			foreach($groupUsers as $guser){
+				$useUsers[$guser['userId']] = $guser['userId'];
+			}
+			foreach($xcpUsers as $user){
+				if($getAll){
+					$users[] = $user;
+					continue;
+				}
+				else{
+					if(isset($useUsers[$user['userId']])){
+						$users[] = $user;
+						continue;
+					}
+				}
+			}			
+		}
 		
+		$used_users = array();
+		foreach($users as $k => $user){
+			if(isset($used_users[$user['userId']])){
+				unset($users[$k]);
+				continue;
+			}
+			$used_users[$user['userId']] = $k;
+		}
+	
 		if(count($users) == 0){
 			throw new \Exception('No valid users');
 		}
