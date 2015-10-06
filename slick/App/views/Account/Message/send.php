@@ -1,4 +1,4 @@
-<h2>Send Private Message</h2>
+<h2><i class="fa fa-envelope"></i> Send Private Message</h2>
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Go Back</a>
 </p>

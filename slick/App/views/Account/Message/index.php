@@ -1,8 +1,8 @@
-<h2>Private Messages</h2>
-<p>
-	<strong><a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/send">Send New Message</a></strong>
+<p class="pull-right">
+	<strong><a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/send" class="btn">Send New Message</a></strong>
 </p>
 
+<h2><i class="fa fa-envelope"></i> Private Messages</h2>
 <?php
 $tca = new \App\Tokenly\TCA_Model;
 $profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
@@ -45,8 +45,13 @@ else{
 		}
 				
 		$avImage = $message['from']['avatar'];
-		if(!isExternalLink($message['from']['avatar'])){
-			$avImage = SITE_URL.'/files/avatars/'.$message['from']['avatar'];
+		if(trim($message['from']['real_avatar']) == ''){
+			$avImage = SITE_URL.'/files/avatars/default.jpg';
+		}
+		else{
+			if(!isExternalLink($message['from']['avatar'])){
+				$avImage = SITE_URL.'/files/avatars/'.$message['from']['avatar'];
+			}
 		}
 		$avImage = '<img src="'.$avImage.'" alt="" />';
 		if($fromTCA){
@@ -55,8 +60,13 @@ else{
 		$avatar = '<span class="mini-avatar">'.$avImage.'</span>';
 				
 		$avImage2 = $message['to']['avatar'];
-		if(!isExternalLink($message['to']['avatar'])){
-			$avImage2 = SITE_URL.'/files/avatars/'.$message['to']['avatar'];
+		if(trim($message['to']['real_avatar']) == ''){
+			$avImage2 = SITE_URL.'/files/avatars/default.jpg';
+		}
+		else{		
+			if(!isExternalLink($message['to']['avatar'])){
+				$avImage2 = SITE_URL.'/files/avatars/'.$message['to']['avatar'];
+			}
 		}
 		$avImage2 = '<img src="'.$avImage2.'" alt="" />';
 		if($toTCA){
