@@ -1,0 +1,18 @@
+{
+	"name": "Tokenly CMS",
+	"description": "Content Management System with built in cryptocurrency support",
+	"keywords": [],
+	"license": "GNU2.0",
+	"authors": [
+		{
+			"name": "Nick Rathman",
+			"email": "nick@tokenly.com"
+		}
+	],
+	"require": {
+		"bitwasp/bitcoin-lib": "@dev",
+		"mdanter/ecc": "~0.2.0",
+		"blocktrail/blocktrail-sdk": "1.2.*",
+		"tokenly/counterparty-transaction-parser": "@dev"
+	}
+}

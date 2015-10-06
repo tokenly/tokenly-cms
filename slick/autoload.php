@@ -29,3 +29,7 @@ function slick_autoload($class)
 	}
 }
 spl_autoload_register('slick_autoload');
+
+
+//register composer autoloader as secondary autoload
+require SITE_BASE.'/vendor/autoload.php';
