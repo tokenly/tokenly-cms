@@ -22,6 +22,7 @@ class MagicWords_Controller extends \App\ModControl
 		$output['view'] = 'index';
 		$output['form'] = $this->model->getWordForm();
 		$output['message'] = '';
+		$output['message_class'] = '';
 		
 		if(posted()){
 			$data = $output['form']->grabData();
@@ -32,10 +33,12 @@ class MagicWords_Controller extends \App\ModControl
 			}
 			catch(\Exception $e){
 				$submit = false;
+				$output['message_class'] = 'text-error';
 				$output['message'] = $e->getMessage();
 			}
 			
 			if($submit){
+				$output['message_class'] = 'text-success';
 				$output['message'] = 'Correct! Word submitted successfully';
 			}	
 		}

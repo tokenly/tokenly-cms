@@ -1,6 +1,6 @@
 <h2>Proof of Listening - Magic Words</h2>
 <p>
-	Did you hear the latest episode of your favorite LTB show?  Listen closely, when they give you the magic word make
+	Did you hear the latest episode of your favorite LTB Network show?  Listen closely, when they give you the magic word make
 	sure to remember it and enter it right here!  Magic Words are the simple method to help us know you're listening, 
 	and reward you for your time! 
 </p>
@@ -11,7 +11,7 @@
 </p>
 <?php
 if(isset($message) AND trim($message) != ''){
-	echo '<p class="error">'.$message.'</p>';
+	echo '<p><strong class="'.$message_class.'">'.$message.'</strong></p>';
 }
 ?>
 <?= $form->display() ?>
