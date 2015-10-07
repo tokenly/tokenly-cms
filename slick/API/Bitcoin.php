@@ -348,7 +348,7 @@ class Bitcoin
 	{
 		$unspent = $this->getaddressunspent($address);
 		$num_batches = ceil($num / $per_batch);
-		$total_required = round($this->getprimingfee($num, $per_input, $per_batch), 8);
+		$total_required = (float)bcmul((string)$this->getprimingfee($num, $per_input, $per_batch), "1", "8");
 		if(round($unspent['total'], 8) < $total_required){
 			throw new \Exception('Not enough coin available for priming - need '.($total_required - $unspent['total']).' BTC more ('.$total_required.' total)'."\n");
 		}
@@ -356,8 +356,8 @@ class Bitcoin
 		if($num > $per_batch){
 			if($use_stage === 1){
 				//do "first stage priming" - create initial outputs for batch set of priming transactions
-				$batch_fee = (($per_input + $this->min_fee) * $per_batch) + $this->min_fee;
-				$total_required = ($batch_fee + $this->min_fee) * $num_batches;
+				$batch_fee = (float)bcadd(bcmul(bcadd((string)convertFloat($per_input), (string)convertFloat($this->min_fee), "8"), (string)$per_batch, "8"), (string)convertFloat($this->min_fee), "8");
+				$total_required = (float)bcmul(bcadd((string)convertFloat($batch_fee), (string)convertFloat($this->min_fee), "8"), (string)$num_batches, "8");
 				$raw_outputs = array();
 				for($i = 0; $i < $num_batches; $i++){
 					$raw_outputs[] = array('address' => $address, 'value' => $batch_fee);
@@ -366,26 +366,29 @@ class Bitcoin
 			}
 			else{
 				//do second stage priming and create outputs for each batch
-				$total_needed = $per_input * $per_batch;
+				$total_needed = (float)bcmul((string)convertFloat($per_input), (string)$per_batch, "8");
 				$output = array('stage' => 2, 'txs' => array());
 				for($i = 0; $i < $num_batches; $i++){	
 					$raw_outputs = array();
 					for($i2 = 0; $i2 < $per_batch; $i2++){
-						$raw_outputs[] = array('address' => $address, 'value' => $per_input - ($this->min_fee / 2));
+						$raw_outputs[] = array('address' => $address, 
+											   'value' => $per_input
+											   );
 					}
 
 					$raw_inputs = array();
 					$total_used = 0;
 					foreach($unspent['utxos'] as $k => $tx){
 						$raw_inputs[] = array('txid' => $tx['txid'], 'vout' => $tx['vout']);
-						$total_used += $tx['amount'];
+						$total_used = (float)bcadd((string)convertFloat($total_used), (string)convertFloat($tx['amount']), "8");
 						unset($unspent['utxos'][$k]);
 						if($total_used >= $total_needed){
 							break;
 						}
 					}
-					$total_needed += $this->min_fee;
-					$unused_amount = $total_used - $total_needed;
+					$unused_amount = (float)bcsub((string)convertFloat($total_used),
+													bcadd((string)convertFloat($total_needed), bcmul((string)count($raw_outputs), (string)convertFloat($this->min_fee), "8"), "8")
+									          , "8");
 					if($unused_amount > $this->dust_limit){
 						$raw_outputs[] = array('address' => $address, 'value' => $unused_amount);
 					}							
@@ -411,19 +414,18 @@ class Bitcoin
 		$total_used = 0;
 		foreach($unspent['utxos'] as $tx){
 			$raw_inputs[] = array('txid' => $tx['txid'], 'vout' => $tx['vout']);
-			$total_used += $tx['amount'];
+			$total_used = (float)bcadd((string)convertFloat($total_used), (string)convertFloat($tx['amount']), "8");
 			if($total_used >= $total_required){
 				break;
 			}
 		}
-		
-		
-		$total_required += $this->min_fee;
-		$unused_amount = $total_used - $total_required;
+
+		$total_required = (float)bcadd((string)convertFloat($total_required), (string)convertFloat($this->min_fee), "8");
+		$unused_amount = (float)bcsub((string)convertFloat($total_used), (string)convertFloat($total_required), "8");
 		if($unused_amount > $this->dust_limit){
 			$raw_outputs[] = array('address' => $address, 'value' => $unused_amount);
 		}		
-		
+
 		$output = $this->sendcustomrawtransaction($raw_inputs, $raw_outputs);
 		$output['stage'] = $stage;	
 		if($stage === 2){
