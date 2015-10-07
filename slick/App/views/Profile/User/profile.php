@@ -134,9 +134,13 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 											$custom_status_class = 'text-success';
 										}
 									}
+									$use_active = $profile['lastActive'];
+									if($status_title == 'Offline'){
+										$use_active = $profile['lastAuth'];
+									}
 									echo $status_title;
 									?>	
-								<i id="hud-status-circle" class="fa fa-circle <?= $custom_status_class ?>" title="Last active: <?= formatDate($profile['lastActive']) ?>"></i>						
+								<i id="hud-status-circle" class="fa fa-circle <?= $custom_status_class ?>" title="Last active: <?= formatDate($use_active) ?>"></i>						
 							</span>
 							<?php
 							if(isset($profile['affiliate']['userId'])){

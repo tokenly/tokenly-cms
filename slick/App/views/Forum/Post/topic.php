@@ -143,7 +143,12 @@ if($page == 1){
 				$online_icon .= ' text-error';
 			}			
 			
-			$use_status = '<span title="Last active: '.formatDate($topic['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';;
+			$use_active = $topic['author']['lastActive'];
+			if($online_title == 'Offline'){
+				$use_active = $topic['author']['lastAuth'];
+			}
+			
+			$use_status = '<span title="Last active: '.formatDate($use_active).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';;
 			?>
 			<?= $use_status ?><br>
 			Posts: <?= \App\Account\Home_Model::getUserPostCount($topic['userId']) ?>
