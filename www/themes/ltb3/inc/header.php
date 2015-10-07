@@ -12,7 +12,7 @@
 	}
 	?>
 	<meta name="description" content="<?= $metaDescription ?>">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=1">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/fonts.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/base.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/legacy.css">	
