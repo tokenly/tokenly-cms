@@ -480,6 +480,7 @@ class Board_Model extends Core\Model
 	public function getBoardFilters($user = false)
 	{
 		$output = array();
+		$forum_app = get_app('forum');
 		if(!$user){
 			//use cookies
 			if(isset($_COOKIE['boardFilters'])){
@@ -489,10 +490,15 @@ class Board_Model extends Core\Model
 				$output['antifilters'] = explode(',', $_COOKIE['boardAntiFilters']);
 			}
 			else{
-				//turn this into a setting at some point
-				$output['antifilters'] = array(31,47,57,48,50,49,51, //non english boards	
-											   40,56,78,79 //other off topic boards
-											);
+				if(isset($forum_app['meta']['default-excluded-boards'])){
+					$output['antifilters'] = explode(',',$forum_app['meta']['default-excluded-boards']);
+					foreach($output['antifilters'] as $k => $r){
+						$output['antifilters'][$k] = intval(trim($r));
+					}
+				}
+				else{
+					$output['antifilters'] = array();
+				}
 			}								
 			
 		}
@@ -507,9 +513,15 @@ class Board_Model extends Core\Model
 				$output['antifilters'] = explode(',', $userAntiFilters);
 			}
 			else{
-				$output['antifilters'] = array(31,47,57,48,50,49,51, //non english boards	
-											   40,56,78,79 //other off topic boards
-											);
+				if(isset($forum_app['meta']['default-excluded-boards'])){
+					$output['antifilters'] = explode(',',$forum_app['meta']['default-excluded-boards']);
+					foreach($output['antifilters'] as $k => $r){
+						$output['antifilters'][$k] = intval(trim($r));
+					}
+				}
+				else{
+					$output['antifilters'] = array();
+				}
 			}
 		}
 		
