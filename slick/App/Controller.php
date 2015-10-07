@@ -100,7 +100,8 @@ class Controller extends Core\Controller
         $thisModule = false;
         $itemId = null;
         foreach($pageIndex as $index){
-            if($index['url'] == join('/', $this->args)){
+			$join_args = join('/', $this->args);
+            if($index['url'] == $join_args OR $index['url'] == $join_args.'/'){
                 $getModule = $this->model->get('modules', $index['moduleId']);
                 if($getModule AND $getModule['active'] == 1){
 					
