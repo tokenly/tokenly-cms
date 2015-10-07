@@ -30,7 +30,6 @@
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jcycle.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.fancybox.pack.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/base64.js"></script>
-		<script type="text/javascript" src="<?= THEME_URL ?>/js/mobile-tabls.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.jplayer.min.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jplayer.playlist.min.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.cookie.js"></script>
