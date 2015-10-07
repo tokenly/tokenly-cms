@@ -242,7 +242,7 @@ echo '</ul>	';
 					<span><?= date('F d, Y', strtotime($post['publishDate'])) ?></span>
 				</div><!-- blog-date -->
 				<div class="blog-title">
-					<span><?= shortenMsg($post['title'], 55) ?></span>
+					<span><?= shortenMsg($post['title'], 105) ?></span>
 				</div>
 			</li>			
 			<?php	

@@ -893,6 +893,7 @@ footer .tagline a{
 	text-decoration: none;
 	font-family: "din-bold";
 	color: #000;
+	font-size: 15px;
 }
 
 .blog-list.grid li:hover .blog-title span{
