@@ -514,13 +514,15 @@ ul.disc li{
 	display: block;
 	text-align: left;
 	margin: 0px;
+	overflow: hidden;
+	max-height: 110px;
 }
 .reply-author .profile-pic img, .op-author .profile-pic img{
 	width: 100%;
 }
 .post-username{
 	display: block;
-	margin: 10px 0px;
+	margin: 5px 0px;
 	text-align: center;
 	word-wrap: break-word;
 }
@@ -542,14 +544,19 @@ ul.disc li{
 	padding: 15px;
 }
 .reply-content, .op-content{
-	margin-left: 145px;
+	margin-left: 125px;
 	vertical-align: top;
 }
 
 .reply-content .post-content, .op-content .post-content{
 	position: relative;
-	padding-top: 15px;
-	padding-right: 15px;
+	padding: 15px;
+	font-size: 14px;
+}
+
+.reply-content .post-content blockquote, .op-content .post-content blockquote,
+.reply-content .post-content blockquote p, .op-content .post-content blockquote p{
+	font-size: 14px;
 }
 
 .forum-stats{
@@ -565,11 +572,11 @@ ul.disc li{
 
 .post-controls{
 	display: block;
-	padding: 10px;
-	font-size: 14px;
-	margin: 10px 0px;
+	padding: 7px;
+	font-size: 12px;
+	margin: 0px 0px 10px 0px;
 	position: relative;
-	background: #efefef;
+	border-bottom: 1px solid #ccc;
 }
 .post-controls a{
 	display: inline-block;
@@ -616,17 +623,15 @@ ul.disc li{
 }
 
 .forum-sig{
-	clear: both;
 	position: relative;
 	margin-top: 35px;
 	margin-bottom: 6px;
+	margin-left: 15px;
 	font-size: 12px;
 	color: #888;
-
 	padding: 6px 6px 6px 12px;
 	border-left: 12px solid #FFDFB1;
 	background-color: #fcf7f0;
-
 }
 
 
@@ -635,9 +640,9 @@ ul.disc li{
 	margin-bottom: 2px;
 }
 .post-author-info{
-	font-size: 12px;
-	font-weight: 700;
-	padding-top: 15px;
+	font-size: 11px;
+	padding-top: 5px;
+	line-height: 1.4;
 }
 .topics-table .post-category{
 	font-size: 12px;

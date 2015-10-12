@@ -2456,7 +2456,7 @@ body.dash-home .admin-content{
 }
 
 .reply-list .post-extras, .thread-op .post-extras{
-	margin-left: 15px;
+	margin-left: 5px;
 }
 
 .forum-thread  h2{
@@ -2634,6 +2634,27 @@ body.dash-home .admin-content{
 	font-weight: 500;
 	color: #006f9a;
 }
+
+.post-extras > span{
+	display: inline-block;
+	margin-right: 5px;
+}
+
+.template-forum .send-msg-btn{
+	font-size: 12px;
+	display: block;
+	margin-top: 5px;
+	font-weight: 700;
+}
+
+.template-forum textarea{
+	font-size: 14px;
+}
+
+.template-forum .markdown-preview blockquote, .template-forum .markdown-preview blockquote p, .template-forum .markdown-preview {
+	font-size: 14px;
+}
+
 
 /*** Media Queries ***/
 

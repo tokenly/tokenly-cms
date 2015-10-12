@@ -108,6 +108,7 @@ if($page == 1){
 		</div>
 		<div class="post-author-info">
 			<?php
+			
 			$use_status = '';
 			$online_icon = 'fa-circle';
 			$online_title = 'Offline';
@@ -148,13 +149,13 @@ if($page == 1){
 				$use_active = $topic['author']['lastAuth'];
 			}
 			
-			$use_status = '<span title="Last active: '.formatDate($use_active).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';;
+			$use_status = '<span title="Last active: '.formatDate($use_active).'"><i class="fa fa-circle '.$online_icon.'"></i> <strong>'.$online_title.'</strong></span>';;
 			?>
 			<?= $use_status ?><br>
-			Posts: <?= \App\Account\Home_Model::getUserPostCount($topic['userId']) ?>
+			<strong>Posts:</strong> <?= \App\Account\Home_Model::getUserPostCount($topic['userId']) ?>
 			<?php
 			if(isset($topic['author']['profile']['location'])){
-				echo '<br>Location: '.$topic['author']['profile']['location']['value'];
+				echo '<br><strong>Location:</strong> '.$topic['author']['profile']['location']['value'];
 			}
 			
 			
@@ -163,6 +164,7 @@ if($page == 1){
 					echo '<br><a href="'.SITE_URL.'/dashboard/account/messages/send?user='.$topic['author']['slug'].'" target="_blank" class="send-msg-btn" title="Send private message"><i class="fa fa-envelope"></i> Message</a>';
 				}
 			}
+			
 			?>
 			
 		</div>
@@ -190,7 +192,7 @@ if($page == 1){
 	<div class="post-extras">
 	<?php
 	if($user AND $perms['canReportPost'] AND $topic['userId'] != $user['userId']){
-		echo '<div class="report-link">';
+		echo '<span class="report-link">';
 		if(isset($topic['isReported']) AND $topic['isReported']){
 			echo '<em>Reported</em>'; 
 		}
@@ -198,10 +200,10 @@ if($page == 1){
 			echo '<a class="report-post" data-id="'.$topic['topicId'].'" data-type="topic" href="#">Flag/Report</a>';
 		}
 	
-		echo '</div>';
+		echo '</span> ';
 	}
 	if($user AND $perms['canRequestBan']){
-		echo '<div class="report-link"><a class="request-ban" data-id="'.$topic['userId'].'" href="#">Request Ban</a></div>';
+		echo ' <span class="report-link"><a class="request-ban" data-id="'.$topic['userId'].'" href="#">Request Ban</a></span>';
 	}	
 	echo '</div>'; //post-extras
 	$likeList = array();
@@ -343,6 +345,7 @@ if(count($replies) == 0){
 			
 			<div class="post-author-info">
 				<?php
+				
 			$use_status = '';
 			$online_icon = 'fa-circle';
 			$online_title = 'Offline';
@@ -378,13 +381,13 @@ if(count($replies) == 0){
 				$online_icon .= ' text-error';
 			}			
 			
-			$use_status = '<span title="Last active: '.formatDate($reply['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> '.$online_title.'</span>';
+			$use_status = '<span title="Last active: '.formatDate($reply['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> <strong>'.$online_title.'</strong></span>';
 			?>
 			<?= $use_status ?><br>			
-				Posts: <?= \App\Account\Home_Model::getUserPostCount($reply['userId']) ?>
+				<strong>Posts:</strong> <?= \App\Account\Home_Model::getUserPostCount($reply['userId']) ?>
 				<?php
 				if(isset($reply['author']['profile']['location'])){
-					echo '<br>Location: '.$reply['author']['profile']['location']['value'];
+					echo '<br><strong>Location:</strong> '.$reply['author']['profile']['location']['value'];
 				}
 				if($user AND $user['userId'] != $reply['userId']){
 					if($checkUserTCA){					
@@ -395,6 +398,7 @@ if(count($replies) == 0){
 			</div>
 			<?php
 			}//endif
+			
 			?>
 		</div>
 		<div class="reply-content">
@@ -420,17 +424,17 @@ if(count($replies) == 0){
 		<div class="post-extras">
 		<?php
 		if($user AND $perms['canReportPost'] AND $reply['userId'] != $user['userId']){
-			echo '<div class="report-link">';
+			echo '<span class="report-link">';
 			if(isset($reply['isReported']) AND $reply['isReported']){
 				echo '<em>Reported</em>'; 
 			}
 			else{
 				echo '<a class="report-post" data-id="'.$reply['postId'].'" data-type="post" href="#">Flag/Report</a>';
 			}
-			echo '</div>';
+			echo '</span> ';
 		}	
 		if($user AND $perms['canRequestBan']){
-			echo '<div class="report-link"><a class="request-ban" data-id="'.$reply['userId'].'" href="#">Request Ban</a></div>';
+			echo ' <span class="report-link"><a class="request-ban" data-id="'.$reply['userId'].'" href="#">Request Ban</a></span>';
 		}			
 		$permaPage = '';
 		$returnPage = '';
