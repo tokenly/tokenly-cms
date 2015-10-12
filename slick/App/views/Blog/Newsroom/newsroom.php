@@ -119,7 +119,7 @@ if(trim($blog['image']) != '' AND file_exists(SITE_PATH.'/files/blogs/'.$blog['i
 		}
 		else{
 		$time = time();
-		echo '<table class="admin-table data-table '.$blog['slug'].'_posts submissions-table">
+		echo '<table class="admin-table mobile-table data-table '.$blog['slug'].'_posts submissions-table">
 				<thead>
 					<tr>
 						<th>ID</th>

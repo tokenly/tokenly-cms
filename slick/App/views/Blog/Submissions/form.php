@@ -490,7 +490,7 @@ if(isset($post) AND $post['published'] == 1){
 		<div id="compare-result" style="display: none;"></div>
 		<a id="compare-result-trigger" class="fancy" style="display: none;" href="#compare-result"></a>
 		<div class="clear"></div>
-		<table class="admin-table">
+		<table class="admin-table mobile-table">
 			<thead>
 				<th>Version #</th>
 				<th>User</th>

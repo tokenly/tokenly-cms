@@ -100,7 +100,7 @@ foreach($distribute['addressList'] as $addr => $amount){
 }
 
 $table = new \UI\Table;
-$table->addClass('admin-table');
+$table->addClass('admin-table mobile-table');
 $table->setData($tableData);
 $table->addColumn('address', 'Address');
 $table->addColumn('amount', 'Amount');

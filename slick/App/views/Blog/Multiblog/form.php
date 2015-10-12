@@ -41,7 +41,7 @@ if(isset($blogRoles)){
 		echo '<p>No roles added yet</p>';
 	}
 	else{
-		echo '<table class="admin-table">
+		echo '<table class="admin-table mobile-table">
 				<thead>
 					<tr>
 						<th>User</th>

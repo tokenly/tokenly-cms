@@ -90,7 +90,7 @@ if($scout){
 	<div class="clear"></div>
 	<hr>
 	<h3><?= $scout['asset'] ?> User List</h3>
-	<table class="admin-table data-table submissions-table">
+	<table class="admin-table data-table submissions-table mobile-table">
 		<thead>
 			<tr>
 				<th>User</th>

@@ -36,7 +36,7 @@ if(count($distributeList) > 0){
 	}
 
 	$table = new \UI\Table;
-	$table->addClass('admin-table');
+	$table->addClass('admin-table mobile-table');
 	$table->setData($distributeList);
 	$table->addColumn('distributeId', 'ID');
 	$table->addColumn('asset', 'Asset');

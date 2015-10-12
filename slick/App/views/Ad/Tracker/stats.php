@@ -30,7 +30,7 @@ if(count($clicks) == 0){
 	echo '<p>No clicks yet!</p>';
 }
 else{
-	echo '<table class="admin-table data-table submissions-table tracking-stats-table">
+	echo '<table class="admin-table data-table submissions-table tracking-stats-table mobile-table">
 			<thead>
 				<tr>
 					<th>IP/User</th>

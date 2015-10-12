@@ -19,7 +19,7 @@ if(!$transactions OR count($transactions) == 0){
 }
 else{
 	echo '<div class="inventory-tx-list">';
-	echo '<table class="admin-table data-table">';
+	echo '<table class="admin-table data-table mobile-table">';
 	?>
 	<thead>
 		<tr>

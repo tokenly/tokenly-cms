@@ -159,7 +159,7 @@ if($option_selected){
 		echo '<p>No available payments to collect.</p>';
 	}
 	else{
-		echo '<table class="admin-table payment-table">
+		echo '<table class="admin-table payment-table mobile-table">
 				<thead>
 					<tr>
 						<th style="width:30px;"><input type="checkbox" id="check-all"></th>					
@@ -276,7 +276,7 @@ else{
 		echo '<p>No collections made yet.</p>';
 	}
 	else{
-		echo '<table class="admin-table data-table">
+		echo '<table class="admin-table data-table mobile-table">
 			<thead>
 				<tr>
 					<th style="width: 25px;">ID</th>
