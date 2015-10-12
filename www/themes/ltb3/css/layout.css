@@ -2628,6 +2628,17 @@ body.dash-home .admin-content{
 	margin-left: 15px;
 }
 
+.blog-form .content-preview.markdown-preview{
+	width: 70%;
+	background: #fff;
+}
+
+.blog-form #blog-content textarea{
+	width: 72.5%;
+	height: 400px;
+	background: #fff;
+}
+
 /*** Media Queries ***/
 @media only screen and (max-width: 1420px){
 

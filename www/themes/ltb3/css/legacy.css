@@ -834,10 +834,10 @@ div.forum-bar ul li:nth-child(3) {
 	font-size: 18px;
 }
 
-.text-error{
+.text-error, .content .text-error{
 	color: #E60000;
 }
-.success{
+.success, .content .success{
 	color: #00E000!important;
 	font-weight: 700;
 	font-size: 18px;
@@ -1320,19 +1320,19 @@ img.board-img{
 	font-weight: 700;
 }
 
-.text-success{
+.text-success, .content .text-success{
 	color: #00d627;
 }
 
-.text-progress{
+.text-progress, .content .text-progress{
 	color: #0f6bff;
 }
 
-.text-pending{
+.text-pending, .content .text-pending{
 	color: #F7931A;
 }
 
-.text-default{
+.text-default, .content .text-default{
 	color: #000;
 }
 

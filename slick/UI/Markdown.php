@@ -56,7 +56,7 @@ class Markdown extends FormObject
 			<div class="<?= $this->name ?>-preview markdown-preview">
 				<?php
 				if($this->previewTitle != ''){
-					echo '<h4>'.$this->previewTitle.' - '.$this->label_raw.'</h4>';
+					echo '<h4 class="text-progress">'.$this->previewTitle.' - '.$this->label_raw.'</h4>';
 				}
 				?>
 				<div class="<?= $this->name ?>-preview-cont markdown-preview-cont"><?= $this->getHTMLValue() ?></div>
