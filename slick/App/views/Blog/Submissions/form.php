@@ -150,6 +150,7 @@ if(isset($post)){
 }
 ?>
 </h2>
+<a name="post-top" id="post-top"></a>
 <p>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>">Back to Submissions</a>
 	<?php
@@ -578,6 +579,7 @@ if(isset($post) AND $post['published'] == 1){
 			$('.blog-tabs').find('.tab[data-tab="' + tab + '"]').addClass('active');
 			$('.blog-form').find('.ltb-data-tab').hide();
 			$('.blog-form').find('.ltb-data-tab#' + tab).show();
+			document.getElementById('post-top').scrollIntoView();   			
 		});
 		$('#autogen-excerpt').click(function(e){
 			if($(this).is(':checked')){
