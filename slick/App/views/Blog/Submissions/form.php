@@ -235,8 +235,9 @@ if(isset($post) AND $post['published'] == 1){
 			<?php
 			if(!isset($post) OR (isset($post) AND $unlock_post)){
 				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="status-cat" value="Next" />';
+				echo $form->displaySubmit();
 			}
-			?>
+			?>		
 		</div>			
 	</div>
 	<div class="ltb-data-tab" id="status-cat" style="display: none;">
@@ -288,6 +289,7 @@ if(isset($post) AND $post['published'] == 1){
 			<?php
 			if(!isset($post) OR (isset($post) AND $unlock_post)){
 				echo '<input type="button" class="tab-btn Slick_UI_Button" data-tab="meta-data" value="Next" />';
+				echo $form->displaySubmit();
 			}
 			?>
 		</div>	
@@ -576,7 +578,6 @@ if(isset($post) AND $post['published'] == 1){
 			$('.blog-tabs').find('.tab[data-tab="' + tab + '"]').addClass('active');
 			$('.blog-form').find('.ltb-data-tab').hide();
 			$('.blog-form').find('.ltb-data-tab#' + tab).show();
-			$("html, body").animate({ scrollTop: 0 }, "slow");
 		});
 		$('#autogen-excerpt').click(function(e){
 			if($(this).is(':checked')){
