@@ -222,6 +222,21 @@ if(!$isAll){
 						<span class="thread-most-recent">
 							<a href="<?= SITE_URL ?>/forum/post/<?= $topic['url'] ?>?page=<?= $topic['numPages'] ?>#post-<?= $topic['mostRecent']['postId'] ?>" title="<?= $topic['mostRecent']['author']['username'] ?> says: <?= str_replace('"', '\'', shortenMsg($topic['mostRecent']['content'], 250)) ?>"><i class="fa fa-mail-forward"></i> View most recent</a>
 						</span>
+						<span class="thread-recent-user">
+							<?php
+							$recentAvImage = $topic['mostRecent']['author']['avatar'];
+							if(trim($topic['mostRecent']['author']['real_avatar']) == ''){
+								$recentAvImage = SITE_URL.'/files/avatars/default.jpg';
+							}
+							else{				
+								if(!isExternalLink($topic['mostRecent']['author']['avatar'])){
+									$recentAvImage = SITE_URL.'/files/avatars/'.$topic['mostRecent']['author']['avatar'];
+								}
+							}
+							$recentAvImage = '<span class="mini-avatar"><img src="'.$recentAvImage.'" alt="" /></span>';							
+							?>
+							<a href="<?= SITE_URL ?>/profile/user/<?= $topic['mostRecent']['author']['slug'] ?>"><?= $recentAvImage.' '.$topic['mostRecent']['author']['username'] ?></a>
+						</span>
 						<span class="thread-recent-time" title="Last post: <?= formatDate($topic['mostRecent']['postTime']) ?>">
 							<i class="fa fa-clock-o"></i> <?= human_time_since($topic['mostRecent']['postTime'], false, false, 'round') ?> ago
 						</span>

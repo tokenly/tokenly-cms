@@ -2558,8 +2558,8 @@ body.dash-home .admin-content{
 .forum-thread-list .mini-avatar{
 	float: none;
 	display: inline-block;
-	width: 20px;
-	height: 20px;
+	width: 16px;
+	height: 16px;
 	margin-left: 3px;
 }
 
@@ -2628,6 +2628,11 @@ body.dash-home .admin-content{
 	width: 71.5%;
 	height: 400px;
 	background: #fff;
+}
+
+.content .forum-thread-list .thread-recent-user a{
+	font-weight: 500;
+	color: #006f9a;
 }
 
 /*** Media Queries ***/
