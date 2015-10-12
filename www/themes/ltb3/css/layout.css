@@ -896,16 +896,7 @@ footer .tagline a{
 	font-size: 15px;
 }
 
-.blog-list.grid li:hover .blog-title span{
-	color: #006f9a;
-}
-.blog-list.grid li:hover .blog-image img{
-	opacity: 0.8;
-}
 
-.blog-list.grid li:hover{
-	background: #f2f2f2;
-}
 .blog-list.grid li .blog-link{
 	position: absolute;
 	width: 100%;
@@ -2640,6 +2631,22 @@ body.dash-home .admin-content{
 }
 
 /*** Media Queries ***/
+
+@media screen and (min-width: 767px){
+
+	.blog-list.grid li:hover{
+		background: #f2f2f2;
+	}
+	
+	.blog-list.grid li:hover .blog-title span{
+		color: #006f9a;
+	}
+	.blog-list.grid li:hover .blog-image img{
+		opacity: 0.8;
+	}
+		
+}
+
 @media only screen and (max-width: 1420px){
 
 	.blog-list.grid{
