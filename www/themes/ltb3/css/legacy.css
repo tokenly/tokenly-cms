@@ -248,8 +248,9 @@ ul.disc li{
 	width: 80px;
 	position: relative;
 }
-.member-avatar img{
-	max-width: 100%;
+.content .member-avatar img{
+	min-width: 100%;
+	min-height: 100%;
 }
 
 .forum-category{
