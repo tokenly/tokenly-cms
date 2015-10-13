@@ -108,7 +108,7 @@ if($page == 1){
 		</div>
 		<div class="post-author-info">
 			<?php
-			
+			$this->includeView('inc/group-title', array('profile' => $topic['author'], 'primary_only' => true));
 			$use_status = '';
 			$online_icon = 'fa-circle';
 			$online_title = 'Offline';
@@ -345,7 +345,7 @@ if(count($replies) == 0){
 			
 			<div class="post-author-info">
 				<?php
-				
+				$this->includeView('inc/group-title', array('profile' => $reply['author'], 'primary_only' => true));
 			$use_status = '';
 			$online_icon = 'fa-circle';
 			$online_title = 'Offline';

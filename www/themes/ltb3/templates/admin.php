@@ -128,42 +128,7 @@ include(THEME_PATH.'/inc/header.php');
 							</h3>
 							<div class="user-info-col user-info-left">
 								<?php
-								if($user['primary_group']){
-									$groupStyle = '';
-									if(trim($user['primary_group']['displayView']) != ''){
-										$groupStyle = 'style="color: #'.$user['primary_group']['displayView'].';"';
-									}
-									$moreGroups = '';
-									if(count($user['groups']) > 1){
-										$displayGroups = array();
-										foreach($user['groups'] as $ugroup){
-											if($ugroup['silent'] == 0){
-												$displayGroups[] = $ugroup;
-											}
-										}
-										if(count($displayGroups) > 0){
-											$displayGroupNames = array();
-											foreach($displayGroups as $dg){
-												$dgColor = '';
-												if(trim($dg['displayView']) != ''){
-													$dgColor = 'style="color: #'.$dg['displayView'].';"';
-												}
-												$displayGroupNames[] = '<span '.$dgColor.'">'.$dg['displayName'].'</span>';
-											}
-											$moreGroups = '';
-											if(count($displayGroups) > 1){
-												$moreGroups = ' <a href="#user-group-list" class="fancy" title="View more groups"><i class="fa fa-group"></i></a>
-																<div style="display: none;" id="user-group-list">
-																	<h3>'.$display_name.'\'s Groups</h3>
-																	<p>
-																		'.join(', ', $displayGroupNames).'
-																	</p>
-																</div>';
-											}
-										}
-									}
-									echo '<span class="user-group" '.$groupStyle.'">'.$user['primary_group']['displayName'].$moreGroups.'</span>';
-								}
+								$this->includeView('inc/group-title', array('profile' => $user));
 								if(isset($user['meta']['pop_score_cache'])){
 									echo '<span class="user-rating" title="Total Proof of Participation Earned"><i class="fa fa-comment"></i> '.number_format(round($user['meta']['pop_score_cache'])).' PoP</span>';
 								}
@@ -381,4 +346,3 @@ include(THEME_PATH.'/inc/header.php');
 	</script>
 <?php
 include(THEME_PATH.'/inc/footer-full.php');
-?>

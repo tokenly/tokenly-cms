@@ -52,42 +52,7 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 						</h3>
 						<div class="user-info-col user-info-left">
 							<?php
-							if($profile['primary_group']){
-								$groupStyle = '';
-								if(trim($profile['primary_group']['displayView']) != ''){
-									$groupStyle = 'style="color: #'.$profile['primary_group']['displayView'].';"';
-								}
-								$moreGroups = '';
-								if(count($profile['groups']) > 1){
-									$displayGroups = array();
-									foreach($profile['groups'] as $ugroup){
-										if($ugroup['silent'] == 0){
-											$displayGroups[] = $ugroup;
-										}
-									}
-									if(count($displayGroups) > 0){
-										$displayGroupNames = array();
-										foreach($displayGroups as $dg){
-											$dgColor = '';
-											if(trim($dg['displayView']) != ''){
-												$dgColor = 'style="color: #'.$dg['displayView'].';"';
-											}
-											$displayGroupNames[] = '<span '.$dgColor.'">'.$dg['displayName'].'</span>';
-										}
-										$moreGroups = '';
-										if(count($displayGroups) > 1){
-											$moreGroups = ' <a href="#user-group-list" class="fancy" title="View more groups"><i class="fa fa-group"></i></a>
-															<div style="display: none;" id="user-group-list">
-																<h3>'.$display_name.'\'s Groups</h3>
-																<p>
-																	'.join(', ', $displayGroupNames).'
-																</p>
-															</div>';
-										}
-									}
-								}
-								echo '<span class="user-group" '.$groupStyle.'">'.$profile['primary_group']['displayName'].$moreGroups.'</span>';
-							}
+							$this->includeView('inc/group-title', array('profile' => $profile));
 							if(isset($profile['meta']['pop_score_cache'])){
 								echo '<span class="user-rating" title="Total Proof of Participation Earned"><i class="fa fa-comment"></i> '.number_format(round($profile['meta']['pop_score_cache'])).' PoP</span>';
 							}

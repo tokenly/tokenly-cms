@@ -2655,6 +2655,11 @@ body.dash-home .admin-content{
 	font-size: 14px;
 }
 
+.post-author-info .user-group{
+	display: block;
+	font-weight: 700;
+}
+
 
 /*** Media Queries ***/
 
