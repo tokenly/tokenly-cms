@@ -372,4 +372,20 @@ class View extends Core\View
 		$class->params = $params;
 		return $class->display();
 	}
+	
+	public static function includeView($view, $data = array(), $echo = true)
+	{
+		foreach($data as $k => $v){
+			$$k = $v;
+		}
+		ob_start();
+		include(FRAMEWORK_PATH.'/App/views/'.$view.'.php');
+		$content = ob_get_contents();
+		ob_end_clean();
+		if($echo){
+			echo $content;
+			return;
+		}
+		return $content;
+	}
 }
