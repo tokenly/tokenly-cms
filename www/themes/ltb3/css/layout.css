@@ -742,7 +742,7 @@ footer .tagline a{
 }
 
 .mini-avatar img{
-	height: 100%;
+	min-height: 100%;
 }
 
 .user-link .user-name{
@@ -2656,6 +2656,11 @@ body.dash-home .admin-content{
 }
 
 .post-author-info .user-group{
+	display: block;
+	font-weight: 700;
+}
+
+.member-list .user-group{
 	display: block;
 	font-weight: 700;
 }

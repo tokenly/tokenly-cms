@@ -116,7 +116,7 @@ if(count($members) == 0){
 			$lastActive = ' - Last active: '.formatDate($user['lastActive']);
 		}
 		
-		$status = '<small><strong>Status:</strong> '.$online_title.' <i class="fa '.$online_icon.'" title="'.$online_title.$lastActive.'"></i></small>';
+		$status = '<strong>Status:</strong> '.$online_title.' <i class="fa '.$online_icon.'" title="'.$online_title.$lastActive.'"></i>';
 					
 		echo '<li>
 				<div class="member-avatar">
@@ -130,7 +130,10 @@ if(count($members) == 0){
 					<p>
 						<strong><a href="'.SITE_URL.'/profile/user/'.$user['slug'].'" class="btn btn-small btn-blue">View Profile</a></strong>
 					</p>
-					'.$status.'
+					<small>
+						'.$this->includeView('inc/group-title', array('profile' => $user['profile'], 'primary_only' => true), false).'
+						'.$status.'
+					</small>
 					</div>
 				</div>
 				<div class="clear"></div>';
