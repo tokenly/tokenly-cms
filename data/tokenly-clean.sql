@@ -1856,6 +1856,7 @@ CREATE TABLE `tracking_clicks` (
   `IP` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `request_url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `click_time` datetime DEFAULT NULL,
+  `adspaceId` int(11) unsigned DEFAULT 0,
   PRIMARY KEY (`clickId`),
   KEY `urlId` (`urlId`),
   KEY `userId` (`userId`),
@@ -1892,6 +1893,9 @@ CREATE TABLE `tracking_urls` (
   `active` int(1) DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `last_click` datetime DEFAULT NULL,
+  `last_update` datetime DEFAULT NULL,
+  `label` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `image` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,  
   PRIMARY KEY (`urlId`),
   KEY `siteId` (`siteId`),
   KEY `url` (`url`),
@@ -2302,3 +2306,23 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2015-07-30 21:53:44
+
+--
+-- Table structure for table `adspaces`
+--
+
+
+CREATE TABLE `adspaces` (
+  `adspaceId` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `label` varchar(255) DEFAULT NULL,
+  `width` int(11) unsigned DEFAULT '0',
+  `height` int(11) unsigned DEFAULT '0',
+  `maxItems` int(11) unsigned DEFAULT '1',
+  `active` tinyint(2) DEFAULT '0',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `items` longtext,
+  `slug` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`adspaceId`),
+  KEY `slug` (`slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
