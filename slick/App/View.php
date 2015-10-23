@@ -368,6 +368,7 @@ class View extends Core\View
 		if(!$getTag){
 			return false;
 		}
+		$getTag['class'] = '\Tags\\'.$getTag['class'];
 		$class = new $getTag['class']($params);
 		$class->params = $params;
 		return $class->display();
