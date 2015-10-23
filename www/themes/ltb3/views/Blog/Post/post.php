@@ -10,7 +10,7 @@ $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['aut
 $imagePath = SITE_PATH.'/files/blogs';
 ?>
 <div class="blog-listings">
-	<div class="ad large-banner center"><?= $this->displayBlock('top-ad') ?></div><br>
+	<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'ltb-blog-top-ad')) ?>
 	<h1><?= $blog['name'] ?></h1>
 	<hr>
 </div>

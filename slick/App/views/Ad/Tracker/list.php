@@ -14,10 +14,15 @@ else{
 	$total_clicks = 0;
 	$total_impressions = 0;
 	$total_ctr = 0;
-	foreach($urls as $item){
+	foreach($urls as $k => $item){
 		$total_clicks += $item['clicks'];
 		$total_impressions += $item['impressions'];
-		$total_ctr += ($item['clicks'] / $item['impressions']) * 100;
+		$ctr = 0;
+		if($item['impressions'] > 0){
+			$ctr = ($item['clicks'] / $item['impressions']);
+			$total_ctr +=  $ctr * 100;
+		}
+		$urls[$k]['ctr'] = $ctr;
 	}
 	$average_ctr = 0;
 	if(count($urls) > 0){
@@ -57,12 +62,20 @@ else{
 			}
 			?>
 			<tr>
-				<td><?= $item['urlId'] ?></td>
-				<td class="url-field"><a href="<?= $item['url'] ?>" target="_blank"><?= $item['url'] ?></a></td>
+				<td>
+					<?= $item['urlId'] ?></td>
+				<td class="url-field">
+					<?php
+					if(trim($item['label']) != ''){
+						echo '<strong>'.$item['label'].'</strong><Br>';
+					}
+					?>
+					<small><a href="<?= $item['url'] ?>" target="_blank"><?= $item['url'] ?></a></small>
+				</td>
 				<td><?= number_format($item['clicks']) ?></td>
 				<td><?= number_format($item['unique_clicks']) ?></td>
 				<td><?= number_format($item['impressions']) ?></td>
-				<td><?= number_format(($item['clicks'] / $item['impressions'])*100, 2) ?>%</td>
+				<td><?= number_format($item['ctr'], 2) ?>%</td>
 				<td>
 					<?= date('Y/m/d', $start_date) ?>
 				</td>

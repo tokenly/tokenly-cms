@@ -12,7 +12,13 @@
 	<li><strong>Impressions:</strong> <?= number_format($tracking_url['impressions']) ?></li>
 	<li><strong>Clicks:</strong> <?= number_format($tracking_url['clicks']) ?></li>
 	<li><strong>Unique Clicks:</strong> <?= number_format($tracking_url['unique_clicks']) ?></li>
-	<li><strong>Click-Thru Rate (CTR):</strong> <?= number_format(($tracking_url['clicks'] / $tracking_url['impressions'])*100, 2) ?>%</li>
+	<?php
+	$ctr = 0;
+	if($tracking_url['impressions'] > 0){
+		$ctr = ($tracking_url['clicks'] / $tracking_url['impressions'])*100;
+	}
+	?>
+	<li><strong>Click-Thru Rate (CTR):</strong> <?= number_format($ctr, 2) ?>%</li>
 	<li><strong>Last Click:</strong>
 	<?php
 	if($tracking_url['last_click'] != NULL AND $tracking_url['last_click'] != '0000-00-00 00:00:00'){
@@ -30,12 +36,14 @@ if(count($clicks) == 0){
 	echo '<p>No clicks yet!</p>';
 }
 else{
+	$model = new \Core\Model;
 	echo '<table class="admin-table data-table submissions-table tracking-stats-table mobile-table">
 			<thead>
 				<tr>
 					<th>IP/User</th>
 					<th>Reference URL</th>
 					<th>Click Time</th>
+					<th>Adspace</th>
 				</tr>
 			</thead>
 			<tbody>';
@@ -46,10 +54,19 @@ else{
 			$andUser = ' (<a href="'.SITE_URL.'/profile/user/'.$click['user']['slug'].'" target="_blank">'.$click['user']['username'].'</a>)';
 		}
 		
+		$show_adspace = 'N/A';
+		if(isset($click['adspaceId']) AND $click['adspaceId'] > 0){
+			$getAdspace = $model->get('adspaces', $click['adspaceId']);
+			if($getAdspace){
+				$show_adspace = '[#'.$getAdspace['adspaceId'].'] '.$getAdspace['label'];
+			}
+		}
+		
 		echo '<tr>
 				<td>'.$click['IP'].$andUser.'</td>
 				<td class="url-field">'.$click['request_url'].'</td>
 				<td>'.date('Y/m/d \<\b\r\> H:i', strtotime($click['click_time'])).'</td>
+				<td>'.$show_adspace.'</td>
 			  </tr>';
 	}
 	

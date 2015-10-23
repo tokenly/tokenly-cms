@@ -6,11 +6,20 @@ class Tracker_Model extends Core\Model
 	public function getURLForm()
 	{
 		$form = new UI\Form;
+		$form->setFileEnc();
 		
+		$label = new UI\Textbox('label');
+		$label->setLabel('Label');
+		$form->add($label);
+				
 		$url = new UI\Textbox('url');
 		$url->setLabel('Destination URL');
 		$url->addAttribute('required');
 		$form->add($url);
+		
+		$image = new UI\File('image');
+		$image->setLabel('Image');
+		$form->add($image);
 		
 		$active = new UI\Checkbox('active', 'active');
 		$active->setLabel('Active?');
@@ -37,11 +46,16 @@ class Tracker_Model extends Core\Model
 		$insertData['siteId'] = $data['siteId'];
 		$insertData['userId'] = $data['userId'];
 		$insertData['created_at'] = timestamp();
+		if(isset($data['label'])){
+			$insertData['label'] = $data['label'];
+		}
 		
 		$insert = $this->insert('tracking_urls', $insertData);
 		if(!$insert){
 			throw new \Exception('Error adding tracking URL');
 		}
+		
+		$this->uploadImage($insert);
 		
 		$insertData['urlId'] = $insert;
 		return $insertData;
@@ -59,10 +73,54 @@ class Tracker_Model extends Core\Model
 		
 		$data['url'] = strip_tags($data['url']);
 		
-		$edit = $this->edit('tracking_urls', $id, array('url' => $data['url'], 'active' => $active));
+		$updateData = array('url' => $data['url'], 'active' => $active);
+		if(isset($data['label'])){
+			$updateData['label'] = $data['label'];
+		}
+		
+		$edit = $this->edit('tracking_urls', $id, $updateData);
 		if(!$edit){
 			throw new \Exception('Error editing tracking URL');
 		}
+		
+		$this->uploadImage($id);
+		
 		return true;
+	}
+	
+	public function uploadImage($urlId)
+	{
+		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
+			$ext = 'jpg';
+			if(isset($_FILES['image']['type'])){
+				switch($_FILES['image']['type']){
+					case 'image/jpg':
+					case 'image/jpeg':
+						$ext = 'jpg';
+						break;
+					case 'image/gif':
+						$ext = 'gif';
+						break;
+					case 'image/png':
+						$ext = 'png';
+						break;
+				}
+			}
+			$fileName = 'ad-'.md5($urlId.'-'.$_FILES['image']['name']).'.'.$ext;
+			$dir = SITE_PATH.'/files/ads';
+			if(!is_dir($dir)){
+				@mkdir($dir, 755);
+			}
+			$move = move_uploaded_file($_FILES['image']['tmp_name'], $dir.'/'.$fileName);
+			if(!$move){
+				throw new \Exception('Error uploading image');
+			}
+			$save = $this->edit('tracking_urls', $urlId, array('image' => $fileName));
+			if(!$save){
+				throw new \Exception('Error saving uploaded image');
+			}
+			return true;
+		}
+		
 	}
 }

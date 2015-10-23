@@ -3,7 +3,7 @@ include(THEME_PATH.'/inc/header.php');
 ?>
 <div class="content">
 	<div class="home-content">
-		<div class="ad large-banner center"><?= $this->displayBlock('top-ad') ?></div> <!-- first ad -->
+		<div class="ad large-banner center"><?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'top-home-ad')) ?></div> <!-- first ad -->
 		<div class="clear"></div>
 		<div class="blog-list-cont">
 	<?php

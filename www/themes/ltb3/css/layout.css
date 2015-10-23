@@ -743,6 +743,7 @@ footer .tagline a{
 
 .mini-avatar img{
 	min-height: 100%;
+	max-width: 100%;
 }
 
 .user-link .user-name{
@@ -2665,6 +2666,53 @@ body.dash-home .admin-content{
 	font-weight: 700;
 }
 
+.ad.homepage-sidebar-ad{
+	position: relative;
+	overflow: hidden;
+	min-width: 250px;
+	min-height: 250px;
+	max-width: 100%;
+	background: #000;
+	margin-bottom: 10px;
+}
+
+.ad.homepage-sidebar-ad p{
+	margin: 0px;
+}
+
+.adspace-ad-form{
+	position: relative;
+	padding: 10px 20px;
+	border: solid 1px #efefef;
+	background: #fff;
+	width: 50%;
+}
+
+.adspace-ad-form input, .adspace-ad-form select{
+	font-size: 14px;
+}
+
+.adspace-ad-form select{
+	width: 50%;
+}
+
+.adspace-ad-form input[type="text"]{
+	display: inline-block;
+	width: 175px;
+}
+
+.adspace-ad-form input[type="submit"]{
+	margin: 10px 0px;
+}
+
+.adspace-ad-form label{
+	display: inline-block;
+	margin-right: 10px;
+}
+
+.adspace-item img{
+	max-width: 100%;
+}
 
 /*** Media Queries ***/
 
