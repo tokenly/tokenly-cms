@@ -296,6 +296,7 @@ function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData =
 
 function markdown($str)
 {
+	$str = strip_tags($str, '<a><i><em><b><strong><p><br><iframe><img>');
 	require_once(SITE_PATH.'/resources/Parsedown.php');
 	$parsedown = new Parsedown();
 	$parse =  $parsedown->parse($str);
@@ -320,8 +321,10 @@ function markdown($str)
 	
 	/*** end @mention mod ***/
 	
+	$parse = strip_tags($parse, '<p><br><hr><i><em><b><strong><a><img><iframe><blockquote><ul><ol><li><table><tbody><thead><th><tr><td><code><pre>');
 	return $parse;
 }
+
 
 
 function parseRawInput()
