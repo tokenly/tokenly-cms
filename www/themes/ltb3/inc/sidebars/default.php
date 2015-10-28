@@ -14,6 +14,8 @@ if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 }
 ?>
 						<div class="sidebar-inner-content">
+							<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'default-sidebar-2')) ?>
+							<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'default-sidebar')) ?>							
 							<div class="search-cont pull-right">
 								<a href="#" class="search-icon" title="Search website"><i class="fa fa-search"></i></a>
 							</div><!-- search-cont -->							

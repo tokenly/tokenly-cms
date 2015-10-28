@@ -95,6 +95,7 @@
 								</a>								
 								<div class="menu-top">
 									<div class="pull-left header-links">
+										<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'top-header-ad')) ?>
 										<?= $this->displayBlock('header-extra-links') ?>										
 									</div><!-- account-links -->
 									<div class="pull-right account-links">

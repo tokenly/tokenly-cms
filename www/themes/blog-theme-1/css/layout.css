@@ -1,0 +1,259 @@
+
+.wrap{
+	position: relative;
+}
+
+.clear{
+	clear: both;
+}
+
+.left-bar{
+  background: #f5f5f5;
+  position: fixed;
+  top: 0;
+  height: 100%;
+  width: 20%;
+  padding: 90px 2% 2% 2%;
+  overflow: hidden;
+  z-index: 10000;
+  box-sizing: border-box;
+}
+
+
+.left-bar .icon-list{
+	background: #E7E7E7;
+	display: inline-block;
+	margin: 0;
+	padding: 8px 30px;
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 20%;
+	z-index: 200;
+	box-sizing: border-box;
+}
+
+.left-bar .icon-list li{
+  display: inline-block;
+  list-style-type: none;
+  margin-right: 15px;
+  width: 18px;
+}
+
+.logo-title{
+  font-family: "Roboto Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1;
+  text-transform: uppercase;
+  margin: 0;
+  position: relative;
+}
+
+.logo-title a{
+  position: relative;
+  text-decoration: none;
+  color: #404040;
+}
+
+.logo-tagline{
+  color: #aaa;
+  line-height: 1.4;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: normal;
+  display: inline-block;
+  margin: 10px 0 0 0;
+  text-align: center;
+}
+
+.menu-cont{
+	clear: both;
+	display: block;
+	float: left;
+	padding-top: 30px;
+	width: 100%;
+}
+
+.menu-cont .menu{
+  list-style: none;
+  margin: 0 0 2% 0;
+  padding-left: 0;
+}
+
+.menu-cont .menu li{
+	list-style-type: none;
+	display: block;
+	position: relative;
+}
+
+.menu-cont .menu li a{
+  display: block;
+  padding: 2% 0;
+  color: #404040;
+  font-family: "Roboto Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.menu-cont .menu li:hover a, .menu-cont .menu li.active a{
+	 color: #777;
+}
+.main{
+  display: inline-block;
+  width: 100%;
+  padding: 5% 6% 4% 26%;
+}
+
+.entry-title, .blog-post > h1, .content > h1 {
+  font-family: "Roboto Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 80px;
+  font-weight: 400;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 2%;
+}
+
+.blog-image{
+  margin-bottom: 4%;
+  display: block;
+  float: left;
+  text-align: center;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  width: 260px;
+}
+
+.blog-post .blog-image img{
+	width: 100%;
+	margin: 0px;
+}
+
+.blog-date{
+  margin-bottom: 2%;
+  color: #aaa;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.blog-excerpt, .blog-content{
+	font-size: 20px;
+	font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	display: inline-block;
+	width: 72%;
+	vertical-align: top;
+}
+
+.blog-list > li{
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  margin-bottom: 25px;
+  padding-bottom: 6%;
+  border-bottom: solid 15px #f6f6f6;
+  list-style-type: none;
+  
+}
+
+.login input[type="submit"]{
+	display: block;
+}
+
+.blog-cats{
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+
+.blog-commentCount{
+	display: none;
+}
+
+.blog-extra{
+}
+
+.blog-social{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.content > .rss-link{
+	display: none;
+}
+
+.blog-paging .active{
+	font-weight: 700;
+	color: #000;
+}
+
+.blog-avatar{
+	float: right;
+	vertical-align: top;
+	width: 150px;
+}
+
+.blog-description{
+	margin-bottom: 30px;
+	margin-top: -10px;
+}
+
+.blog-more{
+	color: #333;
+	margin-bottom: 10px;
+	display: inline-block;
+	font-weight: 700;
+}
+
+.footer{
+	font-size: 14px;
+}
+
+.blog-list{
+	margin-left: 0px;
+}
+
+
+/* #Media Queries
+================================================== */
+
+	/* Smaller than standard 960 (devices and browsers) */
+	@media only screen and (max-width: 959px) {}
+
+	/* Tablet Portrait size to standard 960 (devices and browsers) */
+	@media only screen and (min-width: 768px) and (max-width: 959px) {}
+
+	/* All Mobile Sizes (devices and browser) */
+	@media only screen and (max-width: 768px) {
+		.left-bar{
+			margin-left: 0;
+			padding: 70px 5% 25px 5%;
+			position: relative;
+			width: 100%;		
+		}
+		
+		.main{
+			padding: 5%;
+		}
+		
+		.left-bar .icon-list{
+		  padding: 8px 6%;
+		  position: absolute;		
+		  width: 100%;
+		}
+		
+		.entry-title, .blog-post > h1, .content > h1 {
+			font-size: 50px;
+			margin-bottom: 20px;
+		}		
+		
+	
+	}
+
+	/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+	@media only screen and (min-width: 480px) and (max-width: 767px) {}
+
+	/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+	@media only screen and (max-width: 479px) {}

@@ -66,5 +66,4 @@ if(!isset($metaDescription)){
 			</ul><!-- menu -->
 		</div><!-- menu-cont -->
 	</div><!-- left-bar -->
-	
 	<div class="main">

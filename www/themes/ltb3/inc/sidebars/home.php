@@ -14,6 +14,7 @@ if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 }
 ?>
 						<div class="sidebar-inner-content">
+							<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar-2')) ?>
 							<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar')) ?>
 							<div class="ad center sidebar-ad">
 								
