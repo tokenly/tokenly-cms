@@ -91,7 +91,7 @@ class DisplayAdspace extends Model
 		
 		ob_start();
 		?>
-<div style="margin-left: auto; margin-right: auto; margin-bottom: 10px; line-height: 0; overflow: hidden; position: relative; display: block; text-align: center; width: <?= $adspace['width'] ?>px; height: <?= $adspace['height'] ?>px;">		
+<div style="margin-left: auto; margin-right: auto; margin-bottom: 0px; line-height: 0; overflow: hidden; position: relative; display: block; text-align: center; width: <?= $adspace['width'] ?>px; height: <?= $adspace['height'] ?>px;">		
 <?php
 
 \Core\Model::$cacheMode = false;

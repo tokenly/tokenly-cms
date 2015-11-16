@@ -2714,6 +2714,11 @@ body.dash-home .admin-content{
 	max-width: 100%;
 }
 
+.account-links .login-pull span{
+	font-size: 13px;
+}
+
+
 /*** Media Queries ***/
 
 @media screen and (min-width: 767px){
@@ -2749,6 +2754,21 @@ body.dash-home .admin-content{
 	.blog-list.grid li{
 		width: 130px;
 	}
+	
+	.account-links .login-pull span{
+		display: none;
+	}
+	.account-links .login-pull span.mini-avatar{
+		display: inline-block;
+	}
+	
+	.header-menu .menu-top .account-links{
+		margin-right: 15px;
+	}
+	
+	.account-links .mini-avatar{
+		margin-right: 0px;
+	}	
 
 @media only screen and (max-width: 1250px){
 
@@ -2891,11 +2911,25 @@ body.dash-home .admin-content{
 	.blog-list.grid{
 		width: 465px;	
 	}
+}
+
+@media only screen and (max-width: 870px) {
+
+	.blog-list.grid{
+		width: 465px;	
+	}
+	
 
 	
 }
 
-@media only screen and (max-width: 720px) {
+@media only screen and (max-width: 750px) {
+
+	.account-links .login-pull span{
+		display: inline-block;
+	}
+	
+	
 	.header-menu .main-menu{
 		display: none;
 	}
@@ -2915,8 +2949,17 @@ body.dash-home .admin-content{
 	}
 	
 	.menu-top .header-links{
-		display: none;
+		position: absolute;
+		top: 50px;
+		width: 100%;
+		margin: 0px;
+		padding: 0px;
 	}	
+	
+	.menu-top .header-links img{
+		max-width: 100%;
+		width: 80%;
+	}
 	
 	.menu-top .account-links.pull-right{
 		float: left;
@@ -3077,7 +3120,7 @@ body.dash-home .admin-content{
 }
 
 @media only screen and (max-width: 500px){
-	.menu-top .account-links.pull-right{
+	body .header-menu .menu-top .account-links.pull-right{
 		float: right;
 		clear: right;
 		margin-right: 10px;
@@ -3135,6 +3178,10 @@ body.dash-home .admin-content{
 	.blog-listings > .rss-link{
 		display: none;
 	}	
+	
+	.menu-top .header-links{
+		display: none;
+	}
 	
 }
 
