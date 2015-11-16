@@ -243,6 +243,7 @@ class Submissions_Model extends Core\Model
 	
 	public function updatePostCategories($postId, $cats, $user)
 	{
+		\Core\Model::$cacheMode = false;
 		if(!is_array($cats)){
 			$cats = array($cats);
 		}
@@ -269,15 +270,16 @@ class Submissions_Model extends Core\Model
 			if(!$catAccess AND !$user['perms']['canManageAllBlogs']){
 				continue;
 			}
-			
+					
 			$existing = false;
 			foreach($postCats as $postCat){
-				if($postCat['categoryId'] == $catAccess['categoryId']){
+				if($catAccess AND $postCat['categoryId'] == $catAccess['categoryId']){
 					$existing = true;
 					break;
 				}
 			}
 			
+
 			if(!$existing){
 				$approved = 0;
 				if($user['perms']['canManageAllBlogs'] OR $user['userId'] == $catAccess['blog']['userId']){
@@ -298,9 +300,11 @@ class Submissions_Model extends Core\Model
 						}
 					}
 				}
-				$update = $this->insert('blog_postCategories', array('postId' => $postId, 'categoryId' => $catAccess['categoryId'], 'approved' => $approved));		
+				$insert_vals = array('postId' => $postId, 'categoryId' => $cat, 'approved' => $approved);
+				$update = $this->insert('blog_postCategories', $insert_vals);		
 			}
 		}
+		\Core\Model::$cacheMode = true;		
 		return true;
 	}
 	
