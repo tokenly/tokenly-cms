@@ -194,25 +194,31 @@ class Report_Model extends Core\Model
 		if($blockCache){
 			$blockInfos = json_decode($blockCache, true);
 		}
+
 		foreach($txList as $tx){
 			
-			if(!isset($blockInfos[$tx['block']])){
-				try{
-					$blockHash = $btc->getblockhash($tx['block']);
-					$blockInfo = $btc->getblock($blockHash);
+			if($tx['asset'] != 'BTC'){
+				if(!isset($blockInfos[$tx['block']])){
+					try{
+						$blockHash = $btc->getblockhash($tx['block']);
+						$blockInfo = $btc->getblock($blockHash);
+					}
+					catch(\Exception $e){
+						throw new \Exception('Error getting block info for index '.$tx['block']);
+					}
+					$blockInfos[$tx['block']] = $blockInfo;
 				}
-				catch(\Exception $e){
-					throw new \Exception('Error getting block info for index '.$tx['block']);
+				else{
+					$blockInfo = $blockInfos[$tx['block']];
 				}
-				$blockInfos[$tx['block']] = $blockInfo;
+				$block_time = $blockInfo['time'];
 			}
 			else{
-				$blockInfo = $blockInfos[$tx['block']];
+				$block_time =  $tx['time'];
 			}
-
 			
 			$item = array();
-			$item[] = date('Y/m/d H:i:s', $blockInfo['time']);
+			$item[] = date('Y/m/d H:i:s', $block_time);
 			$item[] = $tx['address'];
 			$item[] = $tx['asset'];
 			if($tx['divisible']){

@@ -272,7 +272,12 @@ class Bitcoin
 		if($tx_list AND isset($tx_list['data']) AND count($tx_list['data']) > 0){
 			$tx_count = $tx_list['total'];
 			if(!$limit){
-				$pages = ceil($tx_count / $tx_list['per_page']);
+				if(!isset($tx_list['per_page']) OR $tx_list['per_page'] == 0){
+					$pages = 1;
+				}
+				else{
+					$pages = ceil($tx_count / $tx_list['per_page']);
+				}
 			}
 			foreach($tx_list['data'] as $tx){
 				$item = array();
@@ -281,6 +286,7 @@ class Bitcoin
 				$item['amount'] = 0;
 				$item['inputs'] = $tx['inputs'];
 				$item['outputs'] = $tx['outputs'];
+				$item['block'] = $tx['block_height'];
 				foreach($tx['inputs'] as $input){
 					if($input['address'] == $address){
 						$item['amount'] -= $input['value'];
