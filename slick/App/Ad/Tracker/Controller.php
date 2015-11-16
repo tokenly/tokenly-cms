@@ -65,7 +65,7 @@ class Tracker_Controller extends \App\ModControl
 			}
 			catch(\Exception $e){
 				$add = false;
-				Utl\Session::flash('message', $e->getMessage(), 'error');
+				Util\Session::flash('message', $e->getMessage(), 'error');
 			}
 			if($add){
 				Util\Session::flash('message', 'Tracking URL created!', 'success');
