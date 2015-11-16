@@ -85,6 +85,7 @@ class Post_Model extends Core\Model
 			$notifyData['postId'] = $useData['postId'];
 			$notifyData['page'] = $page;
 			$notifyData['postContent'] = $useData['content'];
+			$notifyData['user'] = $appData['user'];
 
 			mention($useData['content'], 'emails.forumPostMention',
 					$useData['userId'], $useData['postId'], 'forum-reply', $notifyData);

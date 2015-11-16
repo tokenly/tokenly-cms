@@ -321,7 +321,7 @@ function markdown($str)
 	
 	/*** end @mention mod ***/
 	
-	$parse = strip_tags($parse, '<p><br><hr><i><em><b><strong><a><img><iframe><blockquote><ul><ol><li><table><tbody><thead><th><tr><td><code><pre>');
+	$parse = strip_tags($parse, '<p><br><hr><i><em><b><strong><a><img><iframe><blockquote><ul><ol><li><table><tbody><thead><th><tr><td><code><pre><h1><h2><h3><h4><h5><h6>');
 	return $parse;
 }
 
