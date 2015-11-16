@@ -13,6 +13,49 @@
 	?>
 	<meta name="description" content="<?= $metaDescription ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=1">
+	<?php
+	if($template == 'blog' AND isset($post)){
+		$post_url = $site['url'].'/'.$app['url'].'/'.$module['url'].'/'.$post['url'];
+		if(isset($canonical)){
+			$post_url = $canonical;
+		}
+		//extra social media fields for Open Graph
+		?>
+		<meta property="og:site_name" content="Let's Talk Bitcoin" />
+		<meta property="og:title" content="<?= $title ?>" />
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content="<?= $post_url ?>" />
+		<?php
+		if($post['coverImage'] != ''){
+			?>
+			<meta property="og:image" content="https://letstalkbitcoin.com/files/blogs/<?= $post['coverImage'] ?>" />
+			<?php
+		}
+		$og_desc = strip_tags($post['excerpt']);
+		if($post['formatType'] == 'markdown'){
+			$og_desc = strip_tags(markdown($post['excerpt']));
+		}
+		if(isset($post['social-summary']) AND trim($post['social-summary']) != ''){
+			$og_desc = strip_tags($post['social-summary']);
+		}
+		?>
+		<meta property="og:description" content="<?= $og_desc ?>" />
+		<?php
+		if(isset($post['twitter-summary']) AND trim($post['twitter-summary']) != ''){
+		?>
+			<meta property="twitter:description" content="<?= strip_tags($post['twitter-summary']) ?>" />
+		<?php
+		}//endif
+		$authorName = $post['author']['username'];
+		if(isset($post['author']['profile']['real-name']) AND trim($post['author']['profile']['real-name']['value']) != ''){
+			$authorName =  $post['author']['profile']['real-name']['value'];
+		}		
+		?>
+			<meta name="author" content="<?= $authorName ?>" />
+			<meta property="article:author" content="<?= SITE_URL ?>/profile/user/<?= $post['author']['slug'] ?>" />
+		<?php
+	}
+	?>	
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/fonts.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/base.css">
 	<link rel="stylesheet" href="<?= THEME_URL ?>/css/legacy.css">	
@@ -149,7 +192,7 @@
 												echo '<span class="mini-avatar"><img src="'.SITE_URL.'/files/avatars/'.$user['meta']['avatar'].'" alt="" /></span>';
 											}
 											?>
-											<span><?= $user['username'] ?></span></a>
+											<span><?= shortenMsg($user['username'],13) ?></span></a>
 											<a href="<?= SITE_URL ?>/account/logout" title="Logout" style="margin-left: 10px;"><i class="fa fa-sign-out"></i></a>
 										<?php
 										}
