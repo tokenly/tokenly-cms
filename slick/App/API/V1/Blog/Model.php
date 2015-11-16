@@ -251,6 +251,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 					 AND p.publishDate <= "'.timestamp().'"
 					 '.$andCats.'
 					 '.$andUsers.'
+					 '.$andFeatured.'
 					 '.$andWhen.'
 					 ORDER BY p.postId DESC
 					 LIMIT '.$start.', '.$limit;
