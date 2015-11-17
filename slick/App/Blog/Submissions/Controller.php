@@ -362,7 +362,7 @@ class Submissions_Controller extends \App\ModControl
 				}
 			}
 			
-			if(($getPost['userId'] != $this->data['user']['userId'] AND !$foundRole AND !$this->data['perms']['canEditOtherPost'])
+			if(($getPost['userId'] != $this->data['user']['userId'] AND (!$foundRole OR !$this->data['perms']['canEditOtherPost']))
 				OR
 			   ($getPost['userId'] == $this->data['user']['userId'] AND !$this->data['perms']['canEditSelfPost'])
 			   ){
