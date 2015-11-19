@@ -24,6 +24,7 @@ class Link_Controller extends \App\ModControl
 		if(!isset($_SESSION['visited_tracking_urls'])){
 			$_SESSION['visited_tracking_urls'] = array();
 		}	
+
 		//check if they have clicked this link already in current session
 		if(!in_array($getLink['urlId'], $_SESSION['visited_tracking_urls'])){
 			$unique = $this->checkUniqueClick($getLink['urlId']);
@@ -72,7 +73,7 @@ class Link_Controller extends \App\ModControl
 																		 'last_click' => $time));	
 																		 
 			//record click to specific scheduled ad in adspace
-			if($ad_key AND $getAdspace){
+			if(($ad_key !== false) AND $getAdspace){
 				$ad_items = json_decode($getAdspace['items'], true);
 				if(!is_array($ad_items)){
 					$ad_items = array();
