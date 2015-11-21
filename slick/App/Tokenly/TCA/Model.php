@@ -114,6 +114,28 @@ class TCA_Model extends Core\Model
 	}
 	
 	/**
+	 * Generic TCA checking
+	 * Checks if one or more addresses meet the defined Token-Access conditions. Returns true or false
+	 * 
+	 * @param $userId integer - ID of the user
+	 * @param $conditions array
+	 * @example $conditions = array(array('asset' => 'ASSET', 'amount' => 5000, 'op' => '=', 'stackOp' => 'AND'));
+	 * 
+	 * @return bool
+	 */
+	public function checkAccess($userId, $conditions = array())
+	{
+		$getBalances = $this->inventory->getUserBalances($userId, true);
+		$stack = array();
+		foreach($conditions as $lock){
+			$hasReq = $this->parseLock($getBalances, $lock);
+			$stack[] = array('hasReq' => $hasReq, 'stackOp' => $lock['stackOp']);
+		}
+		$doCheck = $this->parseStack($stack);
+		return $doCheck;
+	}
+	
+	/**
 	* Checks specific token_access entry against list of user balances based on defined conditional operator.
 	*
 	* @param $balances Array
