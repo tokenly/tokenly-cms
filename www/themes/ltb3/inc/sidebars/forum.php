@@ -1,5 +1,8 @@
 <div class="sidebar-inner-content">
-<h2>Network <span>Forums</span></h2>
+	<div style="margin-bottom: 20px;">
+		<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'networkforum-sidebar')) ?>					
+	</div>	
+	<h2>Network <span>Forums</span></h2>
 <?php
 if(isset($forum_home)){
 	unset($board);

@@ -1,5 +1,7 @@
 <div class="blog-listings">
-<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'ltb-blog-top-ad')) ?>
+<div style="margin-bottom: 20px;">
+	<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'ltb-blog-top-ad')) ?>
+</div>
 <h1><?= $title ?></h1>
 <?php
 if(isset($category)){

@@ -43,6 +43,9 @@ foreach($getArchive as $ak => $av){
 }
 ?>
 <div class="sidebar-inner-content">
+	<div style="margin-bottom: 20px;">
+		<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'networkblogs-sidebar')) ?>					
+	</div>	
 	<div class="search-cont pull-right">
 		<a href="#" class="search-icon" title="Search website"><i class="fa fa-search"></i></a>
 	</div><!-- search-cont -->				

@@ -234,6 +234,8 @@ tr:last-child td:last-child {
 .header-menu .menu-top .account-links{
 	margin-right: 25px;
 	margin-top: 15px;
+	position: relative;
+	z-index: 100000;
 }
 
 .header-menu .menu-top .header-links  .fa-btc{
@@ -2822,7 +2824,7 @@ body.dash-home .admin-content{
 
 }
 
-@media only screen and (max-width: 1050px) {
+@media only screen and (max-width: 1150px) {
 	.main{
 		float: none;
 		width: 100%;
@@ -2873,6 +2875,10 @@ body.dash-home .admin-content{
 	
 	.ad.sidebar-ad .tracking-link{
 		width: 150px;
+	}
+	
+	.notify-list{
+		left: -180px;
 	}
 }
 
@@ -3081,6 +3087,10 @@ body.dash-home .admin-content{
 	/*	margin-left: 0px;*/
 	}	
 
+
+	.notify-list{
+		left: 0px;
+	}
 }
 
 
