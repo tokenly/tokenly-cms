@@ -474,6 +474,18 @@ class Submissions_Model extends Core\Model
 				}
 			}
 		}
+		
+		//get platform chief editors
+		$meta = new \App\Meta_Model;
+		$global_editors = $meta->getUsersWithPermission('blog', 'receiveAllReview');
+		if($global_editors){
+			foreach($global_editors as $ge){
+				if($ge != $post['userId']){
+					\App\Meta_Model::notifyUser($ge, 'emails.blog.ready_review', $post['postId'], 'blog-post-ready', true, $notifyData);
+				}
+			}
+		}
+		
 		return true; 
 	}
 	

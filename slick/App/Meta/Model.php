@@ -430,4 +430,29 @@ class Meta_Model extends Core\Model
 		}
 		return $output;
 	}	
+	
+	public function getUsersWithPermission($app, $key)
+	{
+		$app = get_app($app);
+		if(!$app){
+			return false;
+		}
+		$perm = $this->getAppPerm($app['appId'], $key);
+		if(!$perm){
+			return false;
+		}
+		$perm_users = $this->fetchAll('SELECT gu.userId
+									   FROM group_users gu
+									   LEFT JOIN group_perms gp ON gp.groupId = gu.groupId
+									   WHERE gp.permId = :id
+									   GROUP BY gu.userId', array(':id' => $perm['permId']));
+		if(!$perm_users){
+			return false;
+		}
+		$output = array();
+		foreach($perm_users as $user){
+			$output[] = $user['userId'];
+		}
+		return $output;
+	}
 }
