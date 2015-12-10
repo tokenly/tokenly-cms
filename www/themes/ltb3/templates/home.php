@@ -28,7 +28,7 @@ include(THEME_PATH.'/inc/header.php');
 		$app = $catModel->get('apps', 'blog', array(), 'slug');
 		
 		$listViewStyle = 'display: none;';
-		if(isset($_COOKIE['blog-list-type']) AND $_COOKIE['blog-list-type'] == 'list'){
+		if(!isset($_COOKIE['blog-list-type']) OR $_COOKIE['blog-list-type'] == 'list'){
 			$listViewStyle = '';
 		}		
 ?>
@@ -192,7 +192,7 @@ foreach($posts as $post){
 }//endforeach
 echo '</ul>	';
 	$gridViewStyle = 'display: none;';
-	if(!isset($_COOKIE['blog-list-type']) OR $_COOKIE['blog-list-type'] == 'grid'){
+	if(isset($_COOKIE['blog-list-type']) AND $_COOKIE['blog-list-type'] == 'grid'){
 		$gridViewStyle = '';
 	}
 	echo '<ul class="blog-list grid home-posts" style="'.$gridViewStyle.'">';
