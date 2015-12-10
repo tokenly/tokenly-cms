@@ -198,6 +198,11 @@ class Disqus
 		return $output;
 	}
 	
-	
+	public function getRecentPosts($max = 10)
+	{
+		$this->reqSecret = true;
+		$output = $this->call('forums/listPosts', array('forum' => $this->forumId, 'limit' => $max, 'related' => 'thread'));
+		return $output;
+	}
 	
 }

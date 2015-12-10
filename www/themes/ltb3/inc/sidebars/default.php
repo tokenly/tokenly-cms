@@ -8,25 +8,88 @@ if(isset($_SESSION['accountAuth'])){
 	$andAuth = '?x-auth='.$_SESSION['accountAuth'];
 }
 $forum_threads = json_decode(file_get_contents(SITE_URL.'/api/v1/forum/threads'.$andAuth), true);
-$show_threads = false;
+
+$disqus = new \API\Disqus;
+$disqusPosts = $disqus->getRecentPosts();
+
+$sidebar_threads = array();
+
 if(is_array($forum_threads) AND isset($forum_threads['threads'])){
+	foreach($forum_threads['threads'] as $f_thread){
+		$item = array();
+		$item['title'] = $f_thread['title'];
+		$post_page = 0;
+		$andPage = '';
+		if(isset($f_thread['mostRecent']['postId'])){
+			$post_page = $model->getPostPage($f_thread['mostRecent']['postId'], $forum_meta['postsPerPage']);
+		}
+		if($post_page > 1){
+			$andPage = '?page='.$post_page;
+		}
+		if(!isset($f_thread['postId'])){
+			$f_thread['postId'] = 0;
+		}		
+		$item['link'] = SITE_URL.'/forum/post/'.$f_thread['url'].$andPage.'#post-'.$f_thread['postId'];
+		$item['author'] = $f_thread['author'];
+		$item['content'] = $f_thread['content'];
+		$item['time'] = strtotime($f_thread['postTime']);
+		if(isset($f_thread['mostRecent']['postId'])){
+				$item['author'] = $f_thread['mostRecent']['author'];
+				$item['content'] = $f_thread['mostRecent']['content'];
+				$item['time'] = strtotime($f_thread['mostRecent']['postTime']);
+		}
+		$item['author']['link'] = SITE_URL.'/profile/user/'.$item['author']['slug'];
+		$item['type'] = 'thread';
+		$sidebar_threads[] = $item;
+	}
+}
+
+if(is_array($disqusPosts)){
+	date_default_timezone_set('UTC');
+	foreach($disqusPosts as $d_thread){
+		$item = array();
+		$item['title'] = $d_thread['thread']['clean_title'];
+		$item['link'] = $d_thread['url'];
+		$item['author'] = array();
+		$item['author']['username'] = $d_thread['author']['name'];
+		$item['author']['avatar'] = $d_thread['author']['avatar']['permalink'];
+		$item['author']['link'] = $d_thread['author']['profileUrl'];
+		if(isset($d_thread['author']['url']) AND trim($d_thread['author']['url']) != ''){
+			$item['author']['link'] = $d_thread['author']['url'];
+		}
+		$item['content'] = $d_thread['raw_message'];
+		$item['time'] = strtotime($d_thread['createdAt']);
+		$item['type'] = 'comment';
+		$sidebar_threads[] = $item;
+	}
+	date_default_timezone_set('America/Los_Angeles');
+	
+}
+
+aasort($sidebar_threads, 'time');
+$sidebar_threads = array_reverse($sidebar_threads);
+
+$show_threads = false;
+if(count($sidebar_threads) > 0){
 	$show_threads = true;
 }
+
+
 ?>
 						<div class="sidebar-inner-content">
 							<div style="margin-bottom: 20px;">
 								<?php
-								$ad2 = $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'default-sidebar-2'));
+								$ad2 = $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar-ad-2'));
 								if($ad2){
 									echo '<div style="margin-bottom: 20px;">'.$ad2.'</div>';
 								}
-								?>
-								<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'default-sidebar')) ?>							
+								?>								
+								<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar')) ?>
 							</div>
 							<div class="search-cont pull-right">
 								<a href="#" class="search-icon" title="Search website"><i class="fa fa-search"></i></a>
 							</div><!-- search-cont -->							
-							<h2>LTB Forums <span>Recent Posts</span></h2>
+							<h2>LTB Community <span>Recent Posts</span></h2>
 							<div class="clear"></div>
 							<?php
 							if(!$show_threads){
@@ -39,36 +102,23 @@ if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 								<?php
 								$limit = 6;
 								$num = 0;
-								foreach($forum_threads['threads'] as $thread){
+								foreach($sidebar_threads as $thread){
 									if($num >= $limit){
 										break;
 									}
 									$num++;
-									$post_page = 0;
-									$andPage = '';
-									if(isset($thread['mostRecent']['postId'])){
-										$post_page = $model->getPostPage($thread['mostRecent']['postId'], $forum_meta['postsPerPage']);
-									}
-									if($post_page > 1){
-										$andPage = '?page='.$post_page;
-									}
-									$thread_preview = $thread;
-									$thread_preview['postId'] = 0;
-									if(isset($thread['mostRecent']['postId'])){
-										$thread_preview = $thread['mostRecent'];
-									}
 									?>
 								<li>
 									<div class="post-title">
-										<span class="post-date" title="<?= date('F jS, Y \a\t H:i a', strtotime($thread_preview['postTime'])) ?>"><?= human_time_since($thread_preview['postTime'], false, true, 'floor') ?></span>
-										<a href="<?= SITE_URL.'/profile/user/'.$thread_preview['author']['slug'] ?>" class="user-link"><span class="mini-avatar"><img src="<?= $thread_preview['author']['avatar'] ?>" alt="" /></span><span class="user-name"><?= $thread_preview['author']['username'] ?></span></a>
+										<span class="post-date" title="<?= date('F jS, Y \a\t H:i a', $thread['time']) ?>"><?= human_time_since($thread['time'], false, true, 'floor') ?></span>
+										<a href="<?= $thread['author']['link'] ?>" class="user-link"><span class="mini-avatar"><img src="<?= $thread['author']['avatar'] ?>" alt="" /></span><span class="user-name"><?= $thread['author']['username'] ?></span></a>
 									</div>
 									<div class="post-content">
 										<p>
-											<?= shortenMsg(strip_tags(remove_tags(markdown($thread_preview['content']), array('blockquote'))), 250) ?>
+											<?= shortenMsg(strip_tags(remove_tags(markdown($thread['content']), array('blockquote'))), 250) ?>
 										</p>
 										<div class="post-thread-title">
-											<a href="<?= SITE_URL.'/forum/post/'.$thread['url'].$andPage ?>#post-<?= $thread_preview['postId'] ?>" title="<?= str_replace('"', '\'', $thread['title']) ?>" class="view-post">
+											<a href="<?= $thread['link'] ?>" title="<?= str_replace('"', '\'', $thread['title']) ?>" class="view-post">
 												<span class="pull-right text-right">View Thread <i class="fa fa-mail-forward"></i></span>
 											</a>
 												<strong><?= $thread['title'] ?></strong>
