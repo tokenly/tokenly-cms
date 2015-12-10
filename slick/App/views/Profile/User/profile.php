@@ -1,10 +1,16 @@
 <h1 class="large">Community Directory</h1>
 <hr>
+<?php
+if($page_mod == ''){
+?>
 <div class="pull-right">
 	<p>
 		<a href="#activity" class="btn">Activity</a>
 	</p>
 </div>
+<?php
+}
+?>
 <p>
 	<a href="<?= route('profile.member-list') ?>" title="Back to user directory"><i class="fa fa-mail-reply"></i> Go back</a>
 </p>
@@ -195,6 +201,20 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 			<div class="clear"></div>
 		</div><!-- dash-home-stats -->
 	</div><!-- profile-stats -->
+	<?php
+
+	$foundActivity = false;
+	if($activity['forums'] AND $activity['forums']['posts']){
+		$foundActivity = true;
+	}
+	
+	if($activity['blog'] AND $activity['blog']['posts']){
+		$foundActivity = true;
+		
+	}	
+		
+	if($page_mod == ''){
+	?>
 	<div class="profile-content"
 	<?php
 	if((trim($profile['email']) == '' OR intval($profile['showEmail']) === 0)
@@ -208,10 +228,12 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 	?>
 	>
 		<?php
+	}
 		if(intval($profile['pubProf']) == 0 AND (!$user OR $user['userId'] != $profile['userId'])){
 			echo '<p><strong>This users\' profile is private.</strong></p>';
 		}
 		else{
+			if($page_mod == ''){
 		?>
 		<ul class="profile-info">
 			<?php
@@ -276,24 +298,21 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 		<a name="activity"></a>
 		<div class="clear"></div>
 	</div>
+	<?php
+	}//endif $page_mod == ''
+		
+	if($page_mod == ''){
+	?>
 	<h2 class="text-default">User Activity</h2>	
 	<div class="profile-activity-cont">
 	<?php
-
-	$foundActivity = false;
-	if($activity['forums'] AND $activity['forums']['posts']){
-		$foundActivity = true;
 	}
-	
-	if($activity['blog'] AND $activity['blog']['posts']){
-		$foundActivity = true;
-		
-	}	
 	
 	if(!$foundActivity){
 		echo '<p>No account activity found.</p>';
 	}	
 	else{
+		if($page_mod == ''){
 	?>		
 	<ul class="ltb-stat-tabs" data-tab-type="profile-activity">
 		<?php
@@ -324,10 +343,12 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 	<div class="clear"></div>
 	<div class="profile-activity">
 <?php
-		if($activity['forums'] AND $activity['forums']['posts']){
+	}//endif $page_mod == ''
+
+		if($activity['forums'] AND $activity['forums']['posts'] AND ($page_mod == '' OR $page_mod == 'forum-only')){
 ?>
 		<div class="ltb-data-tab" id="forum-activity" style="<?= $forumDisplay ?>">
-			<h4>Forum Posts</h4>
+			<h3><a href="<?= SITE_URL ?>/profile/user/<?= $profile['slug'] ?>/forum-posts"  class="text-success">Forum Posts</a></h3>
 			<ul>
 				<li><strong>Replies:</strong> <?= number_format($activity['forums']['replies']) ?></li>
 				<li><strong>Topics:</strong> <?= number_format($activity['forums']['topics']) ?></li>
@@ -362,10 +383,11 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 		</div>
 		<?php
 		}
-		if($activity['blog'] AND $activity['blog']['posts']){
+
+		if($activity['blog'] AND $activity['blog']['posts'] AND ($page_mod == '' OR $page_mod == 'blog-only')){
 		?>
 		<div class="ltb-data-tab" id="blog-activity" style="<?= $blogDisplay ?>">
-			<h3>Blog Posts</h3>
+			<h3><a href="<?= SITE_URL ?>/profile/user/<?= $profile['slug'] ?>/blog-posts"  class="text-success">Blog Posts</a></h3>
 			<ul>
 				<li><strong>Posts Authored:</strong> <?= number_format($activity['blog']['written']) ?></li>
 				<li><strong>Posts Contributed To:</strong> <?= number_format($activity['blog']['contribs']) ?></li>
@@ -541,14 +563,20 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 		</div>
 		<?php
 		}//endif
-		?>
-	</div><!-- profile-activity -->
-	<?php
-	}//endif
-	?>
-	</div><!-- profile-activity-cont -->
-	<?php
-	}//endif
+		
+				if($page_mod == ''){
+				?>
+				</div><!-- profile-activity -->
+				<?php
+				}//endif $page_mod == ''
+			}//endif
+				if($page_mod == ''){
+				?>
+				</div><!-- profile-activity-cont -->
+				<?php
+				}
+			}//endif
+
 	?>
 </div>
 <script type="text/javascript">

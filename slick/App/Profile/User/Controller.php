@@ -40,6 +40,18 @@ class User_Controller extends \App\ModControl
 		$output['title'] = 'User Info - '.$getProfile['username'];
 		$output['template'] = 'profile';
 		
+		$output['page_mod'] = false;
+		if(isset($this->args[3])){
+			switch($this->args[3]){
+				case 'blog-posts':
+					$output['page_mod'] = 'blog-only';
+					break;
+				case 'forum-posts':
+					$output['page_mod'] = 'forum-only';
+					break;
+			}
+		}
+		
 		return $output;
 	}
 }
