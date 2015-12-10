@@ -196,7 +196,7 @@ class Post_Controller extends \App\ModControl
 		if(!isset($_SESSION['viewed_posts'])){
 			$_SESSION['viewed_posts'] = array();
 		}
-		if(!in_array($getPost['postId'], $_SESSION['viewed_posts'])){
+		if(!in_array($getPost['postId'], $_SESSION['viewed_posts']) AND !botdetect()){
 			$newViews = $getPost['views'] + 1;
 			$this->model->edit('blog_posts', $getPost['postId'], array('views' => $newViews));
 			$_SESSION['viewed_posts'][] = $getPost['postId'];
