@@ -1,6 +1,14 @@
 <h1 class="large">Community Directory</h1>
 <hr>
 <?php
+
+if(!isset($forumDisplay)){
+	$forumDisplay = false;
+}
+if(!isset($blogDisplay)){
+	$blogDisplay = false;
+}
+
 if($page_mod == ''){
 ?>
 <div class="pull-right">
