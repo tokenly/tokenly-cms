@@ -4,6 +4,8 @@ use PDO;
 
 class Model
 {
+	use \Traits\Modable;
+	
 	private $savedQueries = array();
 	public static $db;
 	public static $numQueries = 0;
@@ -14,6 +16,7 @@ class Model
 	public static $queryLog = array();
 	public static $indexes = array();
 	public static $logMode = false;
+	protected $container = false;
 
 	function __construct()
 	{
@@ -38,12 +41,14 @@ class Model
 		else{
 			$this->db = self::$db;
 		}
-	}
+		$this->container = new Container($this);
+	}	
+	
 	/**
 	* Prepare and execute an sql query
 	*
 	*/
-	public function sendQuery($sql, $values = array())
+	protected function sendQuery($sql, $values = array())
 	{
 		if(self::$logMode){
 			$logKey = md5($sql);
@@ -78,7 +83,7 @@ class Model
 	* Execute a query and fetch an array containing row info
 	*
 	*/
-	public function fetchSingle($sql, $values = array(), $obj = 0, $noCache = false)
+	protected function fetchSingle($sql, $values = array(), $obj = 0, $noCache = false)
 	{
 		if(!$noCache AND self::$cacheMode){
 			$qSig = md5('FETCH'.$sql.serialize($values));
@@ -105,7 +110,7 @@ class Model
 	* Execute query and fetch a list of rows that match the query
 	*
 	*/
-	public function fetchAll($sql, $values = array(), $obj = 0, $noCache = false)
+	protected function fetchAll($sql, $values = array(), $obj = 0, $noCache = false)
 	{
 		if(!$noCache AND self::$cacheMode){
 			$qSig = md5('FETCHALL'.$sql.serialize($values));
@@ -134,7 +139,7 @@ class Model
 	* if a query was already made, use this function to grab the saved version
 	*
 	*/
-	public function getSavedQuery($key)
+	protected function getSavedQuery($key)
 	{
 		if(!isset($this->savedQueries[$key])){
 			return false;
@@ -148,13 +153,13 @@ class Model
 	*
 	*
 	*/
-	public function saveQuery($key, $value)
+	protected function saveQuery($key, $value)
 	{
 		$this->savedQueries[$key] = $value;
 		return true;
 	}
 	
-	public function getParams($array = array())
+	protected function getParams($array = array())
 	{
 		$output = array();
 		foreach($array as $key => $val){
@@ -163,7 +168,7 @@ class Model
 		return $output;
 	}
 	
-	public function insert($table, $data)
+	protected function insert($table, $data)
 	{
 		$fields = array();
 		$params = array();
@@ -179,7 +184,7 @@ class Model
 		return $this->db->lastInsertId($table);
 	}
 	
-	public function edit($table, $id, $data, $indexName = '')
+	protected function edit($table, $id, $data, $indexName = '')
 	{
 		if($indexName == ''){
 			$indexName = self::$indexes[$table];
@@ -200,7 +205,7 @@ class Model
 		return $this->sendQuery($sql, $params);
 	}
 	
-	public function delete($table, $id, $indexName = '')
+	protected function delete($table, $id, $indexName = '')
 	{
 		if($indexName == ''){
 			$indexName = self::$indexes[$table];
@@ -214,7 +219,7 @@ class Model
 		return $this->sendQuery($sql, array(':index' => $id));
 	}
 	
-	public function getAll($table, $wheres = array(), $fields = array(), $orderBy = '', $orderDir = 'desc', $limit = false, $limitStart = 0)
+	protected function getAll($table, $wheres = array(), $fields = array(), $orderBy = '', $orderDir = 'desc', $limit = false, $limitStart = 0)
 	{
 		$where = '';
 		$whereValues = array();
@@ -293,7 +298,7 @@ class Model
 	
 
 	
-	public function get($table, $id, $fields = array(), $indexName = '')
+	protected function get($table, $id, $fields = array(), $indexName = '')
 	{
 		if($indexName == ''){
 			$indexName = self::$indexes[$table];
@@ -313,7 +318,7 @@ class Model
 		
 	}
 	
-	public function count($table, $field = '', $value = '')
+	protected function count($table, $field = '', $value = '')
 	{
 		$where = '';
 		$values = array();
@@ -348,7 +353,7 @@ class Model
 		return $fetch['total'];
 	}
 	
-	public function sum($table, $field, $id = '', $index = '')
+	protected function sum($table, $field, $id = '', $index = '')
 	{
 		$where = '';
 		$values = array();
@@ -367,7 +372,7 @@ class Model
 		
 	}
 	
-	public function truncate($table)
+	protected function truncate($table)
 	{
 		$sql = 'TRUNCATE '.$table;
 		return $this->sendQuery($sql);
