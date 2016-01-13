@@ -6,6 +6,7 @@ class Auth_Controller extends \Core\Controller
 	
 	function __construct()
 	{
+		parent::__construct();
 		$this->model = new Auth_Model;
 	}
 	
