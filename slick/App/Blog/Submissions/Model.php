@@ -255,17 +255,35 @@ class Submissions_Model extends Core\Model
 									   LEFT JOIN blog_categories c ON c.categoryId = pc.categoryId
 									   WHERE pc.postId = :postId',
 									  array(':postId' => $postId));
-									  
-		foreach($postCats as $cat){
+		
+		foreach($postCats as $k => $cat){
 			if(!in_array($cat['categoryId'], $cats)){
 				$catAccess = $this->container->checkCategoryAccess($cat['categoryId'], $user['userId']);
 				if($catAccess OR $user['perms']['canManageAllBlogs']){ //only remove if they also have access to the category (to prevent accidental removal)
 					$this->delete('blog_postCategories', $cat['postCatId']);
+					unset($postCats[$k]);
 				}
 			}
 		}
-
+	
+		
+		//clear out any duplicates
+		$used = array();
+		foreach($postCats as $k => $cat){
+			if(!in_array($cat['categoryId'], $used)){
+				$used[] = $cat['categoryId'];
+			}
+			else{
+				$this->delete('blog_postCategories', $cat['postCatId']);
+				unset($postCats[$k]);
+			}
+		}
+		
+		
 		foreach($cats as $cat){
+			if(in_array($cat, $used)){
+				continue;
+			}
 			$catAccess = $this->container->checkCategoryAccess($cat, $user['userId']);
 			if(!$catAccess AND !$user['perms']['canManageAllBlogs']){
 				continue;
