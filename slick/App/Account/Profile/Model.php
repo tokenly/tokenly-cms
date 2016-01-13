@@ -4,7 +4,7 @@ use Core, UI, Util, API;
 
 class Profile_Model extends Core\Model
 {
-	public function getProfileForm($user, $siteId, $app)
+	protected function getProfileForm($user, $siteId, $app)
 	{
 		$app = get_app('account');
 		$meta = new \App\Meta_Model;
@@ -63,7 +63,7 @@ class Profile_Model extends Core\Model
 		return $form;
 	}
 	
-	public function updateProfile($user, $data, $isAPI = false)
+	protected function updateProfile($user, $data, $isAPI = false)
 	{
 		$app = get_app('account');
 		
@@ -140,7 +140,7 @@ class Profile_Model extends Core\Model
 		
 	}
 	
-	public function getProfileInfo($user)
+	protected function getProfileInfo($user)
 	{
 		$getProfile = $this->getAll('user_profileVals', array('userId' => $user['userId']));
 		$output = array();

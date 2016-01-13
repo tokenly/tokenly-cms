@@ -5,7 +5,7 @@ class User_Model extends Core\Model
 {
 	public static $profiles = array();
 	
-	public function getUserProfile($id, $siteId = 0)
+	protected function getUserProfile($id, $siteId = 0)
 	{
 		//depreciate use of passing $siteId everywhere..
 		$getSite = currentSite();
@@ -87,7 +87,7 @@ class User_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getUserAvatar($userId)
+	protected function getUserAvatar($userId)
 	{
 		$getUser = $this->get('users', $userId, array('userId', 'username', 'slug', 'email'));
 		$site = currentSite();
@@ -99,7 +99,7 @@ class User_Model extends Core\Model
 		return $avatar;
 	}
 	
-	public function getUsersWithProfile($fieldId)
+	protected function getUsersWithProfile($fieldId)
 	{
 		$get = static_cache($fieldId.'_profileVals');
 		if(!$get){
@@ -114,7 +114,7 @@ class User_Model extends Core\Model
 		return $users;
 	}
 	
-	public function getUserActivity($userId, $user)
+	protected function getUserActivity($userId, $user)
 	{
 		$output = array();
 		$tca = new Tokenly\TCA_Model;
@@ -182,7 +182,7 @@ class User_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getProfileViews($userId, $update = false)
+	protected function getProfileViews($userId, $update = false)
 	{
 		$meta = new \App\Meta_Model;
 		$views = intval($meta->getUserMeta($userId, 'profile-views'));

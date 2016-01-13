@@ -9,7 +9,7 @@ class AssetScout_Model extends Core\Model
 		$this->inventory = new Inventory_Model;
 	}
 	
-	public function getScoutForm()
+	protected function getScoutForm()
 	{
 		$form = new UI\Form;
 		$form->setMethod('GET');
@@ -22,7 +22,7 @@ class AssetScout_Model extends Core\Model
 		return $form;
 	}
 	
-	public function scoutAsset($data)
+	protected function scoutAsset($data)
 	{
 		if(!isset($data['asset'])){
 			throw new \Exception('Please enter a asset name');

@@ -13,7 +13,7 @@ class AssetCache_Controller extends \App\ModControl
 		$this->model = new AssetCache_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
@@ -23,10 +23,10 @@ class AssetCache_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'add':
-					$output = $this->addAsset($output);
+					$output = $this->container->addAsset($output);
 					break;
 				case 'edit':
-					$output = $this->editAsset($output);
+					$output = $this->container->editAsset($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -34,12 +34,12 @@ class AssetCache_Controller extends \App\ModControl
 			}
 		}
 		else{
-			$output = $this->viewAssetList($output);
+			$output = $this->container->viewAssetList($output);
 		}
 		return $output;
 	}
 	
-	private function viewAssetList($output)
+	protected function viewAssetList($output)
 	{
 		$output['view'] = 'index';
 		$output['assetList'] = $this->model->getAll('xcp_assetCache', array(), array(), 'asset', 'asc');
@@ -54,7 +54,7 @@ class AssetCache_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addAsset($output)
+	protected function addAsset($output)
 	{
 		if(!$this->data['perms']['canViewAllAssets']){
 			$output['view'] = '403';
@@ -79,7 +79,7 @@ class AssetCache_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editAsset($output)
+	protected function editAsset($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';

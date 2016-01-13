@@ -8,12 +8,12 @@ class Settings_Model extends Core\Model
 		parent::__construct();
 	}
 	
-	public function getSettings()
+	protected function getSettings()
 	{
 		return $this->getAll('settings');
 	}
 	
-	public function editSettings($data)
+	protected function editSettings($data)
 	{
 		$alteredKeys = array();
 		foreach($data as $key => $item){
@@ -35,17 +35,17 @@ class Settings_Model extends Core\Model
 			}
 		}
 		foreach($keyValues as $key => $value){
-			$this->editSetting($key, $value);
+			$this->container->editSetting($key, $value);
 		}
 		return true;
 	}
 	
-	public function editSetting($key, $value)
+	protected function editSetting($key, $value)
 	{
 		return $this->edit('settings', $key, array('settingValue' => $value), 'settingKey');
 	}
 	
-	public function getSetting($key)
+	protected function getSetting($key)
 	{
 		$fetch = $this->get('settings', $key, array(), 'settingKey');
 		if(!$fetch){
@@ -54,7 +54,7 @@ class Settings_Model extends Core\Model
 		return $fetch['settingValue'];
 	}
 	
-	public function getSettingsForm($settings)
+	protected function getSettingsForm($settings)
 	{
 		$form = new UI\Form;
 		foreach($settings as $setting){		

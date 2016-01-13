@@ -13,7 +13,7 @@ class AssetDrop_Controller extends \App\ModControl
 		$this->model = new AssetDrop_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['view'] = 'index';

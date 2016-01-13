@@ -13,14 +13,14 @@ class Inventory_Controller extends \App\ModControl
 		$this->model = new Inventory_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';	
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'transactions':
-					$output = $this->showInventoryTransactions($output);
+					$output = $this->container->showInventoryTransactions($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -43,7 +43,7 @@ class Inventory_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function showInventoryTransactions($output)
+	protected function showInventoryTransactions($output)
 	{
 		$output['transactions'] = $this->model->getUserInventoryTransactions($this->data['user']['userId']);
 		$output['view'] = 'transactions';

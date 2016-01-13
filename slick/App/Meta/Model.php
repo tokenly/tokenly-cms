@@ -7,9 +7,9 @@ class Meta_Model extends Core\Model
 	public static $userMeta = array();
 	public static $metaCache = array();
 	
-	public function updateUserMeta($userId, $key, $value)
+	protected function updateUserMeta($userId, $key, $value)
 	{
-		$get = $this->getUserMeta($userId, $key, 1);
+		$get = $this->container->getUserMeta($userId, $key, 1);
 		if(!$get){
 			//create new row
 			$update = $this->insert('user_meta', array('userId' => $userId, 'metaKey' => $key, 'metaValue' => $value));
@@ -24,9 +24,9 @@ class Meta_Model extends Core\Model
 		return true;
 	}
 	
-	public function clearUserMeta($userId, $key)
+	protected function clearUserMeta($userId, $key)
 	{
-		$get = $this->getUserMeta($userId, $key, 1);
+		$get = $this->container->getUserMeta($userId, $key, 1);
 		if($get){
 			$delete = $this->delete('user_meta', $get['metaId']);
 			if($delete){
@@ -36,9 +36,9 @@ class Meta_Model extends Core\Model
 		return false;
 	}
 	
-	public function updateStat($key, $value, $label = '')
+	protected function updateStat($key, $value, $label = '')
 	{
-		$get = $this->getStat($key, 1);
+		$get = $this->container->getStat($key, 1);
 		if(!$get){
 			//create new row
 			$values = array('statKey' => $key, 'statValue' => $value);
@@ -61,7 +61,7 @@ class Meta_Model extends Core\Model
 		return true;
 	}
 	
-	public function getStat($key, $fullData = 0)
+	protected function getStat($key, $fullData = 0)
 	{
 		$get = $this->fetchSingle('SELECT * FROM stats WHERE statKey = :key', array(':key' => $key));
 		if(!$get){
@@ -73,14 +73,14 @@ class Meta_Model extends Core\Model
 		return $get['statValue'];
 	}
 	
-	public function getUserMeta($userId, $key, $fullData = 0)
+	protected function getUserMeta($userId, $key, $fullData = 0)
 	{
 		if($fullData == 0 AND isset(self::$userMeta[$userId][$key])){
 			return self::$userMeta[$userId][$key];
 		}
 		elseif($fullData == 0){
 			if(!isset(self::$userMeta[$userId])){
-				$this->userMeta($userId);
+				$this->container->userMeta($userId);
 				if(!isset(self::$userMeta[$userId][$key])){
 					return false;
 				}
@@ -102,7 +102,7 @@ class Meta_Model extends Core\Model
 	}
 	
 
-	public function userMeta($userId)
+	protected function userMeta($userId)
 	{
 		if(isset(self::$userMeta[$userId])){
 			return self::$userMeta[$userId];
@@ -119,7 +119,7 @@ class Meta_Model extends Core\Model
 		return $output;
 	}
 	
-	public function appMeta($appId)
+	protected function appMeta($appId)
 	{
 		$getApp = $this->get('apps', $appId);
 		if(!$getApp){
@@ -143,14 +143,14 @@ class Meta_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getAppMeta($appId, $key, $fullData = 0, $blob = false)
+	protected function getAppMeta($appId, $key, $fullData = 0, $blob = false)
 	{
 		if($fullData == 0 AND isset(self::$appMeta[$appId][$key])){
 			return self::$appMeta[$appId][$key];
 		}
 		elseif($fullData == 0){
 			if(!isset(self::$appMeta[$appId])){
-				$this->appMeta($appId);
+				$this->container->appMeta($appId);
 				if(!isset(self::$appMeta[$appId][$key])){
 					return false;
 				}				
@@ -179,9 +179,9 @@ class Meta_Model extends Core\Model
 		
 	}
 	
-	public function updateAppMeta($appId, $key, $value, $label = '', $isSetting = 0, $type = '', $blob = false)
+	protected function updateAppMeta($appId, $key, $value, $label = '', $isSetting = 0, $type = '', $blob = false)
 	{
-		$get = $this->getAppMeta($appId, $key, 1);
+		$get = $this->container->getAppMeta($appId, $key, 1);
 		$valueType = 'metaValue';
 		if($blob){
 			$valueType = 'valueBlob';
@@ -212,7 +212,7 @@ class Meta_Model extends Core\Model
 		
 	}
 	
-	public static function getUserAppPerms($userId, $appId)
+	protected static function getUserAppPerms($userId, $appId)
 	{
 		$model = new \App\Meta_Model;
 		$app = $model->get('apps',$appId, array('appId'));
@@ -242,7 +242,7 @@ class Meta_Model extends Core\Model
 		return $perms;
 	}
 	
-	public function getAppPerm($appId, $key)
+	protected function getAppPerm($appId, $key)
 	{
 		$getPerms = $this->getAll('app_perms', array('appId' => $appId, 'permKey' => $key));
 		if(count($getPerms) == 0){
@@ -251,9 +251,9 @@ class Meta_Model extends Core\Model
 		return $getPerms[0];
 	}
 	
-	public function addAppPerm($appId, $key)
+	protected function addAppPerm($appId, $key)
 	{
-		$getPerm = $this->getAppPerm($appId, $key);
+		$getPerm = $this->container->getAppPerm($appId, $key);
 		if(!$getPerm){
 			$add = $this->insert('app_perms', array('appId' => $appId, 'permKey' => $key));
 			if(!$add){
@@ -264,7 +264,7 @@ class Meta_Model extends Core\Model
 		return false;
 	}
 	
-	public static function notifyUser($userId, $message, $itemId = 0, $type = '', $allowDupe = false, $data = array())
+	protected static function notifyUser($userId, $message, $itemId = 0, $type = '', $allowDupe = false, $data = array())
 	{
 		$model = new Core\Model;
 		if($itemId != 0 AND $type != '' AND !$allowDupe){
@@ -335,7 +335,7 @@ class Meta_Model extends Core\Model
 		return $add;
 	}
 	
-	public static function checkItemNotified($userId, $itemId, $type)
+	protected static function checkItemNotified($userId, $itemId, $type)
 	{
 		$model = new Core\Model;
 		$get = $model->fetchSingle('SELECT * FROM user_notifications WHERE userId = :userId AND type = :type AND itemId = :itemId',
@@ -347,7 +347,7 @@ class Meta_Model extends Core\Model
 	}
 	
 
-	public function getPageMeta($pageId, $key, $fullData = 0)
+	protected function getPageMeta($pageId, $key, $fullData = 0)
 	{
 		
 		$get = $this->fetchSingle('SELECT * FROM page_meta WHERE pageId = :id AND metaKey = :key', array(':id' => $pageId, ':key' => $key));
@@ -361,9 +361,9 @@ class Meta_Model extends Core\Model
 		return $get['value'];
 	}
 	
-	public function updatePageMeta($pageId, $key, $value)
+	protected function updatePageMeta($pageId, $key, $value)
 	{
-		$get = $this->getPageMeta($pageId, $key, 1);
+		$get = $this->container->getPageMeta($pageId, $key, 1);
 		if(!$get){
 			//create new row
 			$update = $this->insert('page_meta', array('pageId' => $pageId, 'metaKey' => $key, 'value' => $value));
@@ -378,7 +378,7 @@ class Meta_Model extends Core\Model
 		return true;
 	}	
 	
-	public function pageMeta($pageId)
+	protected function pageMeta($pageId)
 	{
 		$getAll = $this->getAll('page_meta', array('pageId' => $pageId));
 		$output = array();
@@ -390,7 +390,7 @@ class Meta_Model extends Core\Model
 	}	
 	
 	
-	public function getBlockMeta($blockId, $key, $fullData = 0)
+	protected function getBlockMeta($blockId, $key, $fullData = 0)
 	{
 		
 		$get = $this->fetchSingle('SELECT * FROM block_meta WHERE blockId = :id AND metaKey = :key', array(':id' => $blockId, ':key' => $key));
@@ -404,9 +404,9 @@ class Meta_Model extends Core\Model
 		return $get['value'];
 	}
 	
-	public function updateBlockMeta($blockId, $key, $value)
+	protected function updateBlockMeta($blockId, $key, $value)
 	{
-		$get = $this->getBlockMeta($blockId, $key, 1);
+		$get = $this->container->getBlockMeta($blockId, $key, 1);
 		if(!$get){
 			//create new row
 			$update = $this->insert('block_meta', array('blockId' => $blockId, 'metaKey' => $key, 'value' => $value));
@@ -421,7 +421,7 @@ class Meta_Model extends Core\Model
 		return true;
 	}	
 	
-	public function blockMeta($blockId)
+	protected function blockMeta($blockId)
 	{
 		$getAll = $this->getAll('block_meta', array('blockId' => $blockId));
 		$output = array();
@@ -431,13 +431,13 @@ class Meta_Model extends Core\Model
 		return $output;
 	}	
 	
-	public function getUsersWithPermission($app, $key)
+	protected function getUsersWithPermission($app, $key)
 	{
 		$app = get_app($app);
 		if(!$app){
 			return false;
 		}
-		$perm = $this->getAppPerm($app['appId'], $key);
+		$perm = $this->container->getAppPerm($app['appId'], $key);
 		if(!$perm){
 			return false;
 		}

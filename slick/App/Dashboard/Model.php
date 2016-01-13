@@ -3,7 +3,7 @@ namespace App\Dashboard;
 use Core;
 class Model extends Core\Model
 {
-	public function getModuleFromArgs($args)
+	protected function getModuleFromArgs($args)
 	{
 		$module = false;
 		$app = false;
@@ -21,16 +21,16 @@ class Model extends Core\Model
 		}
 		
 		if($module){
-			$checkDash = $this->checkModuleIsDash($module['moduleId']);
+			$checkDash = $this->container->checkModuleIsDash($module['moduleId']);
 			if(!$checkDash){
 				$module = false;
 			}
 		}
-		$this->getDashModules();
+		$this->container->getDashModules();
 		return array('app' => $app, 'module' => $module);
 	}
 	
-	public function checkModuleIsDash($moduleId, $returnParsed = false)
+	protected function checkModuleIsDash($moduleId, $returnParsed = false)
 	{
 		$getModule = $this->get('modules', $moduleId);
 		if(!$getModule){
@@ -50,20 +50,20 @@ class Model extends Core\Model
 		return true;
 	}
 	
-	public function getModuleDashName($moduleId)
+	protected function getModuleDashName($moduleId)
 	{
 		$getModule = $this->get('modules', $moduleId);
 		if(!$getModule){
 			return false;
 		}
-		$get = $this->checkModuleIsDash($moduleId, true);
+		$get = $this->container->checkModuleIsDash($moduleId, true);
 		if(isset($get['menu-label']) AND trim($get['menu-label']) != ''){
 			return $get['menu-label'];
 		}
 		return $getModule['name'];
 	}
 	
-	public function getDashModules($siteId = 0)
+	protected function getDashModules($siteId = 0)
 	{
 		if($siteId == 0){
 			$site = currentSite();
@@ -74,7 +74,7 @@ class Model extends Core\Model
 		$cms = get_app('cms');
 		$prevHash = $meta->getAppMeta($cms['appId'], 'dashboard-hash');
 		$getPrevData = $meta->getAppMeta($cms['appId'], 'dashboard-modules-'.$siteId);
-		$curHash = $this->getDashHash();
+		$curHash = $this->container->getDashHash();
 		
 		if($curHash == $prevHash AND $getPrevData){
 			$getPrevData = json_decode($getPrevData, true);
@@ -94,7 +94,7 @@ class Model extends Core\Model
 			foreach($getApps as $app){
 				$getModules = $this->getAll('modules', array('appId' => $app['appId'], 'active' => 1));
 				foreach($getModules as $module){
-					$checkDash = $this->checkModuleIsDash($module['moduleId'], true);
+					$checkDash = $this->container->checkModuleIsDash($module['moduleId'], true);
 					if($checkDash){
 						if(!isset($output[$app['appId']])){
 							$output[$app['appId']] = array();
@@ -121,7 +121,7 @@ class Model extends Core\Model
 		}
 	}
 	
-	public function getDashHash()
+	protected function getDashHash()
 	{
 		$get = $this->fetchSingle('SELECT moduleId FROM modules ORDER BY moduleId DESC LIMIT 1');
 		if(!$get){

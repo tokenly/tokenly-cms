@@ -16,38 +16,38 @@ class Pages_Controller extends \App\ModControl
         $this->model = new Pages_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showPages();
+					$output = $this->container->showPages();
 					break;
 				case 'add':
-					$output = $this->addPage();
+					$output = $this->container->addPage();
 					break;
 				case 'edit':
-					$output = $this->editPage();
+					$output = $this->container->editPage();
 					break;
 				case 'delete':
-					$output = $this->deletePage();
+					$output = $this->container->deletePage();
 					break;
 				default:
-					$output = $this->showPages();
+					$output = $this->container->showPages();
 					break;
 			}
 		}
 		else{
-			$output = $this->showPages();
+			$output = $this->container->showPages();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showPages()
+    protected function showPages()
     {
 		$output = array('view' => 'list');
 		$getPages = $this->model->getAll('pages', array('siteId' => $this->data['site']['siteId']));
@@ -56,7 +56,7 @@ class Pages_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addPage()
+	protected function addPage()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getPageForm(0, $this->data['themeData']);
@@ -81,7 +81,7 @@ class Pages_Controller extends \App\ModControl
 	}
 
 	
-	private function editPage()
+	protected function editPage()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -119,13 +119,10 @@ class Pages_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function deletePage()
+	protected function deletePage()
 	{
 		if(isset($this->args[3])){
-			$getPage = $this->model->get('pages', $this->args[3]);
-			if($getPage){
-				$delete = $this->model->delete('pages', $this->args[3]);
-			}			
+			$delete = $this->model->deletePage($this->args[3]);			
 		}
 		redirect($this->site.$this->moduleUrl);
 	}

@@ -3,7 +3,7 @@ namespace App\API\V1;
 use Core, API;
 class Blog_Model extends \App\Blog\Submissions_Model
 {
-	public function getAllPosts($data, $getExtra = 0, $start = 0, $filled = array())
+	protected function getAllPosts($data, $getExtra = 0, $start = 0, $filled = array())
 	{
 		$meta = new \App\Meta_Model;
 		$blogApp = $this->get('apps', 'blog', array('appId'), 'slug');
@@ -46,7 +46,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 			foreach($expCats as $expCat){
 				$expCat = intval($expCat);
 				$catList[] = $expCat;
-				$catList = array_merge($catList, $this->getChildCategories($expCat));
+				$catList = array_merge($catList, $this->container->getChildCategories($expCat));
 			}
 			$catList = array_unique($catList);
 			if(count($catList) > 0){
@@ -266,6 +266,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 		$tca = new \App\Tokenly\TCA_Model;
 		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
 		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
 		$isRSS = false;
 		if(!isset($data['isRSS'])){
 			$disqus = new API\Disqus;
@@ -278,7 +279,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 			$data['user'] = false;
 		}
 		
-		$getPosts = $this->addAllPostMeta($getPosts);
+		$getPosts = $this->container->addAllPostMeta($getPosts);
 		foreach($getPosts as $key => $post){
 			if(isset($filled[$post['postId']])){
 				continue;
@@ -304,17 +305,24 @@ class Blog_Model extends \App\Blog\Submissions_Model
 				}
 			}
 		
+			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']), array('categoryId'));
+			$cats = array();
+			foreach($getCats as $cat){
+				$getCat = $this->get('blog_categories', $cat['categoryId']);
+				if($getCat['image'] != ''){
+					$getCat['image'] = $data['site']['url'].'/files/blogs/'.$getCat['image'];
+				}
+				$cats[] = $getCat;
+				$catTCA = $tca->checkItemAccess($data['user'], $catModule['moduleId'], $getCat['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($data['user'], $catModule['moduleId'], $getCat['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					unset($getPosts[$key]);
+					continue 2;
+				}
+			}		
+		
 			if(!$isRSS){
 				if(!isset($data['noCategories']) OR (isset($data['noCategories']) AND !$data['noCategories'])){
-					$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']), array('categoryId'));
-					$cats = array();
-					foreach($getCats as $cat){
-						$getCat = $this->get('blog_categories', $cat['categoryId']);
-						if($getCat['image'] != ''){
-							$getCat['image'] = $data['site']['url'].'/files/blogs/'.$getCat['image'];
-						}
-						$cats[] = $getCat;
-					}
 					$getPosts[$key]['categories'] = $cats;
 				}
 			}
@@ -402,7 +410,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 		return $getPosts;
 	}
 	
-	public function addAllPostMeta($posts, $andPrivate = false)
+	protected function addAllPostMeta($posts, $andPrivate = false)
 	{
 		$idList = array();
 		foreach($posts as $post){
@@ -447,7 +455,7 @@ class Blog_Model extends \App\Blog\Submissions_Model
 		return $posts;
 	}
 	
-	public function addComment($data, $appData)
+	protected function addComment($data, $appData)
 	{
 		if(!isset($data['postId'])){
 			throw new \Exception('postId not set');
@@ -563,13 +571,13 @@ class Blog_Model extends \App\Blog\Submissions_Model
 		*/
 	}
 	
-	public function getChildCategories($categoryId, $catList = array())
+	protected function getChildCategories($categoryId, $catList = array())
 	{
 		$get = $this->getAll('blog_categories', array('parentId' => $categoryId), array('categoryId'));
 		if(count($get) > 0){
 			foreach($get as $row){
 				$catList[] = $row['categoryId'];
-				$catList = $this->getChildCategories($row['categoryId'], $catList);
+				$catList = $this->container->getChildCategories($row['categoryId'], $catList);
 			}
 		}
 		return $catList;

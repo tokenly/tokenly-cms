@@ -4,7 +4,7 @@ use Core, UI, Util, App\Tokenly, App\Profile\User_Model, App\Tokenly\TCA_Model, 
 class Message_Model extends Core\Model
 {
 	
-	public function getMessageForm()
+	protected function getMessageForm()
 	{
 		$form = new UI\Form;
 		
@@ -28,7 +28,7 @@ class Message_Model extends Core\Model
 	}
 	
 	
-	public function sendMessage($data)
+	protected function sendMessage($data)
 	{
 		$useData = checkRequiredFields($data, array('userId' => true, 'message' => true, 'username' => true));
 		
@@ -72,7 +72,7 @@ class Message_Model extends Core\Model
 		
 	}
 	
-	public function getUserInbox($userId, $perPage = 50, $page = 1)
+	protected function getUserInbox($userId, $perPage = 50, $page = 1)
 	{
 		$start = 0;
 		if($page > 1){
@@ -85,14 +85,14 @@ class Message_Model extends Core\Model
 			$row['message'] = decrypt_string($row['message']);
 			$row['from'] = $profModel->getUserProfile($row['userId'], $this->appData['site']['siteId']);
 			$row['to'] = $profModel->getUserProfile($row['toUser'], $this->appData['site']['siteId']);
-			$row['hasReplied'] = $this->checkMessageReplied($row['messageId']);
+			$row['hasReplied'] = $this->container->checkMessageReplied($row['messageId']);
 			
 		}
 		
 		return $getMessages;
 	}
 	
-	public function checkMessageReplied($messageId)
+	protected function checkMessageReplied($messageId)
 	{
 		$get = $this->getAll('private_messages', array('replyId' => $messageId), array('messageId'));
 		if($get AND count($get) > 0){
@@ -101,7 +101,7 @@ class Message_Model extends Core\Model
 		return false;
 	}
 	
-	public function getUserOutbox($userId, $perPage = 50, $page = 1)
+	protected function getUserOutbox($userId, $perPage = 50, $page = 1)
 	{
 		$start = 0;
 		if($page > 1){
@@ -114,14 +114,14 @@ class Message_Model extends Core\Model
 			$row['message'] = decrypt_string($row['message']);
 			$row['from'] = $profModel->getUserProfile($row['userId'], $this->appData['site']['siteId']);
 			$row['to'] = $profModel->getUserProfile($row['toUser'], $this->appData['site']['siteId']);
-			$row['hasReplied'] = $this->checkMessageReplied($row['messageId']);
+			$row['hasReplied'] = $this->container->checkMessageReplied($row['messageId']);
 			
 		}
 		
 		return $getMessages;
 	}
 	
-	public function sendReply($data)
+	protected function sendReply($data)
 	{
 		$useData = checkRequiredFields($data, array('userId' => true, 'message' => true, 'toUser' => true, 'replyId' => true));
 		
@@ -158,29 +158,29 @@ class Message_Model extends Core\Model
 		return $add;
 	}
 	
-	public function getNumUnreadMessages($userId)
+	protected function getNumUnreadMessages($userId)
 	{
 		$get = $this->getAll('private_messages', array('toUser' => $userId, 'isRead' => 0, 'userId' => array('op' => '!', 'value' => $userId)), array('messageId'));
 		return count($get);
 	}
 	
-	public function getReplyChain($replyId, $chain = array())
+	protected function getReplyChain($replyId, $chain = array())
 	{
 		$get = $this->get('private_messages', $replyId);
 		if($get){
 			if($get['isRead'] == 0 AND $this->appData['user']['userId'] == $get['toUser']){
 				$this->edit('private_messages', $get['messageId'], array('isRead' => 1));
 			}			
-			$chain[] = $this->parseMessage($get);
+			$chain[] = $this->container->parseMessage($get);
 			if($get['replyId'] != 0){
-				$chain = $this->getReplyChain($get['replyId'], $chain);
+				$chain = $this->container->getReplyChain($get['replyId'], $chain);
 			}
 		}
 		
 		return $chain;
 	}
 	
-	public function parseMessage($getMessage)
+	protected function parseMessage($getMessage)
 	{
 		$getMessage['subject'] = decrypt_string($getMessage['subject']);
 		$getMessage['message'] = decrypt_string($getMessage['message']);
@@ -194,12 +194,12 @@ class Message_Model extends Core\Model
 		return $getMessage;		
 	}
 	
-	public function getEndOfChain($messageId)
+	protected function getEndOfChain($messageId)
 	{
 		$getReply = $this->get('private_messages', $messageId, array('messageId'), 'replyId');
 		if(!$getReply){
 			return $messageId;
 		}
-		return $this->getEndOfChain($getReply['messageId']);
+		return $this->container->getEndOfChain($getReply['messageId']);
 	}
 }

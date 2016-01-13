@@ -7,7 +7,7 @@ class Controller extends \App\AppControl
         parent::__construct();
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		if(trim($this->args[0]) == ''){

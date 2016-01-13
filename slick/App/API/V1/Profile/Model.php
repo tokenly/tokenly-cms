@@ -3,7 +3,7 @@ namespace App\API\V1;
 use Core;
 class Profile_Model extends Core\Model
 {
-	public function getProfileFields($user, $siteId)
+	protected function getProfileFields($user, $siteId)
 	{
 		$getGroups = $this->getAll('group_users', array('userId' => $user['userId']));
 		$groupIds = array();
@@ -27,12 +27,12 @@ class Profile_Model extends Core\Model
 		return $getFields;
 	}
 	
-	public function updateProfile($data)
+	protected function updateProfile($data)
 	{
 		if(!isset($data['fields']) OR count($data['fields']) == 0){
 			throw new \Exception('No fields set');
 		}
-		$getFields = $this->getProfileFields($data['user'], $data['site']['siteId']);
+		$getFields = $this->container->getProfileFields($data['user'], $data['site']['siteId']);
 		$useData = array();
 		foreach($getFields as $field){
 			foreach($data['fields'] as $pKey => $pVal){

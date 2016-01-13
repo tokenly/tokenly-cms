@@ -3,7 +3,7 @@ namespace App\Tokenly;
 use Core, UI, API, Util;
 class AssetCache_Model extends Core\Model
 {
-	public function addAssetForm()
+	protected function addAssetForm()
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -28,7 +28,7 @@ class AssetCache_Model extends Core\Model
 		return $form;
 	}
 	
-	public function editAssetForm()
+	protected function editAssetForm()
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -57,7 +57,7 @@ class AssetCache_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addAsset($data)
+	protected function addAsset($data)
 	{
 		if(trim($data['asset']) == ''){
 			throw new \Exception('Asset name required');
@@ -107,7 +107,7 @@ class AssetCache_Model extends Core\Model
 		return $add;
 	}
 	
-	public function editAsset($data)
+	protected function editAsset($data)
 	{
 		$useData = array('description' => $data['description'], 'link' => $data['link']);
 		if(isset($data['ownerId'])){

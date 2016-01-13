@@ -16,40 +16,40 @@ class Groups_Controller extends \App\ModControl
         $this->model = new Groups_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showGroups();
+					$output = $this->container->showGroups();
 					break;
 				case 'add':
-					$output = $this->addGroup();
+					$output = $this->container->addGroup();
 					break;
 				case 'edit':
-					$output = $this->editGroup();
+					$output = $this->container->editGroup();
 					break;
 				case 'delete':
-					$output = $this->deleteGroup();
+					$output = $this->container->deleteGroup();
 					break;
 				case 'members':
-					$output = $this->showMembers();
+					$output = $this->container->showMembers();
 					break;
 				default:
-					$output = $this->showGroups();
+					$output = $this->container->showGroups();
 					break;
 			}
 		}
 		else{
-			$output = $this->showGroups();
+			$output = $this->container->showGroups();
 		}
 		$output['template'] = 'admin';
         return $output;
     }
     
-    private function showGroups()
+    protected function showGroups()
     {
 		$output = array('view' => 'list');
 		$getGroups = $this->model->getAll('groups');
@@ -59,7 +59,7 @@ class Groups_Controller extends \App\ModControl
 	}
 	
 	
-	private function addGroup()
+	protected function addGroup()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getGroupForm();
@@ -83,7 +83,7 @@ class Groups_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editGroup()
+	protected function editGroup()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -130,7 +130,7 @@ class Groups_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function deleteGroup()
+	protected function deleteGroup()
 	{
 		if(isset($this->args[3])){
 			if($this->model->count('groups') > 1){
@@ -143,7 +143,7 @@ class Groups_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl);
 	}
 	
-	private function showMembers()
+	protected function showMembers()
 	{
 		$output = array();
 		$output['view'] = 'members';

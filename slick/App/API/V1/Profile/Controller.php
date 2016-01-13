@@ -12,7 +12,7 @@ class Profile_Controller extends \Core\Controller
 		
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -20,16 +20,16 @@ class Profile_Controller extends \Core\Controller
 		if(isset($this->args[1])){
 			switch($this->args[1]){
 				case 'user':
-					$output = $this->getUser();
+					$output = $this->container->getUser();
 					break;
 				case 'update':
-					$output = $this->updateProfile();
+					$output = $this->container->updateProfile();
 					break;
 				case 'get-users':
-					$output = $this->getAllUsers();
+					$output = $this->container->getAllUsers();
 					break;
 				case 'get-fields':
-					$output = $this->profileFields();
+					$output = $this->container->profileFields();
 					break;
 				default:
 					http_response_code(400);
@@ -46,7 +46,7 @@ class Profile_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getUser()
+	protected function getUser()
 	{
 		$output = array();
 		
@@ -80,7 +80,7 @@ class Profile_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function updateProfile()
+	protected function updateProfile()
 	{
 		$output = array();
 		
@@ -117,7 +117,7 @@ class Profile_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function profileFields()
+	protected function profileFields()
 	{
 		$output = array();
 
@@ -135,7 +135,7 @@ class Profile_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getAllUsers()
+	protected function getAllUsers()
 	{
 		$output = array();
 		

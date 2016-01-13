@@ -3,7 +3,7 @@ namespace App\Tokenly;
 use Core, UI, Util, API;
 class Address_Model extends Core\Model
 {
-	public function getAddressForm()
+	protected function getAddressForm()
 	{
 		$form = new UI\Form;
 		
@@ -36,7 +36,7 @@ class Address_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addAddress($data)
+	protected function addAddress($data)
 	{
 		if(!isset($data['userId'])){
 			throw new \Exception('No User ID set');
@@ -89,14 +89,14 @@ class Address_Model extends Core\Model
 		}
 		
 		if($isPrimary === 1){
-			$this->switchPrimary($data['userId'], $add);
+			$this->container->switchPrimary($data['userId'], $add);
 		}
 		
 		$get = $this->get('coin_addresses', $add);
 		return $get;
 	}
 	
-	public function switchPrimary($userId, $addressId)
+	protected function switchPrimary($userId, $addressId)
 	{
 		$sql = 'UPDATE coin_addresses SET isPrimary = 0 WHERE userId = :userId';
 		$exec = $this->sendQuery($sql, array('userId' => $userId));
@@ -135,7 +135,7 @@ class Address_Model extends Core\Model
 		return true;
 	}
 	
-	public function editAddress($addressId, $data)
+	protected function editAddress($addressId, $data)
 	{
 		$getAddress = $this->get('coin_addresses', $addressId);
 		$isXCP = 0;
@@ -156,12 +156,12 @@ class Address_Model extends Core\Model
 			throw new \Exception('Error editing address');
 		}
 		if($useData['isPrimary'] == 1){
-			$this->switchPrimary($getAddress['userId'], $addressId);
+			$this->container->switchPrimary($getAddress['userId'], $addressId);
 		}		
 		return true;
 	}
 	
-	public function getDepositAddress($address, $throw_except = false)
+	protected function getDepositAddress($address, $throw_except = false)
 	{
 		$btc = new API\Bitcoin(BTC_CONNECT);
 		$account = 'VERIFY_'.$address['userId'].':'.$address['addressId'];
@@ -177,7 +177,7 @@ class Address_Model extends Core\Model
 		return $getAddress;		
 	}
 	
-	public function checkAddressPayment($address)
+	protected function checkAddressPayment($address)
 	{
 		if($address['verified'] != 0){
 			return array('result' => 'verified');
@@ -219,7 +219,7 @@ class Address_Model extends Core\Model
 		return array('result' => 'none');
 	}
 	
-	public function getSecretMessage($address)
+	protected function getSecretMessage($address)
 	{
 		$chars = 12;
 		$hash = hash('sha256', md5($address['submitDate'].$address['address'].'_'.$address['addressId']));
@@ -239,7 +239,7 @@ class Address_Model extends Core\Model
 		
 	}
 	
-	public function checkSecretMessage($address, $message = null)
+	protected function checkSecretMessage($address, $message = null)
 	{
 		if($address['verified'] != 0){
 			return array('error' => 'Already verified');
@@ -252,7 +252,7 @@ class Address_Model extends Core\Model
 			$message = $_POST['message'];
 		}
 				
-		$getMessage = $this->getSecretMessage($address);
+		$getMessage = $this->container->getSecretMessage($address);
 		$btc = new API\Bitcoin(BTC_CONNECT);
 		
 		$inputMessage = extract_signature($message);
@@ -280,7 +280,7 @@ class Address_Model extends Core\Model
 		}
 	}
 	
-	public function checkAddressUnverifiable($address)
+	protected function checkAddressUnverifiable($address)
 	{
 		$getAddresses = $this->getAll('coin_addresses', array('address' => $address['address'], 'verified' => 1));
 		if(count($getAddresses) > 0){
@@ -289,7 +289,7 @@ class Address_Model extends Core\Model
 		return false;
 	}
 	
-	public function getBroadcastText($address)
+	protected function getBroadcastText($address)
 	{
 		$site = currentSite();
 		$parseDomain = strtoupper(preg_replace('/[^a-z]/i','',$site['domain']));
@@ -298,12 +298,12 @@ class Address_Model extends Core\Model
 		return $text;
 	}
 	
-	public function checkAddressBroadcast($address)
+	protected function checkAddressBroadcast($address)
 	{
 		if($address['verified'] == 1){
 			return true;
 		}
-		$req_text = $this->getBroadcastText($address);
+		$req_text = $this->container->getBroadcastText($address);
 		try{
 			$xcp = new API\Bitcoin(XCP_CONNECT);
 			$broadcasts = $xcp->get_broadcasts(array('filters' => array('field' => 'source', 'op' => '=', 'value' => $address['address'])));
@@ -339,7 +339,7 @@ class Address_Model extends Core\Model
 		return $found;
 	}
 	
-	public function getAddressTransactions($addressId, $andUpdate = false)
+	protected function getAddressTransactions($addressId, $andUpdate = false)
 	{
 		$get = $this->get('coin_addresses', $addressId);
 		if(!$get OR $get['verified'] == 0){
@@ -363,7 +363,7 @@ class Address_Model extends Core\Model
 					$diff = time() - intval($last_update);
 				}		
 				if(!$diff OR $diff > $trigger){
-					$update_tx = $this->updateAddressTransactions($addressId);
+					$update_tx = $this->container->updateAddressTransactions($addressId);
 					if(is_array($update_tx)){
 						$get_tx =  array_merge($update_tx, $get_tx);
 					}			
@@ -377,14 +377,14 @@ class Address_Model extends Core\Model
 			}
 			$txInfo['to_user'] = false;
 			if(isset($txInfo['to'])){
-				$lookup_to = $this->lookupAddress($txInfo['to'], false, $get['userId']);
+				$lookup_to = $this->container->lookupAddress($txInfo['to'], false, $get['userId']);
 				if($lookup_to){
 					$txInfo['to_user'] = $lookup_to;
 				}
 			}
 			$txInfo['from_user'] = false;
 			if(isset($txInfo['from'])){
-				$lookup_from = $this->lookupAddress($txInfo['from'], false, $get['userId']);
+				$lookup_from = $this->container->lookupAddress($txInfo['from'], false, $get['userId']);
 				if($lookup_from){
 					$txInfo['from_user'] = $lookup_from;
 				}
@@ -402,7 +402,7 @@ class Address_Model extends Core\Model
 		return $get_tx;
 	}
 	
-	public function updateAddressTransactions($addressId)
+	protected function updateAddressTransactions($addressId)
 	{
 		$get = $this->get('coin_addresses', $addressId);
 		if(!$get OR $get['verified'] == 0){
@@ -525,7 +525,7 @@ class Address_Model extends Core\Model
 		return $output_items;
 	}
 	
-	public function lookupAddress($address, $public = false, $includeUser = false)
+	protected function lookupAddress($address, $public = false, $includeUser = false)
 	{
 		$values = array(':address' => $address, ':public' => intval($public));
 		$orUser = '';

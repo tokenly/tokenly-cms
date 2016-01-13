@@ -13,37 +13,37 @@ class ProxyURLs_Controller extends \App\ModControl
         $this->model = new ProxyURLs_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showProxies();
+					$output = $this->container->showProxies();
 					break;
 				case 'add':
-					$output = $this->addProxy();
+					$output = $this->container->addProxy();
 					break;
 				case 'edit':
-					$output = $this->editProxy();
+					$output = $this->container->editProxy();
 					break;
 				case 'delete':
-					$output = $this->deleteProxy();
+					$output = $this->container->deleteProxy();
 					break;
 				default:
-					$output = $this->showProxies();
+					$output = $this->container->showProxies();
 					break;
 			}
 		}
 		else{
-			$output = $this->showProxies();
+			$output = $this->container->showProxies();
 		}
 		$output['template'] = 'admin';
         return $output;
     }
     
-    private function showProxies()
+    protected function showProxies()
     {
 		$output = array('view' => 'list');
 		$output['proxyList'] = $this->model->getAll('proxy_url');
@@ -51,7 +51,7 @@ class ProxyURLs_Controller extends \App\ModControl
 	}
 	
 	
-	private function addProxy()
+	protected function addProxy()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getProxyForm();
@@ -74,7 +74,7 @@ class ProxyURLs_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editProxy()
+	protected function editProxy()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -107,7 +107,7 @@ class ProxyURLs_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteProxy()
+	protected function deleteProxy()
 	{
 		if(isset($this->args[3])){
 			$getProxy = $this->model->get('proxy_url', $this->args[3]);

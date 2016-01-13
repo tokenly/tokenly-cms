@@ -13,7 +13,7 @@ class Participation_Controller extends \App\ModControl
 		$this->model = new Participation_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
@@ -21,16 +21,16 @@ class Participation_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->viewReport($output);
+					$output = $this->container->viewReport($output);
 					break;
 				case 'delete':
-					$output = $this->deleteReport($output);
+					$output = $this->container->deleteReport($output);
 					break;
 				case 'download':
-					$output = $this->downloadReport($output);
+					$output = $this->container->downloadReport($output);
 					break;
 				case 'edit':
-					$output = $this->editReport($output);
+					$output = $this->container->editReport($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -64,7 +64,7 @@ class Participation_Controller extends \App\ModControl
 		
 	}
 	
-	private function viewReport($output)
+	protected function viewReport($output)
 	{
 		$output['view'] = 'report';
 		$getReport = $this->model->get('pop_reports', $this->args[3]);
@@ -92,7 +92,7 @@ class Participation_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editReport($output)
+	protected function editReport($output)
 	{
 		$getReport = $this->model->get('pop_reports', $this->args[3]);
 		if(!$getReport){
@@ -123,7 +123,7 @@ class Participation_Controller extends \App\ModControl
 	}
 	
 	
-	private function deleteReport($output)
+	protected function deleteReport($output)
 	{
 		$getReport = $this->model->get('pop_reports', $this->args[3]);
 		if(!$getReport){
@@ -135,7 +135,7 @@ class Participation_Controller extends \App\ModControl
 		redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
-	private function downloadReport($output)
+	protected function downloadReport($output)
 	{
 		$getReport = $this->model->get('pop_reports', $this->args[3]);
 		if(!$getReport){

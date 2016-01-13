@@ -3,7 +3,7 @@ namespace App\Account;
 use Core, UI, Util;
 class Reset_Model extends Core\Model
 {
-	public function getResetForm()
+	protected function getResetForm()
 	{
 		$form = new UI\Form;
 
@@ -20,7 +20,7 @@ class Reset_Model extends Core\Model
 		
 	}
 	
-	public function sendPasswordReset($data, $site)
+	protected function sendPasswordReset($data, $site)
 	{
 		if((!isset($data['email']) OR trim($data['email']) == '') AND (!isset($data['username']) OR trim($data['username']) == '')){
 			throw new \Exception('Email address or Username required');
@@ -74,7 +74,7 @@ class Reset_Model extends Core\Model
 		return true;
 	}
 	
-	public function getPassResetForm()
+	protected function getPassResetForm()
 	{
 		$form = new UI\Form;
 		$form->setSubmitText('Complete Password Reset');
@@ -92,7 +92,7 @@ class Reset_Model extends Core\Model
 		return $form;
 	}
 	
-	public function completePassChange($data)
+	protected function completePassChange($data)
 	{
 		if(!isset($data['password']) OR trim($data['password']) == ''){
 			throw new \Exception('Password');

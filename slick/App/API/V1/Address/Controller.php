@@ -10,7 +10,7 @@ class Address_Controller extends \Core\Controller
 		$this->model = new \App\Tokenly\Address_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -38,13 +38,13 @@ class Address_Controller extends \Core\Controller
 			}
 			switch($args[1]){
 				case 'get':
-					$output = $this->getAddresses();
+					$output = $this->container->getAddresses();
 					break;
 				case 'submit':
-					$output = $this->submitAddress();
+					$output = $this->container->submitAddress();
 					break;
 				case 'verify':
-					$output = $this->verifyAddress();
+					$output = $this->container->verifyAddress();
 					break;
 				default:
 					http_response_code(400);

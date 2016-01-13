@@ -9,13 +9,13 @@ class Home_Controller extends \App\ModControl
         $this->model = new Home_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
 		if(!isset($_SESSION['accountAuth'])){
 			if(isset($_COOKIE['rememberAuth'])){
-				$log = $this->logRemembered();
+				$log = $this->container->logRemembered();
 				if($log){
 					die();
 				}
@@ -24,10 +24,10 @@ class Home_Controller extends \App\ModControl
 			if(isset($this->args[1])){
 				switch($this->args[1]){
 					case 'verify';
-						$output = $this->verifyAccount($output);
+						$output = $this->container->verifyAccount($output);
 						break;
 					case 'success':
-						$output = $this->showSuccess($output);
+						$output = $this->container->showSuccess($output);
 						break;
 					default:
 						$output['view'] = '404';
@@ -53,10 +53,11 @@ class Home_Controller extends \App\ModControl
 				}
 				
 				if($_POST['submit-type'] == 'login'){
-					$output = $this->login($output);
+					//dd($this->container);
+					$output = $this->container->login($output);
 				}
 				elseif($output['registerForm']){
-					$output = $this->register($output);
+					$output = $this->container->register($output);
 				}
 			}
 			
@@ -79,7 +80,7 @@ class Home_Controller extends \App\ModControl
 		return $output;
     }
     
-    private function login($output)
+    protected function login($output)
     {
 		$data = $output['loginForm']->grabData();
 		$data['site'] = $this->data['site'];
@@ -102,7 +103,7 @@ class Home_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function register($output)
+	protected function register($output)
 	{
 		if(intval($this->data['app']['meta']['disableRegister']) == 1){
 			return $output;
@@ -126,7 +127,7 @@ class Home_Controller extends \App\ModControl
 		return $output;
 	}
     
-    public static function logRemembered()
+    protected static function logRemembered()
     {	
 		$model = new Home_Model;
 		if(!isset($_COOKIE['rememberAuth'])){
@@ -166,7 +167,7 @@ class Home_Controller extends \App\ModControl
 		
 	}
     
-    public function verifyAccount($output)
+    protected function verifyAccount($output)
     {
 		if(!isset($this->args[2]) OR trim($this->args[2]) == ''){
 			$output['view'] = '404';
@@ -186,7 +187,7 @@ class Home_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function showSuccess($output)
+	protected function showSuccess($output)
 	{
 		$output['view'] = 'register-success';
 		$output['title'] = 'Register Account';

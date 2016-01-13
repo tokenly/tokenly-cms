@@ -4,7 +4,7 @@ use Core, UI, Util;
 class Sites_Model extends Core\Model
 {
 
-	public function getSiteForm($siteId = 0)
+	protected function getSiteForm($siteId = 0)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -48,7 +48,7 @@ class Sites_Model extends Core\Model
 		return $form;
 	}
 
-	public function addSite($data)
+	protected function addSite($data)
 	{
 		$req = array('name', 'isDefault', 'domain', 'url');
 		$useData = array();
@@ -66,12 +66,12 @@ class Sites_Model extends Core\Model
 			throw new \Exception('Error adding site');
 		}
 		
-		$this->updateSiteImage($add);
+		$this->container->updateSiteImage($add);
 		
 		return $add;
 	}
 		
-	public function editSite($id, $data)
+	protected function editSite($id, $data)
 	{
 		$req = array('name', 'isDefault', 'domain', 'url');
 		$useData = array();
@@ -94,12 +94,12 @@ class Sites_Model extends Core\Model
 			$this->insert('site_apps', array('siteId' => $id, 'appId' => $app));
 		}
 		
-		$this->updateSiteImage($id);
+		$this->container->updateSiteImage($id);
 		
 		return true;
 	}
 	
-	public function getSiteApps($siteId)
+	protected function getSiteApps($siteId)
 	{
 		$get = $this->getAll('site_apps', array('siteId' => $siteId));
 		$output = array();
@@ -110,7 +110,7 @@ class Sites_Model extends Core\Model
 		return $output;
 	}
 
-	public function updateSiteImage($id)
+	protected function updateSiteImage($id)
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != false){
 

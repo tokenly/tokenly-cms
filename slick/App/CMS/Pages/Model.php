@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class Pages_Model extends Core\Model
 {
-	public function getPageForm($pageId = 0, $theme)
+	protected function getPageForm($pageId = 0, $theme)
 	{
 		$getPage = false;
 		if($pageId != 0){
@@ -76,7 +76,7 @@ class Pages_Model extends Core\Model
 	
 
 
-	public function addPage($data)
+	protected function addPage($data)
 	{
 		$req = array('name' => true, 'url' => false, 'siteId' => true, 'active' => false, 'content' => false, 'description' => false ,'template' => true, 'formatType' => false);
 		$useData = array();
@@ -98,7 +98,7 @@ class Pages_Model extends Core\Model
 			$useData['url'] = $useData['name'];
 		}
 		$useData['url'] = genURL($useData['url']);
-		$useData['url'] = $this->checkURLExists($useData['url'], $data['siteId']);
+		$useData['url'] = $this->container->checkURLExists($useData['url'], $data['siteId']);
 		
 		
 		$add = $this->insert('pages', $useData);
@@ -106,14 +106,14 @@ class Pages_Model extends Core\Model
 			throw new \Exception('Error adding page');
 		}
 		
-		$this->updatePageIndex($add, $useData['url'], $useData['siteId']);
+		$this->container->updatePageIndex($add, $useData['url'], $useData['siteId']);
 		
 		return $add;
 		
 		
 	}
 	
-	public function updatePageIndex($pageId, $url, $siteId)
+	protected function updatePageIndex($pageId, $url, $siteId)
 	{
 		$pageModule = $this->get('modules', 'page-view', array(), 'slug');
 		if(!$pageModule){
@@ -137,12 +137,9 @@ class Pages_Model extends Core\Model
 		}
 		
 		return true;
-						
-		
-		
 	}
 		
-	public function editPage($id, $data)
+	protected function editPage($id, $data)
 	{
 		$getPage = $this->get('pages', $id);
 		$req = array('name' => true, 'url' => false, 'siteId' => true, 'active' => false, 'content' => false, 'description' => false ,'template' => true, 'formatType' => false);
@@ -165,7 +162,7 @@ class Pages_Model extends Core\Model
 			$useData['url'] = $useData['name'];
 		}
 		$useData['url'] = genURL($useData['url']);
-		$useData['url'] = $this->checkURLExists($useData['url'], $useData['siteId'], $id);
+		$useData['url'] = $this->container->checkURLExists($useData['url'], $useData['siteId'], $id);
 		
 		if($getPage['formatType'] == 'markdown' AND $useData['formatType'] != 'markdown'){
 			$useData['content'] = markdown($useData['content']);
@@ -176,13 +173,13 @@ class Pages_Model extends Core\Model
 			throw new \Exception('Error editing page');
 		}
 		
-		$this->updatePageIndex($id, $useData['url'], $useData['siteId']);
+		$this->container->updatePageIndex($id, $useData['url'], $useData['siteId']);
 		
 		return true;
 		
 	}
 	
-	public function checkURLExists($url, $siteId, $ignore = 0, $count = 0)
+	protected function checkURLExists($url, $siteId, $ignore = 0, $count = 0)
 	{
 		$useurl = $url;
 		if($count > 0){
@@ -195,7 +192,7 @@ class Pages_Model extends Core\Model
 		if($get AND $get['itemId'] != $ignore){
 			//url exists already, search for next level of url
 			$count++;
-			return $this->checkURLExists($url, $siteId, $ignore, $count);
+			return $this->container->checkURLExists($url, $siteId, $ignore, $count);
 		}
 		
 		if($count > 0){
@@ -203,5 +200,15 @@ class Pages_Model extends Core\Model
 		}
 
 		return $url;
+	}
+	
+	protected function deletePage($id)
+	{
+		$getPage = $this->get('pages', $id);
+		$delete = false;
+		if($getPage){
+			$delete = $this->delete('pages', $id);
+		}		
+		return $delete;
 	}
 }

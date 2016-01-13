@@ -3,7 +3,7 @@ namespace App\Forum;
 use Core, UI, Util;
 class Categories_Model extends Core\Model
 {
-	public function getCategoryForm($categoryId = 0)
+	protected function getCategoryForm($categoryId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -27,7 +27,7 @@ class Categories_Model extends Core\Model
 		return $form;
 	}
 
-	public function addCategory($data)
+	protected function addCategory($data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'rank' => false, 'description' => false);
 		$useData = array();
@@ -57,7 +57,7 @@ class Categories_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editCategory($id, $data)
+	protected function editCategory($id, $data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'rank' => false, 'description' => false);
 		$useData = array();

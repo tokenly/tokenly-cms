@@ -13,7 +13,7 @@ class Distribute_Controller extends \App\ModControl
 		$this->model = new Distribute_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'tokenly');
@@ -22,16 +22,16 @@ class Distribute_Controller extends \App\ModControl
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'tx':
-					$output = $this->showTxPage($output);
+					$output = $this->container->showTxPage($output);
 					break;
 				case 'delete':
-					$output = $this->deleteTx($output);
+					$output = $this->container->deleteTx($output);
 					break;
 				case 'download':
-					$output = $this->downloadTxReport($output);
+					$output = $this->container->downloadTxReport($output);
 					break;
 				case 'edit':
-					$output = $this->editDistribution($output);
+					$output = $this->container->editDistribution($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -39,13 +39,13 @@ class Distribute_Controller extends \App\ModControl
 			}
 		}
 		else{
-			$output = $this->distributeForm($output);
+			$output = $this->container->distributeForm($output);
 		}
 		$output['template'] = 'admin';
 		return $output;
 	}
 	
-	public function distributeForm($output)
+	protected function distributeForm($output)
 	{
 		$output['view'] = 'index';
 		$output['message'] = '';
@@ -69,7 +69,7 @@ class Distribute_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function showTxPage($output)
+	protected function showTxPage($output)
 	{
 		if(!isset($this->args[3]) OR trim($this->args[3]) == ''){
 			$output['view'] = '404';
@@ -90,7 +90,7 @@ class Distribute_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function deleteTx($output)
+	protected function deleteTx($output)
 	{
 		if(!isset($this->args[3]) OR trim($this->args[3]) == ''){
 			$output['view'] = '404';
@@ -105,7 +105,7 @@ class Distribute_Controller extends \App\ModControl
 		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
-	public function downloadTxReport($output)
+	protected function downloadTxReport($output)
 	{
 		if(!isset($this->args[3]) OR trim($this->args[3]) == ''){
 			$output['view'] = '404';
@@ -181,7 +181,7 @@ class Distribute_Controller extends \App\ModControl
 		die();
 	}
 	
-	public function editDistribution($output)
+	protected function editDistribution($output)
 	{
 		$getTx = $this->model->get('xcp_distribute', $this->args[3], array(), 'address');
 		if(!$getTx){

@@ -9,7 +9,7 @@ class Proxy_Controller extends \App\ModControl
 		$this->model = new Core\Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		ob_end_clean();

@@ -12,7 +12,7 @@ class Blog_Controller extends \Core\Controller
 		
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -20,19 +20,19 @@ class Blog_Controller extends \Core\Controller
 		if(isset($args[1])){
 			switch($args[1]){
 				case 'categories':
-					$output = $this->category();
+					$output = $this->container->category();
 					break;
 				case 'archive':
-					$output = $this->archive();
+					$output = $this->container->archive();
 					break;
 				case 'posts':
-					$output = $this->getAllPosts();
+					$output = $this->container->getAllPosts();
 					break;
 				case 'meta':
 					if(isset($args[2])){
 						switch($args[2]){
 							case 'types':
-								$output = $this->getMetaTypes();
+								$output = $this->container->getMetaTypes();
 								break 2;
 						}
 					}
@@ -47,7 +47,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getMetaTypes()
+	protected function getMetaTypes()
 	{
 		$output = array();
 		$getTypes = $this->model->getAll('blog_postMetaTypes', array('siteId' => $this->args['data']['site']['siteId']), array(), 'rank', 'asc');
@@ -60,39 +60,39 @@ class Blog_Controller extends \Core\Controller
 		
 	}
 	
-	private function comments()
+	protected function comments()
 	{
 		$output = array();
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'add':
-					$output = $this->addComment();
+					$output = $this->container->addComment();
 					break;
 				case 'edit':
-					$output = $this->editComment();
+					$output = $this->container->editComment();
 					break;
 				case 'delete':
-					$output = $this->deleteComment();
+					$output = $this->container->deleteComment();
 					break;
 				case 'get':
-					$output = $this->getComment();
+					$output = $this->container->getComment();
 					break;
 				default:
-					$output = $this->getPostComments();
+					$output = $this->container->getPostComments();
 					break;
 				
 			}
 			
 		}
 		else{
-			$output = $this->getPostComments();
+			$output = $this->container->getPostComments();
 		}
 		
 		
 		return $output;
 	}
 	
-	private function getComment()
+	protected function getComment()
 	{
 		$output = array();
 		
@@ -186,7 +186,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function addComment()
+	protected function addComment()
 	{
 		$output = array();
 		if($this->useMethod != 'POST'){
@@ -245,7 +245,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function editComment()
+	protected function editComment()
 	{
 		$output = array();
 		if($this->useMethod != 'PATCH'){
@@ -355,7 +355,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function deleteComment()
+	protected function deleteComment()
 	{
 		$output = array();
 		if($this->useMethod != 'DELETE'){
@@ -445,26 +445,26 @@ class Blog_Controller extends \Core\Controller
 	}
 	
 	
-	private function getPostComments()
+	protected function getPostComments()
 	{
 		$output = array();
 			
 		if(isset($this->args[4])){
 			switch($this->useMethod){
 				case 'GET':
-					return $this->getComment();
+					return $this->container->getComment();
 					break;
 				case 'PATCH':
-					return $this->editComment();
+					return $this->container->editComment();
 					break;
 				case 'DELETE':
-					return $this->deleteComment();
+					return $this->container->deleteComment();
 					break;
 			}
 		}
 		else{
 			if($this->useMethod == 'POST'){
-				return $this->addComment();
+				return $this->container->addComment();
 			}
 		}
 		if($this->useMethod != 'GET'){
@@ -603,13 +603,13 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function post()
+	protected function post()
 	{
 		$output = array();
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'get':
-					$output = $this->getPost();
+					$output = $this->container->getPost();
 					break;
 				default:
 					http_response_code(400);
@@ -627,7 +627,7 @@ class Blog_Controller extends \Core\Controller
 		
 	}
 	
-	private function getPost()
+	protected function getPost()
 	{
 		$output = array();
 		
@@ -638,7 +638,7 @@ class Blog_Controller extends \Core\Controller
 		}
 		
 		if(isset($this->args[3]) AND $this->args[3] == 'comments'){
-			return $this->getPostComments();
+			return $this->container->getPostComments();
 		}
 		
 		$model = new \App\Blog\Post_Model;
@@ -731,24 +731,24 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function category()
+	protected function category()
 	{
 		$output = array();
 		if(isset($this->args[2])){
-			$output = $this->getCategory();
+			$output = $this->container->getCategory();
 		}
 		else{
-			$output = $this->getCategoryList();
+			$output = $this->container->getCategoryList();
 			
 		}
 		
 		return $output;
 	}
 	
-	private function getCategory()
+	protected function getCategory()
 	{
 		if(isset($this->args[3]) AND $this->args[3] == 'posts'){
-			return $this->getCategoryPosts();
+			return $this->container->getCategoryPosts();
 		}
 		
 		$output = array();
@@ -806,7 +806,7 @@ class Blog_Controller extends \Core\Controller
 		
 	}
 	
-	private function getCategoryPosts()
+	protected function getCategoryPosts()
 	{
 		$output = array();
 		$output = array();
@@ -876,7 +876,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getCategoryList()
+	protected function getCategoryList()
 	{
 		$model = new \App\Blog\Categories_Model;
 		$getCats = $model->getCategories($this->args['data']['site']['siteId']);
@@ -885,19 +885,19 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 
-	private function archive()
+	protected function archive()
 	{
 		$output = array();
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'all':
-					$output = $this->getAllPosts();
+					$output = $this->container->getAllPosts();
 					break;
 				case 'archives':
-					$output = $this->getArchiveList();
+					$output = $this->container->getArchiveList();
 					break;
 				default:
-					$output = $this->getArchive();
+					$output = $this->container->getArchive();
 					break;
 			}
 		}
@@ -910,12 +910,12 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getAllPosts()
+	protected function getAllPosts()
 	{
 		$output = array();
 		
 		if(isset($this->args[2])){
-			return $this->getPost();
+			return $this->container->getPost();
 		}
 		
 		try{
@@ -939,7 +939,7 @@ class Blog_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getArchiveList()
+	protected function getArchiveList()
 	{
 		$catModel = new \App\Blog\Categories_Model;
 		$output = array();
@@ -951,7 +951,7 @@ class Blog_Controller extends \Core\Controller
 	}
 	
 	
-	private function getArchive()
+	protected function getArchive()
 	{
 		$output = array();
 		

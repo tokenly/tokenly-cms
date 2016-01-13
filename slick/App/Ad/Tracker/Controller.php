@@ -14,23 +14,23 @@ class Tracker_Controller extends \App\ModControl
 		$this->model = new Tracker_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'add':
-					$output = $this->addURL($output);
+					$output = $this->container->addURL($output);
 					break;
 				case 'edit':
-					$output = $this->editURL($output);
+					$output = $this->container->editURL($output);
 					break;
 				case 'delete':
-					$output = $this->deleteURL($output);
+					$output = $this->container->deleteURL($output);
 					break;
 				case 'view':
-					$output = $this->viewURL($output);
+					$output = $this->container->viewURL($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -38,12 +38,12 @@ class Tracker_Controller extends \App\ModControl
 			}
 		}
 		else{
-			$output = $this->showURLs($output);
+			$output = $this->container->showURLs($output);
 		}
 		return $output;
 	}
 	
-	public function showURLs($output)
+	protected function showURLs($output)
 	{
 		$output['view'] = 'list';
 		$output['urls'] = $this->model->getAll('tracking_urls', array('siteId' => $this->data['site']['siteId']));
@@ -51,7 +51,7 @@ class Tracker_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function addURL($output)
+	protected function addURL($output)
 	{
 		$output['view'] = 'form';
 		$output['form'] = $this->model->getURLForm();
@@ -75,7 +75,7 @@ class Tracker_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function editURL($output)
+	protected function editURL($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -108,7 +108,7 @@ class Tracker_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function deleteURL($output)
+	protected function deleteURL($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -127,7 +127,7 @@ class Tracker_Controller extends \App\ModControl
 		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);	
 	}
 	
-	public function viewURL($output)
+	protected function viewURL($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';

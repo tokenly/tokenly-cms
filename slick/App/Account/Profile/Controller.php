@@ -16,7 +16,7 @@ class Profile_Controller extends \App\ModControl
         $this->model = new Profile_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$output['user'] = Home_Model::userInfo();

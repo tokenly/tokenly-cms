@@ -20,7 +20,7 @@ class Board_Model extends Core\Model
 	}
 	
 	
-	public function getTopicForm()
+	protected function getTopicForm()
 	{
 		$form = new UI\Form;
 		
@@ -37,7 +37,7 @@ class Board_Model extends Core\Model
 	}
 	
 
-	public function checkURLExists($url, $ignore = 0, $count = 0)
+	protected function checkURLExists($url, $ignore = 0, $count = 0)
 	{
 		$useurl = $url;
 		if($count > 0){
@@ -47,7 +47,7 @@ class Board_Model extends Core\Model
 		if($get AND $get['topicId'] != $ignore){
 			//url exists already, search for next level of url
 			$count++;
-			return $this->checkURLExists($url, $ignore, $count);
+			return $this->container->checkURLExists($url, $ignore, $count);
 		}
 		
 		if($count > 0){
@@ -57,7 +57,7 @@ class Board_Model extends Core\Model
 		return $url;
 	}
 	
-	public function postTopic($data, $appData)
+	protected function postTopic($data, $appData)
 	{
 		$useData = array();
 		$req = array('boardId' => true, 'userId' => true, 'title' => true, 'content' => true);
@@ -116,7 +116,7 @@ class Board_Model extends Core\Model
 			$useData['url'] = substr(md5($useData['title']), 0, 10);
 		}
 		
-		$useData['url'] = $this->checkURLExists($useData['url']);
+		$useData['url'] = $this->container->checkURLExists($useData['url']);
 		$useData['postTime'] = timestamp();
 		$useData['lastPost'] = timestamp();
 		
@@ -188,7 +188,7 @@ class Board_Model extends Core\Model
 		
 	}
 	
-	public function getBoardTopics($boardId, $data, $page = 1, $all = false)
+	protected function getBoardTopics($boardId, $data, $page = 1, $all = false)
 	{
 		$start = 0;
 		$max = intval($data['app']['meta']['topicsPerPage']);
@@ -199,7 +199,7 @@ class Board_Model extends Core\Model
 		
 		if($all){
 			
-			$filters = $this->getBoardFilters($data['user']);
+			$filters = $this->container->getBoardFilters($data['user']);
 			$andFilters = '';
 			$filterNum = 0;
 			if(count($filters['antifilters']) > 0){
@@ -267,18 +267,18 @@ class Board_Model extends Core\Model
 									   '.$limit, array(':boardId' => $boardId) );
 		}
 		
-		$topics = $this->checkTopicsTCA($topics, $data);
+		$topics = $this->container->checkTopicsTCA($topics, $data);
 								
-		$topics = $this->parseTopics($topics, $data, $all);
+		$topics = $this->container->parseTopics($topics, $data, $all);
 		
 		return $topics;
 		
 	}
 	
-	public function checkTopicsTCA($topics, $data)
+	protected function checkTopicsTCA($topics, $data)
 	{
 		foreach($topics as $k => $row){
-			$checkTopic = $this->checkTopicTCA($data['user'], $row);
+			$checkTopic = $this->container->checkTopicTCA($data['user'], $row);
 			if(!$checkTopic){
 				unset($topics[$k]);
 				continue;
@@ -287,7 +287,7 @@ class Board_Model extends Core\Model
 		return $topics;
 	}
 	
-	public function checkTopicTCA($user, $row)
+	protected function checkTopicTCA($user, $row)
 	{
 		$tca = new Tokenly\TCA_Model;
 		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
@@ -309,25 +309,25 @@ class Board_Model extends Core\Model
 		return true;
 	}
 	
-	public function getAllStickyPosts($data)
+	protected function getAllStickyPosts($data)
 	{
 		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'buried' => 0));
-		$topics = $this->checkTopicsTCA($topics, $data);
-		$topics = $this->parseTopics($topics, $data, true);
+		$topics = $this->container->checkTopicsTCA($topics, $data);
+		$topics = $this->container->parseTopics($topics, $data, true);
 		return $topics;
 		
 	}
     
-    public function getBoardStickyPosts($data, $boardId)
+    protected function getBoardStickyPosts($data, $boardId)
     {
 		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'boardId' => $boardId, 'buried' => 0));
-		$topics = $this->checkTopicsTCA($topics, $data);
-		$topics = $this->parseTopics($topics, $data, true);
+		$topics = $this->container->checkTopicsTCA($topics, $data);
+		$topics = $this->container->parseTopics($topics, $data, true);
 		return $topics;
     }
 	
 	
-	public function parseTopics($topics, $data, $all = false)
+	protected function parseTopics($topics, $data, $all = false)
 	{
 		$tca = new Tokenly\TCA_Model;
 		$profModel = new Profile\User_Model;
@@ -477,7 +477,7 @@ class Board_Model extends Core\Model
 		return $topics;
 	}
 	
-	public function getBoardFilters($user = false)
+	protected function getBoardFilters($user = false)
 	{
 		$output = array();
 		$forum_app = get_app('forum');
@@ -528,7 +528,7 @@ class Board_Model extends Core\Model
 		return $output;
 	}
 	
-	public function updateBoardFilters($user = false, $filters = array())
+	protected function updateBoardFilters($user = false, $filters = array())
 	{
 		if(!is_array($filters)){
 			$filters = array($filters);
@@ -558,7 +558,7 @@ class Board_Model extends Core\Model
 		return true;
 	}
 	
-	public function countFilteredTopics($filters = array())
+	protected function countFilteredTopics($filters = array())
 	{
 		$andSQL = 'WHERE';
 		$num = 0;
@@ -583,7 +583,7 @@ class Board_Model extends Core\Model
 		return $count['total'];
 	}
 	
-	public function getUserSubscribedThreads($userId = false, $limit = false, $start = 0)
+	protected function getUserSubscribedThreads($userId = false, $limit = false, $start = 0)
 	{
 		$site = currentSite();
 		$user = user($userId);
@@ -637,7 +637,7 @@ class Board_Model extends Core\Model
 		return $get;
 	}
 	
-	public function countUserSubscribedTopics($userId = false)
+	protected function countUserSubscribedTopics($userId = false)
 	{
 		$site = currentSite();
 		$user = user($userId);
@@ -676,7 +676,7 @@ class Board_Model extends Core\Model
 	}
 	
 
-	public function getUserTCAThreads($userId = false, $limit = false, $start = 0)
+	protected function getUserTCAThreads($userId = false, $limit = false, $start = 0)
 	{
 		$site = currentSite();
 		$user = user($userId);
@@ -715,7 +715,7 @@ class Board_Model extends Core\Model
 		return $get;
 	}
 	
-	public function countUserTCATopics($userId = false)
+	protected function countUserTCATopics($userId = false)
 	{
 		$site = currentSite();
 		$user = user($userId);

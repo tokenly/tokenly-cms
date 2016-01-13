@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class ContentBlocks_Model extends Core\Model
 {
-	public function getBlockForm($blockId = 0)
+	protected function getBlockForm($blockId = 0)
 	{
 		$getBlock = false;
 		if($blockId != 0){
@@ -54,7 +54,7 @@ class ContentBlocks_Model extends Core\Model
 		return $form;
 	}
 
-	public function addBlock($data)
+	protected function addBlock($data)
 	{
 		$req = array('name', 'slug', 'siteId', 'active', 'content', 'formatType');
 		$useData = array();
@@ -75,7 +75,7 @@ class ContentBlocks_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editBlock($id, $data)
+	protected function editBlock($id, $data)
 	{
 		$getBlock = $this->get('content_blocks', $id);
 		$req = array('name', 'slug', 'siteId', 'active', 'content', 'formatType');
@@ -98,5 +98,15 @@ class ContentBlocks_Model extends Core\Model
 			throw new \Exception('Error editing block');
 		}
 		return true;
+	}
+	
+	protected function deleteBlock($id)
+	{
+		$getBlock = $this->get('content_blocks', $id);
+		$delete = false;
+		if($getBlock){
+			$delete = $this->delete('content_blocks', $id);
+		}	
+		return $delete;	
 	}
 }

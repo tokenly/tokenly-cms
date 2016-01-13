@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class Accounts_Model extends Core\Model
 {
-	public function accountForm()
+	protected function accountForm()
 	{
 		$form = new UI\Form;
 		
@@ -30,7 +30,7 @@ class Accounts_Model extends Core\Model
 		return $form;
 	}
 	
-	public function updateAccount($id, $data)
+	protected function updateAccount($id, $data)
 	{
 		$this->delete('group_users', $id, 'userId');
 		foreach($data['groups'] as $groupId){
@@ -50,7 +50,7 @@ class Accounts_Model extends Core\Model
 		return true;
 	}
 	
-	public function getSearchForm()
+	protected function getSearchForm()
 	{
 		$form = new UI\Form;
 		

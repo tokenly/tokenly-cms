@@ -3,7 +3,7 @@ namespace App\Ad;
 use Core, UI, Util;
 class Tracker_Model extends Core\Model
 {
-	public function getURLForm()
+	protected function getURLForm()
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -30,7 +30,7 @@ class Tracker_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addTrackingURL($data)
+	protected function addTrackingURL($data)
 	{
 		if(!isset($data['url']) OR trim($data['url']) == ''){
 			throw new \Exception('URL required');
@@ -55,13 +55,13 @@ class Tracker_Model extends Core\Model
 			throw new \Exception('Error adding tracking URL');
 		}
 		
-		$this->uploadImage($insert);
+		$this->container->uploadImage($insert);
 		
 		$insertData['urlId'] = $insert;
 		return $insertData;
 	}
 	
-	public function editTrackingURL($id, $data)
+	protected function editTrackingURL($id, $data)
 	{
 		if(!isset($data['url']) OR trim($data['url']) == ''){
 			throw new \Exception('URL required');
@@ -83,12 +83,12 @@ class Tracker_Model extends Core\Model
 			throw new \Exception('Error editing tracking URL');
 		}
 		
-		$this->uploadImage($id);
+		$this->container->uploadImage($id);
 		
 		return true;
 	}
 	
-	public function uploadImage($urlId)
+	protected function uploadImage($urlId)
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
 			$ext = 'jpg';

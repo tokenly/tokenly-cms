@@ -16,7 +16,7 @@ class Stats_Controller extends \App\ModControl
         $this->model = new Stats_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$output['view'] = 'stats';

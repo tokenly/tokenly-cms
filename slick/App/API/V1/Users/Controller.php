@@ -10,33 +10,33 @@ class Users_Controller extends \Core\Controller
 		$this->model = new Users_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
 		if(isset($this->args[1])){
 			switch($this->args[1]){
 				case 'update':
-					$output = $this->updateProfile();
+					$output = $this->container->updateProfile();
 					break;
 				case 'get-fields':
-					$output = $this->profileFields();
+					$output = $this->container->profileFields();
 					break;
 				case 'self':
-					$output = $this->getSelf();
+					$output = $this->container->getSelf();
 					break;
 				default:
-					$output = $this->getUser();
+					$output = $this->container->getUser();
 					break;
 			}
 		}
 		else{
 			if($this->useMethod == 'POST'){
-				$output = $this->register();
+				$output = $this->container->register();
 				
 			}
 			elseif($this->useMethod == 'GET'){
-				$output = $this->getAllUsers();
+				$output = $this->container->getAllUsers();
 			}
 			else{
 				http_response_code(400);
@@ -46,7 +46,7 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function register()
+	protected function register()
 	{
 		$model = new Register_Model;
 		$output = array();
@@ -79,16 +79,16 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getSelf()
+	protected function getSelf()
 	{
 		$output = array();
 		
 		if(isset($this->args[2]) and $this->args[2] == 'fields'){
 			if($this->useMethod == 'PATCH'){
-				return $this->updateProfile();
+				return $this->container->updateProfile();
 			}
 			elseif($this->useMethod == 'GET'){
-				return $this->profileFields();
+				return $this->container->profileFields();
 			}
 		}
 		
@@ -111,7 +111,7 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getUser()
+	protected function getUser()
 	{
 		$output = array();
 		
@@ -160,7 +160,7 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function updateProfile()
+	protected function updateProfile()
 	{
 		$output = array();
 		if($this->useMethod != 'PATCH'){
@@ -192,7 +192,7 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function profileFields()
+	protected function profileFields()
 	{
 		$output = array();
 		try{
@@ -209,7 +209,7 @@ class Users_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getAllUsers()
+	protected function getAllUsers()
 	{
 		$output = array();
 		$profModel = new \App\Profile\User_Model;

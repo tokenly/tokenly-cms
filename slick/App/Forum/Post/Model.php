@@ -3,7 +3,7 @@ namespace App\Forum;
 use Core, UI, Util, App\Tokenly, App\Account, App\Profile;
 class Post_Model extends Core\Model
 {
-	public function getReplyForm()
+	protected function getReplyForm()
 	{
 		$form = new UI\Form;
 		
@@ -15,7 +15,7 @@ class Post_Model extends Core\Model
 		return $form;
 	}
 	
-	public function postReply($data, $appData)
+	protected function postReply($data, $appData)
 	{
 		$useData = array();
 		$req = array('topicId' => true, 'userId' => true, 'content' => false);
@@ -131,7 +131,7 @@ class Post_Model extends Core\Model
 		return $returnData;
 	}
 	
-	public function editPost($id, $data, $appData)
+	protected function editPost($id, $data, $appData)
 	{
 		$useData = array();
 		$req = array('content' => true);
@@ -184,7 +184,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function getTopicReplies($topicId, $data, $page = 1)
+	protected function getTopicReplies($topicId, $data, $page = 1)
 	{
 		$start = 0;
 		$max = intval($data['app']['meta']['postsPerPage']);
@@ -227,7 +227,7 @@ class Post_Model extends Core\Model
 		return $get;
 	}
 	
-	public function editTopic($topicId, $data, $appData)
+	protected function editTopic($topicId, $data, $appData)
 	{
 		$useData = array();
 		$req = array('title' => true, 'content' => true);
@@ -271,7 +271,7 @@ class Post_Model extends Core\Model
 		return $this->get('forum_topics', $topicId);
 	}
 	
-	public function getMoveTopicForm($site, $user)
+	protected function getMoveTopicForm($site, $user)
 	{
 		$form = new UI\Form;
 		
@@ -299,7 +299,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function moveTopic($id, $data, $user)
+	protected function moveTopic($id, $data, $user)
 	{
 		if(!isset($data['boardId'])){
 			throw new \Exception('Board Required');
@@ -325,7 +325,7 @@ class Post_Model extends Core\Model
 		return $getBoard;
 	}
 	
-	public function getPostPage($postId, $perPage)
+	protected function getPostPage($postId, $perPage)
 	{
 		$page = 1;
 		$perPage = intval($perPage);
@@ -353,7 +353,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public static function getNumTopicReplies($topicId)
+	protected static function getNumTopicReplies($topicId)
 	{
 		$model = new Core\Model;
 		$count = $model->fetchSingle('SELECT count(*) as total
@@ -364,7 +364,7 @@ class Post_Model extends Core\Model
 		return $count['total'];
 	}
 	
-	public static function getNumTopicPages($topicId)
+	protected static function getNumTopicPages($topicId)
 	{
 		$model = new \App\Meta_Model;
 		$count = Post_Model::getNumTopicReplies($topicId);
@@ -378,7 +378,7 @@ class Post_Model extends Core\Model
 		return $numPages;
 	}
 	
-	public function getUserUpvoteScore($userId)
+	protected function getUserUpvoteScore($userId)
 	{
 		$count = $this->fetchSingle('SELECT SUM(score) as total FROM user_likes WHERE opUser = :userId', array(':userId' => $userId));
 		if(!$count){
@@ -387,7 +387,7 @@ class Post_Model extends Core\Model
 		return $count['total'];
 	}
 	
-	public function getUserPosts($userId, $andTopics = true, $perPage = false, $page = 1)
+	protected function getUserPosts($userId, $andTopics = true, $perPage = false, $page = 1)
 	{
 		$output = array('count' => 0, 'replies' => 0, 'topics' => 0, 'likes' => 0, 'posts' => array());
 		
@@ -474,7 +474,7 @@ class Post_Model extends Core\Model
 			$getBoard = $this->get('forum_boards', $getTopic['boardId']);
 			$getCategory = $this->get('forum_categories', $getBoard['categoryId']);
 			if($item['type'] == 'reply'){
-				$pageNum = $this->getPostPage($item['itemId'], $perPage);
+				$pageNum = $this->container->getPostPage($item['itemId'], $perPage);
 				$item['ref_title'] = 'Re: '.$getTopic['title'];
 				$item['ref_url'] = $getTopic['url'];
 				if($pageNum > 1){

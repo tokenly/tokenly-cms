@@ -14,7 +14,7 @@ class Order_Controller extends \App\ModControl
 		$this->model = new Core\Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
@@ -22,7 +22,7 @@ class Order_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'delete':
-					$output = $this->deleteOrder($output);
+					$output = $this->container->deleteOrder($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -40,7 +40,7 @@ class Order_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteOrder($output)
+	protected function deleteOrder($output)
 	{
 		if(isset($this->args[3])){
 			$getOrder = $this->model->get('payment_order', $this->args[3]);

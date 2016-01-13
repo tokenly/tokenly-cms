@@ -15,7 +15,7 @@ class AppSettings_Controller extends \App\ModControl
 		$this->meta = new \App\Meta_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		

@@ -4,7 +4,7 @@ use Core, UI, Util;
 class MenuItems_Model extends Core\Model
 {
 
-	public function getMenuPageForm($siteId, $itemId = 0)
+	protected function getMenuPageForm($siteId, $itemId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -39,7 +39,7 @@ class MenuItems_Model extends Core\Model
 		$form->add($parentId);
 		$getMenus = $this->getAll('menus', array('siteId' => $siteId));
 		foreach($getMenus as $menu){
-			$items = $this->getMenuTree($menu['menuId']);
+			$items = $this->container->getMenuTree($menu['menuId']);
 			foreach($items as $item){
 				$isLink = 0;
 				if($item['isLink']){
@@ -58,7 +58,7 @@ class MenuItems_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getMenuTree($menuId, $getItems = false, $output = array(), $indent = 0)
+	protected function getMenuTree($menuId, $getItems = false, $output = array(), $indent = 0)
 	{
 		if(!$getItems){
 			$getItems = \App\View::getMenu($menuId);
@@ -73,7 +73,7 @@ class MenuItems_Model extends Core\Model
 			$item['label'] = $useSpace.$item['label'];
 			$output[] = $item;
 			if(isset($item['children'])){
-				$output = $this->getMenuTree($menuId, $item['children'], $output, ($indent + 1));
+				$output = $this->container->getMenuTree($menuId, $item['children'], $output, ($indent + 1));
 			}
 		}
 		
@@ -81,7 +81,7 @@ class MenuItems_Model extends Core\Model
 
 	}
 	
-	public function addMenuPage($data)
+	protected function addMenuPage($data)
 	{
 		$req = array('pageId' => true, 'menuId' => true, 'rank' => false, 'label' => true, 'parentId' => true);
 		$useData = array();
@@ -116,7 +116,7 @@ class MenuItems_Model extends Core\Model
 	}
 
 
-	public function editMenuPage($id, $data)
+	protected function editMenuPage($id, $data)
 	{
 		$req = array('pageId' => true, 'menuId' => true, 'rank' => false, 'label' => true, 'parentId' => true);
 		$useData = array();
@@ -150,7 +150,7 @@ class MenuItems_Model extends Core\Model
 		return $edit;
 	}
 
-	public function addMenuLink($data)
+	protected function addMenuLink($data)
 	{
 		$req = array('url' => true, 'menuId' => true, 'rank' => false, 'label' => true, 'parentId' => true);
 		$useData = array();
@@ -184,7 +184,7 @@ class MenuItems_Model extends Core\Model
 	}
 
 
-	public function editMenuLink($id, $data)
+	protected function editMenuLink($id, $data)
 	{
 		$req = array('url' => true, 'menuId' => true, 'rank' => false, 'label' => true, 'parentId' => true);
 		$useData = array();
@@ -217,7 +217,7 @@ class MenuItems_Model extends Core\Model
 		return $edit;
 	}
 
-	public function getMenuLinkForm($siteId, $itemId = 0)
+	protected function getMenuLinkForm($siteId, $itemId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -249,7 +249,7 @@ class MenuItems_Model extends Core\Model
 		$form->add($parentId);
 		$getMenus = $this->getAll('menus', array('siteId' => $siteId));
 		foreach($getMenus as $menu){
-			$items = $this->getMenuTree($menu['menuId']);
+			$items = $this->container->getMenuTree($menu['menuId']);
 			foreach($items as $item){
 				$isLink = 0;
 				if($item['isLink']){

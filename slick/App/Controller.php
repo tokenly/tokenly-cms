@@ -25,7 +25,7 @@ class Controller extends Core\Controller
 
 	}
 	
-	public function init()
+	protected function init()
 	{
 		if(!$this->model->db){
 			$backup_view = SITE_PATH.'/themes/db-dead.php';
@@ -37,7 +37,26 @@ class Controller extends Core\Controller
 			}
 			die();
 		}
-        //first, check what site we are on
+		
+		//load modifications
+		$scan_mods = scandir(FRAMEWORK_PATH.'/Mods');
+		foreach($scan_mods as $mod){
+			if($mod == '.' OR $mod == '..'){
+				continue;
+			}
+			if(is_dir(FRAMEWORK_PATH.'/Mods/'.$mod)){
+				foreach (glob(FRAMEWORK_PATH.'/Mods/'.$mod.'/*.php') as $filename)
+				{
+					require_once($filename);
+				}
+			}
+			elseif(substr($mod, -1, 4) == '.php'){
+				require_once(FRAMEWORK_PATH.'/Mods/'.$mod);
+			}
+		}
+
+
+        //check what site we are on
         $getSite = currentSite();
         if(!$getSite){
 			die('Invalid domain name - no site found');

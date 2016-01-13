@@ -16,20 +16,20 @@ class Adspace_Controller extends App\ModControl
 		$this->model = new Adspace_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'add':
-					$output = $this->addAdspace($output);
+					$output = $this->container->addAdspace($output);
 					break;
 				case 'edit':
-					$output = $this->editAdspace($output);
+					$output = $this->container->editAdspace($output);
 					break;
 				case 'delete':
-					$output = $this->deleteAdspace($output);
+					$output = $this->container->deleteAdspace($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -37,7 +37,7 @@ class Adspace_Controller extends App\ModControl
 			}
 		}
 		else{
-			$output = $this->showAdspaces($output);
+			$output = $this->container->showAdspaces($output);
 		}	
 		
 		return $output;
@@ -96,16 +96,16 @@ class Adspace_Controller extends App\ModControl
 		if(isset($this->args[4]) AND isset($this->args[5])){
 			switch($this->args[4]){
 				case 'edit-ad':
-					$output = $this->editAdspaceAd($output);
+					$output = $this->container->editAdspaceAd($output);
 					break;
 				case 'delete-ad':
-					$output = $this->deleteAdspaceAd($output);
+					$output = $this->container->deleteAdspaceAd($output);
 					break;
 				case 'archive-ad':
-					$output = $this->archiveAdspaceAd($output);
+					$output = $this->container->archiveAdspaceAd($output);
 					break;
 				case 'unarchive-ad':
-					$output = $this->unarchiveAdspaceAd($output);
+					$output = $this->container->unarchiveAdspaceAd($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -346,6 +346,6 @@ class Adspace_Controller extends App\ModControl
 	
 	protected function unarchiveAdspaceAd($output)
 	{
-		return $this->archiveAdspaceAd($output, 0);
+		return $this->container->archiveAdspaceAd($output, 0);
 	}	
 }

@@ -18,38 +18,38 @@ class ProfileFields_Controller extends \App\ModControl
          
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showProfileFields();
+					$output = $this->container->showProfileFields();
 					break;
 				case 'add':
-					$output = $this->addField();
+					$output = $this->container->addField();
 					break;
 				case 'edit':
-					$output = $this->editField();
+					$output = $this->container->editField();
 					break;
 				case 'delete':
-					$output = $this->deleteField();
+					$output = $this->container->deleteField();
 					break;
 				default:
-					$output = $this->showProfileFields();
+					$output = $this->container->showProfileFields();
 					break;
 			}
 		}
 		else{
-			$output = $this->showProfileFields();
+			$output = $this->container->showProfileFields();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showProfileFields()
+    protected function showProfileFields()
     {
 		$output = array('view' => 'list');
 		$getProfileFields = $this->model->getAll('profile_fields', array('siteId' => $this->data['site']['siteId']), array(), 'rank', 'asc');
@@ -59,7 +59,7 @@ class ProfileFields_Controller extends \App\ModControl
 	}
 	
 	
-	private function addField()
+	protected function addField()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getFieldForm();
@@ -84,7 +84,7 @@ class ProfileFields_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editField()
+	protected function editField()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -123,7 +123,7 @@ class ProfileFields_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteField()
+	protected function deleteField()
 	{
 		if(isset($this->args[3])){
 			$getField = $this->model->get('profile_fields', $this->args[3]);

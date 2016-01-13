@@ -4,7 +4,7 @@ use Core, UI, Util;
 class ProfileFields_Model extends Core\Model
 {
 
-	public function getFieldForm($fieldId = 0)
+	protected function getFieldForm($fieldId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -56,7 +56,7 @@ class ProfileFields_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addField($data)
+	protected function addField($data)
 	{
 		$req = array('label' => true, 'type' => true, 'options' => false, 'public' => false, 'active' => false, 'siteId' => true, 'rank' => false, 'slug' => false);
 		$useData = array();
@@ -92,7 +92,7 @@ class ProfileFields_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editField($id, $data)
+	protected function editField($id, $data)
 	{
 		$req = array('label' => true, 'type' => true, 'options' => false, 'public' => false, 'active' => false, 'siteId' => true, 'rank' => false, 'slug' => false);
 		$useData = array();

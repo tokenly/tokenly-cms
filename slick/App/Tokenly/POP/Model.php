@@ -6,7 +6,7 @@ class POP_Model extends Core\Model
 	function __construct()
 	{
 		parent::__construct();
-		$this->weights = $this->getScoreWeights();
+		$this->weights = $this->container->getScoreWeights();
 		$this->coinFieldId = PRIMARY_TOKEN_FIELD;
 		$this->fields = array('views', 'register', 'comments', 'posts', 'threads', 'magic-words', 'likes', 'referrals');
 		
@@ -17,7 +17,7 @@ class POP_Model extends Core\Model
 	}
 
 	
-	public function checkFirstView($userId, $moduleId, $itemId = 0)
+	protected function checkFirstView($userId, $moduleId, $itemId = 0)
 	{
 		$get = $this->getAll('pop_firstView', array('userId' => $userId, 'moduleId' => $moduleId, 'itemId' => $itemId), array('popId'));
 		if($get AND count($get) > 0){
@@ -26,7 +26,7 @@ class POP_Model extends Core\Model
 		return false;
 	}
 	
-	public static function recordFirstView($userId, $moduleId, $itemId = 0)
+	protected static function recordFirstView($userId, $moduleId, $itemId = 0)
 	{
 		$model = new POP_Model;
 		$check = $model->checkFirstView($userId, $moduleId, $itemId);
@@ -45,7 +45,7 @@ class POP_Model extends Core\Model
 	if timeframe false, get all. else should be array('start' => date, 'end' => date)
 	
 	*/
-	public function getUserFirstViews($userId, $timeframe = false)
+	protected function getUserFirstViews($userId, $timeframe = false)
 	{
 		$values = array(':id' => $userId);
 		$sql = 'SELECT popId, popDate FROM pop_firstView WHERE userId = :id';
@@ -71,7 +71,7 @@ class POP_Model extends Core\Model
 		return array('total' => $total, 'days' => $dayNums);
 	}
 	
-	public function getNumUserComments($userId, $timeframe = false, $minLength = 0)
+	protected function getNumUserComments($userId, $timeframe = false, $minLength = 0)
 	{
 		$disqus = new API\Disqus;
 		$username = DISQUS_DEFAULT_FORUM.'-'.md5($userId);
@@ -117,7 +117,7 @@ class POP_Model extends Core\Model
 	-1 = topics only
 	
 	*/
-	public function getNumUserPosts($userId, $timeframe = false, $minLength = 0, $andTopics = 1)
+	protected function getNumUserPosts($userId, $timeframe = false, $minLength = 0, $andTopics = 1)
 	{
 		$numPosts = 0;
 		$numTopics = 0;
@@ -190,7 +190,7 @@ class POP_Model extends Core\Model
 		return array('total' => ($numPosts + $numTopics), 'days' => $dayNums);
 	}
 	
-	public function negateUserBuriedPosts($userId, $timeframe = false)
+	protected function negateUserBuriedPosts($userId, $timeframe = false)
 	{
 		$sql = 'SELECT postId, content FROM forum_posts WHERE userId = :id AND buried = 1';
 		if(is_array($timeframe)){
@@ -204,7 +204,7 @@ class POP_Model extends Core\Model
 	returns array with num users and user info list
 	
 	*/
-	public function getNewUsers($timeframe)
+	protected function getNewUsers($timeframe)
 	{
 		$values = array();
 		$sql = 'SELECT userId, username, regDate FROM users WHERE regDate >= "'.$timeframe['start'].'" AND regDate <= "'.$timeframe['end'].'"';
@@ -216,7 +216,7 @@ class POP_Model extends Core\Model
 		
 	}
 	
-	public function getNumPublishedPosts($userId, $timeframe = false)
+	protected function getNumPublishedPosts($userId, $timeframe = false)
 	{
 		$values = array(':id' => $userId);
 		$sql = 'SELECT postId FROM blog_posts WHERE userId = :id AND published = "published" AND featured = 1';
@@ -251,10 +251,10 @@ class POP_Model extends Core\Model
 		return $get;
 	}
 	
-	public function getUserContributedPosts($userId, $timeframe = false)
+	protected function getUserContributedPosts($userId, $timeframe = false)
 	{
 		if(!isset($this->publishedPosts)){
-			$this->setPublishedPosts($timeframe);
+			$this->container->setPublishedPosts($timeframe);
 		}
 		
 		$output = array('num' => 0, 'total' => 0, 'posts' => array());
@@ -293,7 +293,7 @@ class POP_Model extends Core\Model
 	check if user is a new registrant
 	
 	*/
-	public function checkUserIsNew($userId, $timeframe)
+	protected function checkUserIsNew($userId, $timeframe)
 	{
 		$get = $this->get('users', $userId, array('regDate'));
 		if(!$get){
@@ -310,7 +310,7 @@ class POP_Model extends Core\Model
 	}
 	
 	
-	public function getPopScore($userId, $timeframe = false, $fields = false)
+	protected function getPopScore($userId, $timeframe = false, $fields = false)
 	{
 		$popFields = $this->fields;
 		if($fields !== false){
@@ -324,55 +324,55 @@ class POP_Model extends Core\Model
 			$negate = 0;
 			switch($field){
 				case 'views':
-					$num = $this->getUserFirstViews($userId, $timeframe);
+					$num = $this->container->getUserFirstViews($userId, $timeframe);
 					//$score = $num * $this->weights['viewScore'];
 					foreach($num['days'] as $numDay => $dayPosts){
-						$score += $this->diminishScore($dayPosts, $this->weights['viewScore']);
+						$score += $this->container->diminishScore($dayPosts, $this->weights['viewScore']);
 					}
 					$output['extra'] = $num['days'];
 					$num = $num['total'];					
 					break;
 				case 'register':
-					$check = $this->checkUserIsNew($userId, $timeframe);
+					$check = $this->container->checkUserIsNew($userId, $timeframe);
 					if($check){
 						$score = $this->weights['registerScore'];
 						$num = 1;
 					}
 					break;
 				case 'comments':
-					$num = $this->getNumUserComments($userId, $timeframe);
+					$num = $this->container->getNumUserComments($userId, $timeframe);
 					foreach($num['days'] as $numDay => $dayPosts){
-						$score += $this->diminishScore($dayPosts, $this->weights['commentScore']);
+						$score += $this->container->diminishScore($dayPosts, $this->weights['commentScore']);
 					}
 					$output['extra'] = $num['days'];
 					$num = $num['total'];
 					break;
 				case 'posts':
-					$num = $this->getNumUserPosts($userId, $timeframe, 0, 0);					
+					$num = $this->container->getNumUserPosts($userId, $timeframe, 0, 0);					
 					foreach($num['days'] as $numDay => $dayPosts){
-						$score += $this->diminishScore($dayPosts, $this->weights['postScore']);
+						$score += $this->container->diminishScore($dayPosts, $this->weights['postScore']);
 					}
 					$output['extra'] = $num['days'];
 					$num = $num['total'];
-					$negate = $this->negateUserBuriedPosts($userId, $timeframe);
+					$negate = $this->container->negateUserBuriedPosts($userId, $timeframe);
 					break;
 				case 'threads':
-					$num = $this->getNumUserPosts($userId, $timeframe, 0, -1);
+					$num = $this->container->getNumUserPosts($userId, $timeframe, 0, -1);
 					foreach($num['days'] as $numDay => $dayPosts){
-						$score += $this->diminishScore($dayPosts, $this->weights['threadScore']);
+						$score += $this->container->diminishScore($dayPosts, $this->weights['threadScore']);
 					}		
 					$output['extra'] = $num['days'];
 					$num = $num['total'];				
 					break;
 				case 'magic-words':
-					$num = $this->getNumUserWords($userId, $timeframe);
+					$num = $this->container->getNumUserWords($userId, $timeframe);
 					$score = $num * $this->weights['wordScore'];
 					break;
 				case 'likes':
-					$num = $this->getNumUserLikes($userId, $timeframe);
+					$num = $this->container->getNumUserLikes($userId, $timeframe);
 					$totalLikes = 0;
 					foreach($num['days'] as $numDay => $dayPosts){
-						//$score += $this->diminishScore($dayPosts, $this->weights['likeScore']);
+						//$score += $this->container->diminishScore($dayPosts, $this->weights['likeScore']);
 						$score += $dayPosts['finalScore'] * $this->weights['likeScore'];
 						$totalLikes += $dayPosts['num'];
 					}
@@ -381,17 +381,17 @@ class POP_Model extends Core\Model
 					$num = $num['total'];						
 					break;
 				case 'referrals':
-					$num = $this->getNumUserActiveReferrals($userId, $timeframe);
+					$num = $this->container->getNumUserActiveReferrals($userId, $timeframe);
 					$score = $num * $this->weights['referralScore'];
 					break;
 				case 'blog-posts':
-					$getScore = $this->getUserContributedPosts($userId, $timeframe);
+					$getScore = $this->container->getUserContributedPosts($userId, $timeframe);
 					$num = $getScore['num'];
 					$score = $getScore['total'];					
 					$output['extra'] = $getScore['posts'];
 					break;
 				case 'pov':
-					$pov = $this->getUserPOV($userId, $timeframe);
+					$pov = $this->container->getUserPOV($userId, $timeframe);
 					$num = $pov['num'];
 					$score = $pov['total'];
 					$output['extra'] = $pov['posts'];
@@ -409,7 +409,7 @@ class POP_Model extends Core\Model
 		
 	}
 	
-	public function getPopScoreList($timeframe = false, $fields = false)
+	protected function getPopScoreList($timeframe = false, $fields = false)
 	{
 		$profModel = new Profile\User_Model;
 		$getUsers = $profModel->getUsersWithProfile($this->coinFieldId);
@@ -422,7 +422,7 @@ class POP_Model extends Core\Model
 				continue;
 			}
 			$usedAddresses[$user['value']] = 1;
-			$getScore = $this->getPopScore($user['userId'], $timeframe, $fields);
+			$getScore = $this->container->getPopScore($user['userId'], $timeframe, $fields);
 			$getScore['address'] = $user['value'];
 			$getScore['username'] = $user['username'];
 			$getScore['trueScore'] = $getScore['score'];
@@ -442,7 +442,7 @@ class POP_Model extends Core\Model
 		return array('totalPoints' => $totalScore, 'data' => $output);
 	}
 	
-	public function getScoreWeights()
+	protected function getScoreWeights()
 	{
 		$getApp = $this->get('apps', 'tokenly', array(), 'slug');
 		if(!$getApp){
@@ -471,7 +471,7 @@ class POP_Model extends Core\Model
 		return $output;
 	}
 	
-	public function diminishScore($numTimes, $weight)
+	protected function diminishScore($numTimes, $weight)
 	{
 		$total = 0;
 		if($numTimes == 0){
@@ -484,7 +484,7 @@ class POP_Model extends Core\Model
 	}
 	
 	
-	public function getNumUserWords($userId, $timeframe = false)
+	protected function getNumUserWords($userId, $timeframe = false)
 	{
 		$values = array(':id' => $userId);
 		$sql = 'SELECT submitId FROM pop_words WHERE userId = :id';
@@ -496,7 +496,7 @@ class POP_Model extends Core\Model
 		return count($get);
 	}
 	
-	public function getNumUserLikes($userId, $timeframe = false)
+	protected function getNumUserLikes($userId, $timeframe = false)
 	{
 		if(!isset($this->likeData)){
 			$sql = 'SELECT * FROM user_likes ';
@@ -554,7 +554,7 @@ class POP_Model extends Core\Model
 		foreach($dayNums as &$day){
 			foreach($day['users'] as &$dayUser){
 				$perPoint = $dayUser['score'] / $dayUser['num'];
-				$dayUser['finalScore'] = $this->diminishScore($dayUser['num'], $perPoint);
+				$dayUser['finalScore'] = $this->container->diminishScore($dayUser['num'], $perPoint);
 			}
 		}
 		foreach($dayNums as &$day){
@@ -567,7 +567,7 @@ class POP_Model extends Core\Model
 		return array('total' => $num, 'days' => $dayNums);	
 	}
 	
-	public function getNumUserActiveReferrals($userId, $timeframe = false)
+	protected function getNumUserActiveReferrals($userId, $timeframe = false)
 	{
 		$sql = 'SELECT userId FROM user_referrals
 				WHERE affiliateId = :userId';
@@ -577,7 +577,7 @@ class POP_Model extends Core\Model
 		
 		$output = array();
 		foreach($get as $row){
-			$userPop = $this->getPopScore($row['userId'], $timeframe, array('views','comments','posts','threads'));
+			$userPop = $this->container->getPopScore($row['userId'], $timeframe, array('views','comments','posts','threads'));
 			$score = $userPop['score'];
 			if($score >= $minPop){
 				$output[] = $row;
@@ -587,7 +587,7 @@ class POP_Model extends Core\Model
 		return count($output);
 	}
 	
-	public function getNumUserPublishedPosts($userId, $timeframe = false)
+	protected function getNumUserPublishedPosts($userId, $timeframe = false)
 	{
 		$sql = 'SELECT userId FROM blog_posts
 				WHERE userId = :userId AND status="published" AND featured = 1';
@@ -600,7 +600,7 @@ class POP_Model extends Core\Model
 		return count($get);
 	}
 	
-	public function getNumUserEditedPosts($userId, $timeframe = false)
+	protected function getNumUserEditedPosts($userId, $timeframe = false)
 	{
 		$sql = 'SELECT userId FROM blog_posts
 				WHERE (editedBy = :editId OR (userId = :userId AND editedBy = 0)) AND status="published" AND featured = 1';
@@ -613,7 +613,7 @@ class POP_Model extends Core\Model
 		return count($get);
 	}	
 	
-	public function getUserPOV($userId, $timeframe = false)
+	protected function getUserPOV($userId, $timeframe = false)
 	{
 		$score = 0;
 		if(!isset($this->disqus)){
@@ -624,7 +624,7 @@ class POP_Model extends Core\Model
 		}
 		
 		if(!isset($this->publishedPosts)){
-			$this->setPublishedPosts($timeframe);
+			$this->container->setPublishedPosts($timeframe);
 		}
 		$blogModule = $this->get('modules', 'blog-post', array(), 'slug');
 		$pageIndex = \App\Controller::$pageIndex;

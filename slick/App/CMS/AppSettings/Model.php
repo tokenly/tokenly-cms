@@ -8,7 +8,7 @@ class AppSettings_Model extends \App\Meta_Model
 		parent::__construct();
 	}
 
-	public function getSettingsForm($settings)
+	protected function getSettingsForm($settings)
 	{
 		$form = new UI\Form;	
 		foreach($settings as $setting){		
@@ -49,7 +49,7 @@ class AppSettings_Model extends \App\Meta_Model
 		return $form;
 	}	
 	
-	public function editSettings($data, $apps)
+	protected function editSettings($data, $apps)
 	{
 		$validApps = array();
 		foreach($apps as $app){
@@ -72,7 +72,7 @@ class AppSettings_Model extends \App\Meta_Model
 			throw new \Exception('No settings updated');
 		}
 		foreach($validSettings as $itemId => $value){
-			$edit = $this->updateAppMeta($value['appId'], $value['key'], $value['value'], '', 1);
+			$edit = $this->container->updateAppMeta($value['appId'], $value['key'], $value['value'], '', 1);
 			if(!$edit){
 				throw new \Exception('Failed updating setting ('.$value['key'].')');
 			}

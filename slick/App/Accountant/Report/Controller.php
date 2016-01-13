@@ -14,7 +14,7 @@ class Report_Controller extends \App\ModControl
         $this->model = new Report_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$output['template'] = 'admin';

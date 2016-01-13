@@ -10,7 +10,7 @@ class Auth_Model extends Account\Home_Model
 		$this->api = true;
 	}
 
-	public static function getUser($data)
+	protected static function getUser($data)
 	{
 		$model = new Auth_Model;
 		if(!isset($data['authKey'])){
@@ -42,13 +42,13 @@ class Auth_Model extends Account\Home_Model
 		return $getProf;	
 	}
 	
-	public function logout($data)
+	protected function logout($data)
 	{
 		if(!isset($data['authKey'])){
 			throw new \Exception('Not logged in');
 		}
 		else{
-			$this->clearSession($data['authKey']);
+			$this->container->clearSession($data['authKey']);
 			unset($_SESSION['accountAuth']);
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');

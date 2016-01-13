@@ -16,7 +16,7 @@ class Inventory_Model extends Core\Model
 		}
 	}
 	
-	public function getAddressBalances($addressId)
+	protected function getAddressBalances($addressId)
 	{
 		if(isset(self::$addresses[$addressId])){
 			return self::$addresses[$addressId];
@@ -32,7 +32,7 @@ class Inventory_Model extends Core\Model
 		return $balances;
 	}
 	
-	public function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false, $keepAddress = false)
+	protected function getUserBalances($userId, $groupAmounts = false, $type = 'btc', $forceRefresh = false, $keepAddress = false)
 	{
 		$meta = new \App\Meta_Model;
 		$time = time();
@@ -56,11 +56,11 @@ class Inventory_Model extends Core\Model
 		}
 		foreach($getAddresses as $address){
 			if(($timeDiff >= $this->addressCacheRate OR $forceRefresh) AND !$skip_check){
-				$balances[$address['address']] = $this->checkAddressBalances($address['addressId']);
+				$balances[$address['address']] = $this->container->checkAddressBalances($address['addressId']);
 				$newChecked = true;
 			}
 			else{
-				$balances[$address['address']] = $this->getAddressBalances($address['addressId']);
+				$balances[$address['address']] = $this->container->getAddressBalances($address['addressId']);
 			}
 			if(!$keepAddress AND count($balances[$address['address']]) == 0){
 				unset($balances[$address['address']]);
@@ -86,7 +86,7 @@ class Inventory_Model extends Core\Model
 		return $group;
 	}
 	
-	public function checkAddressBalances($addressId)
+	protected function checkAddressBalances($addressId)
 	{
 		$getAddress = $this->get('coin_addresses', $addressId);
 		if(!$getAddress OR $getAddress['isXCP'] == 0 OR $getAddress['verified'] == 0){
@@ -98,7 +98,7 @@ class Inventory_Model extends Core\Model
 			$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getAddress['address'])));
 		}
 		catch(\Exception $e){
-			return $this->getAddressBalances($addressId);
+			return $this->container->getAddressBalances($addressId);
 			//return false;
 		}
 		$fullBalances = array();
@@ -109,7 +109,7 @@ class Inventory_Model extends Core\Model
 					$isCurrent = $current['balanceId'];
 				}
 			}
-			$getAsset = $this->getAssetData($balance['asset']);
+			$getAsset = $this->container->getAssetData($balance['asset']);
 			if(!$getAsset){
 				continue;
 			}
@@ -136,7 +136,7 @@ class Inventory_Model extends Core\Model
 		return $fullBalances;
 	}
 	
-	public function getAssetData($asset)
+	protected function getAssetData($asset)
 	{
 		$xcp = new API\Bitcoin(XCP_CONNECT);
 		$getAsset = false;
@@ -169,12 +169,12 @@ class Inventory_Model extends Core\Model
 		return $getAsset;
 	}
 	
-	public function hasBalance($userId, $asset, $minAmount = 0, $addressId = 0, $type = 'btc')
+	protected function hasBalance($userId, $asset, $minAmount = 0, $addressId = 0, $type = 'btc')
 	{
 		if($minAmount < 0){
 			return false;
 		}
-		$getBalances = $this->getUserBalances($userId, false, $type);
+		$getBalances = $this->container->getUserBalances($userId, false, $type);
 		if($addressId != 0){
 			$getAddress = $this->get('coin_addresses', $addressId);
 			if(!$getAddress OR $getAddress['isXCP'] == 0 OR $getAddress['verified'] == 0){
@@ -210,10 +210,10 @@ class Inventory_Model extends Core\Model
 		return false;
 	}
 	
-	public function getWeightedUserTokenScore($userId, $opUserId, $token, $minScore = 0, $maxScore = 5, $tokenStep = 1000, $maxTokens = 500000)
+	protected function getWeightedUserTokenScore($userId, $opUserId, $token, $minScore = 0, $maxScore = 5, $tokenStep = 1000, $maxTokens = 500000)
 	{
-		$userBalances = $this->getUserBalances($userId, true);
-		$opBalances = $this->getUserBalances($opUserId, true);
+		$userBalances = $this->container->getUserBalances($userId, true);
+		$opBalances = $this->container->getUserBalances($opUserId, true);
 		$userTokens = 0;
 		$opTokens = 0;
 		$maxSteps = $maxTokens / $tokenStep;
@@ -240,12 +240,12 @@ class Inventory_Model extends Core\Model
 		return array('score' => $score, 'user' => $userTokens, 'op' => $opTokens);
 	}	
 	
-	public function getUserInventoryTransactions($userId, $limit = false, $andUpdate = false)
+	protected function getUserInventoryTransactions($userId, $limit = false, $andUpdate = false)
 	{
 		 $get_all = $this->getAll('coin_addresses', array('userId' => $userId, 'verified' => 1));
 		 $tx_list = array();
 		 foreach($get_all as $address){
-			 $address_tx = $this->getUserAddressTransactions($userId, $address['address'], $andUpdate);
+			 $address_tx = $this->container->getUserAddressTransactions($userId, $address['address'], $andUpdate);
 			 if(is_array($address_tx)){
 				 foreach($address_tx as $tx){
 					 $tx_list[] = $tx;
@@ -272,7 +272,7 @@ class Inventory_Model extends Core\Model
 		 return $tx_list;
 	}
 	
-	public function getUserAddressTransactions($userId, $address, $andUpdate = false)
+	protected function getUserAddressTransactions($userId, $address, $andUpdate = false)
 	{
 		 $get = $this->getAll('coin_addresses', array('userId' => $userId, 'address' => $address));
 		 if(!$get OR count($get) == 0){

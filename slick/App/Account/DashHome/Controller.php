@@ -15,7 +15,7 @@ class DashHome_Controller extends \App\ModControl
         $this->model = new DashHome_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		if(isset($_SESSION['accountAuth'])){
 			try{

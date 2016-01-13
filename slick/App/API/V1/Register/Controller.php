@@ -10,7 +10,7 @@ class Register_Controller extends \Core\Controller
 		$this->model = new Register_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$output = array();
 		try{

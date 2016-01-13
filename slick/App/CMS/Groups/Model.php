@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class Groups_Model extends Core\Model
 {
-	public function getGroupForm($groupId = 0)
+	protected function getGroupForm($groupId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -99,7 +99,7 @@ class Groups_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getGroupModules($groupId, $idOnly = 0)
+	protected function getGroupModules($groupId, $idOnly = 0)
 	{
 		$get = $this->fetchAll('SELECT g.*, a.name as appName, m.name as moduleName
 								FROM group_access g
@@ -121,7 +121,7 @@ class Groups_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getGroupSites($groupId, $idOnly = 0)
+	protected function getGroupSites($groupId, $idOnly = 0)
 	{
 		$get = $this->fetchAll('SELECT g.*, m.name as siteName
 								FROM group_sites g
@@ -143,7 +143,7 @@ class Groups_Model extends Core\Model
 	}
 
 
-	public function addGroup($data)
+	protected function addGroup($data)
 	{
 		$req = array('name', 'isDefault', 'slug', 'siteId');
 		$useData = array();
@@ -184,7 +184,7 @@ class Groups_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editGroup($id, $data)
+	protected function editGroup($id, $data)
 	{
 		$req = array('name', 'isDefault', 'slug', 'siteId');
 		$useData = array();
@@ -252,7 +252,7 @@ class Groups_Model extends Core\Model
 		return true;
 	}
 	
-	public function getGroupMembers($groupId)
+	protected function getGroupMembers($groupId)
 	{
 		$get = $this->fetchAll('SELECT u.userId, u.username, u.slug, u.email
 								FROM group_users g

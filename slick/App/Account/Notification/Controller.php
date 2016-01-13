@@ -14,7 +14,7 @@ class Notification_Controller extends \App\ModControl
 		
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 

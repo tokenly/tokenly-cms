@@ -12,7 +12,7 @@ class ModControl extends Core\Controller
 		$this->model = new Core\Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = array();
 		if(intval($this->data['module']['checkAccess']) === 1){
@@ -35,7 +35,7 @@ class ModControl extends Core\Controller
 		return $output;
 	}
 	
-	public function __install($moduleId)
+	protected function __install($moduleId)
 	{
 		$getModule = $this->model->get('modules', $moduleId);
 		if(!$getModule){

@@ -9,7 +9,7 @@ class Invite_Controller extends \App\ModControl
 		$this->model = new Invite_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		if(!$this->data['user']){

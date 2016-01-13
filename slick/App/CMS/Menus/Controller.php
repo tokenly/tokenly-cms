@@ -17,38 +17,38 @@ class Menus_Controller extends \App\ModControl
         $this->model = new Menus_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showMenus();
+					$output = $this->container->showMenus();
 					break;
 				case 'add':
-					$output = $this->addMenu();
+					$output = $this->container->addMenu();
 					break;
 				case 'edit':
-					$output = $this->editMenu();
+					$output = $this->container->editMenu();
 					break;
 				case 'delete':
-					$output = $this->deleteMenu();
+					$output = $this->container->deleteMenu();
 					break;
 				default:
-					$output = $this->showMenus();
+					$output = $this->container->showMenus();
 					break;
 			}
 		}
 		else{
-			$output = $this->showMenus();
+			$output = $this->container->showMenus();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showMenus()
+    protected function showMenus()
     {
 		$output = array('view' => 'list');
 		$output['menuList'] = $this->model->getAll('menus', array('siteId' => $this->data['site']['siteId']));;
@@ -57,7 +57,7 @@ class Menus_Controller extends \App\ModControl
 	}
 	
 	
-	private function addMenu()
+	protected function addMenu()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getMenuForm();
@@ -84,7 +84,7 @@ class Menus_Controller extends \App\ModControl
 	}
 	
 
-	private function editMenu()
+	protected function editMenu()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -120,7 +120,7 @@ class Menus_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteMenu()
+	protected function deleteMenu()
 	{
 		if(isset($this->args[3])){
 			$getMenu = $this->model->get('menus', $this->args[3]);

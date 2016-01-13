@@ -13,7 +13,7 @@ class Notifier_Controller extends \App\ModControl
 		$this->model = new Notifier_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';

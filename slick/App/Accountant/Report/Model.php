@@ -9,7 +9,7 @@ class Report_Model extends Core\Model
 		$this->inventory = new Tokenly\Inventory_Model;
 	}
 	
-	public function getAddressReportForm()
+	protected function getAddressReportForm()
 	{
 		$form = new UI\Form;
 		
@@ -28,7 +28,7 @@ class Report_Model extends Core\Model
 		
 	}
 	
-	public function generateAddressReport($data)
+	protected function generateAddressReport($data)
 	{
 		$output = array();
 		

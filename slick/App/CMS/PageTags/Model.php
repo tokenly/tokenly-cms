@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class PageTags_Model extends Core\Model
 {
-	public function getTagForm($tagId = 0)
+	protected function getTagForm($tagId = 0)
 	{
 		$form = new UI\Form;
 		$tag = new UI\Textbox('tag');
@@ -19,7 +19,7 @@ class PageTags_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addTag($data)
+	protected function addTag($data)
 	{
 		$req = array('tag', 'class');
 		$useData = array();
@@ -40,7 +40,7 @@ class PageTags_Model extends Core\Model
 		return $add;	
 	}
 		
-	public function editTag($id, $data)
+	protected function editTag($id, $data)
 	{
 		$req = array('tag', 'class');
 		$useData = array();

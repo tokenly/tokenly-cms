@@ -13,7 +13,7 @@ class Referral_Controller extends \App\ModControl
 		$this->model = new Referral_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 

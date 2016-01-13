@@ -3,7 +3,7 @@ namespace App\RSS;
 use Core, App\API\V1, UI, Util, App\Blog;
 class Model extends Core\Model
 {
-	public function getBlogFeed($data)
+	protected function getBlogFeed($data)
 	{
 		$startTime = microtime(true);
 		
@@ -42,14 +42,19 @@ class Model extends Core\Model
 		$feed->setTitle($rssMeta['blog-feed-title']);
 		
 		if(isset($_SERVER['HTTP_FROMLINK'])){
-			$feed->setLink($_SERVER['HTTP_FROMLINK']);
+			//$feed->setLink($_SERVER['HTTP_FROMLINK']);
 		}
 		else{
 			$newGet = $_GET;
 			unset($newGet['params']);
-			$feed->setLink($data['site']['url'].'/'.$rssApp['url'].'/'.$feedModule['url'].'/blog?'.http_build_query($newGet));
+			//$feed->setLink($data['site']['url'].'/'.$rssApp['url'].'/'.$feedModule['url'].'/blog?'.http_build_query($newGet));
 		}
+		$feed->setLink('https://letstalkbitcoin.com/resources/files/images/LTBNETWORK-LOGO3.jpg');
 		$feed->setDescription($rssMeta['blog-feed-description']);
+		
+		//hardcode image for now..
+		$site = currentSite();
+		$feed->setImage('The Let\'s Talk Bitcoin Network', 'https://letstalkbitcoin.com/resources/files/images/LTBNETWORK-LOGO3.jpg', 'https://letstalkbitcoin.com/resources/files/images/LTBNETWORK-LOGO3.jpg');
 		
 	
 		foreach($getPosts as $post){
@@ -126,6 +131,7 @@ class Model extends Core\Model
 					}
 					
 					if(isset($audioLength)){
+						$audio = str_replace('https://', 'http://', $audio);
 						$item->setEncloser($audio, $audioLength, 'audio/mpeg');
 					}
 				}
@@ -136,7 +142,7 @@ class Model extends Core\Model
 		$feed->generateFeed();
 	}
 	
-	public function getCustomizeForm($data)
+	protected function getCustomizeForm($data)
 	{
 		$form = new UI\Form;
 		

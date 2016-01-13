@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util, App\Tokenly\AssetScout_Model;
 class Notifier_Model extends Core\Model
 {
-	public function getNotifyForm()
+	protected function getNotifyForm()
 	{
 		$form = new UI\Form;
 		
@@ -32,7 +32,7 @@ class Notifier_Model extends Core\Model
 		return $form;
 	}
 	
-	public function sendNotification($data)
+	protected function sendNotification($data)
 	{
 		$data['message'] = strip_tags(trim($data['message']), '<a><img><em><b><strong><u><s><i><sup>');	
 		if(trim($data['message']) == ''){

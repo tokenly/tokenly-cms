@@ -3,7 +3,7 @@ namespace App\Account;
 use Core;
 class Referral_Model extends Core\Model
 {
-	public function getUserRefs($userId)
+	protected function getUserRefs($userId)
 	{
 		$getRefs = $this->fetchAll('SELECT r.*, u.username, u.slug
 									FROM user_referrals r 

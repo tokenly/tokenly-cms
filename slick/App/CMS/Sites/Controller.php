@@ -16,38 +16,38 @@ class Sites_Controller extends \App\ModControl
         $this->model = new Sites_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showSites();
+					$output = $this->container->showSites();
 					break;
 				case 'add':
-					$output = $this->addSite();
+					$output = $this->container->addSite();
 					break;
 				case 'edit':
-					$output = $this->editSite();
+					$output = $this->container->editSite();
 					break;
 				case 'delete':
-					$output = $this->deleteSite();
+					$output = $this->container->deleteSite();
 					break;
 				default:
-					$output = $this->showSites();
+					$output = $this->container->showSites();
 					break;
 			}
 		}
 		else{
-			$output = $this->showSites();
+			$output = $this->container->showSites();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showSites()
+    protected function showSites()
     {
 		$output = array('view' => 'siteList');
 		$getSites = $this->model->getAll('sites');
@@ -57,7 +57,7 @@ class Sites_Controller extends \App\ModControl
 	}
 	
 	
-	private function addSite()
+	protected function addSite()
 	{
 		$output = array('view' => 'siteForm');
 		$output['form'] = $this->model->getSiteForm();
@@ -80,7 +80,7 @@ class Sites_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editSite()
+	protected function editSite()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -115,7 +115,7 @@ class Sites_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteSite()
+	protected function deleteSite()
 	{
 		if(isset($this->args[3])){
 			if($this->model->count('sites') > 1){

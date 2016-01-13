@@ -13,7 +13,7 @@ class Address_Controller extends \App\ModControl
 		$this->model = new Address_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
@@ -21,36 +21,36 @@ class Address_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'verify':
-					$output = $this->verifyAddress($output);
+					$output = $this->container->verifyAddress($output);
 					break;
 				case 'edit':
-					$output = $this->editAddress($output);
+					$output = $this->container->editAddress($output);
 					break;
 				case 'delete':
-					$output = $this->deleteAddress($output);
+					$output = $this->container->deleteAddress($output);
 					break;
 				case 'checkPayment':
-					$output = $this->checkPayment($output);
+					$output = $this->container->checkPayment($output);
 					break;
 				case 'checkMessage':
-					$output = $this->checkMessage($output);
+					$output = $this->container->checkMessage($output);
 					break;
 				case 'checkBroadcast':
-					$output = $this->checkBroadcast($output);
+					$output = $this->container->checkBroadcast($output);
 					break;
 				default:
-					$output = $this->showAddresses($output);
+					$output = $this->container->showAddresses($output);
 					break;
 			}
 		}
 		else{
-			$output = $this->showAddresses($output);
+			$output = $this->container->showAddresses($output);
 		}
 
 		return $output;
 	}
 		
-	private function showAddresses($output)
+	protected function showAddresses($output)
 	{
 		$output['view'] = 'index';
 		$output['form'] = $this->model->getAddressForm();
@@ -80,7 +80,7 @@ class Address_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function verifyAddress($output)
+	protected function verifyAddress($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -108,7 +108,7 @@ class Address_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editAddress($output)
+	protected function editAddress($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -147,7 +147,7 @@ class Address_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteAddress($output)
+	protected function deleteAddress($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -173,7 +173,7 @@ class Address_Controller extends \App\ModControl
 		redirect($this->site.$this->data['app']['url'].'/'.$this->data['module']['url']);
 	}
 	
-	private function checkPayment($output)
+	protected function checkPayment($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -195,7 +195,7 @@ class Address_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function checkMessage($output)
+	protected function checkMessage($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -215,7 +215,7 @@ class Address_Controller extends \App\ModControl
 		die();
 	}	
 	
-	public function checkBroadcast($output)
+	protected function checkBroadcast($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';

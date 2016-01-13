@@ -4,7 +4,7 @@ use Core, UI, Util;
 class ProxyURLs_Model extends Core\Model
 {
 
-	public function getProxyForm($proxyId = 0)
+	protected function getProxyForm($proxyId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -21,7 +21,7 @@ class ProxyURLs_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addProxy($data)
+	protected function addProxy($data)
 	{
 		$req = array('slug', 'url');
 		$useData = array();
@@ -40,7 +40,7 @@ class ProxyURLs_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editProxy($id, $data)
+	protected function editProxy($id, $data)
 	{
 		$req = array('slug', 'url');
 		$useData = array();

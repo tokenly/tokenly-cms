@@ -17,38 +17,38 @@ class PageTags_Controller extends \App\ModControl
         $this->model = new PageTags_Model;    
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showPageTags();
+					$output = $this->container->showPageTags();
 					break;
 				case 'add':
-					$output = $this->addTag();
+					$output = $this->container->addTag();
 					break;
 				case 'edit':
-					$output = $this->editTag();
+					$output = $this->container->editTag();
 					break;
 				case 'delete':
-					$output = $this->deleteTag();
+					$output = $this->container->deleteTag();
 					break;
 				default:
-					$output = $this->showPageTags();
+					$output = $this->container->showPageTags();
 					break;
 			}
 		}
 		else{
-			$output = $this->showPageTags();
+			$output = $this->container->showPageTags();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showPageTags()
+    protected function showPageTags()
     {
 		$output = array('view' => 'list');
 		$getPageTags = $this->model->getAll('page_tags');
@@ -58,7 +58,7 @@ class PageTags_Controller extends \App\ModControl
 	}
 	
 	
-	private function addTag()
+	protected function addTag()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getTagForm();
@@ -83,7 +83,7 @@ class PageTags_Controller extends \App\ModControl
 	}
 	
 	
-	private function editTag()
+	protected function editTag()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -116,7 +116,7 @@ class PageTags_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteTag()
+	protected function deleteTag()
 	{
 		if(isset($this->args[3])){
 			$getTag = $this->model->get('page_tags', $this->args[3]);

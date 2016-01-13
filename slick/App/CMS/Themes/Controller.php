@@ -18,38 +18,38 @@ class Themes_Controller extends \App\ModControl
  
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showThemes();
+					$output = $this->container->showThemes();
 					break;
 				case 'add':
-					$output = $this->addTheme();
+					$output = $this->container->addTheme();
 					break;
 				case 'edit':
-					$output = $this->editTheme();
+					$output = $this->container->editTheme();
 					break;
 				case 'delete':
-					$output = $this->deleteTheme();
+					$output = $this->container->deleteTheme();
 					break;
 				default:
-					$output = $this->showThemes();
+					$output = $this->container->showThemes();
 					break;
 			}
 		}
 		else{
-			$output = $this->showThemes();
+			$output = $this->container->showThemes();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showThemes()
+    protected function showThemes()
     {
 		$output = array('view' => 'list');
 		
@@ -70,7 +70,7 @@ class Themes_Controller extends \App\ModControl
 	}
 	
 	
-	private function addTheme()
+	protected function addTheme()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getThemeForm();
@@ -94,7 +94,7 @@ class Themes_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editTheme()
+	protected function editTheme()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -136,7 +136,7 @@ class Themes_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteTheme()
+	protected function deleteTheme()
 	{
 		if(isset($this->args[3])){
 			if($this->model->count('themes') > 1){

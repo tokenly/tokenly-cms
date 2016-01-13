@@ -8,7 +8,7 @@ class Logout_Controller extends \App\ModControl
         $this->model = new Home_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		if(!isset($_SESSION['accountAuth'])){

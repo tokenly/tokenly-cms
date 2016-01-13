@@ -10,7 +10,7 @@ class Board_Controller extends \App\ModControl
 		$this->tca = new Tokenly\TCA_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		
@@ -20,13 +20,13 @@ class Board_Controller extends \App\ModControl
 		}
 		
 		if($this->args[2] == 'all'){
-			return $this->showAllTopics($output);
+			return $this->container->showAllTopics($output);
 		}
 		if($this->args[2] == 'subscriptions'){
-			return $this->showSubscribedTopics($output);
+			return $this->container->showSubscribedTopics($output);
 		}
 		if($this->args[2] == 'tca-posts'){
-			return $this->showTCATopics($output);
+			return $this->container->showTCATopics($output);
 		}
 		
 		$getBoard = $this->model->get('forum_boards', $this->args[2], array(), 'slug');
@@ -53,13 +53,13 @@ class Board_Controller extends \App\ModControl
 		if(isset($this->args[3])){
 			switch($this->args[3]){
 				case 'subscribe':
-					$newOutput = $this->subscribeBoard();
+					$newOutput = $this->container->subscribeBoard();
 					break;
 				case 'unsubscribe':
-					$newOutput = $this->unsubscribeBoard();
+					$newOutput = $this->container->unsubscribeBoard();
 					break;
 				case 'post':
-					$newOutput = $this->postTopic();
+					$newOutput = $this->container->postTopic();
 					break;
 				default:
 					$output['view'] = '404';
@@ -99,7 +99,7 @@ class Board_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function postTopic()
+	protected function postTopic()
 	{
 		$output = array();
 		
@@ -149,7 +149,7 @@ class Board_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function showAllTopics($output)
+	protected function showAllTopics($output)
 	{
 		$output['board'] = false;
 		$output['isAll'] = true;
@@ -196,7 +196,7 @@ class Board_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function showSubscribedTopics($output)
+	protected function showSubscribedTopics($output)
 	{
 		$output['board'] = false;
 		$output['isAll'] = true;
@@ -226,7 +226,7 @@ class Board_Controller extends \App\ModControl
 		return $output;
 	}	
 	
-	private function showTCATopics($output)
+	protected function showTCATopics($output)
 	{
 		$output['board'] = false;
 		$output['isAll'] = true;
@@ -257,7 +257,7 @@ class Board_Controller extends \App\ModControl
 	}		
 
 
-	private function subscribeBoard()
+	protected function subscribeBoard()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -288,7 +288,7 @@ class Board_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function unsubscribeBoard()
+	protected function unsubscribeBoard()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');

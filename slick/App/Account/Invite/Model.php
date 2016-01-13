@@ -4,10 +4,10 @@ use Core, \App\Meta_Model;
 class Invite_Model extends Core\Model
 {
 	
-	public function sendInvite($data)
+	protected function sendInvite($data)
 	{
-		$data = $this->createInvite($data);
-		$data = $this->getInviteUsers($data);
+		$data = $this->container->createInvite($data);
+		$data = $this->container->getInviteUsers($data);
 		$notify = Meta_Model::notifyUser($data['acceptUser'], 'emails.invites.'.$data['type'], $data['inviteId'], 'user-invite', false, $data);
 		if(!$notify){
 			throw new \Exception('Error sending invite notification');
@@ -15,7 +15,7 @@ class Invite_Model extends Core\Model
 		return $data;
 	}
 	
-	public function createInvite($data)
+	protected function createInvite($data)
 	{
 		$req = array('userId', 'sendUser', 'type', 'itemId', 'class');
 		foreach($req as $required){
@@ -50,7 +50,7 @@ class Invite_Model extends Core\Model
 		return $data;
 	}
 	
-	public function getInviteUsers($data)
+	protected function getInviteUsers($data)
 	{
 		$data['main_user'] = $this->get('users', $data['userId'], array('userId', 'username', 'slug', 'email'));
 		$data['send_user'] = $this->get('users', $data['sendUser'], array('userId', 'username', 'slug', 'email'));
@@ -59,7 +59,7 @@ class Invite_Model extends Core\Model
 		return $data;
 	}
 	
-	public function getAcceptForm()
+	protected function getAcceptForm()
 	{
 		ob_start();
 		?>

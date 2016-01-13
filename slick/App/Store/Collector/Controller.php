@@ -13,7 +13,7 @@ class Collector_Controller extends \App\ModControl
 		$this->model = new Collector_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';

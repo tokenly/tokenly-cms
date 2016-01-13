@@ -12,7 +12,7 @@ class Reset_Controller extends \App\ModControl
         $this->model = new Reset_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
@@ -22,7 +22,7 @@ class Reset_Controller extends \App\ModControl
 		}
 		
 		if(isset($this->args[2])){
-			return $this->completeReset();
+			return $this->container->completeReset();
 		}
 		
 		$output['message'] = '';
@@ -50,7 +50,7 @@ class Reset_Controller extends \App\ModControl
     }
     
 
-    private function completeReset()
+    protected function completeReset()
     {
 		$output = array();
 		

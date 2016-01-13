@@ -3,7 +3,7 @@ namespace App\Page;
 use Core;
 class View_Model extends Core\Model
 {
-	public function getPageData($pageId)
+	protected function getPageData($pageId)
 	{
 		$getPage = $this->get('pages', $pageId);
 		if(!$getPage OR $getPage['active'] == 0){
@@ -14,7 +14,7 @@ class View_Model extends Core\Model
 		if($getPage['formatType'] == 'markdown'){
 			$getPage['content'] = markdown($getPage['content']);
 		}
-		$output['content'] = $this->processPageContent($getPage['content'], $getPage['siteId']);
+		$output['content'] = $this->container->processPageContent($getPage['content'], $getPage['siteId']);
 		$output['meta-description'] = $getPage['description'];
 		$output['template'] = $getPage['template'];
 		$output['url'] = $getPage['url'];
@@ -23,14 +23,14 @@ class View_Model extends Core\Model
 		return $output;
 	}
 	
-	public function processPageContent($content, $siteId = 0)
+	protected function processPageContent($content, $siteId = 0)
 	{
-		$content = $this->parsePageTags($content);
-		$content = $this->parseContentBlocks($content, $siteId);
+		$content = $this->container->parsePageTags($content);
+		$content = $this->container->parseContentBlocks($content, $siteId);
 		return $content;
 	}
 	
-	public static function parseContentBlocks($str, $siteId)
+	protected static function parseContentBlocks($str, $siteId)
 	{
 		$model = new Core\Model;
 		$newStr = $str;
@@ -60,16 +60,17 @@ class View_Model extends Core\Model
 		return $newStr;
 	}
 	
-	public static function parsePageTags($str, $strip = false)
+	protected static function parsePageTags($str, $strip = false)
 	{
 		$model = new Core\Model;
 		$newStr = $str;
 		$tags = $model->getAll('page_tags');
-		
+
 		preg_match_all('/\[(.+?)\]/',$str,$matches);
-		foreach($matches[1] as $match){
-			//$exp = explode(':', $match);
+
+		foreach($matches[1] as $mk => $match){
 			$checkPos = strpos($match, ':');
+			
 			if($checkPos !== false){
 				$exp = array(substr($match, 0, $checkPos), substr($match, ($checkPos + 1)));
 				foreach($tags as $tag){
@@ -96,7 +97,8 @@ class View_Model extends Core\Model
 									$paramData[] = $param;
 								}
 							}
-						}			
+						}		
+					
 						$tag['class'] = 'Tags\\'.$tag['class'];			
 						$class = new $tag['class']($paramData);
 						$class->params = $paramData;
@@ -110,10 +112,11 @@ class View_Model extends Core\Model
 						if($strip){
 							$newStr = str_replace('['.$match.']', '', $newStr);
 							continue 2;
-						}				
+						}
+							
 						$tag['class'] = 'Tags\\'.$tag['class'];			
 						$class = new $tag['class'];
-						$newStr = str_replace('['.$match.']', $class->display(), $newStr);
+						$newStr = str_replace('['.$match.']', $class->display(), $newStr);					
 					}
 				}
 			}

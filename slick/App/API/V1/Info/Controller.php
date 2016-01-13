@@ -11,7 +11,7 @@ class Info_Controller extends \Core\Controller
 		$this->model = new Core\Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$output = array();
 		$settings = new \App\CMS\Settings_Model;

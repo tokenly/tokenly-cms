@@ -5,7 +5,7 @@ class Distribute_Model extends Core\Model
 {
 	private $coinFieldId = 12; //temporarily hardcoded
 
-	public function getShareForm()
+	protected function getShareForm()
 	{
 		$form = new UI\Form;
 		
@@ -44,7 +44,7 @@ class Distribute_Model extends Core\Model
 		
 	}
 	
-	public function initDistribution($data)
+	protected function initDistribution($data)
 	{
 		
 		if(!isset($data['asset']) OR trim($data['asset']) == ''){
@@ -134,7 +134,7 @@ class Distribute_Model extends Core\Model
 					continue;
 				}
 				
-				$check = $this->obtainAddress($csvAddr);
+				$check = $this->container->obtainAddress($csvAddr);
 				if(!$check){
 					continue;
 				}
@@ -175,7 +175,7 @@ class Distribute_Model extends Core\Model
 				if(trim($address) == ''){
 					continue;
 				}
-				$check = $this->obtainAddress($address);
+				$check = $this->container->obtainAddress($address);
 				if(!$check){
 					continue;
 				}
@@ -276,7 +276,7 @@ class Distribute_Model extends Core\Model
 		return $useData;
 	}
 	
-	public function obtainAddress($address)
+	protected function obtainAddress($address)
 	{
 		$btc = new API\BTCValidate;
 		
@@ -306,7 +306,7 @@ class Distribute_Model extends Core\Model
 		return trim($getAddress['value']);
 	}
 	
-	public function lookupAddress($address)
+	protected function lookupAddress($address)
 	{
 		$get = $this->getAll('user_profileVals', array('value' => $address, 'fieldId' => $this->coinFieldId));
 		if(!$get OR count($get) == 0){
@@ -327,7 +327,7 @@ class Distribute_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getEditShareForm()
+	protected function getEditShareForm()
 	{
 		$form = new UI\Form;
 		
@@ -354,7 +354,7 @@ class Distribute_Model extends Core\Model
 		return $form;
 	}
 	
-	public function editDistribution($data)
+	protected function editDistribution($data)
 	{
 		if(!isset($data['distributeId'])){
 			throw new \Exception('No distribution set');

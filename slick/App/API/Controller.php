@@ -8,7 +8,7 @@ class Controller extends \Core\Controller
 		header('Content-Type: application/json');
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = array();
 		if(!isset($_REQUEST['v'])){

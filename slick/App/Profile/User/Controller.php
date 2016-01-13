@@ -10,7 +10,7 @@ class User_Controller extends \App\ModControl
         $this->tca = new Tokenly\TCA_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		

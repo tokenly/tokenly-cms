@@ -8,7 +8,7 @@ class Controller extends \App\AppControl
         $this->model = new Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$getModule = $this->model->getModuleFromArgs($this->args); //loads a app/module combo based on URL args
 		$this->module = $getModule['module'];

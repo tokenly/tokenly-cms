@@ -3,7 +3,7 @@ namespace App\Store;
 use Core, UI, Util;
 class Categories_Model extends Core\Model
 {
-	public function getStoreCategoryForm($siteId, $categoryId = 0)
+	protected function getStoreCategoryForm($siteId, $categoryId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -17,7 +17,7 @@ class Categories_Model extends Core\Model
 		$form->add($slug);	
 		
 		$parentId = new UI\Select('parentId');
-		$getCategories = $this->getCategoryFormList($siteId, false, array(), 0, $categoryId);
+		$getCategories = $this->container->getCategoryFormList($siteId, false, array(), 0, $categoryId);
 		$parentId->addOption(0, '-Root-');
 		foreach($getCategories as $cat){
 			$parentId->addOption($cat['categoryId'], $cat['name']);
@@ -42,10 +42,10 @@ class Categories_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getCategoryFormList($siteId, $cats = false, $output = array(), $indent = 0, $categoryId = 0)
+	protected function getCategoryFormList($siteId, $cats = false, $output = array(), $indent = 0, $categoryId = 0)
 	{
 		if($cats === false){
-			$getCats = $this->getCategories($siteId);
+			$getCats = $this->container->getCategories($siteId);
 		}
 		else{
 			$getCats = $cats;
@@ -61,18 +61,18 @@ class Categories_Model extends Core\Model
 			$row = array('categoryId' => $cat['categoryId'], 'name' => $indenter.$cat['name'], 'parentId' => $cat['parentId']);
 			$output[] = $row;
 			if(isset($cat['children'])){
-				$output = array_merge($this->getCategoryFormList($siteId, $cat['children'], $output, ($indent+1), $categoryId), $output);
+				$output = array_merge($this->container->getCategoryFormList($siteId, $cat['children'], $output, ($indent+1), $categoryId), $output);
 			}
 		}
 		return $output;
 	}
 	
 	
-	public function getCategories($siteId, $parentId = 0, $menuMode = 0)
+	protected function getCategories($siteId, $parentId = 0, $menuMode = 0)
 	{
 		$get = $this->getAll('store_categories', array('parentId' => $parentId, 'siteId' => $siteId), array(), 'rank', 'asc');
 		foreach($get as $key => $row){
-			$getChildren = $this->getCategories($siteId, $row['categoryId'], $menuMode);
+			$getChildren = $this->container->getCategories($siteId, $row['categoryId'], $menuMode);
 			if(count($getChildren) > 0){
 				$get[$key]['children'] = $getChildren;
 			}
@@ -86,7 +86,7 @@ class Categories_Model extends Core\Model
 		return $get;
 	}
 
-	public function addStoreCategory($data)
+	protected function addStoreCategory($data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'parentId' => false, 'rank' => false, 'description' => false, 'active' => false);
 		$useData = array();
@@ -116,7 +116,7 @@ class Categories_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editStoreCategory($id, $data)
+	protected function editStoreCategory($id, $data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'parentId' => false, 'rank' => false, 'description' => false, 'active' => false);
 		$useData = array();

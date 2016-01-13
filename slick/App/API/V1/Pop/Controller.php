@@ -10,7 +10,7 @@ class Pop_Controller extends \Core\Controller
 		$this->model = new \App\Blog\MagicWords_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -27,7 +27,7 @@ class Pop_Controller extends \Core\Controller
 		if(isset($this->args[1])){
 			switch($this->args[1]){
 				case 'magic-words':
-					$output = $this->magicWords();
+					$output = $this->container->magicWords();
 					break;
 				default:
 					http_response_code(400);
@@ -44,10 +44,10 @@ class Pop_Controller extends \Core\Controller
 	}
 	
 	
-	private function magicWords()
+	protected function magicWords()
 	{
 		if($this->useMethod == 'POST'){
-			return $this->postMagicWord();
+			return $this->container->postMagicWord();
 		}
 		$output = array();
 		
@@ -74,7 +74,7 @@ class Pop_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function postMagicWord()
+	protected function postMagicWord()
 	{
 		$output = array();
 		

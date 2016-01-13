@@ -17,38 +17,38 @@ class ContentBlocks_Controller extends \App\ModControl
         $this->model = new ContentBlocks_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showContentBlocks();
+					$output = $this->container->showContentBlocks();
 					break;
 				case 'add':
-					$output = $this->addBlock();
+					$output = $this->container->addBlock();
 					break;
 				case 'edit':
-					$output = $this->editBlock();
+					$output = $this->container->editBlock();
 					break;
 				case 'delete':
-					$output = $this->deleteBlock();
+					$output = $this->container->deleteBlock();
 					break;
 				default:
-					$output = $this->showContentBlocks();
+					$output = $this->container->showContentBlocks();
 					break;
 			}
 		}
 		else{
-			$output = $this->showContentBlocks();
+			$output = $this->container->showContentBlocks();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showContentBlocks()
+    protected function showContentBlocks()
     {
 		$output = array('view' => 'list');
 		$getContentBlocks = $this->model->getAll('content_blocks', array('siteId' => $this->data['site']['siteId']));
@@ -58,7 +58,7 @@ class ContentBlocks_Controller extends \App\ModControl
 	}
 	
 	
-	private function addBlock()
+	protected function addBlock()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBlockForm();
@@ -86,7 +86,7 @@ class ContentBlocks_Controller extends \App\ModControl
 	
 
 	
-	private function editBlock()
+	protected function editBlock()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -121,13 +121,10 @@ class ContentBlocks_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteBlock()
+	protected function deleteBlock()
 	{
 		if(isset($this->args[3])){
-			$getBlock = $this->model->get('content_blocks', $this->args[3]);
-			if($getBlock){
-				$delete = $this->model->delete('content_blocks', $this->args[3]);
-			}
+			$delete = $this->model->deleteBlock($this->args[3]);
 		}
 		redirect($this->site.$this->moduleUrl);
 	}

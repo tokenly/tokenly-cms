@@ -4,7 +4,7 @@ use Core, UI, Util, App\Tokenly;
 class Boards_Model extends Core\Model
 {
 
-	public function getBoardForm($siteId)
+	protected function getBoardForm($siteId)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -55,7 +55,7 @@ class Boards_Model extends Core\Model
 	
 
 
-	public function addBoard($data)
+	protected function addBoard($data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'rank' => false, 'description' => false, 'active' => false, 'categoryId' => false);
 		$useData = array();
@@ -77,7 +77,7 @@ class Boards_Model extends Core\Model
 			$useData['slug'] = genURL($useData['name']);
 		}
 		$useData['slug'] = strip_tags($useData['slug']);
-		$useData['slug'] = $this->checkDupeSlug($useData['slug']);
+		$useData['slug'] = $this->container->checkDupeSlug($useData['slug']);
 		$useData['name'] = strip_tags($useData['name']);
 		$useData['description'] = strip_tags($useData['description']);
 		
@@ -95,7 +95,7 @@ class Boards_Model extends Core\Model
 		
 	}
 		
-	public function editBoard($id, $data)
+	protected function editBoard($id, $data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'description' => false, 'active' => false);
 		$useData = array();
@@ -125,7 +125,7 @@ class Boards_Model extends Core\Model
 			$useData['slug'] = genURL($useData['name']);
 		}
 		$useData['slug'] = strip_tags($useData['slug']);
-		$useData['slug'] = $this->checkDupeSlug($useData['slug'], $id);
+		$useData['slug'] = $this->container->checkDupeSlug($useData['slug'], $id);
 		$useData['name'] = strip_tags($useData['name']);
 		$useData['description'] = strip_tags($useData['description']);
 		
@@ -143,7 +143,7 @@ class Boards_Model extends Core\Model
 	}
 
 
-	public function getBoardMods($boardId)
+	protected function getBoardMods($boardId)
 	{
 		$sql = 'SELECT u.userId, u.username, u.email, u.slug
 				FROM forum_mods m
@@ -154,7 +154,7 @@ class Boards_Model extends Core\Model
 		return $get;
 	}
 
-	public function getModForm()
+	protected function getModForm()
 	{
 		$form = new UI\Form;
 		
@@ -168,7 +168,7 @@ class Boards_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addMod($boardId, $userId)
+	protected function addMod($boardId, $userId)
 	{
 		
 		$userId = trim($userId);
@@ -188,7 +188,7 @@ class Boards_Model extends Core\Model
 		return $this->insert('forum_mods', array('userId' => $get['userId'], 'boardId' => $boardId));
 	}
 	
-	public function checkDupeSlug($slug, $boardId = 0)
+	protected function checkDupeSlug($slug, $boardId = 0)
 	{
 		$sql = 'SELECT count(*) as total FROM forum_boards WHERE slug LIKE :slug';
 		$values = array(':slug' => $slug.'%');

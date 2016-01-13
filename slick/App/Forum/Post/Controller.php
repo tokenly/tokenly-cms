@@ -10,7 +10,7 @@ class Post_Controller extends \App\ModControl
 		$this->tca = new Tokenly\TCA_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		
@@ -28,7 +28,7 @@ class Post_Controller extends \App\ModControl
 		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
 		
 		if($this->data['user']){
-			$output['perms'] = $this->checkModPerms($getTopic['boardId'], $this->data);
+			$output['perms'] = $this->container->checkModPerms($getTopic['boardId'], $this->data);
 			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $this->data['module']['moduleId'], $getTopic['topicId'], 'topic');
 			$output['perms'] = $this->tca->checkPerms($this->data['user'], $output['perms'], $boardModule['moduleId'], $getTopic['boardId'], 'board');
 			$this->data['perms'] = $output['perms'];
@@ -71,65 +71,65 @@ class Post_Controller extends \App\ModControl
 			switch($this->args[3]){
 				case 'edit':
 					if(isset($this->args[4])){
-						$newOutput = $this->editPost();
+						$newOutput = $this->container->editPost();
 					}
 					else{
-						$newOutput = $this->editTopic();
+						$newOutput = $this->container->editTopic();
 					}
 					break;
 				case 'delete':
 					if(isset($this->args[4])){
-						$newOutput = $this->deletePost();
+						$newOutput = $this->container->deletePost();
 					}
 					else{
-						$newOutput = $this->deleteTopic();
+						$newOutput = $this->container->deleteTopic();
 					}
 					break;
 				case 'lock':
-					$newOutput = $this->lockTopic();
+					$newOutput = $this->container->lockTopic();
 					break;
 				case 'unlock':
-					$newOutput = $this->unlockTopic();
+					$newOutput = $this->container->unlockTopic();
 					break;
 				case 'sticky':
-					$newOutput = $this->stickyTopic();
+					$newOutput = $this->container->stickyTopic();
 					break;
 				case 'unsticky':
-					$newOutput = $this->unstickyTopic();
+					$newOutput = $this->container->unstickyTopic();
 					break;
 				case 'move':
-					$newOutput = $this->moveTopic();
+					$newOutput = $this->container->moveTopic();
 					break;
 				case 'like':
 					if(isset($this->args[4])){
-						$newOutput = $this->likePost();
+						$newOutput = $this->container->likePost();
 					}
 					else{
-						$newOutput = $this->likeTopic();
+						$newOutput = $this->container->likeTopic();
 					}
 					break;
 				case 'unlike':
 					if(isset($this->args[4])){
-						$newOutput = $this->unlikePost();
+						$newOutput = $this->container->unlikePost();
 					}
 					else{
-						$newOutput = $this->unlikeTopic();
+						$newOutput = $this->container->unlikeTopic();
 					}
 					break;
 				case 'subscribe':
-					$newOutput = $this->subscribeTopic();
+					$newOutput = $this->container->subscribeTopic();
 					break;
 				case 'unsubscribe':
-					$newOutput = $this->unsubscribeTopic();
+					$newOutput = $this->container->unsubscribeTopic();
 					break;
 				case 'report':
-					$newOutput = $this->reportPost();
+					$newOutput = $this->container->reportPost();
 					break;
 				case 'permadelete':
-					$newOutput = $this->permaDelete();
+					$newOutput = $this->container->permaDelete();
 					break;
 				case 'request-ban':
-					$newOutput = $this->requestBan();
+					$newOutput = $this->container->requestBan();
 					break;
 				default:
 					$output['view'] = '404';
@@ -167,7 +167,7 @@ class Post_Controller extends \App\ModControl
 		$output['replies'] = $this->model->getTopicReplies($getTopic['topicId'], $this->data, $output['page']);
 		
 		if($this->data['user'] AND posted()){
-			$output = array_merge($output, $this->postReply());
+			$output = array_merge($output, $this->container->postReply());
 			return $output;
 		}
 
@@ -230,7 +230,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function postReply()
+	protected function postReply()
 	{
 		$output = array();
 		if(!$this->data['user'] OR !$this->data['perms']['canPostReply']){
@@ -285,7 +285,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editPost()
+	protected function editPost()
 	{
 		$output = array();
 		
@@ -330,7 +330,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editTopic()
+	protected function editTopic()
 	{
 		$output = array();
 		
@@ -369,7 +369,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deletePost()
+	protected function deletePost()
 	{
 		$output = array();
 		
@@ -388,7 +388,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteTopic()
+	protected function deleteTopic()
 	{
 		$output = array();
 		
@@ -405,7 +405,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function lockTopic()
+	protected function lockTopic()
 	{
 		$output = array();
 
@@ -422,7 +422,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function unlockTopic()
+	protected function unlockTopic()
 	{
 		$output = array();
 
@@ -439,7 +439,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function stickyTopic()
+	protected function stickyTopic()
 	{
 		$output = array();
 
@@ -456,7 +456,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function unstickyTopic()
+	protected function unstickyTopic()
 	{
 		$output = array();
 
@@ -473,7 +473,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function moveTopic()
+	protected function moveTopic()
 	{
 		$output = array();
 		if(!$this->data['user']
@@ -509,7 +509,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function likeTopic()
+	protected function likeTopic()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -571,7 +571,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function unlikeTopic()
+	protected function unlikeTopic()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -607,7 +607,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function likePost()
+	protected function likePost()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -686,7 +686,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function unlikePost()
+	protected function unlikePost()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -730,7 +730,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function subscribeTopic()
+	protected function subscribeTopic()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -761,7 +761,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function unsubscribeTopic()
+	protected function unsubscribeTopic()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -793,7 +793,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function reportPost()
+	protected function reportPost()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');
@@ -933,7 +933,7 @@ class Post_Controller extends \App\ModControl
 		die();
 	}
 	
-	public function checkModPerms($boardId, $appData)
+	protected function checkModPerms($boardId, $appData)
 	{
 		if(isset($appData['app']['meta']['mod-group'])){
 			$modGroup = $this->model->get('groups', $appData['app']['meta']['mod-group']);
@@ -954,7 +954,7 @@ class Post_Controller extends \App\ModControl
 		return $appData['perms'];
 	}
 	
-	private function permaDelete()
+	protected function permaDelete()
 	{
 		$output = array();
 		if(!$this->data['user']){
@@ -989,7 +989,7 @@ class Post_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function requestBan()
+	protected function requestBan()
 	{
 		ob_end_clean();
 		header('Content-Type: text/json');		

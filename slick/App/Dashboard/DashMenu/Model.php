@@ -4,7 +4,7 @@ use App\Tokenly;
 class DashMenu_Model extends Model
 {
 
-	public static function getDashMenu()
+	protected static function getDashMenu()
 	{
 		$output = array();
 		$model = new DashMenu_Model;
@@ -45,7 +45,7 @@ class DashMenu_Model extends Model
 		return $output;
 	}
 	
-	public function getUserAccessModules($user)
+	protected function getUserAccessModules($user)
 	{
 		if(!$user){
 			return array();

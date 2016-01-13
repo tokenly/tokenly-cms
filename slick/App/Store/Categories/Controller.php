@@ -13,37 +13,37 @@ class Categories_Controller extends \App\ModControl
         $this->model = new Categories_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showStoreCategories();
+					$output = $this->container->showStoreCategories();
 					break;
 				case 'add':
-					$output = $this->addStoreCategory();
+					$output = $this->container->addStoreCategory();
 					break;
 				case 'edit':
-					$output = $this->editStoreCategory();
+					$output = $this->container->editStoreCategory();
 					break;
 				case 'delete':
-					$output = $this->deleteStoreCategory();
+					$output = $this->container->deleteStoreCategory();
 					break;
 				default:
-					$output = $this->showStoreCategories();
+					$output = $this->container->showStoreCategories();
 					break;
 			}
 		}
 		else{
-			$output = $this->showStoreCategories();
+			$output = $this->container->showStoreCategories();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showStoreCategories()
+    protected function showStoreCategories()
     {
 		$output = array('view' => 'list');
 		$output['catList'] = $this->model->getCategories($this->data['site']['siteId']);
@@ -51,7 +51,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addStoreCategory()
+	protected function addStoreCategory()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getStoreCategoryForm($this->data['site']['siteId']);
@@ -75,7 +75,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function editStoreCategory()
+	protected function editStoreCategory()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -109,7 +109,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function deleteStoreCategory()
+	protected function deleteStoreCategory()
 	{
 		if(isset($this->args[3])){
 			$getStoreCategory = $this->model->get('store_categories', $this->args[3]);

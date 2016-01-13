@@ -5,7 +5,7 @@ class AssetDrop_Model extends Core\Model
 {
 	public $coinFieldId = 12; //temporarily hardcoded
 	
-	public function getDropperForm($appData)
+	protected function getDropperForm($appData)
 	{
 		$form = new UI\Form;
 		$asset = new UI\Textbox('asset');
@@ -63,7 +63,7 @@ class AssetDrop_Model extends Core\Model
 		
 	}
 	
-	public function initDrop($data, $appData)
+	protected function initDrop($data, $appData)
 	{
 		$profModel = new Profile\User_Model;
 		$xcpUsers = $profModel->getUsersWithProfile($this->coinFieldId);

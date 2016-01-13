@@ -9,7 +9,7 @@ class Link_Controller extends \App\ModControl
 		$this->model = new Core\Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		if(!isset($this->args[2])){
@@ -27,7 +27,7 @@ class Link_Controller extends \App\ModControl
 
 		//check if they have clicked this link already in current session
 		if(!in_array($getLink['urlId'], $_SESSION['visited_tracking_urls'])){
-			$unique = $this->checkUniqueClick($getLink['urlId']);
+			$unique = $this->container->checkUniqueClick($getLink['urlId']);
 			$new_clicks = intval($getLink['clicks']) + 1;
 			$new_unique = intval($getLink['unique_clicks']);
 			$time = timestamp();

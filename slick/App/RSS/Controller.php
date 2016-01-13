@@ -8,7 +8,7 @@ class Controller extends \App\AppControl
 		$this->model = new Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		if(!$this->module){

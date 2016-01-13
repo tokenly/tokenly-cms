@@ -17,7 +17,7 @@ class Settings_Controller extends \App\ModControl
         $this->model = new Settings_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$output['user'] = Home_Model::userInfo();
@@ -29,7 +29,7 @@ class Settings_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'delete':
-					return $this->deleteAccount($output['user']);
+					return $this->container->deleteAccount($output['user']);
 					break;
 			}
 		}
@@ -55,7 +55,7 @@ class Settings_Controller extends \App\ModControl
 		}		
 		
 		if(!$output['adminView'] AND isset($this->args[2]) AND $this->args[2] == 'delete'){
-			return $this->deleteAccount($output['user']);
+			return $this->container->deleteAccount($output['user']);
 		}
 		
 		
@@ -109,7 +109,7 @@ class Settings_Controller extends \App\ModControl
 		return $output;
     }
     
-	private function deleteAccount($user)
+	protected function deleteAccount($user)
 	{
 		$output = array();
 		

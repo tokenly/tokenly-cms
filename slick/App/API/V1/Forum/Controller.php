@@ -32,7 +32,7 @@ class Forum_Controller extends \Core\Controller
 	* @return Array
 	*
 	*/
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -59,16 +59,16 @@ class Forum_Controller extends \Core\Controller
 		if(isset($args[1])){
 			switch($args[1]){
 				case 'categories':
-					$output = $this->categories();
+					$output = $this->container->categories();
 					break;
 				case 'boards':
-					$output = $this->boards();
+					$output = $this->container->boards();
 					break;
 				case 'threads':
-					$output = $this->threads();
+					$output = $this->container->threads();
 					break;
 				case 'opts':
-					$output = $this->opts();
+					$output = $this->container->opts();
 					break;
 				default:
 					http_response_code(400);
@@ -98,7 +98,7 @@ class Forum_Controller extends \Core\Controller
 			return $check;
 		}			
 		if(isset($this->args[2])){
-			return $this->getCategory();
+			return $this->container->getCategory();
 		}
 		$getCats = $this->model->getAll('forum_categories', array('siteId' => $this->args['data']['site']['siteId']),
 															array('categoryId', 'name', 'rank', 'description', 'slug'), 'rank', 'ASC');
@@ -226,7 +226,7 @@ class Forum_Controller extends \Core\Controller
 			return $check;
 		}		
 		if(isset($this->args[2])){
-			return $this->getBoard();
+			return $this->container->getBoard();
 		}		
 		$getBoards = $this->model->fetchAll('SELECT b.boardId, b.categoryId, b.name, b.slug, b.rank, b.description
 											 FROM forum_boards b
@@ -318,11 +318,11 @@ class Forum_Controller extends \Core\Controller
 		$output = array();
 		//route to individual thread
 		if(isset($this->args[2])){
-			return $this->getThread();
+			return $this->container->getThread();
 		}
 		//check if posting a new thread
 		if($this->useMethod == 'POST'){
-			return $this->postThread();
+			return $this->container->postThread();
 		}
 		//get thread list
 		$this->args['data']['user'] = $this->user;
@@ -363,20 +363,20 @@ class Forum_Controller extends \Core\Controller
 		$this->thread = $getThread;
 		//if post ID set... route to specific post/reply
 		if(isset($this->args[3])){
-			return $this->getPost();
+			return $this->container->getPost();
 		}
 		
 		//general thread actions
 		$newOutput = false;
 		switch($this->useMethod){
 			case 'POST':
-				$newOutput = $this->postReply();
+				$newOutput = $this->container->postReply();
 				break;
 			case 'PATCH':
-				$newOutput = $this->editThread();
+				$newOutput = $this->container->editThread();
 				break;
 			case 'DELETE':
-				$newOutput = $this->buryThread();
+				$newOutput = $this->container->buryThread();
 				break;
 		}
 		if($newOutput !== false){
@@ -517,10 +517,10 @@ class Forum_Controller extends \Core\Controller
 				//continue on
 				break;
 			case 'PATCH':
-				$newOutput = $this->editPost();
+				$newOutput = $this->container->editPost();
 				break;
 			case 'DELETE':
-				$newOutput = $this->buryPost();
+				$newOutput = $this->container->buryPost();
 				break;
 			default:
 				$newOutput = array('error' => 'Invalid Request Method', 'methods' => array('GET','PATCH','DELETE'));
@@ -690,31 +690,31 @@ class Forum_Controller extends \Core\Controller
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'flag':
-					$output = $this->flagPost();
+					$output = $this->container->flagPost();
 					break;
 				case 'like':
-					$output = $this->like();
+					$output = $this->container->like();
 					break;
 				case 'unlike':
-					$output = $this->unlike();
+					$output = $this->container->unlike();
 					break;
 				case 'move':
-					$output = $this->moveThread();
+					$output = $this->container->moveThread();
 					break;
 				case 'lock':
-					$output = $this->lockThread();
+					$output = $this->container->lockThread();
 					break;
 				case 'unlock':
-					$output = $this->unlockThread();
+					$output = $this->container->unlockThread();
 					break;
 				case 'sticky':
-					$output = $this->stickyThread();
+					$output = $this->container->stickyThread();
 					break;
 				case 'unsticky':
-					$output = $this->unstickyThread();
+					$output = $this->container->unstickyThread();
 					break;
 				case 'perms':
-					$output = $this->getPerms();
+					$output = $this->container->getPerms();
 					break;
 				default:
 					http_response_code(400);
@@ -1050,7 +1050,7 @@ class Forum_Controller extends \Core\Controller
 	* @return true|Array if wrong method is being used, function will return an array with error message that can be directly returned. 
 	*
 	*/
-	private function checkMethod($method)
+	protected function checkMethod($method)
 	{
 		$output = true;
 		if($this->useMethod != $method){

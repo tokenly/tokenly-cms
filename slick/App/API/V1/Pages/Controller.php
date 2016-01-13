@@ -12,7 +12,7 @@ class Pages_Controller extends \Core\Controller
 		$this->pageModule = $this->model->get('modules', 'page-view', array(), 'slug');
 	}
 
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$output = array();
 		$this->args = $args;
@@ -26,21 +26,21 @@ class Pages_Controller extends \Core\Controller
 		if(isset($args[1])){
 			switch($args[1]){
 				case 'menus':
-					$output = $this->listMenus();
+					$output = $this->container->listMenus();
 					break;
 				default:
-					$output = $this->getPage();
+					$output = $this->container->getPage();
 					break;
 			}
 		}
 		else{
-			$output = $this->listPages();
+			$output = $this->container->listPages();
 		}
 		
 		return $output;
 	}
 	
-	private function listPages()
+	protected function listPages()
 	{
 		$output = array();
 		$getPages = $this->model->getAll('pages', array('siteId' => $this->args['data']['site']['siteId'], 'active' => 1), 
@@ -58,7 +58,7 @@ class Pages_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getPage()
+	protected function getPage()
 	{
 		$output = array();
 		if(!isset($this->args[1]) OR trim($this->args[1]) == ''){
@@ -91,7 +91,7 @@ class Pages_Controller extends \Core\Controller
 		return $output;
 	}
 
-	private function getMenu()
+	protected function getMenu()
 	{
 		$output = array();
 		if(!isset($this->args[2]) OR trim($this->args[2]) == ''){
@@ -122,10 +122,10 @@ class Pages_Controller extends \Core\Controller
 		return $output;
 	}
 
-	private function listMenus()
+	protected function listMenus()
 	{
 		if(isset($this->args[2])){
-			return $this->getMenu();
+			return $this->container->getMenu();
 		}
 		$output = array();
 		$getMenus = $this->model->getAll('menus', array('siteId' => $this->args['data']['site']['siteId']), 

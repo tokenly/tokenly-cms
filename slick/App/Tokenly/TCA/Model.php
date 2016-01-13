@@ -43,7 +43,7 @@ class TCA_Model extends Core\Model
 	* @param $defaultReturn bool
 	* @return Array	
 	*/
-	public function checkPerms($userId, $perms, $moduleId, $itemId = 0, $itemType = '')
+	protected function checkPerms($userId, $perms, $moduleId, $itemId = 0, $itemType = '')
 	{
 		foreach($perms as $key => $val){
 			$getPerm = extract_row(self::$appPerms, array('permKey' => $key));
@@ -53,7 +53,7 @@ class TCA_Model extends Core\Model
 				if(!$val){
 					$defaultReturn = false;
 				}
-				$checkAccess = $this->checkItemAccess($userId, $moduleId, $itemId, $itemType, $defaultReturn, $getPerm['permId'], $val);
+				$checkAccess = $this->container->checkItemAccess($userId, $moduleId, $itemId, $itemType, $defaultReturn, $getPerm['permId'], $val);
 				if(!$checkAccess){
 					$perms[$key] = false;
 				}
@@ -79,7 +79,7 @@ class TCA_Model extends Core\Model
 	* @param $permId integry
 	* @return bool
 	*/
-	public function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0, $override = false)
+	protected function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0, $override = false)
 	{
 		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
 		if(!isset(self::$locks[$lockHash])){
@@ -105,11 +105,11 @@ class TCA_Model extends Core\Model
 				$hasReq = true;
 			}
 			else{
-				$hasReq = $this->parseLock($getBalances, $lock);
+				$hasReq = $this->container->parseLock($getBalances, $lock);
 			}
 			$stack[] = array('hasReq' => $hasReq, 'stackOp' => $lock['stackOp']);
 		}
-		$doCheck = $this->parseStack($stack);
+		$doCheck = $this->container->parseStack($stack);
 		return $doCheck;
 	}
 	
@@ -123,15 +123,15 @@ class TCA_Model extends Core\Model
 	 * 
 	 * @return bool
 	 */
-	public function checkAccess($userId, $conditions = array())
+	protected function checkAccess($userId, $conditions = array())
 	{
 		$getBalances = $this->inventory->getUserBalances($userId, true);
 		$stack = array();
 		foreach($conditions as $lock){
-			$hasReq = $this->parseLock($getBalances, $lock);
+			$hasReq = $this->container->parseLock($getBalances, $lock);
 			$stack[] = array('hasReq' => $hasReq, 'stackOp' => $lock['stackOp']);
 		}
-		$doCheck = $this->parseStack($stack);
+		$doCheck = $this->container->parseStack($stack);
 		return $doCheck;
 	}
 	

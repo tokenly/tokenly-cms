@@ -3,7 +3,7 @@ namespace App\Account;
 use Core, UI, Util, API, App\Tokenly;
 class Settings_Model extends Core\Model
 {
-	public function getSettingsForm($user, $adminView = false)
+	protected function getSettingsForm($user, $adminView = false)
 	{
 		$app = get_app('account');
 		$form = new UI\Form;
@@ -116,7 +116,7 @@ class Settings_Model extends Core\Model
 		return $form;
 	}
 	
-	public function updateSettings($user, $data, $isAPI = false, $adminView = false)
+	protected function updateSettings($user, $data, $isAPI = false, $adminView = false)
 	{
 		$app = get_app('account');
 		$getUser = $this->get('users', $user['userId']);
@@ -136,7 +136,7 @@ class Settings_Model extends Core\Model
 			if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
 				throw new \Exception('Invalid email address');
 			}
-			$checkEmail = $this->checkEmailInUse($user['userId'], $data['email']);
+			$checkEmail = $this->container->checkEmailInUse($user['userId'], $data['email']);
 			if($checkEmail){
 				throw new \Exception('Email address already in use');
 			}
@@ -324,7 +324,7 @@ class Settings_Model extends Core\Model
 		return true;
 	}
 	
-	public function getSettingsInfo($user)
+	protected function getSettingsInfo($user)
 	{
 		$meta = new \App\Meta_Model;
 		$output = array('email' => $user['email']);
@@ -341,7 +341,7 @@ class Settings_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getDeleteForm()
+	protected function getDeleteForm()
 	{
 		$form = new UI\Form;
 
@@ -353,7 +353,7 @@ class Settings_Model extends Core\Model
 		return $form;	
 	}
 	
-	public function deleteAccount($user, $data)
+	protected function deleteAccount($user, $data)
 	{
 		$getUser = $this->get('users', $user['userId']);
 		if(!isset($data['password'])){
@@ -376,7 +376,7 @@ class Settings_Model extends Core\Model
 		
 	}
 	
-	public function checkEmailInUse($userId, $email)
+	protected function checkEmailInUse($userId, $email)
 	{
 		$get = $this->getAll('users', array('email' => $email), array('userId'));
 		if(!$get){

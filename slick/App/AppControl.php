@@ -15,7 +15,7 @@ class AppControl extends Core\Controller
         $this->model = new Core\Model;
     }
     
-    public function init()
+    protected function init()
     {
         $output = array('app' => $this->app, 'module' => $this->module, 'site' => $this->site);
         $output['themeData'] = false;
@@ -82,7 +82,7 @@ class AppControl extends Core\Controller
         return $output;
     }
     
-    public static function checkModuleAccess($moduleId, $redirect = true, $andCheckTCA = true)
+    protected static function checkModuleAccess($moduleId, $redirect = true, $andCheckTCA = true)
     {
 		$model = new Core\Model;
 		$tca = new Tokenly\TCA_Model;
@@ -142,7 +142,7 @@ class AppControl extends Core\Controller
 		return false;
 	}
 	
-	public function __install($appId)
+	protected function __install($appId)
 	{
 		$getApp = $this->model->get('apps', $appId);
 		if(!$getApp){

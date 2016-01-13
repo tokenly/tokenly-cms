@@ -17,31 +17,31 @@ class Accounts_Controller extends \App\ModControl
         $this->model = new Accounts_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'delete':
-					$output = $this->deleteUser();
+					$output = $this->container->deleteUser();
 					break;
 				case 'view':
-					$output = $this->viewUser();
+					$output = $this->container->viewUser();
 					break;
 				default:
-					$output = $this->listUsers();
+					$output = $this->container->listUsers();
 					break;
 			}
 		}
 		else{
-			$output = $this->listUsers();
+			$output = $this->container->listUsers();
 		}
 		$output['template'] = 'admin';
 
         return $output;
     }
     
-    private function listUsers()
+    protected function listUsers()
     {
 		$output = array('view' => 'list');
 		$output['searchForm'] = $this->model->getSearchForm();
@@ -86,7 +86,7 @@ class Accounts_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteUser()
+	protected function deleteUser()
 	{
 		if(isset($this->args[3])){
 			$user = Account\Home_Model::userInfo();
@@ -100,7 +100,7 @@ class Accounts_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl);
 	}
 	
-	private function viewUser()
+	protected function viewUser()
 	{
 		$output = array();
 		if(!isset($this->args[3])){

@@ -12,7 +12,7 @@ class Model extends Core\Model
 		$this->profileModule = $this->get('modules', 'user-profile', array(), 'slug');
 	}
 	
-	public function getForumCategories($site, $app, $user = false)
+	protected function getForumCategories($site, $app, $user = false)
 	{
 		$siteId = $site['siteId'];
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
@@ -46,8 +46,8 @@ class Model extends Core\Model
 													WHERE t.boardId = :boardId', array(':boardId' => $board['boardId']));
 				$getBoards[$bk]['numReplies'] = $countReplies['total'];
 				
-				$lastTopic = $this->getLastBoardTopic($board, $userId);
-				$lastPost = $this->getLastBoardPost($board, $userId);
+				$lastTopic = $this->container->getLastBoardTopic($board, $userId);
+				$lastPost = $this->container->getLastBoardPost($board, $userId);
 
 				$topicTime = 0;
 				if($lastTopic){
@@ -100,7 +100,7 @@ class Model extends Core\Model
 		return $getCats;
 	}
 	
-	public function getLastBoardTopic($board, $userId, $offset = 0)
+	protected function getLastBoardTopic($board, $userId, $offset = 0)
 	{
 		$lastTopic = $this->fetchSingle('SELECT * 
 										FROM forum_topics
@@ -112,12 +112,12 @@ class Model extends Core\Model
 		}			
 		$checkTCA = $this->tca->checkItemAccess($userId, $this->postModule['moduleId'], $lastTopic['topicId'], 'topic');
 		if(!$checkTCA){
-			return $this->getLastBoardTopic($board, $userId, ($offset+1));
+			return $this->container->getLastBoardTopic($board, $userId, ($offset+1));
 		}
 		return $lastTopic;
 	}
 	
-	public function getLastBoardPost($board, $userId, $offset = 0)
+	protected function getLastBoardPost($board, $userId, $offset = 0)
 	{
 		$lastPost = $this->fetchSingle('SELECT p.* 
 										FROM forum_posts p
@@ -130,7 +130,7 @@ class Model extends Core\Model
 		}						
 		$checkTCA = $this->tca->checkItemAccess($userId, $this->postModule['moduleId'], $lastPost['topicId'], 'topic');
 		if(!$checkTCA){
-			return $this->getLastBoardPost($board, $userId, ($offset+1));
+			return $this->container->getLastBoardPost($board, $userId, ($offset+1));
 		}										
 		return $lastPost;
 	}

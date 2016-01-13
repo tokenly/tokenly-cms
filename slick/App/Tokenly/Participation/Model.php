@@ -6,7 +6,7 @@ class Participation_Model extends Core\Model
 	private $startDate = '2014-06-27 00:00:00';
 	private $realStart = '2014-01-01';
 
-	public function getPOPForm()
+	protected function getPOPForm()
 	{
 		$form = new UI\Form;
 		
@@ -72,7 +72,7 @@ class Participation_Model extends Core\Model
 		return $form;
 	}
 	
-	public function generateReport($data)
+	protected function generateReport($data)
 	{
 		/*
 		$data['startDate'] = date('Y-m-d', strtotime($data['startDate']));
@@ -117,7 +117,7 @@ class Participation_Model extends Core\Model
 		return $insert;	
 	}
 	
-	public function getEditReportForm()
+	protected function getEditReportForm()
 	{
 		$form = new UI\Form;
 		

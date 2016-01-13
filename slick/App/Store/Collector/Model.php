@@ -11,7 +11,7 @@ class Collector_Model extends Core\Model
 		$this->inventory = new Tokenly\Inventory_Model;
 	}
 	
-	public function getSelectionForm()
+	protected function getSelectionForm()
 	{
 		$form = new UI\Form;
 		$form->setSubmitText('Go');
@@ -28,12 +28,12 @@ class Collector_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getValidOptions()
+	protected function getValidOptions()
 	{
 		return array('sponsor-form', 'submission-credits', 'tca-forums', 'distributor-change', 'donate-verify');
 	}
 	
-	public function getCollectionForm()
+	protected function getCollectionForm()
 	{
 		$form = new UI\Form;
 		
@@ -58,7 +58,7 @@ class Collector_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getServerBalance()
+	protected function getServerBalance()
 	{
 		try{
 			$balance = $this->btc->getbalance();
@@ -69,7 +69,7 @@ class Collector_Model extends Core\Model
 		return $balance;
 	}
 	
-	public function getFuelInfo()
+	protected function getFuelInfo()
 	{
 		$output = array('balance' => false, 'address' => false);
 		try{
@@ -84,24 +84,24 @@ class Collector_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getPaymentsList($option)
+	protected function getPaymentsList($option)
 	{
 		$output = array();
 		switch($option){
 			case 'sponsor-form':
-				$output = $this->getSponsorPayments();
+				$output = $this->container->getSponsorPayments();
 				break;
 			case 'submission-credits':
-				$output = $this->getSubmissionCreditPayments();
+				$output = $this->container->getSubmissionCreditPayments();
 				break;
 			case 'tca-forums':
-				$output = $this->getTokenSocietyPayments();
+				$output = $this->container->getTokenSocietyPayments();
 				break;
 			case 'distributor-change':
-				$output = $this->getDistributorChange();
+				$output = $this->container->getDistributorChange();
 				break;
 			case 'donate-verify':
-				$output = $this->getVerifyFunds();
+				$output = $this->container->getVerifyFunds();
 				break;
 		}
 		
@@ -117,7 +117,7 @@ class Collector_Model extends Core\Model
 	
 	protected function getSponsorPayments()
 	{
-		$output = $this->getPaymentOrders('ad-purchase');
+		$output = $this->container->getPaymentOrders('ad-purchase');
 		foreach($output as  &$row){
 			$data = $row['info']['orderData'];
 			switch($data['ad_type']){
@@ -140,7 +140,7 @@ class Collector_Model extends Core\Model
 	
 	protected function getSubmissionCreditPayments()
 	{
-		$output = $this->getPaymentOrders('blog-submission-credits');
+		$output = $this->container->getPaymentOrders('blog-submission-credits');
 		$newOutput = array();
 		foreach($output as  &$row){
 			$row['title'] = 'Submission Credits';
@@ -157,7 +157,7 @@ class Collector_Model extends Core\Model
 	
 	protected function getTokenSocietyPayments()
 	{
-		$output = $this->getPaymentOrders('tca-forum');
+		$output = $this->container->getPaymentOrders('tca-forum');
 		foreach($output as  &$row){
 			$row['title'] .= $row['info']['orderData']['board'];
 		}
@@ -222,7 +222,7 @@ class Collector_Model extends Core\Model
 		return $output;
 	}
 	
-	public function collectPayments($data, $appData)
+	protected function collectPayments($data, $appData)
 	{
 		$getUser = $this->get('users', $appData['user']['userId']);
 		$pass = hash('sha256', $getUser['spice'].$data['pass']);
@@ -239,7 +239,7 @@ class Collector_Model extends Core\Model
 			throw new \Exception('No payments selected');
 		}
 		
-		$getPayments = $this->getPaymentsList($data['type']);
+		$getPayments = $this->container->getPaymentsList($data['type']);
 		$selectAmounts = array();
 		foreach($getPayments as $k => $payment){
 			if(in_array($k, $data['payments'])){
@@ -261,7 +261,7 @@ class Collector_Model extends Core\Model
 		$fuel_cost = XCP_DEFAULT_FUEL;
 		
 		$this->btc->walletpassphrase(XCP_WALLET, 300);
-		$this->primeOutputs($addressList, $fuel_cost);
+		$this->container->primeOutputs($addressList, $fuel_cost);
 		$success = array();
 		foreach($addressList as $address => $amounts){
 			$total_cost = 0;
@@ -276,11 +276,11 @@ class Collector_Model extends Core\Model
 					case 'BTC':
 						$amnt = $amnt - $total_cost - $fuel_cost;
 						if($amnt > 0.00001){
-							$collect = $this->collectBTC($address, $data['address'], $amnt, $fuel_cost);
+							$collect = $this->container->collectBTC($address, $data['address'], $amnt, $fuel_cost);
 						}
 						break;
 					default:
-						$collect = $this->collectXCP($address, $data['address'], $amnt, $asset, $fuel_cost);
+						$collect = $this->container->collectXCP($address, $data['address'], $amnt, $asset, $fuel_cost);
 						break;
 				}
 				

@@ -4,7 +4,7 @@ use Core, UI;
 class Themes_Model extends Core\Model
 {
 
-	public function getThemeForm($themeId = 0)
+	protected function getThemeForm($themeId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -28,7 +28,7 @@ class Themes_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addTheme($data)
+	protected function addTheme($data)
 	{
 		$req = array('name', 'location');
 		$useData = array();
@@ -57,7 +57,7 @@ class Themes_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editTheme($id, $data)
+	protected function editTheme($id, $data)
 	{
 		$req = array('name', 'location');
 		$useData = array();

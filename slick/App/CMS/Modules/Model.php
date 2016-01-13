@@ -4,7 +4,7 @@ use Core, UI, Util;
 class Modules_Model extends Core\Model
 {
 
-	public function getAppForm($appId = 0)
+	protected function getAppForm($appId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -47,7 +47,7 @@ class Modules_Model extends Core\Model
 		return $form;
 	}
 
-	public function getModuleForm()
+	protected function getModuleForm()
 	{
 		$form = new UI\Form;
 		
@@ -88,7 +88,7 @@ class Modules_Model extends Core\Model
 	}
 
 	
-	public function addApp($data)
+	protected function addApp($data)
 	{
 		$req = array('name' => true, 'slug' => true, 'active' => true, 'location' => true, 'url' => false);
 		$useData = array();
@@ -119,7 +119,7 @@ class Modules_Model extends Core\Model
 
 	}
 		
-	public function editApp($id, $data)
+	protected function editApp($id, $data)
 	{
 		$req = array('name' => true, 'slug' => true, 'active' => true, 'location' => true, 'url' => false);
 		$useData = array();
@@ -145,7 +145,7 @@ class Modules_Model extends Core\Model
 		return true;
 	}
 
-	public function addModule($appId, $data)
+	protected function addModule($appId, $data)
 	{
 		$getApp = $this->get('apps', $appId);
 		if(!$getApp){
@@ -183,7 +183,7 @@ class Modules_Model extends Core\Model
 		
 	}
 	
-	public function editModule($id, $data)
+	protected function editModule($id, $data)
 	{
 		$req = array('name', 'slug', 'active', 'location', 'url', 'checkAccess');
 		$useData = array();
@@ -203,7 +203,7 @@ class Modules_Model extends Core\Model
 		return true;
 	}
 	
-	public function getAppSettingForm()
+	protected function getAppSettingForm()
 	{
 		$form = new UI\Form;
 		
@@ -235,7 +235,7 @@ class Modules_Model extends Core\Model
 		
 	}
 	
-	public function addAppSetting($data)
+	protected function addAppSetting($data)
 	{
 		$data = checkRequiredFields($data, array('metaKey'));
 		
@@ -247,7 +247,7 @@ class Modules_Model extends Core\Model
 		return $insert;
 	}
 	
-	public function editAppSetting($id, $data)
+	protected function editAppSetting($id, $data)
 	{
 		$data = checkRequiredFields($data, array('metaKey'));
 		
@@ -260,7 +260,7 @@ class Modules_Model extends Core\Model
 	}
 
 
-	public function getAppPermForm()
+	protected function getAppPermForm()
 	{
 		$form = new UI\Form;
 		
@@ -272,7 +272,7 @@ class Modules_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addAppPerm($data)
+	protected function addAppPerm($data)
 	{
 		$data = checkRequiredFields($data, array('permKey'));
 		
@@ -284,7 +284,7 @@ class Modules_Model extends Core\Model
 		return $insert;
 	}
 	
-	public function editAppPerm($id, $data)
+	protected function editAppPerm($id, $data)
 	{
 		$data = checkRequiredFields($data, array('permKey'));
 		

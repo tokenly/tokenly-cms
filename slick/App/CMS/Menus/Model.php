@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, Util;
 class Menus_Model extends Core\Model
 {
-	public function getMenuForm($menuId = 0)
+	protected function getMenuForm($menuId = 0)
 	{
 		$form = new UI\Form;
 	
@@ -20,7 +20,7 @@ class Menus_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addMenu($data)
+	protected function addMenu($data)
 	{
 		$req = array('name', 'slug', 'siteId');
 		$useData = array();
@@ -41,7 +41,7 @@ class Menus_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editMenu($id, $data)
+	protected function editMenu($id, $data)
 	{
 		$req = array('name', 'slug', 'siteId');
 		$useData = array();

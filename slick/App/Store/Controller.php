@@ -8,7 +8,7 @@ class Controller extends App\AppControl
         $this->model = new Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		if(!$output['module']){
@@ -17,7 +17,7 @@ class Controller extends App\AppControl
 		return $output;
     }
     
-    public function __install($appId)
+    protected function __install($appId)
     {
 		parent::__install($appId);
 		$meta = new \App\Meta_Model;

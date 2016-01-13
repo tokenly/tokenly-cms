@@ -15,7 +15,7 @@ class Message_Controller extends \App\ModControl
 		
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$this->model->appData = $this->data;
@@ -29,16 +29,16 @@ class Message_Controller extends \App\ModControl
 		if(isset($this->args[2]) AND trim($this->args[2]) != ''){
 			switch($this->args[2]){
 				case 'send':
-					$output = $this->sendMessage($output);
+					$output = $this->container->sendMessage($output);
 					break;
 				case 'sent':
-					$output = $this->outbox($output);
+					$output = $this->container->outbox($output);
 					break;
 				case 'view':
-					$output = $this->viewMessage($output);
+					$output = $this->container->viewMessage($output);
 					break;
 				case 'delete':
-					$output = $this->deleteMessage($output);
+					$output = $this->container->deleteMessage($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -46,14 +46,14 @@ class Message_Controller extends \App\ModControl
 			}
 		}
 		else{
-			$output = $this->inbox($output);
+			$output = $this->container->inbox($output);
 		}
 
 
 		return $output;	
 	}
 	
-	private function inbox($output)
+	protected function inbox($output)
 	{
 		$page = 0;
 		if(isset($_GET['page'])){
@@ -73,7 +73,7 @@ class Message_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function outbox($output)
+	protected function outbox($output)
 	{
 		$page = 0;
 		if(isset($_GET['page'])){
@@ -93,7 +93,7 @@ class Message_Controller extends \App\ModControl
 		return $output;		
 	}
 	
-	private function sendMessage($output)
+	protected function sendMessage($output)
 	{
 		$output['view'] = 'send';
 		$output['message'] = '';
@@ -122,7 +122,7 @@ class Message_Controller extends \App\ModControl
 		return $output;		
 	}
 	
-	private function viewMessage($output)
+	protected function viewMessage($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';
@@ -191,7 +191,7 @@ class Message_Controller extends \App\ModControl
 		return $output;		
 	}
 	
-	private function deleteMessage($output)
+	protected function deleteMessage($output)
 	{
 		//delete but dont delete for both people....
 		return $output;		

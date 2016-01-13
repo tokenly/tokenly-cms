@@ -11,7 +11,7 @@ class Account_Controller extends \Core\Controller
 		
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -28,7 +28,7 @@ class Account_Controller extends \Core\Controller
 		if(isset($this->args[1])){
 			switch($this->args[1]){
 				case 'settings':
-					$output = $this->settings();
+					$output = $this->container->settings();
 					break;
 				default:
 					http_response_code(400);
@@ -45,14 +45,14 @@ class Account_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function settings()
+	protected function settings()
 	{
 		$output = array();
 		
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'update':
-					$output = $this->updateSettings();
+					$output = $this->container->updateSettings();
 					break;
 				default:
 					http_response_code(400);
@@ -61,14 +61,14 @@ class Account_Controller extends \Core\Controller
 			}
 		}
 		else{
-			$output = $this->getSettings();
+			$output = $this->container->getSettings();
 		}
 		
 		return $output;
 		
 	}
 	
-	private function getSettings($noCheck = false)
+	protected function getSettings($noCheck = false)
 	{
 		$output = array();
 		if($this->useMethod != 'GET' AND !$noCheck){
@@ -103,7 +103,7 @@ class Account_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function updateSettings()
+	protected function updateSettings()
 	{
 		$output = array();
 		if($this->useMethod != 'PATCH'){
@@ -119,7 +119,7 @@ class Account_Controller extends \Core\Controller
 		$getApp['meta'] = $appSettings;
 		
 
-		$getSettings = $this->getSettings(true);
+		$getSettings = $this->container->getSettings(true);
 		$this->useMethod = 'PATCH';
 
 		$getSettings = $getSettings['settings'];
@@ -151,7 +151,7 @@ class Account_Controller extends \Core\Controller
 		}
 		
 		$output['result'] = 'success';
-		$output['settings'] = $this->getSettings(true);
+		$output['settings'] = $this->container->getSettings(true);
 		$output['settings'] = $output['settings']['settings'];
 		
 		return $output;

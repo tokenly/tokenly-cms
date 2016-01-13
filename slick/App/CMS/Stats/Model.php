@@ -3,7 +3,7 @@ namespace App\CMS;
 use Core, UI, App\Profile;
 class Stats_Model extends Core\Model
 {
-	public function getStats()
+	protected function getStats()
 	{
 		$output = array();
 		

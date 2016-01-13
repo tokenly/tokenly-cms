@@ -5,7 +5,7 @@ class Home_Model extends Core\Model
 {
 	public static $activity_updated = false;
 	
-	public function getLoginForm()
+	protected function getLoginForm()
 	{
 		$form = new UI\Form;
 		
@@ -39,7 +39,7 @@ class Home_Model extends Core\Model
 	}
 	
 	
-	public function getRegisterForm()
+	protected function getRegisterForm()
 	{
 		$form = new UI\Form;
 		
@@ -76,7 +76,7 @@ class Home_Model extends Core\Model
 		
 	}
 	
-	public function registerAccount($data, $noAuth = false)
+	protected function registerAccount($data, $noAuth = false)
 	{
 		if(!isset($data['isAPI'])){
 			require_once(SITE_PATH.'/resources/recaptchalib2.php');
@@ -158,7 +158,7 @@ class Home_Model extends Core\Model
 			$useData['email'] = $data['email'];
 		}
 
-		if($this->usernameExists($useData['username'])){
+		if($this->container->usernameExists($useData['username'])){
 			http_response_code(400);
 			throw new \Exception('Username already taken');
 		}
@@ -168,7 +168,7 @@ class Home_Model extends Core\Model
 		$useData['spice'] = $genPass['salt'];
 		$useData['regDate'] = timestamp();
 		$useData['slug'] = genURL($data['username']);
-		$useData['slug'] = $this->checkSlugExists($useData['slug']);
+		$useData['slug'] = $this->container->checkSlugExists($useData['slug']);
 		
 		//generate activation code
 		$useData['activate_code'] = hash('sha256', time().$genPass['salt'].$useData['slug'].mt_rand(0,1000));
@@ -181,7 +181,7 @@ class Home_Model extends Core\Model
 		
 		if(!$noAuth){
 			//disable auto logging in when registering
-			//$this->generateAuthToken($add);
+			//$this->container->generateAuthToken($add);
 		}
 		
 		$getSite = $this->getAll('sites', array('isDefault' => 1));
@@ -244,7 +244,7 @@ class Home_Model extends Core\Model
 
 	}
 	
-	public function usernameExists($username)
+	protected function usernameExists($username)
 	{
 		$get = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => strtolower(trim($username))));
 		if($get){
@@ -253,14 +253,14 @@ class Home_Model extends Core\Model
 		return false;
 	}
 	
-	public function generateAuthToken($userId)
+	protected function generateAuthToken($userId)
 	{
 		$get = $this->get('users', $userId);
 		if(!$get){
 			return false;
 		}
 		$token = hash('sha256', $get['username'].$get['spice'].$_SERVER['REMOTE_ADDR'].time().mt_rand(0,1000));
-		$makeSession = $this->makeSession($userId, $token);
+		$makeSession = $this->container->makeSession($userId, $token);
 		if(!$makeSession){
 			return false;
 		}
@@ -275,7 +275,7 @@ class Home_Model extends Core\Model
 		return $token;
 	}
 
-	public static function updateLastActive($userId)
+	protected static function updateLastActive($userId)
 	{
 		if(!self::$activity_updated){
 			$model = new Home_Model;
@@ -304,7 +304,7 @@ class Home_Model extends Core\Model
 		return true;
 	}
 
-	public function checkAuth($data)
+	protected function checkAuth($data)
 	{	
 		if(isset($data['authKey'])){
 			http_response_code(400);
@@ -374,7 +374,7 @@ class Home_Model extends Core\Model
 		}
 
 		$meta = new \App\Meta_Model;		
-		$getAttempts = $this->getLoginAttempts($get);
+		$getAttempts = $this->container->getLoginAttempts($get);
 				
 		if($checkPassword){
 			if(!isset($data['password'])){
@@ -389,7 +389,7 @@ class Home_Model extends Core\Model
 			}
 		}
 		
-		$token = $this->generateAuthToken($get['userId']);
+		$token = $this->container->generateAuthToken($get['userId']);
 		if(!$token){
 			http_response_code(400);
 			$getAttempts++;
@@ -419,7 +419,7 @@ class Home_Model extends Core\Model
 		return $getProf;
 	}
 	
-	public function getLoginAttempts($get)
+	protected function getLoginAttempts($get)
 	{
 		$meta = new \App\Meta_Model;
 		$lastAttempt = strtotime($meta->getUserMeta($get['userId'], 'last_attempt'));
@@ -449,7 +449,7 @@ class Home_Model extends Core\Model
 		return $getAttempts;	
 	}
 	
-	public static function userInfo($userId = false)
+	protected static function userInfo($userId = false)
 	{
 		$model = new Home_Model;
 		if(!$userId AND !isset($_SESSION['accountAuth'])){
@@ -525,7 +525,7 @@ class Home_Model extends Core\Model
 		
 	}
 	
-	public static function getUsersOnline()
+	protected static function getUsersOnline()
 	{
 		$model = new Core\Model;
 		$sql= 'SELECT COUNT(*) as total FROM users
@@ -544,14 +544,14 @@ class Home_Model extends Core\Model
 		
 	}
 	
-	public static function getMostOnline()
+	protected static function getMostOnline()
 	{
 		$meta = new \App\Meta_Model;
 		$mostOnline = $meta->getStat('mostOnline');
 		return $mostOnline;
 	}
 	
-	public static function getOnlineUsers()
+	protected static function getOnlineUsers()
 	{
 		$model = new Profile\User_Model;
 
@@ -572,7 +572,7 @@ class Home_Model extends Core\Model
 		
 	}
 	
-	public static function getUserPostCount($userId)
+	protected static function getUserPostCount($userId)
 	{
 		$model = new Core\Model;
 		$totalPosts = 0;
@@ -590,7 +590,7 @@ class Home_Model extends Core\Model
 		return $totalPosts;
 	}
 	
-	public function checkSlugExists($slug, $ignore = 0, $count = 0)
+	protected function checkSlugExists($slug, $ignore = 0, $count = 0)
 	{
 		$useslug = $slug;
 		if($count > 0){
@@ -600,7 +600,7 @@ class Home_Model extends Core\Model
 		if($get AND $get['userId'] != $ignore){
 			//slug exists already, search for next level of slug
 			$count++;
-			return $this->checkSlugExists($slug, $ignore, $count);
+			return $this->container->checkSlugExists($slug, $ignore, $count);
 		}
 		
 		if($count > 0){
@@ -610,7 +610,7 @@ class Home_Model extends Core\Model
 		return $slug;
 	}
 	
-	public function findSession($userId, $ip)
+	protected function findSession($userId, $ip)
 	{
 		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE userId = :id AND IP = :IP ORDER BY sessionId DESC LIMIT 1',
 								array(':id' => $userId, ':IP' => $ip));
@@ -620,7 +620,7 @@ class Home_Model extends Core\Model
 		return $get;
 	}
 	
-	public function checkSession($auth, $useCache = false)
+	protected function checkSession($auth, $useCache = false)
 	{
 		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE auth = :auth ORDER BY sessionId DESC LIMIT 1',
 									array(':auth' => $auth), 0, $useCache);
@@ -630,9 +630,9 @@ class Home_Model extends Core\Model
 		return false;
 	}
 	
-	public function clearSession($auth)
+	protected function clearSession($auth)
 	{
-		$getSesh = $this->checkSession($auth);
+		$getSesh = $this->container->checkSession($auth);
 		if(!$getSesh){
 			return false;
 		}
@@ -640,7 +640,7 @@ class Home_Model extends Core\Model
 		return $this->delete('user_sessions', $getSesh['sessionId']);
 	}
 	
-	public function countSessions($userId = 0)
+	protected function countSessions($userId = 0)
 	{
 		if($userId > 0){
 			return $this->count('user_sessions', 'userId', $userId);
@@ -648,7 +648,7 @@ class Home_Model extends Core\Model
 		return $this->count('user_sessions');
 	}
 	
-	public function getSessions($userId = 0)
+	protected function getSessions($userId = 0)
 	{
 		$wheres = array();
 		if($userId > 0){
@@ -657,9 +657,9 @@ class Home_Model extends Core\Model
 		return $this->getAll('user_sessions', $wheres, array(), 'sessionId');
 	}
 	
-	public function makeSession($userId, $token)
+	protected function makeSession($userId, $token)
 	{
-		$check = $this->checkSession($token);
+		$check = $this->container->checkSession($token);
 		if($check){
 			return false;
 		}

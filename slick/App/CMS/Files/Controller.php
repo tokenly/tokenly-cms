@@ -16,7 +16,7 @@ class Files_Controller extends \App\ModControl
         $this->model = new Files_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         $output['view'] = 'index';

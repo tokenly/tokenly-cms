@@ -7,13 +7,13 @@ class Controller extends \App\AppControl
         parent::__construct();
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		return $output;
     }
     
-	public function __install($appId)
+	protected function __install($appId)
 	{
 		$update = parent::__install($appId);
 		if(!$update){

@@ -8,14 +8,14 @@ class Feed_Controller extends \App\ModControl
 		$this->model = new Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		ob_end_clean();
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'blog':
-					$newOutput = $this->blogFeed();
+					$newOutput = $this->container->blogFeed();
 					break;
 				default:
 					$output['view'] = '404';
@@ -32,7 +32,7 @@ class Feed_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function __install($moduleId)
+	protected function __install($moduleId)
 	{
 		parent::__install($moduleId);
 		
@@ -45,7 +45,7 @@ class Feed_Controller extends \App\ModControl
 		$meta->updateAppMeta($appId, 'blog-feed-description', '', 'Blog Feed Description', 1, 'textarea');
 	}
 	
-	private function blogFeed()
+	protected function blogFeed()
 	{
 		ob_end_clean();
 		header('Content-type: application/xml');

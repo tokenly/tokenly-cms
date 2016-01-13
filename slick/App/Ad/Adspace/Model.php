@@ -4,7 +4,7 @@ use Core\Model, Util, UI;
 
 class Adspace_Model extends Model
 {
-	public function getAdspaceForm()
+	protected function getAdspaceForm()
 	{
 		$form = new UI\Form;
 
@@ -44,7 +44,7 @@ class Adspace_Model extends Model
 		return $form;
 	}
 	
-	public function getAdForm()
+	protected function getAdForm()
 	{
 		$form = new UI\Form;
 		
@@ -85,7 +85,7 @@ class Adspace_Model extends Model
 		return $form;
 	}
 	
-	public function getEditAdForm()
+	protected function getEditAdForm()
 	{
 		$form = new UI\Form;
 		
@@ -110,7 +110,7 @@ class Adspace_Model extends Model
 		return $form;
 	}
 	
-	public function createAdspace($data)
+	protected function createAdspace($data)
 	{
 		$req = array('label' => true, 'width' => true, 'height' => true, 'maxItems' => true, 'slug' => false); 
 		$useData = array();
@@ -149,7 +149,7 @@ class Adspace_Model extends Model
 		return $add;
 	}
 	
-	public function editAdspace($id, $data)
+	protected function editAdspace($id, $data)
 	{
 		$req = array('label' => true, 'width' => true, 'height' => true, 'maxItems' => true, 'slug' => false); 
 		$useData = array();
@@ -186,7 +186,7 @@ class Adspace_Model extends Model
 		return true;
 	}
 	
-	public function addUrlToAdspace($adspace, $data)
+	protected function addUrlToAdspace($adspace, $data)
 	{
 		if(!is_array($adspace['items'])){
 			$items = json_decode($adspace['items'], true);
@@ -226,7 +226,7 @@ class Adspace_Model extends Model
 		
 	}
 	
-	public function deleteUrlFromAdspace($adspace, $idx)
+	protected function deleteUrlFromAdspace($adspace, $idx)
 	{
 		if(!is_array($adspace['items'])){
 			$items = json_decode($adspace['items'], true);
@@ -253,7 +253,7 @@ class Adspace_Model extends Model
 		}
 	}
 	
-	public function editAdspaceAd($adspace, $idx, $data)
+	protected function editAdspaceAd($adspace, $idx, $data)
 	{
 		if(!is_array($adspace['items'])){
 			$items = json_decode($adspace['items'], true);

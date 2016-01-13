@@ -37,7 +37,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array
 	*
 	*/
-	public function getThreadList($data)
+	protected function getThreadList($data)
 	{
 		//limits
 		$start = 0;
@@ -50,9 +50,9 @@ class Forum_Model extends \App\Forum\Board_Model
 		}
 		$limit = 'LIMIT '.$start.', '.$max;
 		//posted before / modified since options
-		$andWhen = $this->checkBeforeInput($data);
+		$andWhen = $this->container->checkBeforeInput($data);
 		//board filters
-		$andFilters = $this->checkBoardFilters($data);
+		$andFilters = $this->container->checkBoardFilters($data);
 		//# of views filters
 		if(isset($data['min-views'])){
 			$data['min-views'] = intval($data['min-views']);
@@ -81,7 +81,7 @@ class Forum_Model extends \App\Forum\Board_Model
 			}
 		}
 		//user filters
-		$andFilters .= $this->checkUserFilters($data);
+		$andFilters .= $this->container->checkUserFilters($data);
 		//check for content stripping
 		$andContent = ',t.content';
 		if(isset($data['no-content']) AND (intval($data['no-content']) === 1 OR $data['no-content'] == 'true')){
@@ -138,7 +138,7 @@ class Forum_Model extends \App\Forum\Board_Model
 		}
 		foreach($getThreads as $key => &$thread){
 			//do TCA checking
-			$checkTCA = $this->checkTopicTCA($data['user'], $thread);
+			$checkTCA = $this->container->checkTopicTCA($data['user'], $thread);
 			if(!$checkTCA){
 				unset($getThreads[$key]);
 				continue;
@@ -368,7 +368,7 @@ class Forum_Model extends \App\Forum\Board_Model
 				$andFilters .= ' AND t.boardId != '.$b.' ';
 			}
 		}
-		$userFilters = $this->getBoardFilters($data['user']);
+		$userFilters = $this->container->getBoardFilters($data['user']);
 		if(count($userFilters['antifilters']) > 0){
 			foreach($userFilters['antifilters'] as &$filter){
 				$filter = intval($filter);
@@ -439,7 +439,7 @@ class Forum_Model extends \App\Forum\Board_Model
 		* @param $data['replies-only'] true|false - set to true to return only list of replies
 	*
 	*/
-	public function getThreadData($thread, $data)
+	protected function getThreadData($thread, $data)
 	{
 		$output = array();
 		//unset some uneccessary data
@@ -498,7 +498,7 @@ class Forum_Model extends \App\Forum\Board_Model
 			$output['thread'] = $thread;
 		}
 		if(!isset($data['thread-only']) OR (isset($data['thread-only']) AND ($data['thread-only'] != 'true' AND $data['thread-only'] != '1'))){
-			$output['replies'] = $this->getThreadReplies($thread, $data);
+			$output['replies'] = $this->container->getThreadReplies($thread, $data);
 		}
 		return $output;
 	}
@@ -509,7 +509,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array
 	*
 	*/
-	public function getThreadReplies($thread, $data)
+	protected function getThreadReplies($thread, $data)
 	{
 		$output = array();
 		//limits
@@ -588,7 +588,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array newly created thread data
 	*
 	*/
-	public function postThread($data)
+	protected function postThread($data)
 	{
 		$appData = array();
 		$appData['user'] = $data['user'];
@@ -598,7 +598,7 @@ class Forum_Model extends \App\Forum\Board_Model
 		$appData['perms'] = $data['user']['perms'];
 		$useData = $data;
 		$useData['userId'] = $data['user']['userId'];
-		$post = $this->postTopic($useData, $appData);
+		$post = $this->container->postTopic($useData, $appData);
 		if(isset($data['parse-markdown']) AND ($data['parse-markdown'] == 'true' OR intval($data['parse-markdown']) === 1)){
 			$post['content'] = markdown($post['content']);
 		}
@@ -615,7 +615,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array edited thread data
 	*
 	*/
-	public function editThread($data)
+	protected function editThread($data)
 	{
 		$postModel = new \App\Forum\Post_Model;
 		$appData = array();
@@ -644,7 +644,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array - new post data
 	* 
 	*/
-	public function postReply($data)
+	protected function postReply($data)
 	{
 		$postModel = new \App\Forum\Post_Model;
 		$meta = new \App\Meta_Model;
@@ -682,7 +682,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array - new edited post data
 	*
 	*/
-	public function editReply($data)
+	protected function editReply($data)
 	{
 		$postModel = new \App\Forum\Post_Model;
 		$meta = new \App\Meta_Model;
@@ -719,7 +719,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $data['id'] - postId or topicId of item in question
 	* @return bool
 	*/
-	public function flagPost($data)
+	protected function flagPost($data)
 	{
 		$req = array('type', 'id');
 		foreach($req as $required){
@@ -857,7 +857,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $data['id'] - postId or topicId of item
 	* @return bool
 	*/
-	public function likePost($data)
+	protected function likePost($data)
 	{
 		if(!isset($data['id'])){
 			throw new \Exception('id required');
@@ -957,7 +957,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $returnID - set this to true to return the "likeId" if the item has indeed been liked already
 	* @return bool
 	*/
-	public function checkLikePost($data, $returnID = false)
+	protected function checkLikePost($data, $returnID = false)
 	{
 		if(!isset($data['type'])){
 			throw new \Exception('type required');
@@ -1006,9 +1006,9 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $data['id'] - postId or topicId of item
 	* @return bool
 	*/
-	public function unlikePost($data)
+	protected function unlikePost($data)
 	{
-		$getLike = $this->checkLikePost($data, true);
+		$getLike = $this->container->checkLikePost($data, true);
 		if(!$getLike){
 			throw new \Exception('Item not liked');
 		}
@@ -1029,7 +1029,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $data['to-id'] - ID of area that item is moving to, e.g the boardId
 	* @return bool
 	*/
-	public function moveThread($data)
+	protected function moveThread($data)
 	{
 		if(!$data['user']){
 			http_response_code(401);
@@ -1119,7 +1119,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $state - set to 1 to lock thread, 0 to unlock thread.
 	* @return bool
 	*/
-	public function lockThread($data, $state = 1)
+	protected function lockThread($data, $state = 1)
 	{
 		if(!$data['user']){
 			http_response_code(401);
@@ -1180,7 +1180,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @param $state - set to 1 to sticky thread, 0 to unsticky thread.
 	* @return bool
 	*/
-	public function stickyThread($data, $state = 1)
+	protected function stickyThread($data, $state = 1)
 	{
 		if(!$data['user']){
 			http_response_code(401);

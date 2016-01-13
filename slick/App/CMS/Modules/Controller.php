@@ -17,53 +17,53 @@ class Modules_Controller extends \App\ModControl
         $this->model = new Modules_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showModules();
+					$output = $this->container->showModules();
 					break;
 				case 'add-app':
-					$output = $this->addApp();
+					$output = $this->container->addApp();
 					break;
 				case 'add-module':
-					$output = $this->addModule();
+					$output = $this->container->addModule();
 					break;
 				case 'edit-app':
-					$output = $this->editApp();
+					$output = $this->container->editApp();
 					break;
 				case 'edit-module':
-					$output = $this->editModule();
+					$output = $this->container->editModule();
 					break;
 				case 'delete-app':
-					$output = $this->deleteApp();
+					$output = $this->container->deleteApp();
 					break;
 				case 'delete-module':
-					$output = $this->deleteModule();
+					$output = $this->container->deleteModule();
 					break;
 				case 'settings':
-					$output = $this->manageSettings();
+					$output = $this->container->manageSettings();
 					break;
 				case 'perms':
-					$output = $this->managePerms();
+					$output = $this->container->managePerms();
 					break;
 				default:
-					$output = $this->showApps();
+					$output = $this->container->showApps();
 					break;
 			}
 		}
 		else{
-			$output = $this->showApps();
+			$output = $this->container->showApps();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showApps()
+    protected function showApps()
     {
 		$output = array('view' => 'appList');
 		$getApps = $this->model->getAll('apps');
@@ -73,7 +73,7 @@ class Modules_Controller extends \App\ModControl
 		
 	}
 	
-	private function showModules()
+	protected function showModules()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -92,7 +92,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addApp()
+	protected function addApp()
 	{
 		$output = array('view' => 'appForm');
 		$output['form'] = $this->model->getAppForm();
@@ -115,7 +115,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addModule()
+	protected function addModule()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -148,7 +148,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editApp()
+	protected function editApp()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -183,7 +183,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editModule()
+	protected function editModule()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -220,7 +220,7 @@ class Modules_Controller extends \App\ModControl
 	}
 	
 	
-	private function deleteApp()
+	protected function deleteApp()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -240,7 +240,7 @@ class Modules_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl);
 	}
 	
-	private function deleteModule()
+	protected function deleteModule()
 	{
 		if(isset($this->args[3])){
 			$getModule = $this->model->get('modules', $this->args[3]);
@@ -251,7 +251,7 @@ class Modules_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl.'/view/'.$getModule['appId']);
 	}
 	
-	public function manageSettings()
+	protected function manageSettings()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -269,13 +269,13 @@ class Modules_Controller extends \App\ModControl
 		if(isset($this->args[4])){
 			switch($this->args[4]){
 				case 'add':
-					$output = $this->addAppSetting($output);
+					$output = $this->container->addAppSetting($output);
 					break;
 				case 'edit':
-					$output = $this->editAppSetting($output);
+					$output = $this->container->editAppSetting($output);
 					break;
 				case 'delete':
-					$output = $this->deleteAppSetting($output);
+					$output = $this->container->deleteAppSetting($output);
 					break;
 				
 			}
@@ -284,7 +284,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function addAppSetting($output)
+	protected function addAppSetting($output)
 	{
 		
 		$output['view'] = 'appSettingForm';
@@ -312,7 +312,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function editAppSetting($output)
+	protected function editAppSetting($output)
 	{
 		if(!isset($this->args[5])){
 			$output['view'] = '404';
@@ -350,7 +350,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function deleteAppSetting($output)
+	protected function deleteAppSetting($output)
 	{
 		if(!isset($this->args[5])){
 			$output['view'] = '404';
@@ -371,7 +371,7 @@ class Modules_Controller extends \App\ModControl
 
 
 
-	public function managePerms()
+	protected function managePerms()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -389,13 +389,13 @@ class Modules_Controller extends \App\ModControl
 		if(isset($this->args[4])){
 			switch($this->args[4]){
 				case 'add':
-					$output = $this->addAppPerm($output);
+					$output = $this->container->addAppPerm($output);
 					break;
 				case 'edit':
-					$output = $this->editAppPerm($output);
+					$output = $this->container->editAppPerm($output);
 					break;
 				case 'delete':
-					$output = $this->deleteAppPerm($output);
+					$output = $this->container->deleteAppPerm($output);
 					break;
 			}
 		}
@@ -403,7 +403,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function addAppPerm($output)
+	protected function addAppPerm($output)
 	{
 		
 		$output['view'] = 'appPermForm';
@@ -431,7 +431,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function editAppPerm($output)
+	protected function editAppPerm($output)
 	{
 		if(!isset($this->args[5])){
 			$output['view'] = '404';
@@ -470,7 +470,7 @@ class Modules_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function deleteAppPerm($output)
+	protected function deleteAppPerm($output)
 	{
 		if(!isset($this->args[5])){
 			$output['view'] = '404';

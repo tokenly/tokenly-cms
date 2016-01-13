@@ -9,24 +9,24 @@ class Auth_Controller extends \Core\Controller
 		$this->model = new Auth_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$output = array();
 		$this->args = $args;
 		switch($this->useMethod){
 			case 'POST':
-				$output =  $this->authenticate();
+				$output =  $this->container->authenticate();
 				break;
 			case 'GET':
 				if(isset($this->args[1])){
 					switch($this->args[1]){
 						case 'logout':
-							$output = $this->logout();
+							$output = $this->container->logout();
 							break;
 					}
 				}
 				else{
-					$output = $this->getUser();
+					$output = $this->container->getUser();
 				}
 				break;
 			
@@ -34,7 +34,7 @@ class Auth_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function authenticate()
+	protected function authenticate()
 	{
 		$output = array();
 		try{
@@ -50,7 +50,7 @@ class Auth_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function getUser()
+	protected function getUser()
 	{
 		$output = array();
 		$profModel = new \App\Profile\User_Model;
@@ -66,7 +66,7 @@ class Auth_Controller extends \Core\Controller
 		return $output;
 	}
 	
-	private function logout()
+	protected function logout()
 	{
 		$output = array();
 		try{

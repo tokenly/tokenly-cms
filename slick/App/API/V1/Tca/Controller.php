@@ -10,7 +10,7 @@ class Tca_Controller extends \Core\Controller
 		$this->model = new \App\Tokenly\TCA_Model;
 	}
 	
-	public function init($args = array())
+	protected function init($args = array())
 	{
 		$this->args = $args;
 		$output = array();
@@ -18,7 +18,7 @@ class Tca_Controller extends \Core\Controller
 		if(isset($args[1])){
 			switch($args[1]){
 				case 'check':
-					$output = $this->checkTokenAccess();
+					$output = $this->container->checkTokenAccess();
 					break;
 				default:
 					http_response_code(400);

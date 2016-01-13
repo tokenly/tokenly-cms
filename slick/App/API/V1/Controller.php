@@ -14,7 +14,7 @@ class Controller extends Core\Controller
 	 *  Attempts to load an endpoint and checks to make sure valid request method is used
 	 * 
 	 * */
-	public function init()
+	protected function init()
 	{
 		if(!isset($this->args[0]) OR empty($this->args[0])){
 			http_response_code(400);

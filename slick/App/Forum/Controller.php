@@ -8,7 +8,7 @@ class Controller extends \App\AppControl
 		parent::__construct();
 		$this->model = new Model;
 	}
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
@@ -46,7 +46,7 @@ class Controller extends \App\AppControl
 		return $output;
     }
     
-	public function __install($appId)
+	protected function __install($appId)
 	{
 		$update = parent::__install($appId);
 		if(!$update){

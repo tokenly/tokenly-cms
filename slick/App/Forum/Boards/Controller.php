@@ -16,7 +16,7 @@ class Boards_Controller extends \App\ModControl
         $this->model = new Boards_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'forum');
@@ -25,34 +25,34 @@ class Boards_Controller extends \App\ModControl
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showBoards();
+					$output = $this->container->showBoards();
 					break;
 				case 'add':
-					$output = $this->addBoard();
+					$output = $this->container->addBoard();
 					break;
 				case 'edit':
-					$output = $this->editBoard();
+					$output = $this->container->editBoard();
 					break;
 				case 'delete':
-					$output = $this->deleteBoard();
+					$output = $this->container->deleteBoard();
 					break;
 				case 'remove-mod':
-					$output = $this->removeModerator();
+					$output = $this->container->removeModerator();
 					break;
 				default:
-					$output = $this->showBoards();
+					$output = $this->container->showBoards();
 					break;
 			}
 		}
 		else{
-			$output = $this->showBoards();
+			$output = $this->container->showBoards();
 		}
 		$output['template'] = 'admin';
         $output['perms'] = $this->data['perms'];	
         return $output;
     }
     
-    private function showBoards()
+    protected function showBoards()
     {
 		$output = array('view' => 'list');
 		$output['boardList'] = $this->model->fetchAll('SELECT b.*, c.name as category
@@ -73,7 +73,7 @@ class Boards_Controller extends \App\ModControl
 	}
 	
 	
-	private function addBoard()
+	protected function addBoard()
 	{
 		$output = array('view' => 'form');
 		if(!$this->data['perms']['canManageAllBoards']){
@@ -114,7 +114,7 @@ class Boards_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editBoard()
+	protected function editBoard()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -177,7 +177,7 @@ class Boards_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteBoard()
+	protected function deleteBoard()
 	{
 		if(isset($this->args[3])){
 			$getBoard = $this->model->get('forum_boards', $this->args[3]);
@@ -190,7 +190,7 @@ class Boards_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl);
 	}
 	
-	private function removeModerator()
+	protected function removeModerator()
 	{
 		if(isset($this->args[3]) AND isset($this->args[4])){
 			$getBoard = $this->model->get('forum_boards', $this->args[3]);

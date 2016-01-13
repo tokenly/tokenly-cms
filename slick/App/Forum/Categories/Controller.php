@@ -13,36 +13,36 @@ class Categories_Controller extends \App\ModControl
         $this->model = new Categories_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showCategories();
+					$output = $this->container->showCategories();
 					break;
 				case 'add':
-					$output = $this->addCategory();
+					$output = $this->container->addCategory();
 					break;
 				case 'edit':
-					$output = $this->editCategory();
+					$output = $this->container->editCategory();
 					break;
 				case 'delete':
-					$output = $this->deleteCategory();
+					$output = $this->container->deleteCategory();
 					break;
 				default:
-					$output = $this->showCategories();
+					$output = $this->container->showCategories();
 					break;
 			}
 		}
 		else{
-			$output = $this->showCategories();
+			$output = $this->container->showCategories();
 		}
 		$output['template'] = 'admin';
         return $output;
     }
     
-    private function showCategories()
+    protected function showCategories()
     {
 		$output = array('view' => 'list');
 		$output['categoryList'] = $this->model->getAll('forum_categories', array('siteId' => $this->data['site']['siteId']), array(), 'rank', 'asc');
@@ -50,7 +50,7 @@ class Categories_Controller extends \App\ModControl
 	}
 	
 	
-	private function addCategory()
+	protected function addCategory()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getCategoryForm();
@@ -74,7 +74,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editCategory()
+	protected function editCategory()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -108,7 +108,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function deleteCategory()
+	protected function deleteCategory()
 	{
 		if(isset($this->args[3])){
 			$getCategory = $this->model->get('forum_categories', $this->args[3]);
