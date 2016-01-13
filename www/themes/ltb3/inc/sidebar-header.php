@@ -26,12 +26,24 @@
 									<h2>On Today's Show</h2>
 									<div class="featured-title track-title">
 										<p class="track">
-											<?= $scPosts[0]['title'] ?>
+											<?php
+											if(isset($scPosts[0])){
+												echo $scPosts[0]['title'];
+											}
+											?>
 										</p>
 									</div><!-- featured-title -->
 									<div class="featured-date">
 										<a href="#" class="pop-out-player" title="Pop out audio player"></a>
-										<span><?= strtoupper(date('jS F Y', strtotime($scPosts[0]['publishDate']))) ?></span>
+										<span>
+											<?php
+											if(isset($scPosts[0])){
+											?>
+											<?= strtoupper(date('jS F Y', strtotime($scPosts[0]['publishDate']))) ?>
+											<?php
+											}
+											?>
+										</span>
 									</div><!-- featured-date -->
 								</div><!-- featured-content -->
 							</div><!-- current-featured -->
