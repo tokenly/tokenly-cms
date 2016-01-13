@@ -150,7 +150,11 @@ class Bitcoin
             CURLOPT_RETURNTRANSFER => true,
             CURLINFO_HEADER_OUT => true
         ));
-        
+
+if($method == 'sendmany'){
+//dd($request);
+}       
+ 
         $response = curl_exec($ch);
         if($response === false)
         {
@@ -172,6 +176,9 @@ class Bitcoin
 			if (@$response['id'] != $currentId) {
 				if(isset($response['data'])){
 					throw new \Exception($response['data']);
+				}
+				if(isset($response['error'])){
+					throw new \Exception($response['error']['message']);
 				}
 				throw new \Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
 			}
