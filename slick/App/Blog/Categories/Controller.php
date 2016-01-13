@@ -19,7 +19,7 @@ class Categories_Controller extends \App\ModControl
         $this->multiblog_model = new Multiblog_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
@@ -27,34 +27,34 @@ class Categories_Controller extends \App\ModControl
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showBlogCategories();
+					$output = $this->container->showBlogCategories();
 					break;
 				case 'add':
-					$output = $this->addBlogCategory();
+					$output = $this->container->addBlogCategory();
 					break;
 				case 'edit':
-					$output = $this->editBlogCategory();
+					$output = $this->container->editBlogCategory();
 					break;
 				case 'delete':
-					$output = $this->deleteBlogCategory();
+					$output = $this->container->deleteBlogCategory();
 					break;
 				default:
-					$output = $this->showBlogCategories();
+					$output = $this->container->showBlogCategories();
 					break;
 			}
 		}
 		else{
-			$output = $this->showBlogCategories();
+			$output = $this->container->showBlogCategories();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showBlogCategories()
+    protected function showBlogCategories()
     {
 		$output = array('view' => 'list');
-		$output['catList'] = $this->model->getCategories($this->data['site']['siteId']);
+		$output['catList'] = $this->model->getCategories($this->data['site']['siteId'], 0, 0, false);
 		
 		foreach($output['catList'] as $catKey => &$cat){
 			$cat['blogRoles'] = $this->multiblog_model->getBlogUserRoles($cat['blogId']);
@@ -73,7 +73,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addBlogCategory()
+	protected function addBlogCategory()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBlogCategoryForm($this->data);
@@ -99,7 +99,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 
-	private function editBlogCategory()
+	protected function editBlogCategory()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -124,13 +124,6 @@ class Categories_Controller extends \App\ModControl
 			return $output;
 		}			
 		
-		$tca = new Tokenly\TCA_Model;
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
-		if(!$checkTCA){
-			$output['view'] = '403';
-			return $output;
-		}
 		
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getBlogCategoryForm($this->data, $this->args[3]);
@@ -159,7 +152,7 @@ class Categories_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteBlogCategory()
+	protected function deleteBlogCategory()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site.$this->moduleUrl);
@@ -183,14 +176,6 @@ class Categories_Controller extends \App\ModControl
 			$output['view'] = '403';
 			return $output;
 		}			
-		
-		$tca = new Tokenly\TCA_Model;
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$checkTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $getBlogCategory['categoryId'], 'blog-category');
-		if(!$checkTCA){
-			$output['view'] = '403';
-			return $output;
-		}
 				
 		$delete = $this->model->delete('blog_categories', $this->args[3]);
 		Util\Session::flash('blog-message', 'Category ['.$getBlogCategory['name'].'] deleted.', 'success');	

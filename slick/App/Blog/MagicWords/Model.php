@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, UI, Util;
 class MagicWords_Model extends Core\Model
 {
-	public function getWordForm()
+	protected function getWordForm()
 	{
 		$form = new UI\Form;
 		
@@ -17,7 +17,7 @@ class MagicWords_Model extends Core\Model
 		return $form;
 	}
 
-	public function checkMagicWord($word, $userId, $type = 'blog')
+	protected function checkMagicWord($word, $userId, $type = 'blog')
 	{
 		$coinApp = $this->get('apps', 'tokenly', array(), 'slug');
 		if(!$coinApp){
@@ -41,13 +41,13 @@ class MagicWords_Model extends Core\Model
 				if(!$module){
 					throw new \Exception('Blog post module not installed');
 				}
-				$candidates = $this->getBlogCandidates($word, $expireLimit);
+				$candidates = $this->container->getBlogCandidates($word, $expireLimit);
 			break;
 		}
 
 		$usedSubmits = array();
 		foreach($candidates as $cand){
-			$check = $this->checkWordSubmitted($word, $userId, $cand, $module['moduleId']);
+			$check = $this->container->checkWordSubmitted($word, $userId, $cand, $module['moduleId']);
 			if(!$check){
 				//insert into db
 				$useData = array('word' => $word, 'userId' => $userId, 'itemId' => $cand, 'moduleId' => $module['moduleId'], 'submitDate' => timestamp());
@@ -68,7 +68,7 @@ class MagicWords_Model extends Core\Model
 		throw new \Exception('Invalid or expired magic word');
 	}
 	
-	public function checkWordSubmitted($word, $userId, $itemId, $moduleId)
+	protected function checkWordSubmitted($word, $userId, $itemId, $moduleId)
 	{
 		$get = $this->getAll('pop_words', array('word' => $word, 'userId' => $userId, 'itemId' => $itemId, 'moduleId' => $moduleId));
 		if($get AND count($get) > 0){
@@ -78,7 +78,7 @@ class MagicWords_Model extends Core\Model
 		
 	}
 	
-	public function getBlogCandidates($word, $expire)
+	protected function getBlogCandidates($word, $expire)
 	{
 		$sql = 'SELECT postId FROM blog_posts WHERE published = 1 AND publishDate >= :limit';
 		$getPosts = $this->fetchAll($sql, array(':limit' => date('Y-m-d H:i:s', $expire)));
@@ -98,7 +98,7 @@ class MagicWords_Model extends Core\Model
 		
 	}
 	
-	public function submitMagicWord($data)
+	protected function submitMagicWord($data)
 	{
 		if(!isset($data['word']) OR trim($data['word']) == ''){
 			throw new \Exception('Please enter a valid word');
@@ -119,7 +119,7 @@ class MagicWords_Model extends Core\Model
 
 		try{
 			$_SESSION['lastMagicWordTry'] = time();
-			$submit = $this->checkMagicWord($data['word'], $data['userId'], $data['type']);
+			$submit = $this->container->checkMagicWord($data['word'], $data['userId'], $data['type']);
 		}
 		catch(\Exception $e){
 			$_SESSION['magicWordTries']++;
@@ -133,7 +133,7 @@ class MagicWords_Model extends Core\Model
 		return $submit;
 	}
 	
-	public function getUserWordSubmissions($userId)
+	protected function getUserWordSubmissions($userId)
 	{
 		$get = $this->getAll('pop_words', array('userId' => $userId), array(), 'submitId');
 		$modules = array();

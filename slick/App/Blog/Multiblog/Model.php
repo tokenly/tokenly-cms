@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, UI, Util, API, App\Tokenly;
 class Multiblog_Model extends Core\Model
 {
-	public function getBlogForm($siteId)
+	protected function getBlogForm($siteId)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -50,7 +50,7 @@ class Multiblog_Model extends Core\Model
 	
 
 
-	public function addBlog($data)
+	protected function addBlog($data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'description' => false, 'active' => false, 'themeId' => false);
 		$useData = array();
@@ -71,7 +71,7 @@ class Multiblog_Model extends Core\Model
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
-		$useData['slug'] = $this->checkURLExists($useData['slug']);
+		$useData['slug'] = $this->container->checkURLExists($useData['slug']);
 		$useData['name'] = strip_tags($useData['name']);
 		$useData['description'] = strip_tags($useData['description']);
 		$useData['created_at'] = timestamp();
@@ -103,13 +103,13 @@ class Multiblog_Model extends Core\Model
 			throw new \Exception('Error creating blog');
 		}
 		
-		$this->uploadImage($add);
+		$this->container->uploadImage($add);
 		
 		return $add;
 	}
 
 	
-	public function checkURLExists($url, $ignore = 0, $count = 0)
+	protected function checkURLExists($url, $ignore = 0, $count = 0)
 	{
 		$useurl = $url;
 		if($count > 0){
@@ -119,7 +119,7 @@ class Multiblog_Model extends Core\Model
 		if($get AND $get['blogId'] != $ignore){
 			//url exists already, search for next level of url
 			$count++;
-			return $this->checkURLExists($url, $ignore, $count);
+			return $this->container->checkURLExists($url, $ignore, $count);
 		}
 		
 		if($count > 0){
@@ -129,7 +129,7 @@ class Multiblog_Model extends Core\Model
 		return $url;
 	}	
 		
-	public function editBlog($id, $data)
+	protected function editBlog($id, $data)
 	{
 		$req = array('name' => true, 'slug' => false, 'description' => false, 'active' => false, 'themeId' => false);
 		$useData = array();
@@ -151,7 +151,7 @@ class Multiblog_Model extends Core\Model
 		if(!isset($useData['slug']) OR trim($useData['slug']) == ''){
 			$useData['slug'] = genURL($useData['name']);
 		}
-		$useData['slug'] = $this->checkURLExists($useData['slug'], $id);
+		$useData['slug'] = $this->container->checkURLExists($useData['slug'], $id);
 		$useData['name'] = strip_tags($useData['name']);
 		$useData['description'] = strip_tags($useData['description']);
 		
@@ -181,13 +181,13 @@ class Multiblog_Model extends Core\Model
 			throw new \Exception('Error editing blog');
 		}
 		
-		$this->uploadImage($id);
+		$this->container->uploadImage($id);
 			
 		return true;
 	}
 
 
-	public function getBlogUserRoles($blogId, $includeOwner = false)
+	protected function getBlogUserRoles($blogId, $includeOwner = false)
 	{
 		$sql = 'SELECT r.userRoleId, u.userId, u.username, u.email, u.slug, r.type, r.token
 				FROM blog_roles r
@@ -249,7 +249,7 @@ class Multiblog_Model extends Core\Model
 		return $roleList;
 	}
 
-	public function getBlogRoleForm()
+	protected function getBlogRoleForm()
 	{
 		$form = new UI\Form;
 		
@@ -271,7 +271,7 @@ class Multiblog_Model extends Core\Model
 		return $form;
 	}
 	
-	public function addBlogRole($blogId, $userId, $type, $user)
+	protected function addBlogRole($blogId, $userId, $type, $user)
 	{
 		
 		$userId = trim($userId);
@@ -364,7 +364,7 @@ class Multiblog_Model extends Core\Model
 		return $add;
 	}
 	
-	public function uploadImage($categoryId)
+	protected function uploadImage($categoryId)
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
 			$getApp = $this->get('apps', 'blog', array(), 'slug');
@@ -387,7 +387,7 @@ class Multiblog_Model extends Core\Model
 		}
 	}
 	
-	public function updateBlogSettings($blogId, $data)
+	protected function updateBlogSettings($blogId, $data)
 	{
 		$getBlog = $this->get('blogs', $blogId);
 		if(!$getBlog){
@@ -403,6 +403,9 @@ class Multiblog_Model extends Core\Model
 			if(isset($expkey[1]) AND $expkey[1] == 'value'){
 				$itemId = $expkey[0];
 				$getSetting = $this->get('app_meta', $itemId);
+				if(!$getSetting){
+					continue;
+				}
 				foreach($defaultSettings as $setting){
 					if($setting['appMetaId'] == $itemId){
 						$newSettings[$setting['metaKey']] = $val;
@@ -420,7 +423,7 @@ class Multiblog_Model extends Core\Model
 		return true;
 	}
 	
-	public function getBlogSettingFormDataFromKeys($settings)
+	protected function getBlogSettingFormDataFromKeys($settings)
 	{
 		$output = array();
 		$blogApp = get_app('blog');
@@ -442,7 +445,7 @@ class Multiblog_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getSingleBlogSettings($blog)
+	protected function getSingleBlogSettings($blog)
 	{
 		$blogApp = get_app('blog');
 		$settings = json_decode($blog['settings'], true);

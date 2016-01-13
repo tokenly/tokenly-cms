@@ -15,7 +15,7 @@ class MagicWords_Controller extends \App\ModControl
 		$this->popModel = new Tokenly\POP_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';

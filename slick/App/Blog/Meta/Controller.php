@@ -17,38 +17,38 @@ class Meta_Controller extends \App\ModControl
         $this->model = new Meta_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showBlogMeta();
+					$output = $this->container->showBlogMeta();
 					break;
 				case 'add':
-					$output = $this->addField();
+					$output = $this->container->addField();
 					break;
 				case 'edit':
-					$output = $this->editField();
+					$output = $this->container->editField();
 					break;
 				case 'delete':
-					$output = $this->deleteField();
+					$output = $this->container->deleteField();
 					break;
 				default:
-					$output = $this->showBlogMeta();
+					$output = $this->container->showBlogMeta();
 					break;
 			}
 		}
 		else{
-			$output = $this->showBlogMeta();
+			$output = $this->container->showBlogMeta();
 		}
 		$output['template'] = 'admin';
         
         return $output;
     }
     
-    private function showBlogMeta()
+    protected function showBlogMeta()
     {
 		$output = array('view' => 'list');
 		$getBlogMeta = $this->model->getAll('blog_postMetaTypes', array('siteId' => $this->data['site']['siteId']), array(), 'rank', 'asc');
@@ -59,7 +59,7 @@ class Meta_Controller extends \App\ModControl
 	}
 	
 	
-	private function addField()
+	protected function addField()
 	{
 		$output = array('view' => 'form');
 		$output['form'] = $this->model->getFieldForm();
@@ -82,7 +82,7 @@ class Meta_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editField()
+	protected function editField()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -118,7 +118,7 @@ class Meta_Controller extends \App\ModControl
 	}
 	
 
-	private function deleteField()
+	protected function deleteField()
 	{
 		if(isset($this->args[3])){
 			$getField = $this->model->get('blog_postMetaTypes', $this->args[3]);

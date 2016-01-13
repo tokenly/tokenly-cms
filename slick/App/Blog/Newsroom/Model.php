@@ -88,13 +88,13 @@ class Newsroom_Model extends Core\Model
 		}
 	}
 	
-	public function initBlogData()
+	protected function initBlogData()
 	{
 		
 		
 	}
 	
-	public function getBlogRooms($data, $useBlog = false, $min_load = false)
+	protected function getBlogRooms($data, $useBlog = false, $min_load = false)
 	{
 		$model = new Multiblog_Model;
 		$submitModel = new Submissions_Model;
@@ -266,7 +266,7 @@ class Newsroom_Model extends Core\Model
 	}
 	
 	
-	public function getBlogs($data)
+	protected function getBlogs($data)
 	{
 		$model = new Multiblog_Model;
 		$catModel = new Categories_Model;
@@ -291,8 +291,8 @@ class Newsroom_Model extends Core\Model
 					continue;
 				}
 			}					
-			$blog['stats'] = $this->getBlogStats($blog);
-			$blog['team'] = $this->getBlogTeam($blog);
+			$blog['stats'] = $this->container->getBlogStats($blog);
+			$blog['team'] = $this->container->getBlogTeam($blog);
 			$blog['categories'] = $catModel->getCategoryFormList($data['site']['siteId'], false, array(), false, 0, $blog['blogId']);
 		}
 		$blogArray = array();
@@ -302,9 +302,9 @@ class Newsroom_Model extends Core\Model
 		return $blogArray;
 	}
 	
-	public function getBlogStats($blog)
+	protected function getBlogStats($blog)
 	{
-		$getPosts = $this->getPostsInBlog($blog['blogId']);
+		$getPosts = $this->container->getPostsInBlog($blog['blogId']);
 		$submitModel = new Submissions_Model;
 		
 		$output = array();
@@ -369,7 +369,7 @@ class Newsroom_Model extends Core\Model
 		return $output;		
 	}
 	
-	public function getBlogTeam($blog)
+	protected function getBlogTeam($blog)
 	{
 		$multiblogs = new Multiblog_Model;
 		$getRoles = $multiblogs->getBlogUserRoles($blog['blogId']);
@@ -413,7 +413,7 @@ class Newsroom_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getPostsInBlog($blogId)
+	protected function getPostsInBlog($blogId)
 	{
 		$get = $this->fetchAll('SELECT p.postId, p.userId, p.views, p.commentCount, p.status
 								FROM blog_postCategories pc

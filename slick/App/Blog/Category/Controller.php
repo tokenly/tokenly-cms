@@ -13,7 +13,7 @@ class Category_Controller extends \App\ModControl
         $this->blogModel = new Multiblog_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
@@ -28,9 +28,12 @@ class Category_Controller extends \App\ModControl
 			return $output;
 		}
 		
+		
 		$tca = new Tokenly\TCA_Model;
+	
 		$checkTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $output['category']['categoryId'], 'blog-category');
-		if(!$checkTCA){
+		$blogTCA = $tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $output['category']['blogId'], 'multiblog');
+		if(!$checkTCA OR !$blogTCA){
 			$output['view'] = '403';
 			return $output;
 		}

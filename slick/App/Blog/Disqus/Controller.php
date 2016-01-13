@@ -12,7 +12,7 @@ class Disqus_Controller extends \App\ModControl
 		parent::__construct();
 	}
 	
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
         $output['view'] = 'index';

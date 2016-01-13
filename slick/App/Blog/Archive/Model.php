@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, App\Profile;
 class Archive_Model extends Core\Model
 {
-	public function getArchivePosts($siteId, $limit = 10, $year, $month, $day, $useMonth, $useDay)
+	protected function getArchivePosts($siteId, $limit = 10, $year, $month, $day, $useMonth, $useDay)
 	{
 		$start = 0;
 		if(isset($_GET['page'])){
@@ -96,7 +96,7 @@ class Archive_Model extends Core\Model
 		
 	}
 	
-	public function getArchivePages($siteId, $limit = 10, $year, $month, $day, $useMonth, $useDay)
+	protected function getArchivePages($siteId, $limit = 10, $year, $month, $day, $useMonth, $useDay)
 	{
 		if($month < 10){
 			$month = '0'.$month;

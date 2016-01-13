@@ -23,7 +23,7 @@ class Submissions_Model extends Core\Model
 		}
 	}
 
-	public function getPostForm($postId = 0, $siteId, $andUseMeta = true, $user = array())
+	protected function getPostForm($postId = 0, $siteId, $andUseMeta = true, $user = array())
 	{
 		$getPost = false;
 		if($postId != 0){
@@ -122,7 +122,7 @@ class Submissions_Model extends Core\Model
 		$accessRoles = array('independent-writer', 'writer', 'editor', 'admin');
 		$getCats = $catModel->getCategories($siteId, 0, true);
 		$blogCatList = array();
-		$getCats = $this->checkCategoryListAccess($getCats, $user);
+		$getCats = $this->container->checkCategoryListAccess($getCats, $user);
 		foreach($getCats as $cat){
 			$getBlog = $this->get('blogs', $cat['blogId']);
 			if(!isset($blogCatList[$cat['blogId']])){
@@ -179,7 +179,7 @@ class Submissions_Model extends Core\Model
 		return $form;
 	}
 	
-	public function checkCategoryListAccess($cats, $user)
+	protected function checkCategoryListAccess($cats, $user)
 	{
 		$catModel = new Categories_Model;
 		$multiblog = new Multiblog_Model;		
@@ -207,13 +207,13 @@ class Submissions_Model extends Core\Model
 				}
 			}
 			if(isset($cat['children'])){
-				$cat['children'] = $this->checkCategoryListAccess($cat['children'], $user);
+				$cat['children'] = $this->container->checkCategoryListAccess($cat['children'], $user);
 			}
 		}
 		return $cats;
 	}
 	
-	public function checkCategoryAccess($categoryId, $userId)
+	protected function checkCategoryAccess($categoryId, $userId)
 	{
 		$cat = $this->get('blog_categories', $categoryId);
 		if(!$cat){
@@ -241,7 +241,7 @@ class Submissions_Model extends Core\Model
 		return $cat;
 	}
 	
-	public function updatePostCategories($postId, $cats, $user)
+	protected function updatePostCategories($postId, $cats, $user)
 	{
 		\Core\Model::$cacheMode = false;
 		if(!is_array($cats)){
@@ -258,7 +258,7 @@ class Submissions_Model extends Core\Model
 									  
 		foreach($postCats as $cat){
 			if(!in_array($cat['categoryId'], $cats)){
-				$catAccess = $this->checkCategoryAccess($cat['categoryId'], $user['userId']);
+				$catAccess = $this->container->checkCategoryAccess($cat['categoryId'], $user['userId']);
 				if($catAccess OR $user['perms']['canManageAllBlogs']){ //only remove if they also have access to the category (to prevent accidental removal)
 					$this->delete('blog_postCategories', $cat['postCatId']);
 				}
@@ -266,7 +266,7 @@ class Submissions_Model extends Core\Model
 		}
 
 		foreach($cats as $cat){
-			$catAccess = $this->checkCategoryAccess($cat, $user['userId']);
+			$catAccess = $this->container->checkCategoryAccess($cat, $user['userId']);
 			if(!$catAccess AND !$user['perms']['canManageAllBlogs']){
 				continue;
 			}
@@ -309,7 +309,7 @@ class Submissions_Model extends Core\Model
 	}
 	
 
-	public function updatePostImage($id, $type = 'image')
+	protected function updatePostImage($id, $type = 'image')
 	{
 		if(isset($_FILES[$type]['tmp_name']) AND trim($_FILES[$type]['tmp_name']) != false){
 			$app = $this->get('apps', 'blog', array(), 'slug');
@@ -342,7 +342,7 @@ class Submissions_Model extends Core\Model
 		
 	}
 
-	public function addPost($data, $appData)
+	protected function addPost($data, $appData)
 	{
 		//check required fields
 		$req = array('title' => true, 'url' => false, 'siteId' => true, 'status' => true,
@@ -368,7 +368,7 @@ class Submissions_Model extends Core\Model
 			$useData['url'] = $useData['title'];
 		}
 		$useData['url'] = genURL($useData['url']);
-		$useData['url'] = $this->checkURLExists($useData['url']);
+		$useData['url'] = $this->container->checkURLExists($useData['url']);
 		$useData['postDate'] = timestamp();
 		$useData['editTime'] = $useData['postDate'];
 		$useData['editedBy'] = $appData['user']['userId'];
@@ -406,12 +406,12 @@ class Submissions_Model extends Core\Model
 		//setup categories
 		if(isset($data['categories'])){
 			$appData['user']['perms'] = $appData['perms'];
-			$this->updatePostCategories($add, $data['categories'], $appData['user']);
+			$this->container->updatePostCategories($add, $data['categories'], $appData['user']);
 		}
 		
 		//setup images
-		$this->updatePostImage($add);
-		$this->updatePostImage($add, 'coverImage');
+		$this->container->updatePostImage($add);
+		$this->container->updatePostImage($add, 'coverImage');
 		
 		
 		//check if publishing right away
@@ -424,7 +424,7 @@ class Submissions_Model extends Core\Model
 		}
 		elseif($useData['status'] == 'ready'){
 			$useData['postId'] = $add;
-			$this->notifyEditorsOnReady($useData, $appData);
+			$this->container->notifyEditorsOnReady($useData, $appData);
 		}
 		
 		//setup any custom meta fields used
@@ -448,7 +448,7 @@ class Submissions_Model extends Core\Model
 	}
 
 	
-	private function notifyEditorsOnReady($post, $appData)
+	protected function notifyEditorsOnReady($post, $appData)
 	{
 		$multiblog = new Multiblog_Model;
 		$getBlogs = $this->fetchAll('SELECT b.*
@@ -490,7 +490,7 @@ class Submissions_Model extends Core\Model
 	}
 	
 		
-	public function editPost($id, $data, $appData)
+	protected function editPost($id, $data, $appData)
 	{
 		//get previous copy of post
 		$getPost = $this->get('blog_posts', $id);
@@ -519,7 +519,7 @@ class Submissions_Model extends Core\Model
 			$useData['url'] = $useData['title'];
 		}
 		$useData['url'] = genURL($useData['url']);
-		$useData['url'] = $this->checkURLExists($useData['url'], $id);
+		$useData['url'] = $this->container->checkURLExists($useData['url'], $id);
 		
 
 		if(!$useData['userId']){
@@ -558,7 +558,7 @@ class Submissions_Model extends Core\Model
 			$notifyData['culprit'] = $appData['user'];
 			$notifyData['post'] = $getPost;
 			$notifyData['new_status'] = $useData['status'];
-			$this->notifyContributors($getPost['postId'], 'status_change', $notifyData, $appData['user']['userId']);
+			$this->container->notifyContributors($getPost['postId'], 'status_change', $notifyData, $appData['user']['userId']);
 		}
 		
 		if($useData['publishDate'] != $getPost['publishDate']){
@@ -566,7 +566,7 @@ class Submissions_Model extends Core\Model
 			$notifyData['culprit'] = $appData['user'];
 			$notifyData['post'] = $getPost;
 			$notifyData['new_date'] = $useData['publishDate'];
-			$this->notifyContributors($getPost['postId'], 'publish_date_change', $notifyData, $appData['user']['userId']);
+			$this->container->notifyContributors($getPost['postId'], 'publish_date_change', $notifyData, $appData['user']['userId']);
 		}
 		
 		
@@ -576,12 +576,12 @@ class Submissions_Model extends Core\Model
 		//check for new version
 		if($getPost['content'] != $useData['content'] OR $getPost['excerpt'] != $useData['excerpt']){
 			$versionContent = array('content' => $useData['content'], 'excerpt' => $useData['excerpt']);
-			$versionNum = $this->getNextVersionNum($id);
+			$versionNum = $this->container->getNextVersionNum($id);
 			$changeNum = 0;
 			$getPrevVersion = $this->get('content_versions', $getPost['version']);
 			if($getPrevVersion){
 				$prevContent = json_decode($getPrevVersion['content'], true);
-				$compare = $this->comparePostChanges($versionContent, $prevContent);
+				$compare = $this->container->comparePostChanges($versionContent, $prevContent);
 				if($compare){
 					$changeNum = $compare['num'];
 				}
@@ -603,15 +603,15 @@ class Submissions_Model extends Core\Model
 		//update categories
 		if(isset($data['categories'])){
 			$appData['user']['perms'] = $appData['perms'];
-			$this->updatePostCategories($id, $data['categories'], $appData['user']);
+			$this->container->updatePostCategories($id, $data['categories'], $appData['user']);
 		}
 		
 		//update images
-		//$this->updatePostImage($id); //disabled normal image
-		$this->updatePostImage($id, 'coverImage');
+		//$this->container->updatePostImage($id); //disabled normal image
+		$this->container->updatePostImage($id, 'coverImage');
 		
 		if($getPost['status'] != 'ready' AND $useData['status'] == 'ready'){
-			$this->notifyEditorsOnReady($getPost, $appData);
+			$this->container->notifyEditorsOnReady($getPost, $appData);
 		}
 			
 		foreach($data as $key => $val){
@@ -620,12 +620,12 @@ class Submissions_Model extends Core\Model
 			if(!$getField){
 				continue;
 			}
-			$update = $this->updatePostMeta($id, $getField['slug'], $val);
+			$update = $this->container->updatePostMeta($id, $getField['slug'], $val);
 		}
 		return true;
 	}
 	
-	public function updatePostMeta($postId, $key, $value = '')
+	protected function updatePostMeta($postId, $key, $value = '')
 	{
 		$getField = $this->get('blog_postMetaTypes', $key, array(), 'slug');
 		if(!$getField){
@@ -649,7 +649,7 @@ class Submissions_Model extends Core\Model
 		return $update;
 	}
 	
-	public function getPostMetaVal($postId, $key)
+	protected function getPostMetaVal($postId, $key)
 	{
 		$model = new Post_Model;
 		$getMeta = $model->getPostMeta($postId, false, true);
@@ -661,7 +661,7 @@ class Submissions_Model extends Core\Model
 		return false;
 	}
 	
-	public function getPostFormCategories($postId, $returnFull = false)
+	protected function getPostFormCategories($postId, $returnFull = false)
 	{
 		$get = $this->getAll('blog_postCategories', array('postId' => $postId));
 		if($returnFull){
@@ -677,7 +677,7 @@ class Submissions_Model extends Core\Model
 
 
 	
-	public function checkURLExists($url, $ignore = 0, $count = 0)
+	protected function checkURLExists($url, $ignore = 0, $count = 0)
 	{
 		$useurl = $url;
 		if($count > 0){
@@ -687,7 +687,7 @@ class Submissions_Model extends Core\Model
 		if($get AND $get['postId'] != $ignore){
 			//url exists already, search for next level of url
 			$count++;
-			return $this->checkURLExists($url, $ignore, $count);
+			return $this->container->checkURLExists($url, $ignore, $count);
 		}
 		
 		if($count > 0){
@@ -697,7 +697,7 @@ class Submissions_Model extends Core\Model
 		return $url;
 	}
 	
-	public function getTrashItems($userId = 0)
+	protected function getTrashItems($userId = 0)
 	{
 		$site = currentSite();
 		$where = array('trash' => 1, 'siteId' => $site['siteId']);
@@ -708,16 +708,16 @@ class Submissions_Model extends Core\Model
 		return $get;
 	}
 	
-	public function countTrashItems($userId = 0)
+	protected function countTrashItems($userId = 0)
 	{
-		$items = $this->getTrashItems($userId);
+		$items = $this->container->getTrashItems($userId);
 		if(!is_array($items)){
 			return false;
 		}
 		return count($items);
 	}
 	
-	public function getVersionNum($postId)
+	protected function getVersionNum($postId)
 	{
 		$get = $this->fetchSingle('SELECT num
 								   FROM content_versions
@@ -730,16 +730,16 @@ class Submissions_Model extends Core\Model
 		return $get['num'];
 	}
 	
-	public function getNextVersionNum($postId)
+	protected function getNextVersionNum($postId)
 	{
 
-		return $this->getVersionNum($postId) + 1;
+		return $this->container->getVersionNum($postId) + 1;
 	}
 	
-	public function getPostVersion($postId, $version = 0)
+	protected function getPostVersion($postId, $version = 0)
 	{
 		if($version == 0){
-			$version = $this->getVersionNum($postId);
+			$version = $this->container->getVersionNum($postId);
 		}
 		$get = $this->fetchSingle('SELECT * FROM content_versions
 								   WHERE type = "blog-post" AND itemId = :id
@@ -751,7 +751,7 @@ class Submissions_Model extends Core\Model
 		return $get;
 	}
 	
-	public function getVersions($postId)
+	protected function getVersions($postId)
 	{
 		$profModel = new Profile\User_Model;
 		$get = $this->getAll('content_versions', array('type' => 'blog-post', 'itemId' => $postId), array(), 'num', 'asc');
@@ -762,7 +762,7 @@ class Submissions_Model extends Core\Model
 		return $get;
 	}
 	
-	public function comparePostChanges($new, $old)
+	protected function comparePostChanges($new, $old)
 	{
 		$fields = array('content', 'excerpt');
 		$lines = array();
@@ -804,9 +804,9 @@ class Submissions_Model extends Core\Model
 		return array('lines' => $lines, 'num' => $numChanges);
 	}
 	
-	public function comparePostVersions($postId, $v1, $v2)
+	protected function comparePostVersions($postId, $v1, $v2)
 	{
-		$getVersions = $this->getVersions($postId);
+		$getVersions = $this->container->getVersions($postId);
 		$getV1 = false;
 		$getV2 = false;
 		foreach($getVersions as $version){
@@ -822,7 +822,7 @@ class Submissions_Model extends Core\Model
 			return false;
 		}
 		
-		$compare = $this->comparePostChanges($getV1['content'], $getV2['content']);
+		$compare = $this->container->comparePostChanges($getV1['content'], $getV2['content']);
 		$compare['v1_user'] = $getV1['user'];
 		$compare['v2_user'] = $getV2['user'];
 		
@@ -830,7 +830,7 @@ class Submissions_Model extends Core\Model
 		
 	}
 	
-	public function getCommentListHash($postId)
+	protected function getCommentListHash($postId)
 	{
 		$get = $this->fetchAll('SELECT commentId as id, editTime as edit FROM blog_comments WHERE postId = :id AND buried = 0 AND editorial = 1',
 								array(':id' => $postId), 0, true);
@@ -838,7 +838,7 @@ class Submissions_Model extends Core\Model
 		return hash('sha256', $encode);
 	}
 	
-	public function complete_blog_contributor_request($invite)
+	protected function complete_blog_contributor_request($invite)
 	{
 		$getPost = $this->get('blog_posts', $invite['itemId']);
 		if(!$getPost){
@@ -850,7 +850,7 @@ class Submissions_Model extends Core\Model
 			throw new \Exception('Invalid blog contributor request');
 		}
 		
-		$contribs = $this->getPostContributors($getPost['postId']);
+		$contribs = $this->container->getPostContributors($getPost['postId']);
 		$contribs[] = array('userId' => $getPost['userId']); //add author to contrib list
 		foreach($contribs as $contrib){
 			\App\Meta_Model::notifyUser($contrib['userId'], 'emails.invites.'.$invite['type'].'_complete', $invite['inviteId'], 'user-invite-complete', false, $invite);
@@ -867,7 +867,7 @@ class Submissions_Model extends Core\Model
 		return $redirect;
 	}
 	
-	public function getPostContributors($postId, $andAccepted = true)
+	protected function getPostContributors($postId, $andAccepted = true)
 	{
 		$accept = '';
 		if($andAccepted){
@@ -885,9 +885,9 @@ class Submissions_Model extends Core\Model
 		
 	}
 	
-	public function checkUserContributor($postId, $userId)
+	protected function checkUserContributor($postId, $userId)
 	{
-		$contribs = $this->getPostContributors($postId);
+		$contribs = $this->container->getPostContributors($postId);
 		foreach($contribs as $contrib){
 			if($contrib['userId'] == $userId){
 				return true;
@@ -896,7 +896,7 @@ class Submissions_Model extends Core\Model
 		return false;
 	}
 	
-	public function getUserContributedPosts($data)
+	protected function getUserContributedPosts($data)
 	{
 		$get = $this->fetchAll('SELECT p.postId, p.userId, p.url, p.title, p.status, p.views, p.commentCount, p.commentCheck,
 									   p.postDate, p.publishDate, p.excerpt, p.published, p.status, p.ready,
@@ -910,9 +910,9 @@ class Submissions_Model extends Core\Model
 		return $get;
 	}
 	
-	public function getUserPostsWithContributed($data)
+	protected function getUserPostsWithContributed($data)
 	{
-		$contribs = $this->getUserContributedPosts($data);
+		$contribs = $this->container->getUserContributedPosts($data);
 		$posts = $this->getAll('blog_posts', array('userId' => $data['user']['userId'], 'trash' => 0));
 		if(!$posts){
 			$posts = array();
@@ -932,7 +932,7 @@ class Submissions_Model extends Core\Model
 		return $output;
 	}
 	
-	public function checkPostCategoryApproved($postId, $categoryId)
+	protected function checkPostCategoryApproved($postId, $categoryId)
 	{
 		$getPostCat = $this->fetchSingle('SELECT approved from blog_postCategories
 												 WHERE categoryId = :categoryId AND postId = :postId',
@@ -944,9 +944,9 @@ class Submissions_Model extends Core\Model
 		return false;
 	}
 	
-	public function parseApprovedCategoryOptions($catOpts, $postId, $categoryId)
+	protected function parseApprovedCategoryOptions($catOpts, $postId, $categoryId)
 	{
-		$postApproved = $this->checkPostCategoryApproved($postId, $categoryId);	
+		$postApproved = $this->container->checkPostCategoryApproved($postId, $categoryId);	
 		foreach($catOpts as $ck => $cv){
 			if($categoryId == $cv['value']){
 				if($postApproved){
@@ -957,12 +957,12 @@ class Submissions_Model extends Core\Model
 				}
 			}
 			if(isset($cv['children'])){
-				$catOpts[$ck]['children'] = $this->parseApprovedCategoryOptions($cv['children'], $postId, $categoryId);
+				$catOpts[$ck]['children'] = $this->container->parseApprovedCategoryOptions($cv['children'], $postId, $categoryId);
 			}			
 		}
 		return $catOpts;
 	}
-	public static function checkPostApproved($postId)
+	protected static function checkPostApproved($postId)
 	{
 		$check = extract_row(self::$approvedCategories, array('postId' => $postId));
 		if($check AND count($check) > 0){
@@ -971,11 +971,11 @@ class Submissions_Model extends Core\Model
 		return 0;
 	}
 	
-	public function notifyContributors($postId, $notification, $data, $skipUser = 0)
+	protected function notifyContributors($postId, $notification, $data, $skipUser = 0)
 	{
 		$getAuthor = $this->get('blog_posts', $postId, array('userId'));
 		\Core\Model::$cacheMode = false;
-		$getContribs = $this->getPostContributors($postId);
+		$getContribs = $this->container->getPostContributors($postId);
 		\Core\Model::$cacheMode = true;
 		$getContribs[] = $getAuthor;
 		foreach($getContribs as $contrib){
@@ -987,7 +987,7 @@ class Submissions_Model extends Core\Model
 		
 	}
 	
-	public function checkPostBlogRole($postId, $userId)
+	protected function checkPostBlogRole($postId, $userId)
 	{
 		$multiblogs = new Multiblog_Model;
 		$getCatBlogs = $this->fetchAll('SELECT c.blogId
@@ -1007,7 +1007,7 @@ class Submissions_Model extends Core\Model
 		return false;
 	}
 	
-	public function getContentWordCount($content, $type = 'markdown')
+	protected function getContentWordCount($content, $type = 'markdown')
 	{
 		switch($type){
 			case 'markdown':

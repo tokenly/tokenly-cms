@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core;
 class MagicWordSubmits_Model extends Core\Model
 {
-	public function getWordSubmissions()
+	protected function getWordSubmissions()
 	{
 		$get = $this->getAll('pop_words', array(), array(), 'submitId');
 		$modules = array();

@@ -13,7 +13,7 @@ class MagicWordSubmits_Controller extends \App\ModControl
 		$this->model = new MagicWordSubmits_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$output['template'] = 'admin';
@@ -22,7 +22,7 @@ class MagicWordSubmits_Controller extends \App\ModControl
 		if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'delete':
-					$output = $this->deleteWord($output);
+					$output = $this->container->deleteWord($output);
 					break;
 				default:
 					$output['view'] = '404';
@@ -30,18 +30,18 @@ class MagicWordSubmits_Controller extends \App\ModControl
 			}
 		}
 		else{
-			$output = $this->showAllWords($output);
+			$output = $this->container->showAllWords($output);
 		}
 		return $output;
 	}
 	
-	private function showAllWords($output)
+	protected function showAllWords($output)
 	{
 		$output['words'] = $this->model->getWordSubmissions();
 		return $output;
 	}
 	
-	private function deleteWord($output)
+	protected function deleteWord($output)
 	{
 		if(!isset($this->args[3])){
 			$output['view'] = '404';

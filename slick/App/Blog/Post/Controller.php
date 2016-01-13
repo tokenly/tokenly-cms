@@ -14,7 +14,7 @@ class Post_Controller extends \App\ModControl
         $this->blogModel = new Multiblog_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
@@ -59,14 +59,7 @@ class Post_Controller extends \App\ModControl
 		}
 		
 		$getBlog = $this->model->getPostFirstBlog($getPost['postId']);
-		if($getBlog){
-			if($getBlog['themeId'] != 0){
-				$getTheme = $this->model->get('themes', $getBlog['themeId']);
-				if($getTheme){
-					$output['theme'] = $getTheme['location'];
-				}
-			}
-		}
+
 		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
 		
 		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
@@ -79,11 +72,21 @@ class Post_Controller extends \App\ModControl
 		
 		foreach($getPost['categories'] as $cat){
 			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
+			$blogTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['blogId'], 'multiblog');
+			if(!$catTCA OR !$blogTCA){
 			$output['view'] = '403';
 			return $output;
 			}
 		}
+		
+		if($getBlog){
+			if($getBlog['themeId'] != 0){
+				$getTheme = $this->model->get('themes', $getBlog['themeId']);
+				if($getTheme){
+					$output['theme'] = $getTheme['location'];
+				}
+			}
+		}		
 		
 		$output['blog'] = $getBlog;		
 		$output['post'] = $getPost;

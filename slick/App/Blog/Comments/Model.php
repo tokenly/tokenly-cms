@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core;
 class Comments_Model extends Core\Model
 {
-	public function getCommentList($siteId)
+	protected function getCommentList($siteId)
 	{
 		$get = $this->fetchAll('SELECT c.*, u.username as author, CONCAT(p.url, "#comment-", c.commentId) as postURL, p.title as postTitle
 								FROM blog_comments c

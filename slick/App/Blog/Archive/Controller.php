@@ -12,7 +12,7 @@ class Archive_Controller extends \App\ModControl
         $this->model = new Archive_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		

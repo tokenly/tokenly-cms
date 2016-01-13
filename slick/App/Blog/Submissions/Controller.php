@@ -43,7 +43,7 @@ class Submissions_Controller extends \App\ModControl
 		return $install;
 	}
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$tca = $this->tca;
@@ -54,47 +54,47 @@ class Submissions_Controller extends \App\ModControl
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showPosts();
+					$output = $this->container->showPosts();
 					break;
 				case 'add':
-					$output = $this->addPost();
+					$output = $this->container->addPost();
 					break;
 				case 'edit':
-					$output = $this->editPost();
+					$output = $this->container->editPost();
 					break;
 				case 'delete':
-					$output = $this->deletePost();
+					$output = $this->container->deletePost();
 					break;
 				case 'preview':
-					$output = $this->previewPost($output);
+					$output = $this->container->previewPost($output);
 					break;
 				case 'check-credits':
-					$output = $this->checkCreditPayment();
+					$output = $this->container->checkCreditPayment();
 					break;
 				case 'trash':
 					if(isset($this->args[3])){
-						$output = $this->trashPost();
+						$output = $this->container->trashPost();
 					}
 					else{
-						$output = $this->showPosts(1);
+						$output = $this->container->showPosts(1);
 					}
 					break;
 				case 'restore':
-					$output = $this->trashPost(true);
+					$output = $this->container->trashPost(true);
 					break;
 				case 'clear-trash':
-					$output = $this->clearTrash();
+					$output = $this->container->clearTrash();
 					break;
 				case 'compare':
-					$output = $this->comparePostVersions();
+					$output = $this->container->comparePostVersions();
 					break;
 				default:
-					$output = $this->showPosts();
+					$output = $this->container->showPosts();
 					break;
 			}
 		}
 		else{
-			$output = $this->showPosts();
+			$output = $this->container->showPosts();
 		}
 		$output['postModule'] = $this->postModule;
 		$output['blogApp'] = $this->blogApp;
@@ -111,15 +111,16 @@ class Submissions_Controller extends \App\ModControl
     *
     * @return Array
     */
-    private function showPosts($trash = 0)
+    protected function showPosts($trash = 0)
     {
 		$output = array('view' => 'list');
 		$getPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'],
 															 'userId' => $this->data['user']['userId'],
 															 'trash' => $trash), array(), 'postId');
-															 
-		$getContribPosts = $this->model->getUserContributedPosts($this->data);
-		$getPosts = array_merge($getPosts, $getContribPosts);
+		if($trash == 0){													 								 
+			$getContribPosts = $this->model->getUserContributedPosts($this->data);
+			$getPosts = array_merge($getPosts, $getContribPosts);
+		}
 															 
 		$viewedComments = $this->meta->getUserMeta($this->data['user']['userId'], 'viewed-editorial-comments');
 		if($viewedComments){
@@ -221,7 +222,7 @@ class Submissions_Controller extends \App\ModControl
 	}
 	
 	
-	private function addPost()
+	protected function addPost()
 	{
 		$output = array('view' => 'form');
 		if(!$this->data['perms']['canWritePost']){
@@ -384,7 +385,7 @@ class Submissions_Controller extends \App\ModControl
 	protected function editPost()
 	{
 		try{
-			$getPost = $this->accessPost();
+			$getPost = $this->container->accessPost();
 		}
 		catch(\Exception $e){
 			return array('view' => $e->getMessage());
@@ -466,13 +467,13 @@ class Submissions_Controller extends \App\ModControl
 		//request/invite a contributor
 		if(posted()){
 			if(isset($_POST['request-contrib']) AND !$contributor){
-				return $this->requestContributor($output);
+				return $this->container->requestContributor($output);
 			}
 			elseif(isset($_POST['invite-contrib']) AND ($this->data['user']['userId'] == $getPost['userId'] OR $this->data['perms']['canManageAllBlogs'])){
-				return $this->requestContributor($output, true);
+				return $this->container->requestContributor($output, true);
 			}
 			elseif(isset($_POST['update-contribs']) AND ($this->data['user']['userId'] == $getPost['userId'] OR $this->data['perms']['canManageAllBlogs'])){
-				return $this->updateContributors($output);
+				return $this->container->updateContributors($output);
 			}
 		}
 		//contributor controls
@@ -480,7 +481,7 @@ class Submissions_Controller extends \App\ModControl
 			if(isset($this->args[5])){
 				switch($this->args[5]){
 					case 'delete':
-						return $this->deleteContributor($output);
+						return $this->container->deleteContributor($output);
 				}
 			}	
 		}	
@@ -618,20 +619,20 @@ class Submissions_Controller extends \App\ModControl
 			if(isset($this->args[5])){
 				switch($this->args[5]){
 					case 'post':
-						$json = $this->postPrivateComment();
+						$json = $this->container->postPrivateComment();
 						break;
 					case 'edit':
-						$json = $this->editPrivateComment();
+						$json = $this->container->editPrivateComment();
 						break;
 					case 'delete':
-						$json = $this->deletePrivateComment();
+						$json = $this->container->deletePrivateComment();
 						break;
 					case 'check':
-						$json = $this->checkCommentList();
+						$json = $this->container->checkCommentList();
 						break;
 					case 'get':
 					default:
-						$json = $this->getPrivateComments();
+						$json = $this->container->getPrivateComments();
 						break;
 				}
 				
@@ -826,7 +827,7 @@ class Submissions_Controller extends \App\ModControl
 	}
 
 	
-	private function deletePost()
+	protected function deletePost()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site.$this->moduleUrl);
@@ -845,29 +846,14 @@ class Submissions_Controller extends \App\ModControl
 		if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
 			return array('view' => '403');
 		}
-		
-		$tca = $this->tca;
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		if(!$postTCA){
-			return array('view' => '403');
-		}
-		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-		foreach($getCategories as $cat){
-			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
-				return array('view' => '403');
-			}
-		}			
-		
+			
 		$delete = $this->model->delete('blog_posts', $this->args[3]);
 		Util\Session::flash('blog-message', $getPost['title'].' deleted successfully', 'success');
 		
 		redirect($this->site.$this->moduleUrl.'/trash');
 	}
 	
-	private function previewPost($output)
+	protected function previewPost($output)
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site.$this->moduleUrl);
@@ -887,21 +873,8 @@ class Submissions_Controller extends \App\ModControl
 			}
 		}	
 		
-		$tca = $this->tca;
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$this->data['perms'] = $tca->checkPerms($this->data['user'], $this->data['perms'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		if(!$postTCA){
-			return array('view' => '403');
-		}
 		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-		foreach($getCategories as $cat){
-			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
-				return array('view' => '403');
-			}
-		}				
+		
 		
 		$cats = array();
 		foreach($getCategories as $cat){
@@ -1073,7 +1046,7 @@ class Submissions_Controller extends \App\ModControl
 		die();
 	}
 	
-	private function trashPost($restore = false)
+	protected function trashPost($restore = false)
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site.$this->moduleUrl);
@@ -1091,21 +1064,7 @@ class Submissions_Controller extends \App\ModControl
 		if($getPost['published'] == 1 AND !$this->data['perms']['canPublishPost']){
 			return array('view' => '403');
 		}
-		
-		$tca = $this->tca;
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
-		$postTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $getPost['postId'], 'blog-post');
-		if(!$postTCA){
-			return array('view' => '403');
-		}
-		$getCategories = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
-		foreach($getCategories as $cat){
-			$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
-			if(!$catTCA){
-				return array('view' => '403');
-			}
-		}			
+				
 		
 		if($restore){
 			$restorePost = $this->model->edit('blog_posts', $this->args[3], array('trash' => 0));
@@ -1119,7 +1078,7 @@ class Submissions_Controller extends \App\ModControl
 		}
 	}		
 		
-	private function clearTrash()
+	protected function clearTrash()
 	{
 
 		$trashPosts = $this->model->getAll('blog_posts', array('siteId' => $this->data['site']['siteId'],
@@ -1161,10 +1120,10 @@ class Submissions_Controller extends \App\ModControl
 		return true;
 	}		
 	
-	public function comparePostVersions()
+	protected function comparePostVersions()
 	{
 		try{
-			$getPost = $this->accessPost();
+			$getPost = $this->container->accessPost();
 		}
 		catch(\Exception $e){
 			return array('view' => $e->getMessage());
@@ -1191,7 +1150,7 @@ class Submissions_Controller extends \App\ModControl
 		die();
 	}	
 	
-	public function requestContributor($output, $author_invite = false)
+	protected function requestContributor($output, $author_invite = false)
 	{
 		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 
@@ -1259,7 +1218,7 @@ class Submissions_Controller extends \App\ModControl
 		redirect($redirect_link);
 	}
 	
-	public function deleteContributor($output)
+	protected function deleteContributor($output)
 	{
 		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 		$getContrib = $this->model->get('blog_contributors', @$this->args[6]);
@@ -1295,7 +1254,7 @@ class Submissions_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	public function updateContributors($output)
+	protected function updateContributors($output)
 	{
 		$redirect_link = $this->site.$this->data['app']['url'].'/'.$this->data['module']['url'].'/edit/'.$output['post']['postId'];
 		

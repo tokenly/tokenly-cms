@@ -1,5 +1,6 @@
 <?php
 namespace App\Blog;
+use App\Tokenly;
 class Controller extends \App\AppControl
 {
     function __construct()
@@ -9,7 +10,7 @@ class Controller extends \App\AppControl
         $this->blogModel = new Multiblog_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		
@@ -18,6 +19,15 @@ class Controller extends \App\AppControl
 				//attempt to find a valid blog
 				$getBlog = $this->catModel->get('blogs', $this->args[1], array(), 'slug');
 				if($getBlog AND $getBlog['active'] == 1){
+					
+					$tca = new Tokenly\TCA_Model;
+					$cat_module = get_app('blog.blog-category');
+					$checkTCA = $tca->checkItemAccess($output['user']['userId'], $cat_module['moduleId'], $getBlog['blogId'], 'multiblog');
+					if(!$checkTCA){
+						$output['view'] = '403';
+						return $output;
+					}
+					
 					$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
 					//show blog home page
 					$output['view'] = 'list';
@@ -57,7 +67,7 @@ class Controller extends \App\AppControl
 		return $output;
     }
     
-    public function __install($appId)
+    protected function __install($appId)
     {
 		$install = parent::__install($appId);
 		if(!$install){

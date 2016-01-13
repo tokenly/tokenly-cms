@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, UI, Util;
 class Meta_Model extends Core\Model
 {
-	public function getFieldForm($fieldId = 0)
+	protected function getFieldForm($fieldId = 0)
 	{
 		$form = new UI\Form;
 		
@@ -56,7 +56,7 @@ class Meta_Model extends Core\Model
 	
 
 
-	public function addField($data)
+	protected function addField($data)
 	{
 		$req = array('label' => true, 'slug' => true, 'type' => true, 'options' => false, 'active' => false, 'siteId' => true, 'rank' => false, 'isPublic' => false, 'hidden' => false);
 		$useData = array();
@@ -101,7 +101,7 @@ class Meta_Model extends Core\Model
 		return $add;
 	}
 		
-	public function editField($id, $data)
+	protected function editField($id, $data)
 	{
 		$req = array('label' => true, 'type' => true, 'options' => false, 'slug' => true, 'active' => false, 'siteId' => true, 'rank' => false, 'isPublic' => false, 'hidden' => false);
 		$useData = array();

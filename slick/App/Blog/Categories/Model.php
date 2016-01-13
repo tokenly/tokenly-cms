@@ -4,7 +4,7 @@ use Core, UI, Util, App\Tokenly, App\Account;
 class Categories_Model extends Core\Model
 {
 
-	public function getBlogCategoryForm($appData, $categoryId = 0)
+	protected function getBlogCategoryForm($appData, $categoryId = 0)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
@@ -56,7 +56,7 @@ class Categories_Model extends Core\Model
 				$thisBlogId = $getThisCat['blogId'];
 			}
 		}
-		$getCategories = $this->getCategoryFormList($appData['site']['siteId'], false, array(), 0, $categoryId, $thisBlogId);
+		$getCategories = $this->container->getCategoryFormList($appData['site']['siteId'], false, array(), 0, $categoryId, $thisBlogId);
 		$parentId->addOption(0, '-Root-');
 		$firstBlogId = false;
 		foreach($getCategories as $cat){
@@ -96,10 +96,10 @@ class Categories_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getCategoryFormList($siteId, $cats = false, $output = array(), $indent = 0, $categoryId = 0, $blogId = 0)
+	protected function getCategoryFormList($siteId, $cats = false, $output = array(), $indent = 0, $categoryId = 0, $blogId = 0)
 	{
 		if($cats === false){
-			$getCats = $this->getCategories($siteId);
+			$getCats = $this->container->getCategories($siteId);
 		}
 		else{
 			$getCats = $cats;
@@ -123,7 +123,7 @@ class Categories_Model extends Core\Model
 				if($indent !== false){
 					$newIndent = $indent+1;
 				}
-				$output = array_merge($this->getCategoryFormList($siteId, $cat['children'], $output, $newIndent, $categoryId, $blogId), $output);
+				$output = array_merge($this->container->getCategoryFormList($siteId, $cat['children'], $output, $newIndent, $categoryId, $blogId), $output);
 			}
 		}
 		
@@ -131,7 +131,7 @@ class Categories_Model extends Core\Model
 	}
 	
 	
-	public function getCategories($siteId, $parentId = 0, $menuMode = 0)
+	protected function getCategories($siteId, $parentId = 0, $menuMode = 0, $use_tca = true)
 	{
 		$thisUser = false;
 		$accountModel = new Account\Home_Model;
@@ -155,13 +155,16 @@ class Categories_Model extends Core\Model
 			$row['blog'] = $getBlog;
 			$get[$key] = $row;
 			
-			$catTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $row['categoryId'], 'blog-category');
-			if(!$catTCA){
-				unset($get[$key]);
-				continue;
-			}	
+			if($use_tca){
+				$catTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $row['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($thisUser, $catModule['moduleId'], $row['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					unset($get[$key]);
+					continue;
+				}	
+			}
 			
-			$getChildren = $this->getCategories($siteId, $row['categoryId'], $menuMode);
+			$getChildren = $this->container->getCategories($siteId, $row['categoryId'], $menuMode, $use_tca);
 			if(count($getChildren) > 0){
 				$get[$key]['children'] = $getChildren;
 			}
@@ -181,7 +184,7 @@ class Categories_Model extends Core\Model
 		return $get;
 	}
 	
-	public function addBlogCategory($data, $user)
+	protected function addBlogCategory($data, $user)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'parentId' => false, 'rank' => false, 'description' => false, 'public' => false, 'blogId' => true);
 		$useData = array();
@@ -245,14 +248,14 @@ class Categories_Model extends Core\Model
 			throw new \Exception('Error adding category');
 		}
 		
-		$this->uploadImage($add);
+		$this->container->uploadImage($add);
 		
 		return $add;
 		
 		
 	}
 		
-	public function editBlogCategory($id, $data)
+	protected function editBlogCategory($id, $data)
 	{
 		$req = array('name' => true, 'slug' => false, 'siteId' => true, 'parentId' => false, 'rank' => false, 'description' => false, 'public' => false);
 		$useData = array();
@@ -294,13 +297,13 @@ class Categories_Model extends Core\Model
 			throw new \Exception('Error editing category');
 		}
 		
-		$this->uploadImage($id);
+		$this->container->uploadImage($id);
 		
 		return true;
 		
 	}
 	
-	public function uploadImage($categoryId)
+	protected function uploadImage($categoryId)
 	{
 		if(isset($_FILES['image']['tmp_name']) AND trim($_FILES['image']['tmp_name']) != ''){
 			$getApp = $this->get('apps', 'blog', array(), 'slug');
@@ -323,7 +326,7 @@ class Categories_Model extends Core\Model
 		}
 	}
 	
-	public function getArchiveList($siteId)
+	protected function getArchiveList($siteId)
 	{
 		$getPosts = $this->fetchAll('SELECT postId, publishDate 
 									FROM blog_posts

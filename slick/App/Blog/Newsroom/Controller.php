@@ -16,15 +16,15 @@ class Newsroom_Controller extends \App\ModControl
 		$this->postModel = new Post_Model;
 	}
 	
-	public function init()
+	protected function init()
 	{
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
         if(isset($this->args[2])){
-			$output = $this->showBlogNewsroom($output);
+			$output = $this->container->showBlogNewsroom($output);
 		}
 		else{
-			$output = $this->showNewsroom($output);
+			$output = $this->container->showNewsroom($output);
 		}
 		$output['template'] = 'admin';
         $output['perms'] = $this->data['perms'];	
@@ -74,7 +74,7 @@ class Newsroom_Controller extends \App\ModControl
 		}
 		if(posted()){
 			if(isset($_POST['update-categories'])){
-				return $this->updateCategories($output);
+				return $this->container->updateCategories($output);
 			}
 		}
 		

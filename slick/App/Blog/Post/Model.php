@@ -5,7 +5,7 @@ class Post_Model extends Core\Model
 {
 	public static $postMetaTypes = false;
 	
-	public function getPost($url, $siteId)
+	protected function getPost($url, $siteId)
 	{
 		$get = $this->fetchSingle('SELECT * FROM blog_posts WHERE url = :url AND siteId = :siteId',
 									array(':url' => $url, ':siteId' => $siteId));
@@ -31,7 +31,7 @@ class Post_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getCommentForm()
+	protected function getCommentForm()
 	{
 		$form = new UI\Form;
 		
@@ -42,7 +42,7 @@ class Post_Model extends Core\Model
 		return $form;
 	}
 	
-	public function getPostComments($postId, $editorial = 0)
+	protected function getPostComments($postId, $editorial = 0)
 	{
 		$getSite = currentSite();
 		$siteId = $getSite['siteId'];
@@ -63,7 +63,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function getComment($commentId)
+	protected function getComment($commentId)
 	{
 		$getSite = currentSite();
 		$siteId = $getSite['siteId'];
@@ -84,7 +84,7 @@ class Post_Model extends Core\Model
 		return $getComment;
 	}
 	
-	public function postComment($data, $appData, $editorial = 0)
+	protected function postComment($data, $appData, $editorial = 0)
 	{
 		if(!isset($data['message']) AND trim($data['message']) == ''){
 			throw new \Exception('Message required');
@@ -101,7 +101,7 @@ class Post_Model extends Core\Model
 		}
 		
 		if($editorial == 1){
-			$whitelist = $this->getEditorialCommentWhitelist($data['postId']);
+			$whitelist = $this->container->getEditorialCommentWhitelist($data['postId']);
 			mention($useData['message'], '%username% has mentioned you in a 
 					<a href="'.$appData['site']['url'].'/'.$appData['app']['url'].'/'.$appData['module']['url'].'/edit/'.$appData['post']['postId'].'#comment-'.$post.'" target="_blank">editorial blog comment.</a>',
 					$useData['userId'], $post, 'blog-editor-reply', array(), $whitelist);					
@@ -139,7 +139,7 @@ class Post_Model extends Core\Model
 			}
 		}
 		
-		$noticeList = $this->getEditorialDiscussionUsers($appData['post']['postId']);
+		$noticeList = $this->container->getEditorialDiscussionUsers($appData['post']['postId']);
 		foreach($noticeList as $extraNotice){
 			if($extraNotice != $appData['user']['userId'] AND $extraNotice != $appData['post']['userId']){
 				\App\Meta_Model::notifyUser($extraNotice, 'emails.blog.editorial_comment', $post, 'new-editor-reply', false, $notifyData);
@@ -152,7 +152,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function getEditorialCommentWhitelist($postId)
+	protected function getEditorialCommentWhitelist($postId)
 	{
 		$output = array();
 		$getPost = $this->get('blog_posts', $postId, array('postId', 'userId'));
@@ -161,7 +161,7 @@ class Post_Model extends Core\Model
 		$output[] = $getPost['userId'];
 		
 		//add contributors + discussion members to list
-		$discussionMembers = $this->getEditorialDiscussionUsers($postId);
+		$discussionMembers = $this->container->getEditorialDiscussionUsers($postId);
 		foreach($discussionMembers as $member){
 			if(!in_array($member, $output)){
 				$output[] = $member;
@@ -169,7 +169,7 @@ class Post_Model extends Core\Model
 		}
 		
 		//add any relevant blog team members to list
-		$teamMembers = $this->getPostBlogTeam($postId);
+		$teamMembers = $this->container->getPostBlogTeam($postId);
 		foreach($teamMembers as $member){
 			if(!in_array($member['userId'], $output)){
 				$output[] = $member['userId'];
@@ -179,7 +179,7 @@ class Post_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getPostBlogTeam($postId)
+	protected function getPostBlogTeam($postId)
 	{
 		$multiblog = new Multiblog_Model;
 		$getCats = $this->fetchAll('SELECT c.blogId
@@ -202,7 +202,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function getEditorialDiscussionUsers($postId)
+	protected function getEditorialDiscussionUsers($postId)
 	{
 		$output = array();
 		
@@ -226,7 +226,7 @@ class Post_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getPostMeta($postId, $fullData = false, $private = false, $site = false)
+	protected function getPostMeta($postId, $fullData = false, $private = false, $site = false)
 	{
 		if(!$site){
 			$site = currentSite();
@@ -270,7 +270,7 @@ class Post_Model extends Core\Model
 		
 	}
 	
-	public function getUserArticles($userId, $andContribs = false, $perPage = false, $page = 1)
+	protected function getUserArticles($userId, $andContribs = false, $perPage = false, $page = 1)
 	{
 		$output = array('posts' => array(), 'written' => 0, 'contribs' => 0, 'count' => 0);
 		$submitModel = app_class('blog.blog-submissions', 'model');
@@ -302,7 +302,7 @@ class Post_Model extends Core\Model
 			}
 			$post['categories'] = $cats;	
 			$post['role'] = 'Author';		
-			$getMeta = $this->getPostMeta($post['postId']);
+			$getMeta = $this->container->getPostMeta($post['postId']);
 			foreach($getMeta as $mkey => $val){
 				if(!isset($post[$mkey])){
 					$post[$mkey] = $val;
@@ -340,7 +340,7 @@ class Post_Model extends Core\Model
 					$cats[] = $getCat;
 				}
 				$post['categories'] = $cats;			
-				$getMeta = $this->getPostMeta($post['postId']);
+				$getMeta = $this->container->getPostMeta($post['postId']);
 				foreach($getMeta as $mkey => $val){
 					if(!isset($post[$mkey])){
 						$post[$mkey] = $val;
@@ -372,7 +372,7 @@ class Post_Model extends Core\Model
 		return $output;
 	}
 	
-	public function getPostFirstBlog($postId)
+	protected function getPostFirstBlog($postId)
 	{
 		$getBlogs = $this->fetchAll('SELECT b.*
 									FROM blog_postCategories pc

@@ -18,7 +18,7 @@ class Multiblog_Controller extends \App\ModControl
         $this->settingModel = new CMS\AppSettings_Model;
     }
     
-    public function init()
+    protected function init()
     {
 		$output = parent::init();
 		$this->data['perms'] = \App\Meta_Model::getUserAppPerms($this->data['user']['userId'], 'blog');
@@ -26,34 +26,34 @@ class Multiblog_Controller extends \App\ModControl
         if(isset($this->args[2])){
 			switch($this->args[2]){
 				case 'view':
-					$output = $this->showBlogs();
+					$output = $this->container->showBlogs();
 					break;
 				case 'add':
-					$output = $this->addBlog();
+					$output = $this->container->addBlog();
 					break;
 				case 'edit':
-					$output = $this->editBlog();
+					$output = $this->container->editBlog();
 					break;
 				case 'delete':
-					$output = $this->deleteBlog();
+					$output = $this->container->deleteBlog();
 					break;
 				case 'remove-role':
-					$output = $this->removeBlogRole();
+					$output = $this->container->removeBlogRole();
 					break;
 				default:
-					$output = $this->showBlogs();
+					$output = $this->container->showBlogs();
 					break;
 			}
 		}
 		else{
-			$output = $this->showBlogs();
+			$output = $this->container->showBlogs();
 		}
 		$output['template'] = 'admin';
         $output['perms'] = $this->data['perms'];	
         return $output;
     }
     
-    private function showBlogs()
+    protected function showBlogs()
     {
 		$output = array('view' => 'list');
 		$wheres = array('siteId' => $this->data['site']['siteId']);		
@@ -75,7 +75,7 @@ class Multiblog_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function addBlog()
+	protected function addBlog()
 	{
 		$output = array('view' => 'form');
 		if(!$this->data['perms']['canCreateBlogs']){
@@ -112,7 +112,7 @@ class Multiblog_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function editBlog()
+	protected function editBlog()
 	{
 		if(!isset($this->args[3])){
 			redirect($this->site);
@@ -212,7 +212,7 @@ class Multiblog_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	private function deleteBlog()
+	protected function deleteBlog()
 	{
 		if(isset($this->args[3])){
 			$getBlog = $this->model->get('blogs', $this->args[3]);
@@ -226,7 +226,7 @@ class Multiblog_Controller extends \App\ModControl
 		redirect($this->site.$this->moduleUrl);
 	}
 	
-	private function removeBlogRole()
+	protected function removeBlogRole()
 	{		
 		if(!isset($this->args[3]) OR !isset($this->args[4])){
 			redirect($this->site.$this->moduleUrl);

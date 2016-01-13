@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, App\Profile, App\Tokenly, UI, Util;
 class Category_Model extends Core\Model
 {
-	public function getHomePosts($siteId, $limit = 10)
+	protected function getHomePosts($siteId, $limit = 10)
 	{
 		$start = 0;
 		if(isset($_GET['page'])){
@@ -59,6 +59,11 @@ class Category_Model extends Core\Model
 		$profModel = new Profile\User_Model;
 		$postModel = new Post_Model;
 		$submitModel = new Submissions_Model;
+		$postModule = get_app('blog.blog-post');
+		$catModule = get_app('blog.blog-category');
+		
+		$tca = new Tokenly\TCA_Model;
+		$user = user();
 		
 		foreach($getPosts as $key => $post){
 			$checkApproved = $submitModel->checkPostApproved($post['postId']);
@@ -66,13 +71,27 @@ class Category_Model extends Core\Model
 				unset($getPosts[$key]);
 				continue;
 			}
-			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $siteId);
+			
+			$postTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $post['postId'], 'blog-post');
+			if(!$postTCA){
+				unset($getPosts[$key]);
+				continue;
+			}
+			
 			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
 			$cats = array();
 			foreach($getCats as $cat){
 				$getCat = $this->get('blog_categories', $cat['categoryId']);
 				$cats[] = $getCat;
+				$catTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					unset($getPosts[$key]);
+					continue 2;
+				}
 			}
+			
+			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $siteId);
 			$getPosts[$key]['categories'] = $cats;
 			//$getPosts[$key]['commentCount'] = $this->count('blog_comments', 'postId', $post['postId']);
 			$getMeta = $postModel->getPostMeta($post['postId']);
@@ -91,7 +110,7 @@ class Category_Model extends Core\Model
 		
 	}
 	
-	public function getHomePages($siteId, $limit = 10)
+	protected function getHomePages($siteId, $limit = 10)
 	{
 		$count = $this->fetchSingle('SELECT COUNT(DISTINCT(p.postId)) as total 
 									 FROM blog_posts p
@@ -117,7 +136,7 @@ class Category_Model extends Core\Model
 									 
 	}
 	
-	public function getCategoryPosts($categoryId, $siteId, $limit = 10, $exclude = array(), $page = false)
+	protected function getCategoryPosts($categoryId, $siteId, $limit = 10, $exclude = array(), $page = false)
 	{
 		$start = 0;
 		if($page != false){
@@ -175,17 +194,33 @@ class Category_Model extends Core\Model
 		
 		$profModel = new Profile\User_Model;
 		$postModel = new Post_Model;
+		$postModule = get_app('blog.blog-post');
+		$catModule = get_app('blog.blog-category');
+		
+		$tca = new Tokenly\TCA_Model;
+		$user = user();		
 		foreach($getPosts as $key => $post){
-			if(in_array($post['postId'], $exclude)){
+			if(in_array($post['postId'], $exclude)){				
 				unset($getPosts[$key]);
 				continue;
 			}
+			$postTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $post['postId'], 'blog-post');
+			if(!$postTCA){
+				unset($getPosts[$key]);
+				continue;
+			}			
 			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $siteId);
 			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
 			$cats = array();
 			foreach($getCats as $cat){
 				$getCat = $this->get('blog_categories', $cat['categoryId']);
 				$cats[] = $getCat;
+				$catTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					unset($getPosts[$key]);
+					continue 2;
+				}				
 			}
 			$getPosts[$key]['categories'] = $cats;
 			//$getPosts[$key]['commentCount'] = $this->count('blog_comments', 'postId', $post['postId']);
@@ -206,7 +241,7 @@ class Category_Model extends Core\Model
 			if(count($exclude) >= $limit){
 				continue;
 			}
-			$getPosts = array_merge($getPosts, $this->getCategoryPosts($children['categoryId'], $siteId, $limit, $exclude));
+			$getPosts = array_merge($getPosts, $this->container->getCategoryPosts($children['categoryId'], $siteId, $limit, $exclude));
 		}
 		
 
@@ -214,7 +249,7 @@ class Category_Model extends Core\Model
 		
 	}
 	
-	public function getCategoryPages($categoryId, $siteId, $limit = 10)
+	protected function getCategoryPages($categoryId, $siteId, $limit = 10)
 	{
 		$count = $this->fetchSingle('SELECT COUNT(*) as total 
 									FROM blog_postCategories pc
@@ -238,7 +273,7 @@ class Category_Model extends Core\Model
 		return $numPages;						 
 	}
 	
-	public function getBlogHomePosts($blogId, $limit = 10)
+	protected function getBlogHomePosts($blogId, $limit = 10)
 	{
 		$start = 0;
 		if(isset($_GET['page'])){
@@ -293,6 +328,11 @@ class Category_Model extends Core\Model
 		$profModel = new Profile\User_Model;
 		$postModel = new Post_Model;
 		$submitModel = new Submissions_Model;
+		$postModule = get_app('blog.blog-post');
+		$catModule = get_app('blog.blog-category');
+		
+		$tca = new Tokenly\TCA_Model;
+		$user = user();				
 		
 		foreach($getPosts as $key => $post){
 			$checkApproved = $submitModel->checkPostApproved($post['postId']);
@@ -300,12 +340,23 @@ class Category_Model extends Core\Model
 				unset($getPosts[$key]);
 				continue;
 			}
+			$postTCA = $tca->checkItemAccess($user, $postModule['moduleId'], $post['postId'], 'blog-post');
+			if(!$postTCA){
+				unset($getPosts[$key]);
+				continue;
+			}					
 			$getPosts[$key]['author'] = $profModel->getUserProfile($post['userId'], $site['siteId']);
 			$getCats = $this->getAll('blog_postCategories', array('postId' => $post['postId']));
 			$cats = array();
 			foreach($getCats as $cat){
 				$getCat = $this->get('blog_categories', $cat['categoryId']);
 				$cats[] = $getCat;
+				$catTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($user, $catModule['moduleId'], $getCat['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					unset($getPosts[$key]);
+					continue 2;
+				}					
 			}
 			$getPosts[$key]['categories'] = $cats;
 			//$getPosts[$key]['commentCount'] = $this->count('blog_comments', 'postId', $post['postId']);
@@ -325,7 +376,7 @@ class Category_Model extends Core\Model
 		
 	}
 	
-	public function getBlogHomePages($blogId, $limit = 10)
+	protected function getBlogHomePages($blogId, $limit = 10)
 	{
 		$count = $this->fetchSingle('SELECT count(DISTINCT(p.postId)) as total
 									 FROM blog_posts p

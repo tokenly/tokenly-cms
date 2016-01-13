@@ -3,7 +3,7 @@ namespace App\Blog;
 use Core, API;
 class Model extends Core\Model
 {
-	public function downloadBlogAudio($categories, $path)
+	protected function downloadBlogAudio($categories, $path)
 	{
 		$output = '';
 		$sc = new API\Soundcloud;
