@@ -54,6 +54,7 @@ class Markdown extends FormObject
 		ob_start();
 		?>
 			<div class="<?= $this->name ?>-preview markdown-preview">
+				<button type="button" id="toggle-markdown-preview-<?= $this->name ?>" class="btn btn-info pull-right">Disable Preview</button>
 				<?php
 				if($this->previewTitle != ''){
 					echo '<h4 class="text-progress">'.$this->previewTitle.' - '.$this->label_raw.'</h4>';
@@ -64,12 +65,34 @@ class Markdown extends FormObject
 			<script type="text/javascript" src="<?= $sitePath ?>/resources/Markdown.Converter.js"></script>
 			<script type="text/javascript">
 				$(document).ready(function(){
+					window.<?= $this->name ?>_markdown_preview_enable = true;
+					var converter = new Markdown.Converter();
 					$('textarea[name="<?= $this->name ?>"]').on('input', function(e){
+						if(!window.<?= $this->name ?>_markdown_preview_enable){
+							return false;
+						}
 						var thisVal = $(this).val();
-						var converter = new Markdown.Converter();
 						
 						getMarkdown = converter.makeHtml(thisVal);
 						$('.<?= $this->name ?>-preview-cont').html(getMarkdown);
+					});
+					
+					$('#toggle-markdown-preview-<?= $this->name ?>').click(function(e){
+						e.preventDefault();
+						if($(this).hasClass('enable')){
+							$(this).removeClass('enable');
+							window.<?= $this->name ?>_markdown_preview_enable = true;
+							$(this).html('Disable Preview');
+							var get = $('textarea[name="<?= $this->name ?>"]').val();
+							getMarkdown = converter.makeHtml(get);
+							$('.<?= $this->name ?>-preview-cont').html(getMarkdown);
+						}
+						else{
+							$(this).addClass('enable');
+							window.<?= $this->name ?>_markdown_preview_enable = false;
+							$(this).html('Enable Preview');
+							$('.markdown-preview-cont').html('');
+						}
 					});
 				});
 			</script>
