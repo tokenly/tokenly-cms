@@ -1,14 +1,6 @@
 <h1 class="large">Community Directory</h1>
 <hr>
 <?php
-
-if(!isset($forumDisplay)){
-	$forumDisplay = false;
-}
-if(!isset($blogDisplay)){
-	$blogDisplay = false;
-}
-
 if($page_mod == ''){
 ?>
 <div class="pull-right">
@@ -45,6 +37,8 @@ $statuses = array('online' => 'text-success',
 				  'busy' => 'text-progress',
 				  'offline' => 'text-error');
 
+$forumDisplay = '';
+$blogDisplay = '';
 
 
 if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == ''){
