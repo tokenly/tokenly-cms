@@ -1,5 +1,6 @@
 <?php
 namespace App\Account;
+use Util;
 class Logout_Controller extends \App\ModControl
 {
     function __construct()
@@ -11,12 +12,13 @@ class Logout_Controller extends \App\ModControl
     protected function init()
     {
 		$output = parent::init();
-		if(!isset($_SESSION['accountAuth'])){
+		$sesh_auth = Util\Session::get('accountAuth');
+		if(!$sesh_auth){
 			redirect($this->site.$this->data['app']['url']);
 		}
 		else{
-			$this->model->clearSession($_SESSION['accountAuth']);
-			unset($_SESSION['accountAuth']);
+			$this->model->clearSession($sesh_auth);
+			Util\Session::clear('accountAuth');
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');
 			}

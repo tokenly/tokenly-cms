@@ -1,6 +1,6 @@
 <?php
 namespace App\API\V1;
-use App\Account;
+use App\Account, Util;
 class Auth_Model extends Account\Home_Model
 {
 	
@@ -49,7 +49,7 @@ class Auth_Model extends Account\Home_Model
 		}
 		else{
 			$this->container->clearSession($data['authKey']);
-			unset($_SESSION['accountAuth']);
+			Util\Session::clear('accountAuth');
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');
 			}

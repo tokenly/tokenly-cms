@@ -1,6 +1,6 @@
 <?php
 namespace App\Profile;
-use Core, App\Tokenly, Tags;
+use Core, App\Tokenly, Tags, Util;
 class User_Model extends Core\Model
 {
 	public static $profiles = array();
@@ -188,12 +188,9 @@ class User_Model extends Core\Model
 		$views = intval($meta->getUserMeta($userId, 'profile-views'));
 		
 		if($update){
-			if(!isset($_SESSION['viewed_profiles']) OR !in_array($userId, $_SESSION['viewed_profiles'])){
-				if(!isset($_SESSION['viewed_profiles'])){
-					$_SESSION['viewed_profiles'] = array();
-				}
-				$_SESSION['viewed_profiles'][] = $userId;
-			
+			$viewed_profiles = Util\Session::get('viewed_profiles', array());
+			if(!$viewed_profiles OR !in_array($userId, $viewed_profiles)){
+				Util\Session::set('viewed_profiles', $userId, APPEND_ARRAY);
 				$meta->updateUserMeta($userId, 'profile-views', ($views+1));
 			}
 		}

@@ -1,6 +1,6 @@
 <?php
 namespace App\Forum;
-use App\Tokenly, App\Profile, App\Account, UI, Util;
+use App\Tokenly, App\Profile, App\Account, UI, Util, Util\Session;
 class Post_Controller extends \App\ModControl
 {
 	function __construct()
@@ -218,12 +218,10 @@ class Post_Controller extends \App\ModControl
 		}
 		
 		if(!$this->data['user'] OR ($this->data['user'] AND $this->data['user']['userId'] != $getTopic['userId'])){
-			if(!isset($_SESSION['viewed-topics'])){
-				$_SESSION['viewed-topics'] = array();
-			}
-			if(!in_array($getTopic['topicId'], $_SESSION['viewed-topics'])){
+			$viewed_topics = Session::get('viewed_topics', array());
+			if(!in_array($getTopic['topicId'], $viewed_topics)){
 				$this->model->edit('forum_topics', $getTopic['topicId'], array('views' => ($getTopic['views'] + 1)));
-				$_SESSION['viewed-topics'][] = $getTopic['topicId'];
+				Session::set('viewed_topics', $getTopic['topicId'], APPEND_ARRAY);
 			}
 		}
 		

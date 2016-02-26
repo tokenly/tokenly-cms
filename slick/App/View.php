@@ -107,8 +107,9 @@ class View extends Core\View
 		$accountModel = new Account\Home_Model;
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
-		if(isset($_SESSION['accountAuth'])){
-			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
+		$sesh_auth = Util\Session::get('accountAuth');
+		if($sesh_auth){
+			$getUser = $accountModel->checkSession($sesh_auth);
 			if($getUser){
 				$userId = $getUser['userId'];
 			}
@@ -326,8 +327,9 @@ class View extends Core\View
 		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
 		$userId = 0;
 		$accountModel = new Account\Home_Model;
-		if(isset($_SESSION['accountAuth'])){
-			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
+		$sesh_auth = Util\Session::get('accountAuth');
+		if($sesh_auth){
+			$getUser = $accountModel->checkSession($sesh_auth);
 			if($getUser){
 				$userId = $getUser['userId'];
 			}

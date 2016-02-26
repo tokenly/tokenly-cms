@@ -135,8 +135,9 @@ class Categories_Model extends Core\Model
 	{
 		$thisUser = false;
 		$accountModel = new Account\Home_Model;
-		if(isset($_SESSION['accountAuth'])){
-			$getUser = $accountModel->checkSession($_SESSION['accountAuth']);
+		$sesh_auth = Util\Session::get('accountAuth');
+		if($sesh_auth){
+			$getUser = $accountModel->checkSession($sesh_auth);
 			if($getUser){
 				$thisUser = $getUser['userId'];
 			}

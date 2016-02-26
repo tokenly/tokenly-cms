@@ -1,6 +1,6 @@
 <?php
 namespace App\Account;
-use App\API\V1;
+use App\API\V1, Util;
 class Home_Controller extends \App\ModControl
 {	
     function __construct()
@@ -12,8 +12,8 @@ class Home_Controller extends \App\ModControl
     protected function init()
     {
 		$output = parent::init();
-		
-		if(!isset($_SESSION['accountAuth'])){
+		$sesh_auth = Util\Session::get('accountAuth');
+		if(!$sesh_auth){
 			if(isset($_COOKIE['rememberAuth'])){
 				$log = $this->container->logRemembered();
 				if($log){
@@ -64,7 +64,7 @@ class Home_Controller extends \App\ModControl
 		}
 		else{
 			try{
-				$userInfo = V1\Auth_Model::getUser(array('authKey' => $_SESSION['accountAuth'], 'site' => $this->data['site']));
+				$userInfo = V1\Auth_Model::getUser(array('authKey' => $sesh_auth, 'site' => $this->data['site']));
 			}
 			catch(\Exception $e){
 				redirect($this->site.$this->data['app']['url'].'/logout');

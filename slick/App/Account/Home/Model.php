@@ -232,11 +232,12 @@ class Home_Model extends Core\Model
 			$meta->updateUserMeta($add, 'site_referral', 'spammer');
 		}
 		
-		if(isset($_SESSION['affiliate-ref'])){
-			$getLink = $this->get('user_meta', $_SESSION['affiliate-ref'], array('userId'), 'metaValue');
-			if($getLink){
-				$this->insert('user_referrals', array('userId' => $add, 'affiliateId' => $getLink['userId'], 'refTime' => timestamp()));
-				unset($_SESSION['affiliate-ref']);
+		$aff_ref = Util\Session::get('affiliate-ref');
+		if($aff_ref){
+			$getRef = $this->get('user_meta', $aff_ref, array('userId'), 'metaValue');
+			if($getRef){
+				$this->insert('user_referrals', array('userId' => $add, 'affiliateId' => $getRef['userId'], 'refTime' => timestamp()));
+				Util\Session::clear('affiliate-ref');
 			}
 		}
 		
@@ -269,7 +270,7 @@ class Home_Model extends Core\Model
 			return false;
 		}
 		if(!isset($this->api) OR $this->api != true){
-			$_SESSION['accountAuth'] = $token;
+			Util\Session::set('accountAuth', $token);
 		}
 		Home_Model::updateLastActive($userId);
 		return $token;
@@ -280,11 +281,12 @@ class Home_Model extends Core\Model
 		if(!self::$activity_updated){
 			$model = new Home_Model;
 			$auth = false;
+			$sesh_auth = Util\Session::get('accountAuth');
 			if(isset($_SERVER['HTTP_X_AUTHENTICATION_KEY'])){
 				$auth = $_SERVER['HTTP_X_AUTHENTICATION_KEY'];
 			}
-			elseif(isset($_SESSION['accountAuth'])){
-				$auth = $_SESSION['accountAuth'];
+			elseif($sesh_auth){
+				$auth = $sesh_auth;
 			}
 			if(!$auth){
 				return false;
@@ -306,11 +308,12 @@ class Home_Model extends Core\Model
 
 	protected function checkAuth($data)
 	{	
+		$sesh_auth = Util\Session::get('accountAuth');
 		if(isset($data['authKey'])){
 			http_response_code(400);
 			throw new \Exception('Already logged in!');
 		}
-		elseif(isset($_SESSION['accountAuth']) AND !isset($data['isAPI'])){
+		elseif($sesh_auth AND !isset($data['isAPI'])){
 			http_response_code(400);
 			throw new \Exception('Already logged in!');
 		}
@@ -452,7 +455,8 @@ class Home_Model extends Core\Model
 	protected static function userInfo($userId = false)
 	{
 		$model = new Home_Model;
-		if(!$userId AND !isset($_SESSION['accountAuth'])){
+		$sesh_auth = Util\Session::get('accountAuth');
+		if(!$userId AND !$sesh_auth){
 			if(isset($_COOKIE['rememberAuth'])){
 				Home_Controller::logRemembered();
 			}
@@ -460,7 +464,7 @@ class Home_Model extends Core\Model
 		}
 		
 		if(!$userId){
-			$get = $model->checkSession($_SESSION['accountAuth']);
+			$get = $model->checkSession($sesh_auth);
 		}
 		else{
 			$get = $model->get('users', $userId);

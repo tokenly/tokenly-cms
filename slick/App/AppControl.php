@@ -1,6 +1,6 @@
 <?php
 namespace App;
-use Core, App\Tokenly, App\Account;
+use Core, App\Tokenly, App\Account, Util;
 class AppControl extends Core\Controller
 {
     public $module = false;
@@ -61,7 +61,7 @@ class AppControl extends Core\Controller
 		}
 		else{
 			if(isset($_GET['ref'])){
-				$_SESSION['affiliate-ref'] = $_GET['ref'];
+				Util\Session::set('affiliate-ref', $_GET['ref']);
 			}
 		}
         if($className != false){
@@ -88,17 +88,17 @@ class AppControl extends Core\Controller
 		$tca = new Tokenly\TCA_Model;
 		$accountModel = new Account\Home_Model;
 		$getSite = currentSite();
-
-		if(!isset($_SESSION['accountAuth'])){
+		$sesh_auth = Util\Session::get('accountAuth');
+		if(!$sesh_auth){
 			if($redirect){
 				redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI']);
 			}
 			return false;
 		}
 		
-		$get = $accountModel->checkSession($_SESSION['accountAuth']);
+		$get = $accountModel->checkSession($sesh_auth);
 		if(!$get){
-			unset($_SESSION['accountAuth']);
+			Util\Session::clear('accountAuth');
 			if($redirect){
 				redirect($getSite['url'].'/account?r='.$_SERVER['REQUEST_URI']);
 			}

@@ -15,10 +15,12 @@ class Category_Model extends Core\Model
 		
 		$orderDir = 'DESC';
 		$extraOrder = '';
-		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+		$sesh_sort = Util\Session::get('blog-sort');
+		if(isset($_GET['sort']) OR $sesh_sort){
 			$useSort = false;
-			if(isset($_SESSION['blog-sort'])){
-				$useSort = $_SESSION['blog-sort'];
+			
+			if($sesh_sort){
+				$useSort = $sesh_sort;
 			}				
 			if(isset($_GET['sort'])){
 				$useSort = $_GET['sort'];
@@ -30,7 +32,7 @@ class Category_Model extends Core\Model
 				$extraOrder = 'popular_score DESC, ';
 			}
 			
-			$_SESSION['blog-sort'] = $useSort;
+			Util\Session::set('blog-sort', $useSort);
 		}		
 		$time = time();		
 		
@@ -156,10 +158,11 @@ class Category_Model extends Core\Model
 		
 		$orderDir = 'DESC';
 		$extraOrder = '';
-		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+		$sesh_sort = Util\Session::get('blog-sort');
+		if(isset($_GET['sort']) OR $sesh_sort){
 			$useSort = false;
-			if(isset($_SESSION['blog-sort'])){
-				$useSort = $_SESSION['blog-sort'];
+			if($sesh_sort){
+				$useSort = $sesh_sort;
 			}				
 			if(isset($_GET['sort'])){
 				$useSort = $_GET['sort'];
@@ -171,7 +174,7 @@ class Category_Model extends Core\Model
 				$extraOrder = 'popular_score DESC, ';
 			}
 			
-			$_SESSION['blog-sort'] = $useSort;
+			Util\Session::set('blog-sort', $useSort);
 		}		
 		$time = time();
 		$getPosts = $this->fetchAll('SELECT p.*,
@@ -285,10 +288,11 @@ class Category_Model extends Core\Model
 		
 		$orderDir = 'DESC';
 		$extraOrder = '';
-		if(isset($_GET['sort']) OR isset($_SESSION['blog-sort'])){
+		$sesh_sort = Util\Session::get('blog-sort');
+		if(isset($_GET['sort']) OR $sesh_sort){
 			$useSort = false;
-			if(isset($_SESSION['blog-sort'])){
-				$useSort = $_SESSION['blog-sort'];
+			if($sesh_sort){
+				$useSort = $sesh_sort;
 			}				
 			if(isset($_GET['sort'])){
 				$useSort = $_GET['sort'];
@@ -300,7 +304,7 @@ class Category_Model extends Core\Model
 				$extraOrder = 'popular_score DESC, ';
 			}
 			
-			$_SESSION['blog-sort'] = $useSort;
+			Util\Session::set('blog-sort', $useSort);
 		}		
 		$time = time();	
 		

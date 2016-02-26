@@ -370,7 +370,7 @@ class Settings_Model extends Core\Model
 			throw new \Exception('Error deleting account, please try again');
 		}
 		
-		unset($_SESSION['accountAuth']);
+		Util\Session::clear('accountAuth');
 		
 		return true;
 		

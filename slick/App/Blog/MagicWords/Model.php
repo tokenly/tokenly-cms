@@ -110,24 +110,28 @@ class MagicWords_Model extends Core\Model
 			$data['type'] = 'blog';
 		}
 		
-		if(!isset($_SESSION['magicWordTries']) OR (time() - $_SESSION['lastMagicWordTry']) > 1600){
-			$_SESSION['magicWordTries'] = 0;
+		$tries = Util\Session::get('magicWordTries');
+		$lastTry = Util\Session::get('lastMagicWordTry');
+		$time = time();
+		
+		if(!$tries OR ($time - $lastTry) > 1600){
+			Util\Session::set('magicWordTries', 0);
 		}
-		elseif($_SESSION['magicWordTries'] >= 10){
+		elseif($tries >= 10){
 			throw new \Exception('Too many wrong tries! Please come back in a while and try again.');
 		}
 
 		try{
-			$_SESSION['lastMagicWordTry'] = time();
+			Util\Session::set('lastMagicWordTry', $time);
 			$submit = $this->container->checkMagicWord($data['word'], $data['userId'], $data['type']);
 		}
 		catch(\Exception $e){
-			$_SESSION['magicWordTries']++;
+			Util\Session::set('magicWordTries', 1, INCREMENT_VAL);
 			throw new \Exception($e->getMessage());
 		}
 		
 		if($submit){
-			$_SESSION['magicWordTries'] = 0;
+			Util\Session::set('magicWordTries', 0);
 		}
 		
 		return $submit;

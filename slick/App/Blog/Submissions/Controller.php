@@ -915,12 +915,12 @@ class Submissions_Controller extends \App\ModControl
 		ob_end_clean();
 		header('Content-Type: application/json');		
 		$output = array('result' => null, 'error' => null);
-		if(isset($_SESSION['blog-credit-check-progress'])){
-			unset($_SESSION['blog-credit-check-progress']);
+		if(Util\Session::get('blog-credit-check-progress')){
+			Util\Session::clear('blog-credit-check-progress');
 			echo json_encode($output);
 			die();
 		}
-		$_SESSION['blog-credit-check-progress'] = 1;
+		Util\Session::set('blog-credit-check-progress', 1);
 		
 		//get latest deposit address
 		$getAddress = $this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-address');
@@ -1041,7 +1041,7 @@ class Submissions_Controller extends \App\ModControl
 		}
 		
 		ob_end_clean();
-		unset($_SESSION['blog-credit-check-progress']);
+		Util\Session::clear('blog-credit-check-progress');
 		echo json_encode($output);
 		die();
 	}

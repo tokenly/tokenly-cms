@@ -1,6 +1,6 @@
 <?php
 namespace App\Ad;
-use Core;
+use Core, Util;
 class Link_Controller extends \App\ModControl
 {
 	function __construct()
@@ -21,12 +21,10 @@ class Link_Controller extends \App\ModControl
 			$output['view'] = '404';
 			return $output;
 		}
-		if(!isset($_SESSION['visited_tracking_urls'])){
-			$_SESSION['visited_tracking_urls'] = array();
-		}	
+		$visited_trackers = Util\Session::get('visited_tracking_urls', array());
 
 		//check if they have clicked this link already in current session
-		if(!in_array($getLink['urlId'], $_SESSION['visited_tracking_urls'])){
+		if(!in_array($getLink['urlId'], $visited_trackers)){
 			$unique = $this->container->checkUniqueClick($getLink['urlId']);
 			$new_clicks = intval($getLink['clicks']) + 1;
 			$new_unique = intval($getLink['unique_clicks']);
@@ -86,8 +84,8 @@ class Link_Controller extends \App\ModControl
 					$this->model->edit('adspaces', $getAdspace['adspaceId'], array('items' => json_encode($ad_items)));
 				}
 			}		
-															 
-			$_SESSION['visited_tracking_urls'][] = $getLink['urlId'];
+						
+			Util\Session::set('visited_tracking_urls', $getLink['urlId'], APPEND_ARRAY);
 		}
 		//send em' off
 		redirect($getLink['url']);
