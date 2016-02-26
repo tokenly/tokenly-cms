@@ -12,7 +12,7 @@ class Controller extends Core\Controller
 			$this->args = array(0 => '');
 		}
 		else{
-			$this->args = explode('/', $_REQUEST['params']);	
+			$this->args = explode('/', ltrim($_REQUEST['params'], '/'));	
 		}
 		foreach($this->args as $k => $arg){
 			if(trim($arg) == '' AND $k != 0){

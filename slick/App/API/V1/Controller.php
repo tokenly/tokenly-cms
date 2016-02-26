@@ -6,7 +6,12 @@ class Controller extends Core\Controller
 	function __construct()
 	{
 		parent::__construct();
-		$this->args = explode('/', $_REQUEST['params']);	
+		$this->args = explode('/', ltrim($_REQUEST['params'],'/'));	
+		if($this->args[0] == 'api' AND isset($this->args[1]) AND $this->args[1] == 'v1'){
+			unset($this->args[0]);
+			unset($this->args[1]);
+			$this->args = array_values($this->args);
+		}
 		$this->model = new Core\Model;
 	}
 	
