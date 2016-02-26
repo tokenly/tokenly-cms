@@ -70,7 +70,7 @@ function add_tca_locks($user, $moduleId, $itemId, $itemType, $tokens = array(), 
 			$token_lock['permId'] = 0;
 			$token_lock['asset'] = $asset;
 			$token_lock['amount'] = 0;
-			$token_lock['op'] = '>';
+			$token_lock['op'] = '>=';
 			$token_lock['stackOp'] =  $stackOp;
 			$stack[] = $token_lock;
 		}
@@ -78,9 +78,6 @@ function add_tca_locks($user, $moduleId, $itemId, $itemType, $tokens = array(), 
 	foreach($amounts as $k => $amount){
 		if(isset($stack[$k])){
 			$stack[$k]['amount'] = $amount;
-			if($amount > 0){
-				$stack[$k]['op'] = '>=';
-			}
 		}
 	}
 	foreach($stack as $item){
