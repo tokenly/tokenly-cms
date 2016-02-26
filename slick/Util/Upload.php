@@ -3,9 +3,15 @@ namespace Util;
 class Upload
 {
 
-	public function uploadFile($name, $fileType, $location, $preserveName = 0)
+	public function uploadFile($file, $fileType, $location, $preserveName = 0)
 	{
-		$getMime = get_mime($_FILES[$name]['tmp_name']);
+		if(is_string($file)){
+			if(!isset($_FILES[$file])){
+				return false;
+			}
+			$file = $_FILES[$file];
+		}
+		$getMime = get_mime($file['tmp_name']);
 		
 		switch($fileType){
 			case 'image':
@@ -17,7 +23,7 @@ class Upload
 		}
 		$blackList = array('php', 'js', 'html', 'htm', 'phtml', 'php4', 'php3', 'phps', 'php5', 'xml', 'sh', 'xhtml', 'htaccess'); 
 		
-		$explodeExt = explode('.', $_FILES[$name]['name']);
+		$explodeExt = explode('.', $file['name']);
 		$countExt = count($explodeExt);
 		$ext = strtolower($explodeExt[$countExt - 1]);
 		
@@ -58,16 +64,16 @@ class Upload
 		}
 		
 		if($preserveName == 0){
-			$newName = rand(0, 100).'-'.$_FILES[$name]['name'];
+			$newName = rand(0, 100).'-'.$file['name'];
 		}
 		else{
-			$newName = mb_convert_encoding($_FILES[$name]['name'], 'UTF-8');;
+			$newName = mb_convert_encoding($file['name'], 'UTF-8');;
 		}
 		$path = SITE_PATH.'/files/'.$location;
 
-		$_FILES[$name]['name'] = $newName;
+		$file['name'] = $newName;
 
-		if(move_uploaded_file($_FILES[$name]['tmp_name'], $path.'/'.$newName)){
+		if(move_uploaded_file($file['tmp_name'], $path.'/'.$newName)){
 			return $newName;
 		}
 		else{
