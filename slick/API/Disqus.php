@@ -198,10 +198,27 @@ class Disqus
 		return $output;
 	}
 	
-	public function getRecentPosts($max = 10)
+	public function getRecentPosts($max = 10, $use_cached = true, $cache_interval = 600)
 	{
+		if($use_cached){
+			$file = SITE_BASE.'/data/disqus-recent.json';
+			$time = time();
+			if(file_exists($file)){
+				$cached_posts = json_decode(@file_get_contents($file), true);
+				if(is_array($cached_posts) AND isset($cached_posts['last_update'])){
+					$diff = $time - $cached_posts['last_update'];
+					if($diff < $cache_interval){ 
+						return $cached_posts['posts'];
+					}
+				}
+			}
+			
+		}
 		$this->reqSecret = true;
 		$output = $this->call('forums/listPosts', array('forum' => $this->forumId, 'limit' => $max, 'related' => 'thread'));
+		if($use_cached){
+			@file_put_contents($file, json_encode(array('last_update' => $time, 'posts' => $output)));
+		}
 		return $output;
 	}
 	
