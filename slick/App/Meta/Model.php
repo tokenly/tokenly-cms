@@ -75,6 +75,10 @@ class Meta_Model extends Core\Model
 	
 	protected function getUserMeta($userId, $key, $fullData = 0)
 	{
+		if($fullData == 1){
+			return $this->fetchSingle('SELECT * FROM user_meta WHERE userId = :userId AND metaKey = :key',
+										array(':userId' => $userId, ':key' => $key));
+		}
 		if(!isset(self::$userMeta[$userId])){
 			$this->container->userMeta($userId);
 		}
