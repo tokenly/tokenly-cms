@@ -53,7 +53,7 @@ class Model
 		if(self::$logMode){
 			$logKey = md5($sql);
 			if(!isset(self::$queryLog[$logKey])){
-				self::$queryLog[$logKey] = array('sql' => $sql, 'count' => 0, 'values' => array(), 'exec-times' => array());
+				self::$queryLog[$logKey] = array('sql' => $sql, 'count' => 0, 'values' => array(), 'exec-times' => array(), 'exec-total' => 0);
 			}			
 			self::$queryLog[$logKey]['values'][] = $values;
 			self::$queryLog[$logKey]['count']++;
@@ -72,7 +72,9 @@ class Model
 		}
 		if(self::$logMode){
 			$endmicro = microtime(true);
-			self::$queryLog[$logKey]['exec-times'][] = $endmicro - $micro;
+			$exec_time = $endmicro - $micro;
+			self::$queryLog[$logKey]['exec-times'][] = $exec_time;
+			self::$queryLog[$logKey]['exec-total'] += $exec_time;
 			self::$numQueries++;
 		}
 		
