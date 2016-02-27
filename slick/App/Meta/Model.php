@@ -75,30 +75,13 @@ class Meta_Model extends Core\Model
 	
 	protected function getUserMeta($userId, $key, $fullData = 0)
 	{
-		if($fullData == 0 AND isset(self::$userMeta[$userId][$key])){
-			return self::$userMeta[$userId][$key];
+		if(!isset(self::$userMeta[$userId])){
+			$this->container->userMeta($userId);
 		}
-		elseif($fullData == 0){
-			if(!isset(self::$userMeta[$userId])){
-				$this->container->userMeta($userId);
-				if(!isset(self::$userMeta[$userId][$key])){
-					return false;
-				}
-				return self::$userMeta[$userId][$key];
-			}
-		}
-		
-		$get = $this->fetchSingle('SELECT * FROM user_meta WHERE userId = :id AND metaKey = :key', array(':id' => $userId, ':key' => $key));
-		if(!$get){
+		if(!isset(self::$userMeta[$userId][$key])){
 			return false;
 		}
-		if($fullData != 0){
-			return $get;
-		}
-		
-		self::$userMeta[$userId][$key] = $get['metaValue'];		
-		
-		return $get['metaValue'];
+		return self::$userMeta[$userId][$key];
 	}
 	
 
@@ -108,7 +91,7 @@ class Meta_Model extends Core\Model
 			return self::$userMeta[$userId];
 		}
 		
-		$getAll = $this->getAll('user_meta', array('userId' => $userId));
+		$getAll = $this->getAll('user_meta', array('userId' => $userId), array('metaKey', 'metaValue'));
 		$output = array();
 		foreach($getAll as $row){
 			$output[$row['metaKey']] = $row['metaValue'];
@@ -133,7 +116,7 @@ class Meta_Model extends Core\Model
 			return self::$appMeta[$appId];
 		}
 		
-		$getAll = $this->getAll('app_meta', array('appId' => $appId));
+		$getAll = $this->getAll('app_meta', array('appId' => $appId), array('metaKey', 'metaValue'));
 		$output = array();
 		foreach($getAll as $key => $row){
 			$output[$row['metaKey']] = $row['metaValue'];

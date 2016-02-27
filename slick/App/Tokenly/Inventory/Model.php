@@ -4,15 +4,18 @@ use Core, API;
 class Inventory_Model extends Core\Model
 {
 	public static $addresses = array();
-	public static $assets = array();
+	public static $assets = false;
 	public $addressCacheRate = 1800; //half an hour
 	
 	function __construct()
 	{
 		parent::__construct();
-		$get_assets = $this->getAll('xcp_assetCache');
-		foreach($get_assets as $asset){
-			self::$assets[$asset['asset']] = $asset;
+		if(!self::$assets){
+			$get_assets = $this->getAll('xcp_assetCache');
+			self::$assets = array();
+			foreach($get_assets as $asset){
+				self::$assets[$asset['asset']] = $asset;
+			}
 		}
 	}
 	

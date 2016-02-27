@@ -235,15 +235,18 @@ class Board_Model extends Core\Model
 					}
 				}
 			}
-
-			$topics = $this->fetchAll('SELECT t.*, c.total as count
+			$sql = 'SELECT t.*, c.total as count,
+										r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
 									   FROM forum_topics t
 									   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+									   LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId
 									   '.$andFilters.'
 									   '.$andTroll.'
 									   AND t.buried = 0
 									   ORDER BY t.lastPost DESC
-									   '.$limit);
+									   '.$limit;
+			$topics = $this->fetchAll($sql);
+			
 		}
 		else{
 			
@@ -257,9 +260,11 @@ class Board_Model extends Core\Model
 				}
 			}
 			
-			$topics = $this->fetchAll('SELECT t.*, c.total as count
+			$topics = $this->fetchAll('SELECT t.*, c.total as count,
+										r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
 									   FROM forum_topics t
 									   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+									   LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId
 									   WHERE t.boardId = :boardId AND t.sticky != 1 AND t.buried = 0
 									   '.$andTroll.'
 									   ORDER BY
@@ -311,7 +316,13 @@ class Board_Model extends Core\Model
 	
 	protected function getAllStickyPosts($data)
 	{
-		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'buried' => 0));
+		$topics = $this->fetchAll('SELECT t.*, c.total as count,
+									r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
+								   FROM forum_topics t
+								   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+								   LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId
+								   WHERE t.sticky = 1 AND t.buried = 0
+								   ORDER BY t.lastPost DESC');
 		$topics = $this->container->checkTopicsTCA($topics, $data);
 		$topics = $this->container->parseTopics($topics, $data, true);
 		return $topics;
@@ -320,7 +331,13 @@ class Board_Model extends Core\Model
     
     protected function getBoardStickyPosts($data, $boardId)
     {
-		$topics = $this->getAll('forum_topics', array('sticky' => 1, 'boardId' => $boardId, 'buried' => 0));
+		$topics = $this->fetchAll('SELECT t.*, c.total as count,
+									r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
+								   FROM forum_topics t
+								   LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+								   LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId
+								   WHERE t.sticky = 1 AND t.buried = 0 AND t.boardId = :boardId
+								   ORDER BY t.lastPost DESC', array(':boardId' => $boardId));		
 		$topics = $this->container->checkTopicsTCA($topics, $data);
 		$topics = $this->container->parseTopics($topics, $data, true);
 		return $topics;
@@ -408,25 +425,26 @@ class Board_Model extends Core\Model
 										<span class="post-date">'.formatDate($row['postTime']).'</span>';
 			
 			if(!isset($row['count'])){
-				$countReplies = $this->fetchSingle('SELECT count(*) as total FROM forum_posts WHERE buried = 0 AND trollPost = 0
-													 AND topicId = :topicId', array(':topicId' => $row['topicId']));
 				$row['count'] = 0;
-				if($countReplies){
-					$row['count'] = $countReplies['total'];
-				}
 			}
 			$topics[$key]['numReplies'] = $row['count'];
 			
 			$topics[$key]['lastPost'] = '';
 			$topics[$key]['paging'] = '';
 			$topics[$key]['mostRecent'] = false;
+			
 			if($topics[$key]['numReplies'] > 0){
-				$lastPost = $this->fetchSingle('SELECT postId, userId, postTime, content
-												FROM forum_posts
-												WHERE topicId = :id AND buried = 0
-												'.$andTroll.'
-												ORDER BY postId DESC
-												LIMIT 1', array(':id' => $row['topicId']));
+				$lastPost = false;
+				if(isset($row['recent_postId'])){
+					if(intval($row['recent_postId']) > 0){
+						$lastPost = array();
+						$lastPost['postId'] = $row['recent_postId'];
+						$lastPost['userId'] = $row['recent_userId'];
+						$lastPost['postTime'] = $row['recent_postTime'];
+						$lastPost['content'] = $row['recent_content'];
+					}
+				}
+
 				if($lastPost){
 					$topics[$key]['mostRecent'] = $lastPost;
 					$lastAuthor = $profModel->getUserProfile($lastPost['userId'], $data['site']['siteId']);
@@ -602,8 +620,11 @@ class Board_Model extends Core\Model
 				$topic_subs[] = $sub['topicId'];
 			}
 		}
-		$sql = 'SELECT t.*
+		$sql = 'SELECT t.*, c.total as count,
+				r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
 				FROM forum_topics t
+				LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+				LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId				
 				WHERE';
 		if(count($topic_subs) > 0){
 			$sql .= ' t.topicId IN('.join(',', $topic_subs).') ';
@@ -623,11 +644,22 @@ class Board_Model extends Core\Model
 
 		$get = $this->fetchAll($sql);
 		foreach($get as $k => $row){
-			$row['mostRecent'] = $this->fetchSingle('SELECT *
+			$row['mostRecent'] = false;
+			if(isset($row['recent_postId'])){
+				if(intval($row['recent_postId']) > 0){
+					$row['mostRecent'] = array('postId' => $row['recent_postId'],
+											   'userId' => $row['recent_userId'],
+											   'postTime' => $row['recent_postTime'],
+											   'content' => $row['recent_content']);
+				}
+			}
+			else{
+				$row['mostRecent'] = $this->fetchSingle('SELECT *
 													FROM forum_posts
 													WHERE topicId = :id AND buried = 0
 													ORDER BY postId DESC
 													LIMIT 1', array(':id' => $row['topicId']));
+			}
 			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
 			if($row['mostRecent']){
 				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
@@ -686,9 +718,12 @@ class Board_Model extends Core\Model
 		if(isset($tokenly['meta']['tca-forum-category'])){
 			$tca_category = $tokenly['meta']['tca-forum-category'];
 		}
-		$sql = 'SELECT t.*
+		$sql = 'SELECT t.*, c.total as count,
+				r.postId as recent_postId, r.userId as recent_userId, r.postTime as recent_postTime, r.content as recent_content
 				FROM forum_topics t
 				LEFT JOIN forum_boards b ON t.boardId = b.boardId
+				LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) c ON c.topicId = t.topicId
+				LEFT JOIN(SELECT postId, topicId, userId, postTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId				
 				WHERE
 				b.categoryId = :categoryId';
 				
@@ -701,11 +736,22 @@ class Board_Model extends Core\Model
 
 		$get = $this->fetchAll($sql, array(':categoryId' => $tca_category));
 		foreach($get as $k => $row){
-			$row['mostRecent'] = $this->fetchSingle('SELECT *
-													FROM forum_posts
-													WHERE topicId = :id AND buried = 0
-													ORDER BY postId DESC
-													LIMIT 1', array(':id' => $row['topicId']));
+			$row['mostRecent'] = false;
+			if(isset($row['recent_postId'])){
+				if(intval($row['recent_postId']) > 0){
+					$row['mostRecent'] = array('postId' => $row['recent_postId'],
+											   'userId' => $row['recent_userId'],
+											   'postTime' => $row['recent_postTime'],
+											   'content' => $row['recent_content']);
+				}
+			}
+			else{			
+				$row['mostRecent'] = $this->fetchSingle('SELECT *
+														FROM forum_posts
+														WHERE topicId = :id AND buried = 0
+														ORDER BY postId DESC
+														LIMIT 1', array(':id' => $row['topicId']));
+			}
 			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
 			if($row['mostRecent']){
 				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);

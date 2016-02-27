@@ -560,12 +560,15 @@ class Home_Model extends Core\Model
 		$model = new Profile\User_Model;
 
 		$getUsers = $model->fetchAll('SELECT userId FROM user_sessions
-									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200
-									GROUP BY userId');
+									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200');
 		
 		$site = currentSite();
-		
+		$used = array();
 		foreach($getUsers as $key => $user){
+			if(isset($used[$user['userId']])){
+				continue;
+			}
+			$used[$user['userId']] = 1;
 			$user = $model->getUserProfile($user['userId'], $site['siteId']);
 			$user['link'] = '<a href="'.$site['url'].'/profile/user/'.$user['slug'].'">'.$user['username'].'</a>';
 
