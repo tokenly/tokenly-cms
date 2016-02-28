@@ -5,7 +5,7 @@ class User_Model extends Core\Model
 {
 	public static $profiles = array();
 	
-	protected function getUserProfile($id, $siteId = 0)
+	protected function getUserProfile($id, $siteId = 0, $opts = array())
 	{
 		//depreciate use of passing $siteId everywhere..
 		$getSite = currentSite();
@@ -65,24 +65,26 @@ class User_Model extends Core\Model
 			}			
 		}
 		
-		$output['groups'] = $this->fetchAll('SELECT g.name, g.groupId, g.displayName, g.displayView, g.displayRank, g.isSilent as silent
-										   FROM group_users u
-										   LEFT JOIN groups g ON g.groupId = u.groupId
-										   LEFT JOIN group_sites s ON s.groupId = g.groupId
-										   WHERE u.userId = :id AND s.siteId = :siteId
-										   ORDER  BY g.displayRank DESC, g.displayName ASC, g.name ASC
-										   ', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
-		$output['primary_group'] = false;
-		$primary_found = false;
-		foreach($output['groups'] as $gk => $gv){
-			if(trim($gv['displayName']) == ''){
-				$output['groups'][$gk]['displayName'] = $gv['name'];
-			}
-			if(!$primary_found AND $gv['silent'] == 0){
-				$output['primary_group'] = $gv;
-				$primary_found = true;
-			}
-		}		
+		if(!isset($opts['groups']) OR $opts['groups']){
+			$output['groups'] = $this->fetchAll('SELECT g.name, g.groupId, g.displayName, g.displayView, g.displayRank, g.isSilent as silent
+											   FROM group_users u
+											   LEFT JOIN groups g ON g.groupId = u.groupId
+											   LEFT JOIN group_sites s ON s.groupId = g.groupId
+											   WHERE u.userId = :id AND s.siteId = :siteId
+											   ORDER  BY g.displayRank DESC, g.displayName ASC, g.name ASC
+											   ', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
+			$output['primary_group'] = false;
+			$primary_found = false;
+			foreach($output['groups'] as $gk => $gv){
+				if(trim($gv['displayName']) == ''){
+					$output['groups'][$gk]['displayName'] = $gv['name'];
+				}
+				if(!$primary_found AND $gv['silent'] == 0){
+					$output['primary_group'] = $gv;
+					$primary_found = true;
+				}
+			}	
+		}	
 		
 		return $output;
 	}
