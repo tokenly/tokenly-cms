@@ -4,8 +4,23 @@ $meta = new \App\Meta_Model;
 $forum_app = get_app('forum');
 $forum_meta = $meta->appMeta($forum_app['appId']);
 
-$forum_api = new \App\API\V1\Forum_Model;
-$forum_threads = $forum_api->getThreadList(array('users' => $user));
+$forum_recent_file = SITE_BASE.'/data/forum-recent.json';
+$forum_threads = false;
+$time = time();
+if(file_exists($forum_recent_file)){
+	$forum_recent = json_decode(@file_get_contents($forum_recent_file), true);
+	if(is_array($forum_recent) AND isset($forum_recent['last_update'])){
+		$diff = $time - $forum_recent['last_update'];
+		if($diff < 600){
+			$forum_threads = $forum_recent['threads'];
+		}
+	}
+}
+if(!$forum_threads){
+	$forum_api = new \App\API\V1\Forum_Model;
+	$forum_threads = $forum_api->getThreadList(array('users' => $user));
+	@file_put_contents($forum_recent_file, json_encode(array('last_update' => $time, 'threads' => $forum_threads)));
+}
 
 $disqus = new \API\Disqus;
 $disqusPosts = $disqus->getRecentPosts();
