@@ -114,16 +114,24 @@ class Forum_Model extends \App\Forum\Board_Model
 					break;
 			}
 		}
-		$sql = 'SELECT t.topicId, t.userId, t.title, t.url'.$andContent.', t.boardId, b.name as boardName, b.slug as boardSlug, b.categoryId, c.name as categoryName, c.slug as categorySlug, t.locked, t.postTime, t.editTime, t.lastPost, t.sticky, t.views, t.lockTime, t.lockedBy, t.editedBy
+		$sql = 'SELECT t.topicId, t.userId, t.title, t.url'.$andContent.', t.boardId, b.name as boardName,
+					b.slug as boardSlug, b.categoryId, c.name as categoryName, c.slug as categorySlug,
+					 t.locked, t.postTime, t.editTime, t.lastPost, t.sticky, t.views, t.lockTime, 
+					 t.lockedBy, t.editedBy, cnt.total as count, r.postId as recent_postId,
+					 r.userId as recent_userId, r.postTime as recent_postTime, r.editTime as recent_editTime,
+					 r.content as recent_content		
 				FROM forum_topics t
 				LEFT JOIN forum_boards b ON b.boardId = t.boardId
 				LEFT JOIN forum_categories c ON c.categoryId = b.categoryId
+				LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) cnt ON cnt.topicId = t.topicId
+				LEFT JOIN (SELECT postId, topicId, userId, postTime, editTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId				
 				WHERE t.trollPost = 0 AND t.buried = 0 AND b.active = 1
 				'.$andWhen.'
 				'.$andFilters.'
 				ORDER BY '.$sort.'
 				'.$limit;
 		$getThreads = $this->fetchAll($sql);
+
 		if(count($getThreads) < $max){
 			$output['next'] = null;
 		}
@@ -144,9 +152,7 @@ class Forum_Model extends \App\Forum\Board_Model
 				continue;
 			}
 			//reply count
-			$countReplies = $this->fetchSingle('SELECT count(*) as total FROM forum_posts WHERE topicId = :topicId AND buried = 0 AND trollPost = 0',
-											   array(':topicId' => $thread['topicId']));
-			$thread['replies'] = $countReplies['total'];
+			$thread['replies'] = $thread['count'];
 			//get profile and recent post info
 			if($andContent != ''){
 				if(!$noProfiles){
@@ -156,9 +162,16 @@ class Forum_Model extends \App\Forum\Board_Model
 					unset($thread['author']['email']);
 					unset($thread['author']['lastAuth']);
 				}
-				$thread['mostRecent'] = null;
-				$getRecent = $this->fetchSingle('SELECT postId, userId, content, postTime, editTime, editedBy FROM forum_posts WHERE topicId = :topicId AND buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1',
-												array(':topicId' => $thread['topicId']));
+				$thread['mostRecent'] = false;
+				$getRecent = false;
+				if(isset($thread['recent_postId']) AND intval($thread['recent_postId']) > 0){
+					$getRecent = array('postId' => $thread['recent_postId'],
+												  'content' => $thread['recent_content'],
+												  'userId' => $thread['recent_userId'],
+												  'postTime' => $thread['recent_postTime'],
+												  'editTime' => $thread['recent_editTime']);
+				}
+
 				if($getRecent){
 					$thread['mostRecent'] = $getRecent;
 					if(!$noProfiles){

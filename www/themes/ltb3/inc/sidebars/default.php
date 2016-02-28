@@ -3,11 +3,10 @@ $model = new \App\Forum\Post_Model;
 $meta = new \App\Meta_Model;
 $forum_app = get_app('forum');
 $forum_meta = $meta->appMeta($forum_app['appId']);
-$andAuth = '';
-if(isset($_SESSION['accountAuth'])){
-	$andAuth = '?x-auth='.$_SESSION['accountAuth'];
-}
-$forum_threads = json_decode(file_get_contents(SITE_URL.'/api/v1/forum/threads'.$andAuth), true);
+
+
+$forum_api = new \App\API\V1\Forum_Model;
+$forum_threads = $forum_api->getThreadList(array('users' => $user));
 
 $disqus = new \API\Disqus;
 $disqusPosts = $disqus->getRecentPosts();
@@ -84,7 +83,10 @@ if(count($sidebar_threads) > 0){
 									echo '<div style="margin-bottom: 20px;">'.$ad2.'</div>';
 								}
 								?>								
-								<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar')) ?>
+								<div style="margin-bottom: 20px;">
+									<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepage-sidebar')) ?>
+								</div>
+								<?= $this->displayTag('DISPLAY_ADSPACE', array('slug' => 'homepagesingle125x125')) ?>
 							</div>
 							<div class="search-cont pull-right">
 								<a href="#" class="search-icon" title="Search website"><i class="fa fa-search"></i></a>
