@@ -381,6 +381,9 @@ class Forum_Model extends \App\Forum\Board_Model
 				$andFilters .= ' AND t.boardId != '.$b.' ';
 			}
 		}
+		if(!isset($data['user'])){
+			$data['user'] = false;
+		}
 		$userFilters = $this->container->getBoardFilters($data['user']);
 		if(count($userFilters['antifilters']) > 0){
 			foreach($userFilters['antifilters'] as &$filter){
