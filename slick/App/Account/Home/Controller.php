@@ -67,7 +67,7 @@ class Home_Controller extends \App\ModControl
 				$userInfo = V1\Auth_Model::getUser(array('authKey' => $sesh_auth, 'site' => $this->data['site']));
 			}
 			catch(\Exception $e){
-				redirect($this->site.$this->data['app']['url'].'/logout');
+				redirect($this->site.$this->data['app']['url'].'/auth/logout');
 			}
 			if(isset($_REQUEST['r'])){
 				redirect($this->site.$_GET['r']);

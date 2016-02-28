@@ -193,7 +193,7 @@
 											}
 											?>
 											<span><?= shortenMsg($user['username'],13) ?></span></a>
-											<a href="<?= SITE_URL ?>/account/logout" title="Logout" style="margin-left: 10px;"><i class="fa fa-sign-out"></i></a>
+											<a href="<?= SITE_URL ?>/account/auth/logout" title="Logout" style="margin-left: 10px;"><i class="fa fa-sign-out"></i></a>
 										<?php
 										}
 										else{									

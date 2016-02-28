@@ -174,7 +174,7 @@ $imagePath = SITE_PATH.'/files/blogs';
 				  name:   "LTB Network",
 				  icon:     "<?= SITE_URL ?>/favicon.png",
 				  url:        "<?= SITE_URL ?>/account?r=/dashboard/account/home?closeThis=1",
-				  logout:  "<?= SITE_URL ?>/account/logout?r=<?= $_SERVER['REQUEST_URI'] ?>",
+				  logout:  "<?= SITE_URL ?>/account/auth/logout?r=<?= $_SERVER['REQUEST_URI'] ?>",
 				  width:   "800",
 				  height:  "400"
 			};

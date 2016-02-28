@@ -4,8 +4,9 @@ use App\ModControl;
 
 class Auth_Controller extends ModControl
 {
-	use \Traits\Driveable;
+	use \Traits\DriveableController;
 	
+	protected $driver_key = 'auth';
 	
 	
 }

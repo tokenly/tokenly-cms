@@ -111,7 +111,7 @@ include(THEME_PATH.'/inc/header.php');
 					}
 					?>
 					<a href="<?= SITE_URL ?>/account/settings" title="Edit account settings"><i class="fa fa-cog"></i></a>
-					<a href="<?= SITE_URL ?>/account/logout" title="Sign out"><i class="fa fa-sign-out"></i></a>
+					<a href="<?= SITE_URL ?>/account/auth/logout" title="Sign out"><i class="fa fa-sign-out"></i></a>
 				</div><!-- dash-controls -->				
 				<div class="dashboard-hud" <?php if(isset($_SESSION['show_dash_hud']) AND !$_SESSION['show_dash_hud']){ echo 'style="display: none;"'; } ?> >
 					<div class="dash-user-data">

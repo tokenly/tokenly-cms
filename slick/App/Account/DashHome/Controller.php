@@ -23,7 +23,7 @@ class DashHome_Controller extends \App\ModControl
 				$userInfo = V1\Auth_Model::getUser(array('authKey' => $sesh_auth, 'site' => $this->data['site']));
 			}
 			catch(\Exception $e){
-				redirect($this->site.'account/logout');
+				redirect($this->site.'account/auth/logout');
 			}
 		}
 		else{
