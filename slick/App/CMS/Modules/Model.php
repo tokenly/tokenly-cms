@@ -177,7 +177,9 @@ class Modules_Model extends Core\Model
 		
 		$class = '\\App\\'.$getApp['location'].'\\'.$data['location'].'_Controller';
 		$class = new $class;
-		$class->__install($add);
+		if(method_exists($class, '__install')){
+			$class->__install($add);
+		}
 		
 		return $add;
 		
