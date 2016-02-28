@@ -22,8 +22,9 @@ class Driver
 		if($this->driver){
 			$class = 'Drivers\\'.ucfirst($this->vehicle).'\\'.ucfirst($this->driver).'_'.ucfirst($type);
 			$init = new $class;
+			
 			if($this->this_class){
-				$passables = array_merge($passables, array('data', 'args', 'site', 'itemId', 'moduleUrl'));
+				$passables = array_merge($passables, array('data', 'args', 'site', 'itemId', 'moduleUrl', 'module', 'app', 'user'));
 				foreach($passables as $passable){
 					if(isset($this->this_class->$passable)){
 						$init->$passable = $this->this_class->$passable;
