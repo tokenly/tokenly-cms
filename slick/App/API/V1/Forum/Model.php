@@ -156,7 +156,7 @@ class Forum_Model extends \App\Forum\Board_Model
 			//get profile and recent post info
 			if($andContent != ''){
 				if(!$noProfiles){
-					$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId']);
+					$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId'], array('groups' => false));
 					unset($thread['author']['pubProf']);
 					unset($thread['author']['showEmail']);
 					unset($thread['author']['email']);
@@ -175,7 +175,7 @@ class Forum_Model extends \App\Forum\Board_Model
 				if($getRecent){
 					$thread['mostRecent'] = $getRecent;
 					if(!$noProfiles){
-						$thread['mostRecent']['author'] = $profile->getUserProfile($getRecent['userId'], $data['site']['siteId']);
+						$thread['mostRecent']['author'] = $profile->getUserProfile($getRecent['userId'], $data['site']['siteId'], array('groups' => false));
 						unset($thread['mostRecent']['author']['pubProf']);
 						unset($thread['mostRecent']['author']['showEmail']);				
 						unset($thread['mostRecent']['author']['email']);			
@@ -475,7 +475,7 @@ class Forum_Model extends \App\Forum\Board_Model
 		//get OP profile
 		if(!isset($data['no-profiles']) OR ($data['no-profiles'] != 'true' AND intval($data['no-profiles']) !== 1)){
 			$profile = new \App\Profile\User_Model;
-			$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId']);
+			$thread['author'] = $profile->getUserProfile($thread['userId'], $data['site']['siteId'], array('groups' => false));
 			unset($thread['author']['pubProb']);
 			unset($thread['author']['showEmail']);
 			unset($thread['author']['email']);
@@ -557,7 +557,7 @@ class Forum_Model extends \App\Forum\Board_Model
 		foreach($getPosts as &$post){
 			//get profile data
 			if(!isset($data['no-profiles']) OR ($data['no-profiles'] != 'true' AND intval($data['no-profiles']) !== 1)){
-				$post['author'] = $profile->getUserProfile($post['userId'], $data['site']['siteId']);
+				$post['author'] = $profile->getUserProfile($post['userId'], $data['site']['siteId'], array('groups' => false));
 				unset($post['author']['pubProf']);
 				unset($post['author']['showEmail']);
 				unset($post['author']['email']);
