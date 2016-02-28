@@ -294,11 +294,14 @@ class Home_Model extends Core\Model
 			$getSesh = $model->checkSession($auth);
 			if($getSesh){
 				$time = timestamp();
-				$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
-				if($update){
-					$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
-					self::$activity_updated = true;
-					return true;
+				$diff = strtotime($time) - strtotime($getSesh['lastActive']);
+				if($diff >= 300){
+					$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
+					if($update){
+						$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
+						self::$activity_updated = true;
+						return true;
+					}
 				}
 			}
 			return false;
