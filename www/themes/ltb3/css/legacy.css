@@ -838,7 +838,7 @@ div.forum-bar ul li:nth-child(3) {
 	font-size: 18px;
 }
 
-.text-error, .content .text-error{
+.text-error, .content .text-error, .alert-danger, .text-danger{
 	color: #E60000;
 }
 .success, .content .success{
