@@ -13,4 +13,8 @@ interface AuthController
 	
 	function sync();
 	
+	function verify();
+	
+	function reset();
+	
 }
