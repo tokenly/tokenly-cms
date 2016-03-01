@@ -460,9 +460,6 @@ class Home_Model extends Core\Model
 		$model = new Home_Model;
 		$sesh_auth = Util\Session::get('accountAuth');
 		if(!$userId AND !$sesh_auth){
-			if(isset($_COOKIE['rememberAuth'])){
-				Home_Controller::logRemembered();
-			}
 			return false;
 		}
 		
