@@ -13,7 +13,7 @@ class Submissions_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Submissions_Model;
-        $this->user = Account\Home_Model::userInfo();
+        $this->user = Account\Auth_Model::userInfo();
 		$this->tca = new Tokenly\TCA_Model;
 		$this->inventory = new Tokenly\Inventory_Model;
 		$this->meta = new \App\Meta_Model;
@@ -888,7 +888,7 @@ class Submissions_Controller extends \App\ModControl
 		$output['force-view'] = 'Blog/Post/post';
 		$output['post'] = $getPost;
 		$output['disableComments'] = true;
-		$output['user'] = Account\Home_Model::userInfo();
+		$output['user'] = Account\Auth_Model::userInfo();
 		$output['title'] = $getPost['title'];
 		$output['commentError'] = '';
 		$output['comments'] = array();

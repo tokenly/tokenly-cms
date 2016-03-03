@@ -1,7 +1,7 @@
 <?php
 namespace App\API\V1;
 use App\Account, Util;
-class Auth_Model extends Account\Home_Model
+class Auth_Model extends Account\Auth_Model
 {
 	
 	function __construct()

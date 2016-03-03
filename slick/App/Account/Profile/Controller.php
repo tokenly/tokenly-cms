@@ -19,7 +19,7 @@ class Profile_Controller extends \App\ModControl
     protected function init()
     {
 		$output = parent::init();
-		$output['user'] = Home_Model::userInfo();
+		$output['user'] = Auth_Model::userInfo();
 	
 		if(!$output['user']){
 			redirect($this->data['site']['url']);

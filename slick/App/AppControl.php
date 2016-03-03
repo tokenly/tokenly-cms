@@ -40,7 +40,7 @@ class AppControl extends Core\Controller
         }
 
 		$tca = new Tokenly\TCA_Model;
-        $output['user'] = Account\Home_Model::userInfo();
+        $output['user'] = Account\Auth_Model::userInfo();
         if($output['user']){
 			$output['perms'] = array();
 			$getPerms = $this->model->getAll('app_perms', array('appId' => $moduleApp['appId']));
@@ -86,7 +86,7 @@ class AppControl extends Core\Controller
     {
 		$model = new Core\Model;
 		$tca = new Tokenly\TCA_Model;
-		$accountModel = new Account\Home_Model;
+		$accountModel = new Account\Auth_Model;
 		$getSite = currentSite();
 		$sesh_auth = Util\Session::get('accountAuth');
 		if(!$sesh_auth){

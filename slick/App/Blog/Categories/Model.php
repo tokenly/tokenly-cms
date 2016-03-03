@@ -134,7 +134,7 @@ class Categories_Model extends Core\Model
 	protected function getCategories($siteId, $parentId = 0, $menuMode = 0, $use_tca = true)
 	{
 		$thisUser = false;
-		$accountModel = new Account\Home_Model;
+		$accountModel = new Account\Auth_Model;
 		$sesh_auth = Util\Session::get('accountAuth');
 		if($sesh_auth){
 			$getUser = $accountModel->checkSession($sesh_auth);

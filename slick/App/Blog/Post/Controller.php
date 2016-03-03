@@ -95,7 +95,7 @@ class Post_Controller extends \App\ModControl
 		$output['comments'] = $this->model->getPostComments($getPost['postId']);
 		$output['commentError'] = '';
 		$output['disableComments'] = false;
-		$output['user'] = Account\Home_Model::userInfo();
+		$output['user'] = Account\Auth_Model::userInfo();
 		$output['canonical'] = $this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$this->data['module']['url'].'/'.$getPost['url'];
 		
 		$metaDesc = $getPost['excerpt'];

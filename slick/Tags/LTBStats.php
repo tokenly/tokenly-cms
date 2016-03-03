@@ -9,8 +9,8 @@ class LTBStats
 	function __construct()
 	{
 		$this->model = new \App\Meta_Model;
-		$this->site = $this->model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-		$this->accountModel = new Account\Home_Model;
+		$this->site = currentSite();
+		$this->accountModel = new Account\Auth_Model;
 		
 	}
 	
@@ -24,7 +24,7 @@ class LTBStats
 			}
 		}
 		
-		$getUser = Account\Home_Model::userInfo();
+		$getUser = Account\Auth_Model::userInfo();
 		$model = $this->model;
 		$stats = array();
 		try{

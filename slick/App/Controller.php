@@ -69,7 +69,7 @@ class Controller extends Core\Controller
 
         $settings = new CMS\Settings_Model;
         $disabled = $settings->getSetting('systemDisabled');
-        $getUser = Account\Home_Model::userInfo();
+        $getUser = Account\Auth_Model::userInfo();
         if(intval($disabled) === 1){
 			if($getUser){
 				$settingModule = $this->model->get('modules', 'settings', array(), 'slug');

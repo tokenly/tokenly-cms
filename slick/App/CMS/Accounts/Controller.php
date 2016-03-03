@@ -89,7 +89,7 @@ class Accounts_Controller extends \App\ModControl
 	protected function deleteUser()
 	{
 		if(isset($this->args[3])){
-			$user = Account\Home_Model::userInfo();
+			$user = Account\Auth_Model::userInfo();
 			if($this->args[3] != $user['userId']){
 				$get = $this->model->get('users', $this->args[3]);
 				if($get){

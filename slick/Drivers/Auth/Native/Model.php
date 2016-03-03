@@ -636,6 +636,67 @@ class Native_Model extends Core\Model
 	
 		$this->delete('reset_links', $data['resetId']);
 		return true;
+	}	
+	
+	protected static function userInfo($userId = false)
+	{
+		$model = new Native_Model;
+		$sesh_auth = Util\Session::get('accountAuth');
+		if(!$userId AND !$sesh_auth){
+			return false;
+		}
+		
+		if(!$userId){
+			$get = $model->checkSession($sesh_auth);
+		}
+		else{
+			$get = $model->get('users', $userId);
+		}
+												
+		if(!$get){
+			return false;
+		}
+		
+		$user = $model->get('users', $get['userId'], array('userId', 'username', 'email', 'slug', 'regDate', 'lastAuth', 'lastActive'));
+		$user['auth'] = $get['auth'];
+		
+		$getSite = currentSite();
+
+		$meta = new \App\Meta_Model;
+		$user['meta'] = $meta->userMeta($get['userId']);
+
+		$getRef = $model->get('user_referrals', $get['userId'], array('affiliateId'), 'userId');
+		$user['affiliate'] = false;
+		if($getRef){
+			$getAffiliate = $model->get('users', $getRef['affiliateId'], array('userId', 'username', 'slug'), 'userId');
+			if($getAffiliate){
+				$user['affiliate'] = $getAffiliate;
+			}
+		} 
+		
+		$user['groups'] = $model->fetchAll('SELECT g.name, g.groupId, g.displayName, g.displayView, g.displayRank, g.isSilent as silent
+										   FROM group_users u
+										   LEFT JOIN groups g ON g.groupId = u.groupId
+										   LEFT JOIN group_sites s ON s.groupId = g.groupId
+										   WHERE u.userId = :id AND s.siteId = :siteId
+										   ORDER  BY g.displayRank DESC, g.displayName ASC, g.name ASC
+										   ', array(':id' => $get['userId'], ':siteId' => $getSite['siteId']));
+		$user['primary_group'] = false;
+		$primary_found = false;
+		foreach($user['groups'] as $gk => $gv){
+			if(trim($gv['displayName']) == ''){
+				$user['groups'][$gk]['displayName'] = $gv['name'];
+			}
+			if(!$primary_found AND $gv['silent'] == 0){
+				$user['primary_group'] = $gv;
+				$primary_found = true;
+			}
+		}
+		
+		Native_Model::updateLastActive($get['userId']);
+		
+		return $user;
 		
 	}	
+	
 }

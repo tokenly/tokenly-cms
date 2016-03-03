@@ -76,6 +76,7 @@ class Native_Controller extends ModControl implements \Interfaces\AuthController
 					redirect(route('account.account-home'));
 				}
 			}
+			
 
 			return $output;
 		}

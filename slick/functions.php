@@ -821,7 +821,7 @@ function parse_fileComments($path)
 
 function user($userId = false)
 {
-	return \App\Account\Home_Model::userInfo($userId);
+	return \App\Account\Auth_Model::userInfo($userId);
 }
 
 function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', $end = '-----END BITCOIN SIGNATURE-----')

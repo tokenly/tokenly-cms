@@ -8,7 +8,7 @@ class ForumBuilder
 	{
 		$this->model = new Core\Model;
 		$this->inventory = new Tokenly\Inventory_Model; //load inventory model
-		$this->user = Account\Home_Model::userInfo(); //load user data
+		$this->user = Account\Auth_Model::userInfo(); //load user data
 		$tokenApp = $this->model->get('apps', 'tokenly', array(), 'slug'); //get the tokenly/ltbcoin app
 		$meta = new \App\Meta_Model;
 		$this->settings = $meta->appMeta($tokenApp['appId']); //load some settings

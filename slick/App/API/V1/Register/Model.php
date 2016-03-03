@@ -1,6 +1,6 @@
 <?php
 namespace App\API\V1;
-class Register_Model extends \App\Account\Home_Model
+class Register_Model extends \App\Account\Auth_Model
 {
 	function __construct()
 	{
