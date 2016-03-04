@@ -3,16 +3,13 @@ namespace Traits;
 use Util\Driver, Exception;
 trait DriveableController
 {
+	use Driveable;
+	
 	public function init()
 	{
-		if(!isset($this->driver_key)){
-			throw new Exception('No driver key set for this module');
+		$this->load_driver();
+		if(method_exists($this->driver, 'init')){
+			return $this->driver->init();
 		}
-		$driver = new Driver($this->driver_key, $this);		
-		$this->driver = $driver->load();
-		if(isset($this->container)){
-			$this->container = $this->driver;
-		}		
-		return $this->driver->init();
 	}	
 }
