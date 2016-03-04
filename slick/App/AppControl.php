@@ -59,11 +59,7 @@ class AppControl extends Core\Controller
 			$output['perms'] = $tca->checkPerms($output['user']['userId'], $output['perms'], $this->module['moduleId'], 0, '');
 			
 		}
-		else{
-			if(isset($_GET['ref'])){
-				Util\Session::set('affiliate-ref', $_GET['ref']);
-			}
-		}
+
         if($className != false){
             $class = new $className;
             $class->args = $this->args;

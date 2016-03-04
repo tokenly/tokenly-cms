@@ -312,13 +312,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	}
 	
 	protected function registerAccount($data, $noAuth = false)
-	{
-		if(isset($data['isAPI'])){
-			if(!isset($data['site_referral'])){
-				$data['site_referral'] = 'api';
-			}
-		}
-		
+	{		
 		$req = array('username' => true, 'password' => true, 'email' => true);
 		foreach($req as $key => $required){
 			if($required AND !isset($data[$key])){
@@ -415,19 +409,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		$meta->updateUserMeta($add, 'site_registered', $data['site']);
 		$meta->updateUserMeta($add, 'pubProf', 1);
 		$meta->updateUserMeta($add, 'emailNotify', 1);
-		
-		if(isset($data['site_referral'])){
-			$meta->updateUserMeta($add, 'site_referral', trim(htmlentities(strip_tags($data['site_referral']))));
-		}
-		
-		$aff_ref = Util\Session::get('affiliate-ref');
-		if($aff_ref){
-			$getRef = $this->get('user_meta', $aff_ref, array('userId'), 'metaValue');
-			if($getRef){
-				$this->insert('user_referrals', array('userId' => $add, 'affiliateId' => $getRef['userId'], 'refTime' => timestamp()));
-				Util\Session::clear('affiliate-ref');
-			}
-		}
 		
 		return $add;
 
