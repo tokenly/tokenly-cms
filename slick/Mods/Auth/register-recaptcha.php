@@ -23,5 +23,6 @@
 				throw new \Exception('Captcha invalid!');
 			}
 		}
-		return $data;
+		return array($data);
 	}, true);
+
