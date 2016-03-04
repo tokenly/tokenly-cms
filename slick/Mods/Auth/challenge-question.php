@@ -5,7 +5,6 @@
  * 
  * */
 
-
 \Util\Filter::addFilter('Drivers\Auth\Native_Model', 'getRegisterForm', 
 	function($form, $args){
 		
@@ -13,7 +12,7 @@
 		$challenge->setLabel('Question: Who created the very first version of Bitcoin?');
 		$challenge->addAttribute('required');
 		$form->add($challenge);
-		
+
 		return $form;
 	});
 
@@ -29,5 +28,7 @@
 				throw new \Exception('Incorrect challenge answer');
 			}
 		}
-		return $data;
+		return array($data);
 	}, true);
+
+
