@@ -302,12 +302,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		$email->setLabel('Email *');
 		$email->addAttribute('required');
 		$form->add($email);	
-		
-		$hny = new UI\Textbox('website');
-		$hny->addClass('hny');
-		$hny->setLabel('Your Website:', 'hny');
-		$form->add($hny);
-		
+	
 		$hidden = new UI\Hidden('submit-type');
 		$hidden->setValue('register');
 		$form->add($hidden);
@@ -323,7 +318,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 				$data['site_referral'] = 'api';
 			}
 		}
-	
+		
 		$req = array('username' => true, 'password' => true, 'email' => true);
 		foreach($req as $key => $required){
 			if($required AND !isset($data[$key])){
@@ -332,7 +327,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		}
 		
 		$data['username'] = preg_replace('/\s+/', '', $data['username']);
-		
+
 		if(trim($data['username']) == ''){
 			http_response_code(400);
 			throw new \Exception('Username required');
@@ -355,26 +350,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			http_response_code(400);
 			throw new \Exception('Invalid email address');
 		}
-		
-		//check honeypot, mark as spammer if true
-		$spammer = false;
-		if(isset($data['website']) AND $data['website'] != ''){
-			$spammer = true;
-		}
-		else{
-			//check stopforumspam API
-			$getSpam = @file_get_contents(STOPFORUMSPAM_API.'?email='.$data['email'].'&f=json');
-			if($getSpam){
-				$checkSpam = json_decode($getSpam, true);
-				$spamLimit = 1;
-				if(isset($checkSpam['email'])){
-					if($checkSpam['email']['frequency'] >= $spamLimit){
-						$spammer = true;
-					}
-				}
-			}
-		}
-		
+
 		$useData = array('username' => $data['username'], 'password' => $data['password']);
 		if(isset($data['email'])){
 			$useData['email'] = $data['email'];
@@ -429,13 +405,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			$this->insert('group_users', array('userId' => $add, 'groupId' => $group['groupId']));
 		}
 		
-		if($spammer){
-			$getTrollGroup = $this->get('groups', 'forum-troll', array(), 'slug');
-			if($getTrollGroup){
-				$this->insert('group_users', array('userId' => $add, 'groupId' => $getTrollGroup['groupId']));
-			}
-		}
-		
 		$meta = new \App\Meta_Model;
 		if(!$noAuth){
 			$meta->updateUserMeta($add, 'IP_ADDRESS', $_SERVER['REMOTE_ADDR']);
@@ -449,9 +418,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		
 		if(isset($data['site_referral'])){
 			$meta->updateUserMeta($add, 'site_referral', trim(htmlentities(strip_tags($data['site_referral']))));
-		}
-		elseif($spammer){
-			$meta->updateUserMeta($add, 'site_referral', 'spammer');
 		}
 		
 		$aff_ref = Util\Session::get('affiliate-ref');
