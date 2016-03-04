@@ -1,18 +1,19 @@
 <?php
 namespace App\API\V1;
-use App\Account, Util;
-class Auth_Model extends Account\Auth_Model
+use Core\Model, Util, App\Account\Auth_Model as AccountAuth;
+class Auth_Model extends Model
 {
 	
 	function __construct()
 	{
 		parent::__construct();
 		$this->api = true;
+		$this->auth_model = new AccountAuth;
 	}
 
 	protected static function getUser($data)
 	{
-		$model = new Auth_Model;
+		$model = new AccountAuth;
 		if(!isset($data['authKey'])){
 			http_response_code(401);
 			throw new \Exception('Not logged in');
@@ -48,7 +49,7 @@ class Auth_Model extends Account\Auth_Model
 			throw new \Exception('Not logged in');
 		}
 		else{
-			$this->container->clearSession($data['authKey']);
+			$this->auth_model->clearSession($data['authKey']);
 			Util\Session::clear('accountAuth');
 			if(isset($_COOKIE['rememberAuth'])){
 				setcookie('rememberAuth', '', time()-3600,'/');
