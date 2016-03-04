@@ -14,6 +14,9 @@ trait Modable
 				$use = $use->get_obj();
 			}
 		}
+		if(!method_exists($use, $method)){
+			dd(get_class($use).'\\'.$method.' cannot be found');
+		}
 		$output = self::applyFilters($use, $method, $arguments);
 		self::triggerHooks($use, $method, $output);
 		return $output;
