@@ -1,5 +1,6 @@
 <?php
 namespace App\API\V1;
+use \App\Account\Auth_Model as AccountAuth;
 class Auth_Controller extends \Core\Controller
 {
 	public $methods = array('GET','POST');
@@ -8,6 +9,7 @@ class Auth_Controller extends \Core\Controller
 	{
 		parent::__construct();
 		$this->model = new Auth_Model;
+		$this->auth_model = new AccountAuth;
 	}
 	
 	protected function init($args = array())
@@ -40,7 +42,7 @@ class Auth_Controller extends \Core\Controller
 		$output = array();
 		try{
 			$this->args['data']['isAPI'] = true;
-			$auth = $this->model->checkAuth($this->args['data']);
+			$auth = $this->auth_model->checkAuth($this->args['data']);
 		}
 		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
