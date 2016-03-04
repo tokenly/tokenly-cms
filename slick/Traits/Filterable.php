@@ -5,12 +5,13 @@ trait Filterable
 {
 	static function applyFilters($obj, $method, $arguments, $static = false)
 	{
-		if(!is_string($obj)){
+		if(is_object($obj)){
 			$class = get_class($obj);
 		}
 		else{
 			$class = $obj;
 		}
+		
 		$filters = Filter::getMethodFilters($class, $method);
 		
 		$prepends = array();
