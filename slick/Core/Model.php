@@ -4,7 +4,7 @@ use PDO;
 
 class Model
 {
-	use \Traits\Modable;
+	use \Traits\Modable, \Traits\Containerized;
 	
 	private $savedQueries = array();
 	public static $db;
@@ -16,7 +16,6 @@ class Model
 	public static $queryLog = array();
 	public static $indexes = array();
 	public static $logMode = false;
-	protected $container = false;
 
 	function __construct()
 	{
@@ -41,7 +40,12 @@ class Model
 		else{
 			$this->db = self::$db;
 		}
-		$this->container = new Container($this);
+		
+		$this->load_container();
+		
+		if(method_exists($this, 'load_driver')){
+			$this->load_driver('model');
+		}
 	}	
 	
 	/**
@@ -379,7 +383,5 @@ class Model
 		$sql = 'TRUNCATE '.$table;
 		return $this->sendQuery($sql);
 	}
-
+	
 }
-
-?>

@@ -3,15 +3,14 @@ namespace Core;
 
 class Controller
 {
-	use \Traits\Modable;
+	use \Traits\Modable, \Traits\Containerized;
 	
 	private $script = '';
-	protected $container = false;
 
 	function __construct()
 	{
-		$this->container = new Container($this);
+		$this->load_container();
 	}
-	
 
+	
 }
