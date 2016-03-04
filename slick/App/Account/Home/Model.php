@@ -41,6 +41,7 @@ class Home_Model extends Core\Model
 		$used = array();
 		foreach($getUsers as $key => $user){
 			if(isset($used[$user['userId']])){
+				unset($getUsers[$key]);
 				continue;
 			}
 			$used[$user['userId']] = 1;
