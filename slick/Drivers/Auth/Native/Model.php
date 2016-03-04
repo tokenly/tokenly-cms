@@ -308,11 +308,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		$hny->setLabel('Your Website:', 'hny');
 		$form->add($hny);
 		
-		$challenge = new UI\Textbox('challenge');
-		$challenge->setLabel('Question: Who created the very first version of Bitcoin?');
-		$challenge->addAttribute('required');
-		$form->add($challenge);
-
 		$hidden = new UI\Hidden('submit-type');
 		$hidden->setValue('register');
 		$form->add($hidden);
@@ -324,7 +319,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	protected function registerAccount($data, $noAuth = false)
 	{
 		if(!isset($data['isAPI'])){
-		/*	require_once(SITE_PATH.'/resources/recaptchalib2.php');
+			require_once(SITE_PATH.'/resources/recaptchalib2.php');
 			$recaptcha = new \ReCaptcha(CAPTCHA_PRIV);
 			if(!isset($_POST['g-recaptcha-response'])){
 				throw new \Exception('Captcha required!');
@@ -333,13 +328,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			if($resp == null OR !$resp->success){
 				throw new \Exception('Captcha invalid!');
 			}
-			if(!isset($data['challenge']) OR trim($data['challenge']) == ''){
-				throw new \Exception('Please answer the challenge question');
-			}
-			$possible_answers = array('satoshi', 'satoshi nakamoto', 'nakamoto');
-			if(!in_array(trim(strtolower($data['challenge'])), $possible_answers)){
-				throw new \Exception('Incorrect answer');
-			}*/
 		}
 		else{
 			if(!isset($data['site_referral'])){
