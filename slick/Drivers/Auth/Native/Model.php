@@ -318,18 +318,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	protected function registerAccount($data, $noAuth = false)
 	{
-		if(!isset($data['isAPI'])){
-			require_once(SITE_PATH.'/resources/recaptchalib2.php');
-			$recaptcha = new \ReCaptcha(CAPTCHA_PRIV);
-			if(!isset($_POST['g-recaptcha-response'])){
-				throw new \Exception('Captcha required!');
-			}
-			$resp = $recaptcha->verifyResponse($_SERVER['REMOTE_ADDR'], $_POST['g-recaptcha-response']);
-			if($resp == null OR !$resp->success){
-				throw new \Exception('Captcha invalid!');
-			}
-		}
-		else{
+		if(isset($data['isAPI'])){
 			if(!isset($data['site_referral'])){
 				$data['site_referral'] = 'api';
 			}
