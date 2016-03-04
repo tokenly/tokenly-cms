@@ -2,11 +2,11 @@
 namespace Drivers\Auth;
 use Core, UI, Util, App\Profile, App\Account\Settings_Model;
 
-class Native_Model extends Core\Model
+class Native_Model extends Core\Model implements \Interfaces\AuthModel
 {
 	public static $activity_updated = false;
 	
-	protected function clearSession($auth)
+	public function clearSession($auth)
 	{
 		$getSesh = $this->container->checkSession($auth);
 		if(!$getSesh){
@@ -16,7 +16,7 @@ class Native_Model extends Core\Model
 		return $this->delete('user_sessions', $getSesh['sessionId']);
 	}
 	
-	protected function checkSession($auth, $useCache = false)
+	public function checkSession($auth, $useCache = false)
 	{
 		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE auth = :auth ORDER BY sessionId DESC LIMIT 1',
 									array(':auth' => $auth), 0, $useCache);
@@ -59,7 +59,7 @@ class Native_Model extends Core\Model
 		return $form;
 	}	
 	
-	protected function checkAuth($data)
+	public function checkAuth($data)
 	{	
 		$sesh_auth = Util\Session::get('accountAuth');
 		if(isset($data['authKey'])){
@@ -236,7 +236,7 @@ class Native_Model extends Core\Model
 		return $token;
 	}	
 	
-	protected function makeSession($userId, $token)
+	public function makeSession($userId, $token)
 	{
 		$check = $this->container->checkSession($token);
 		if($check){
@@ -638,7 +638,7 @@ class Native_Model extends Core\Model
 		return true;
 	}	
 	
-	protected static function userInfo($userId = false)
+	public static function userInfo($userId = false)
 	{
 		$model = new Native_Model;
 		$sesh_auth = Util\Session::get('accountAuth');
