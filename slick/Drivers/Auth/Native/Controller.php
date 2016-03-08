@@ -49,6 +49,7 @@ class Native_Controller extends ModControl implements \Interfaces\AuthController
 			//check if already logged in, redirect to dash home if so
 			if($this->data['user']){
 				redirect(route('account.account-home'));
+				return $output;
 			}
 			
 			if(isset($_COOKIE['rememberAuth'])){
@@ -247,5 +248,45 @@ class Native_Controller extends ModControl implements \Interfaces\AuthController
 			return $output;
 		}
 	
-	
+
+    protected static function logRemembered()
+    {	
+		$model = new Native_Model;
+		if(!isset($_COOKIE['rememberAuth'])){
+			return false;
+		}
+		
+		$auth = $_COOKIE['rememberAuth'];
+		$expAuth = explode(':', $auth);
+		if(count($expAuth) != 3){
+			setcookie('rememberAuth', '', time()-3600, '/');
+			return false;
+		}
+		$checksum = md5($expAuth[0].':'.$expAuth[1]);
+		if($checksum != $expAuth[2]){
+			setcookie('rememberAuth', '', time()-3600, '/');
+			return false;
+		}
+		
+		$decodeId = base64_decode($expAuth[1]);
+		$get = $model->get('users', $decodeId);
+		if(!$get){
+			setcookie('rememberAuth', '', time()-3600, '/');
+			return false;
+		}
+		
+		$passHash = hash('sha256', $get['password'].$get['username']);
+		if($passHash != $expAuth[0]){
+			setcookie('rememberAuth', '', time()-3600, '/');
+			return false;
+		}
+
+		$model->generateAuthToken($get['userId']);
+		$url = $_SERVER['REQUEST_URI'];
+		header('Location: '.$url);
+
+		return true;
+		
+	}
+
 }
