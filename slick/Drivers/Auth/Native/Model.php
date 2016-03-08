@@ -238,7 +238,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	public function makeSession($userId, $token)
 	{
-		$check = $this->container->checkSession($token);
+		$check = $this->checkSession($token);
 		if($check){
 			return false;
 		}
