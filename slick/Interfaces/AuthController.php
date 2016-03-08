@@ -3,18 +3,18 @@ namespace Interfaces;
 
 interface AuthController
 {
-	function init();
+	public function init();
 	
-	function login();
+	public function login();
 	
-	function logout();
+	public function logout();
 	
-	function register();
+	public function register();
 	
-	function sync();
+	public function sync();
 	
-	function verify();
+	public function verify();
 	
-	function reset();
+	public function reset();
 	
 }
