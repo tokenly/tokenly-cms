@@ -13,6 +13,10 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			return false;
 		}
 		$this->edit('users', $getSesh['userId'], array('lastActive' => null));
+		Util\Session::clear('accountAuth');
+		if(isset($_COOKIE['rememberAuth'])){
+			setcookie('rememberAuth', '', time()-3600,'/');
+		}				
 		return $this->delete('user_sessions', $getSesh['sessionId']);
 	}
 	

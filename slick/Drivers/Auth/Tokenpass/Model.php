@@ -1,6 +1,6 @@
 <?php
 namespace Drivers\Auth;
-use Core, UI, Util, App\Profile, App\Account\Settings_Model;
+use Core, UI, Util, App\Profile, App\Account\Settings_Model, App\Meta_Model;
 
 class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 {
@@ -75,11 +75,80 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	public function checkAuth($data)
 	{
+		if(!isset($data['username']) OR trim($data['username']) == ''){
+			throw new \Exception('Username required');
+		}
 		
+		if(!isset($data['password']) OR trim($data['password']) == ''){
+			throw new \Exception('Password required');
+		}		
 		
+		$request_url = $this->getAuthUrl(true);
+
+		$params = array(
+			'username' => $data['username'],
+			'password' => $data['password'],
+		);
+		
+
+		$ch = curl_init($request_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+
+		$response = json_decode(curl_exec($ch), true);
+		curl_close($ch);				
+		
+		if(!is_array($response)){
+			throw new \Exception('Error logging in');
+		}
+		
+		if(isset($response['error'])){
+			throw new \Exception($response['error']);
+		}
+		
+		$token = $this->container->getAuthToken($response['code']);
+		if(!$token){
+			throw new \Exception('Error retrieving access token');
+		}
+		
+		$oauth_user = $this->container->getOAuthUser($token);
+		if(!$oauth_user){
+			throw new \Exception('Error getting user data');
+		}
+		
+		$get_user = $this->container->findTokenPassUser($oauth_user['id']);
+		if($get_user){
+			//in system already
+			$userId = $get_user['userId'];
+		}
+		else{
+			//check if username and email already in system... merge or create new account
+			$mergable = $this->container->findMergableUser($oauth_user);
+			if($mergable){
+				//merge existing account
+				$meta = new Meta_Model;
+				$meta->updateUserMeta($mergable['userId'], 'tokenly_uuid', $oauth_user['id']);
+				$userId = $mergable['userId'];
+			}
+			else{
+				//create new account
+				$gen_user = $this->container->generateUser($oauth_user);
+				$userId = $gen_user;
+			}
+		}
+		$this->container->makeSession($userId, $token);
+		
+		$profModel = new Profile\User_Model;
+		$site = currentSite();
+		$getProf = $profModel->getUserProfile($userId, $site['siteId']);
+
+		$getProf['auth'] = $token;
+		$getProf['lastActive'] = timestamp();
+		
+		return $getProf;
 	}
 	
-	public function checkSession($auth)
+	public function checkSession($auth, $useCache = true)
 	{
 		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE auth = :auth ORDER BY sessionId DESC LIMIT 1',
 									array(':auth' => $auth), 0, $useCache);
@@ -97,6 +166,9 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		}
 		$this->edit('users', $getSesh['userId'], array('lastActive' => null));
 		Util\Session::clear('accountAuth');
+		if(isset($_COOKIE['rememberAuth'])){
+			setcookie('rememberAuth', '', time()-3600,'/');
+		}		
 		return $this->delete('user_sessions', $getSesh['sessionId']);
 	}
 	
@@ -129,7 +201,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		return Util\Session::get('auth_state');
 	}
 	
-	protected function getAuthUrl()
+	protected function getAuthUrl($api = false)
 	{
 		$state = $this->container->setState();
 		$client_id = TOKENPASS_CLIENT;
@@ -140,7 +212,12 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		$redirect = $site['url'].'/'.$account_app['url'].'/'.$auth_module['url'].'/callback';
 		$query = array('state' => $state, 'client_id' => $client_id, 'scope' => $scope, 'redirect_uri' => $redirect,
 						'response_type' => 'code');
-		$auth_url = $this->oauth_url.'/authorize?'.http_build_query($query);
+		if($api){
+			$auth_url = TOKENPASS_URL.'/api/v1/oauth/request?'.http_build_query($query);
+		}
+		else{
+			$auth_url = $this->oauth_url.'/authorize?'.http_build_query($query);
+		}
 		return $auth_url;
 	}
 	
