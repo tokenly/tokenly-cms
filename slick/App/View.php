@@ -76,9 +76,15 @@ class View extends Core\View
 			$$key = $val;
 		}
 		
-		define('SITE_URL', $data['site']['url']);
-		define('THEME_PATH', SITE_PATH.'/themes/'.$data['theme']);
-		define('THEME_URL', SITE_URL.'/themes/'.$data['theme']);
+		if(!defined('SITE_URL')){
+			define('SITE_URL', $data['site']['url']);
+		}
+		if(!defined('THEME_PATH')){
+			define('THEME_PATH', SITE_PATH.'/themes/'.$data['theme']);
+		}
+		if(!defined('THEME_URL')){
+			define('THEME_URL', SITE_URL.'/themes/'.$data['theme']);
+		}
 		
 		if(!isset($pageRequest['params'])){
 			$pageRequest['params'] = '';	
