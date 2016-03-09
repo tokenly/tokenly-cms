@@ -48,7 +48,7 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 	public function login()
 	{
 		$output = $this->output;
-		if($output['user']){
+		if($this->data['user']){
 			redirect(route('account.account-home'));
 			return $output;
 		}
@@ -105,9 +105,12 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 	protected function callback()
 	{
 		$output = $this->output;
+		$output['title'] = 'Login';
 		
 		if(!isset($_GET['code'])){
-			die('Code not set');
+			Util\Session::flash('message', 'Code not set', 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;
 		}
 		
 		//check that their state is still valid
@@ -117,23 +120,31 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 			$this_state = $_GET['state'];
 		}
 		if(!$used_state OR $this_state != $used_state){
-			die('Invalid state');
+			Util\Session::flash('message', 'Invalid state', 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;			
 		}
 		
 		//get fresh auth token from their auth code
 		$auth_token = $this->model->getAuthToken($_GET['code']);
 		if(!$auth_token){
-			die('Failed authorizing user');
+			Util\Session::flash('message', 'Failed authorizing user', 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;				
 		}
 		
 		//get data on authorized user from TokenPass
 		$oauth_user = $this->model->getOAuthUser($auth_token);
 		if(!$oauth_user){
-			die('Could not get user');
+			Util\Session::flash('message', 'Could not get user', 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;					
 		}
 		
 		if($oauth_user['email_is_confirmed'] == 0){
-			die('Please verify your account email address before signing in');
+			Util\Session::flash('message', 'Please verify your account email address before signing in. Visit your <a href="'.TOKENPASS_URL.'" target="_blank">TokenPass account</a> to resend the verification email.', 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;			
 		}
 		
 		//check if user in system
@@ -159,9 +170,11 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 				}
 				catch(\Exception $e)
 				{
-					die('Error signing up user: '.$e->getMessage());
+					Util\Session::flash('message', 'Error signing up user: '.$e->getMessage(), 'alert-danger');
+					$output['view'] = 'auth-error';
+					return $output;							
 				}
-				$this->model->makeSession($get_user, $auth_token);
+				$this->model->makeSession($gen_user, $auth_token);
 			}
 		}
 		
