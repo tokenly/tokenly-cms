@@ -470,4 +470,30 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		return false;
 	}		
 	
+	public function updateAccount($id, $data)
+	{
+		$getUser = $this->get('users', $id);
+		$meta = new Meta_Model;
+		$tokenly_uuid = $meta->getUserMeta($id, 'tokenly_uuid');
+		if(!$tokenly_uuid){
+			return false;
+		}
+		if(!isset($data['curPassword'])){
+			throw new \Exception('Current password required to make changes');
+		}
+		$token = $getUser['auth'];
+		
+		$useData = array();
+		if(isset($data['email'])){
+			$useData['email'] = $data['email'];
+		}
+		if(isset($data['password'])){
+			$useData['password'] = $data['password'];
+		}		
+		
+		$update = $this->tokenpass->updateAccount($tokenly_uuid, $token, $data['curPassword'], $useData);
+		
+		return true;
+	}	
+	
 }

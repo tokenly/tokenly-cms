@@ -626,4 +626,76 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		
 	}	
 	
+	public function updateAccount($id, $data)
+	{
+		$getUser = $this->get('users', $id);
+		if(!$data['admin_mode'] AND !isset($data['curPassword'])){
+			throw new \Exception('Current password required to complete changes');
+		}
+		
+		if(!$data['admin_mode']){
+			$checkPass = hash('sha256', $getUser['spice'].$data['curPassword']);
+			if($checkPass != $getUser['password']){
+				throw new \Exception('Incorrect password!');
+			}
+		}
+		
+		$useData = array();	
+		if(isset($data['email'])){
+			if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
+				throw new \Exception('Invalid email address');
+			}
+			$settings = new Settings_Model;
+			$checkEmail = $settings->checkEmailInUse($id, $data['email']);
+			if($checkEmail){
+				throw new \Exception('Email address already in use');
+			}
+			
+			$useData['email'] = $data['email'];
+		}
+		
+		if($data['admin_mode'] AND isset($data['username'])){
+			if(trim($data['username']) == ''){
+				throw new \Exception('Username required');
+			}
+			$getUser = $this->get('users', $data['username'], array('userId'), 'username');
+			if($getUser AND $getUser['userId'] != $id){
+				throw new \Exception('Username already taken');
+			}
+			$useData['username'] = $data['username'];
+			$useData['slug'] = genURL($data['username']);
+		}	
+		
+		if(!$data['admin_mode']){
+			if(isset($data['password']) AND isset($data['password2']) AND trim($data['password']) != ''){
+				if($data['password'] != $data['password2']){
+					throw new \Exception('Passwords do not match');
+				}
+				$genPass = genPassSalt($data['password']);
+				$useData['password'] = $genPass['hash'];
+				$useData['spice'] = $genPass['salt'];
+			}
+		}
+		
+		if($data['admin_mode'] AND isset($data['activated'])){
+			$data['activated'] = intval($data['activated']);
+			if($data['activated'] == 1){
+				$useData['activated'] = 1;
+				$useData['activate_code'] = '';
+			}
+			else{
+				$useData['activated'] = 0;
+			}
+		}
+		
+		if(count($useData) > 0){
+			$update = $this->edit('users', $id, $useData);
+			if(!$update){
+				throw new \Exception('Error updating account settings');
+			}
+		}
+		
+		return true;		
+	}
+	
 }

@@ -122,21 +122,8 @@ class Account_Controller extends \Core\Controller
 		$getSettings = $this->container->getSettings(true);
 		$this->useMethod = 'PATCH';
 
-		$getSettings = $getSettings['settings'];
-		
-		$useData = array();
-		foreach($getSettings as $setting){
-			if(isset($this->args['data'][$setting['name']])){
-				$useData[$setting['name']] = $this->args['data'][$setting['name']];
-			}
-		}
-		
-		if(isset($this->args['data']['avatar'])){
-			$useData['avatar'] = $this->args['data']['avatar'];
-		}
-		
 		try{
-			$update = $this->model->updateSettings($this->user, $useData, true);
+			$update = $this->model->updateSettings($this->user, $this->args['data'], true);
 		}
 		catch(\Exception $e){
 			http_response_code(401);

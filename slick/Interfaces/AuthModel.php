@@ -19,4 +19,6 @@ interface AuthModel
 	public function makeSession($userId, $token);
 	
 	public function registerAccount($data);
+	
+	public function updateAccount($userId, $data);
 }

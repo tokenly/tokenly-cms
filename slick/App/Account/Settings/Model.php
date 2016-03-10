@@ -119,65 +119,12 @@ class Settings_Model extends Core\Model
 	protected function updateSettings($user, $data, $isAPI = false, $adminView = false)
 	{
 		$app = get_app('account');
-		$getUser = $this->get('users', $user['userId']);
-		if(!$adminView AND !isset($data['curPassword'])){
-			throw new \Exception('Current password required to complete changes');
-		}
+		$auth_model = new Auth_Model;
+		$data['admin_mode'] = $adminView;
+		$data['is_api'] = $isAPI;
+		$auth_model->updateAccount($user['userId'], $data);
 		
-		if(!$adminView){
-			$checkPass = hash('sha256', $getUser['spice'].$data['curPassword']);
-			if($checkPass != $getUser['password']){
-				throw new \Exception('Incorrect password!');
-			}
-		}
-		$useData = array();
-			
-		if(isset($data['email']) AND trim($data['email']) != ''){
-			if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
-				throw new \Exception('Invalid email address');
-			}
-			$checkEmail = $this->container->checkEmailInUse($user['userId'], $data['email']);
-			if($checkEmail){
-				throw new \Exception('Email address already in use');
-			}
-			
-			$useData['email'] = $data['email'];
-		}
-		
-		if($adminView AND isset($data['username'])){
-			if(trim($data['username']) == ''){
-				throw new \Exception('Username required');
-			}
-			$getUser = $this->get('users', $data['username'], array('userId'), 'username');
-			if($getUser AND $getUser['userId'] != $user['userId']){
-				throw new \Exception('Username already taken');
-			}
-			$useData['username'] = $data['username'];
-			$useData['slug'] = genURL($data['username']);
-		}
-
-		if(!$adminView){
-			if(isset($data['password']) AND isset($data['password2']) AND trim($data['password']) != ''){
-				if($data['password'] != $data['password2']){
-					throw new \Exception('Passwords do not match');
-				}
-				$genPass = genPassSalt($data['password']);
-				$useData['password'] = $genPass['hash'];
-				$useData['spice'] = $genPass['salt'];
-			}
-		}
-		
-		if($adminView AND isset($data['activated'])){
-			$data['activated'] = intval($data['activated']);
-			if($data['activated'] == 1){
-				$useData['activated'] = 1;
-				$useData['activate_code'] = '';
-			}
-			else{
-				$useData['activated'] = 0;
-			}
-		}
-		
+		//turn this into a mod later	
 		if(isset($user['affiliate']) AND !$user['affiliate'] AND isset($data['refUser']) AND trim($data['refUser']) != ''){
 			$getRef = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => trim(strtolower($data['refUser']))));
 			if($getRef){
@@ -196,6 +143,7 @@ class Settings_Model extends Core\Model
 			}
 		}
 		
+		//turn this into a mod later
 		if(isset($data['field-'.PRIMARY_TOKEN_FIELD]) AND trim($data['field-'.PRIMARY_TOKEN_FIELD]) != ''){
 			$val = $data['field-'.PRIMARY_TOKEN_FIELD];
 			$validate = new API\BTCValidate;
@@ -239,13 +187,7 @@ class Settings_Model extends Core\Model
 			}
 		}
 		
-		if(count($useData) > 0){
-			$update = $this->edit('users', $user['userId'], $useData);
-			if(!$update){
-				throw new \Exception('Error updating account settings');
-			}
-		}
-		
+
 		$meta = new \App\Meta_Model;
 		if(isset($data['pubProf']) AND intval($data['pubProf']) === 1){
 			$meta->updateUserMeta($user['userId'], 'pubProf', 1);
@@ -269,6 +211,7 @@ class Settings_Model extends Core\Model
 		
 		
 		//keep this in for API compatibility for now
+		//turn this into a mod
 		if(!$isAPI){
 			if(isset($_FILES['avatar']['tmp_name']) AND trim($_FILES['avatar']['tmp_name']) != ''){
 				$picName = md5($user['username'].$_FILES['avatar']['name']).'.jpg';
@@ -297,6 +240,7 @@ class Settings_Model extends Core\Model
 			}
 		}
 		
+		//turn this into a mod later
 		if(isset($data['dropList'])){
 			$dropGroup = $this->get('groups', 'drop-list', array(), 'slug');
 			if($dropGroup){
