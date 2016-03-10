@@ -17,4 +17,6 @@ interface AuthModel
 	public function clearSession($auth);
 	
 	public function makeSession($userId, $token);
+	
+	public function registerAccount($data);
 }

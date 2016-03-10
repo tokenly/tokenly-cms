@@ -315,7 +315,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		
 	}
 	
-	protected function registerAccount($data, $noAuth = false)
+	public function registerAccount($data, $noAuth = false)
 	{		
 		$req = array('username' => true, 'password' => true, 'email' => true);
 		foreach($req as $key => $required){
@@ -323,7 +323,6 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 				throw new \Exception(ucfirst($key).' required');
 			}
 		}
-		
 		$data['username'] = preg_replace('/\s+/', '', $data['username']);
 
 		if(trim($data['username']) == ''){

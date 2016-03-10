@@ -1,6 +1,7 @@
 <?php
 namespace Drivers\Auth;
 use Core, UI, Util, App\Profile, App\Account\Settings_Model, App\Meta_Model;
+use Tokenly\AccountsClient\AccountsAPI;
 
 class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 {
@@ -11,6 +12,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		parent::__construct();
 		$this->oauth_url = TOKENPASS_URL.'/oauth';
 		$this->scopes = array('user', 'tca');
+		$this->tokenpass = new AccountsAPI;
 	}
 	
 	public static function userInfo($userId = false)
@@ -383,5 +385,89 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		
 		return $add;
 	}
+	
+	
+	public function registerAccount($data)
+	{		
+		$req = array('username' => true, 'password' => true, 'email' => true);
+		foreach($req as $key => $required){
+			if($required AND !isset($data[$key])){
+				throw new \Exception(ucfirst($key).' required');
+			}
+		}
+		$data['username'] = preg_replace('/\s+/', '', $data['username']);
+
+		if(trim($data['username']) == ''){
+			http_response_code(400);
+			throw new \Exception('Username required');
+		}
+		if(trim($data['password']) == ''){
+			http_response_code(400);
+			throw new \Exception('Password required');
+		}
+		
+		if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)){
+			http_response_code(400);
+			throw new \Exception('Invalid email');
+		}
+		
+		$settingsModel = new Settings_Model;
+		$checkEmail = $settingsModel->checkEmailInUse(0, $data['email']);
+		if($checkEmail){
+			throw new \Exception('Email already in use');
+		}		
+		
+		if($this->container->usernameExists($data['username'])){
+			http_response_code(400);
+			throw new \Exception('Username already taken');
+		}		
+		
+		$tokenpass_register = $this->tokenpass->registerAccount($data['username'], $data['password'], $data['email']);
+		if(!$tokenpass_register OR !isset($tokenpass_register['id'])){
+			http_response_code(400);
+			throw new \Exception('Error registering with TokenPass');
+		}
+		
+		$userData = array();
+		$userData['username'] = $data['username'];
+		$userData['email'] = $data['email'];
+		$userData['password'] = 'tokenpass';
+		$userData['spice'] = 'tokenpass';
+		$userData['regDate'] = timestamp();
+		$userData['slug'] = genURL($data['username']);
+		$userData['slug'] = $this->container->checkSlugExists($userData['slug']);
+		$userData['activated'] = 1;
+		
+		$add = $this->insert('users', $userData);
+		if(!$add){
+			http_response_code(400);
+			throw new \Exception('Error saving account');
+		}
+		
+		//assign them to any default groups
+		$getGroups = $this->getAll('groups', array('isDefault' => 1));
+		foreach($getGroups as $group){
+			$this->insert('group_users', array('userId' => $add, 'groupId' => $group['groupId']));
+		}
+		
+		$meta = new \App\Meta_Model;
+		$site = currentSite();
+		$meta->updateUserMeta($add, 'site_registered', $site['domain']);
+		$meta->updateUserMeta($add, 'pubProf', 1);
+		$meta->updateUserMeta($add, 'emailNotify', 1);		
+		$meta->updateUserMeta($add, 'tokenly_uuid', $tokenpass_register['id']);		
+		
+		return $add;
+
+	}	
+	
+	protected function usernameExists($username)
+	{
+		$get = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => strtolower(trim($username))));
+		if($get){
+			return true;
+		}
+		return false;
+	}		
 	
 }
