@@ -88,6 +88,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		$params = array(
 			'username' => $data['username'],
 			'password' => $data['password'],
+			'grant_access' => 1,
 		);
 		
 
@@ -96,8 +97,8 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
 
 		$response = json_decode(curl_exec($ch), true);
-		curl_close($ch);				
-		
+		curl_close($ch);		
+
 		if(!is_array($response)){
 			throw new \Exception('Error logging in');
 		}
@@ -375,7 +376,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		$site = currentSite();
 
 		$meta->updateUserMeta($add, 'IP_ADDRESS', $_SERVER['REMOTE_ADDR']);
-		$meta->updateUserMeta($add, 'site_registered', $site['site']);
+		$meta->updateUserMeta($add, 'site_registered', $site['domain']);
 		$meta->updateUserMeta($add, 'pubProf', 1);
 		$meta->updateUserMeta($add, 'emailNotify', 1);		
 		$meta->updateUserMeta($add, 'tokenly_uuid', $data['id']);
