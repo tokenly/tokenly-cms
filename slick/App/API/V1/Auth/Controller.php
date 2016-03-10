@@ -40,9 +40,14 @@ class Auth_Controller extends \Core\Controller
 	protected function authenticate()
 	{
 		$output = array();
+		$model = $this->auth_model;
+		if(isset($this->args['data']['force_native']) AND $this->args['data']['force_native']){
+			//force the Auth\Native driver to be used, for legacy migration purposes
+			$model = new \Drivers\Auth\Native_Model;
+		}
 		try{
 			$this->args['data']['isAPI'] = true;
-			$auth = $this->auth_model->checkAuth($this->args['data']);
+			$auth = $model->checkAuth($this->args['data']);
 		}
 		catch(\Exception $e){
 			$output['error'] = $e->getMessage();
