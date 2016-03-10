@@ -107,6 +107,12 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 		$output = $this->output;
 		$output['title'] = 'Login';
 		
+		if(isset($_GET['error']) AND isset($_GET['error_description'])){
+			Util\Session::flash('message', urldecode($_GET['error_description']), 'alert-danger');
+			$output['view'] = 'auth-error';
+			return $output;
+		}
+		
 		if(!isset($_GET['code'])){
 			Util\Session::flash('message', 'Code not set', 'alert-danger');
 			$output['view'] = 'auth-error';
