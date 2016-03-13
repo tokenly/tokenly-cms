@@ -18,7 +18,7 @@ if(file_exists($forum_recent_file)){
 }
 if(!$forum_threads){
 	$forum_api = new \App\API\V1\Forum_Model;
-	$forum_threads = $forum_api->getThreadList(array('user' => $user));
+	$forum_threads = $forum_api->getThreadList(array('user' => $user, 'site' => currentSite()));
 	@file_put_contents($forum_recent_file, json_encode(array('last_update' => $time, 'threads' => $forum_threads)));
 }
 
