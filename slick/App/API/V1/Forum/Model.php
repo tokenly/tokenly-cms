@@ -405,7 +405,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	protected function checkUserFilters($data)
 	{
 		$andFilters = '';
-		if(isset($data['users'])){
+		if(isset($data['users']) AND is_array($data['users'])){
 			$userList = explode(',', $data['users']);
 			foreach($userList as $bk => &$b){
 				$getUser = $this->get('users', $b, array('userId'));
