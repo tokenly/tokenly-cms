@@ -2,6 +2,6 @@
 
 return array(
 	'auth' => 'native', //options: native, tokenpass
-	'tca' => 'native', //options: native, tokenpass
+	'coinAddress' => 'native', //options: native, tokenpass
 
 );
