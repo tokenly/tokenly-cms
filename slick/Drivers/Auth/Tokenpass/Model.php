@@ -563,6 +563,8 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 				}
 			}
 		}
+		$inv = new \App\Tokenly\Inventory_Model;
+		$inv->getUserBalances($user['userId'], false, 'btc', true);
 		return true;
 	}
 	
