@@ -14,7 +14,6 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 	{
 			$output = parent::init();
 			$this->output = $output;
-			
 			if(isset($this->args[2])){
 				switch($this->args[2]){
 					case 'logout':
@@ -31,6 +30,9 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 						break;
 					case 'callback':
 						$output = $this->container->callback();
+						break;
+					case 'sync':
+						$output = $this->sync();
 						break;
 					default:
 						$output['view'] = '404';
@@ -83,7 +85,15 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 	
 	public function sync()
 	{
-		
+		$user = $this->data['user'];
+		if($user){
+			if(class_exists('\\App\\Tokenly\\Address_Model')){
+				//sync coin addresses
+				$this->model->syncAddresses($user);
+			}
+		}
+		redirect(route('account.account-home'));
+		die();
 	}
 	
 	public function verify()
@@ -184,7 +194,7 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 			}
 		}
 		
-		redirect(route('account.account-home'));
+		redirect(route('account.auth').'/sync');
 		return $output;
 	}
 	

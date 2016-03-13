@@ -496,4 +496,74 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		return true;
 	}	
 	
+	protected function syncAddresses($user)
+	{
+		try{
+			$get = $this->tokenpass->getAddresses($user['slug']);
+		}
+		catch(\Exception $e){
+			return false;
+		}
+		if(!is_array($get) OR count($get) == 0){
+			return false;
+		}
+		$current = $this->getAll('coin_addresses', array('userId' => $user['userId']));
+		
+		//remove any that don't exist on their account first
+		$to_delete = array();
+		if($current){
+			foreach($current as $c_row){
+				$found = false;
+				foreach($get as $row){
+					if($row['address'] == $c_row['address']){
+						$found = true;
+						break;
+					}
+				}
+				if(!$found){
+					$to_delete[] = $c_row['addressId'];
+				}
+			}
+		}
+		foreach($to_delete as $addressId){
+			$this->delete('coin_addresses', $addressId);
+		}
+		
+		//add new addresses
+		$time = timestamp();
+		foreach($get as $row){
+			$found = false;
+			foreach($current as $c_row){
+				if($c_row['address'] == $row['address']){
+					$found = true;
+					break;
+				}
+			}
+			if(!$found){
+				$address = array();
+				$address['userId'] = $user['userId'];
+				$address['address'] = $row['address'];
+				$address['type'] = 'btc';
+				$address['submitDate'] = $time;
+				$address['verified'] = 1;
+				$address['public'] = intval($row['public']);
+				$address['isXCP'] = 1;
+				$add = $this->insert('coin_addresses', $address);
+				if($add){
+					if(is_array($row['balances'])){
+						foreach($row['balances'] as $asset => $amnt){
+							$balance = array();
+							$balance['addressId'] = $add;
+							$balance['asset'] = $asset;
+							$balance['balance'] = round($amnt / SATOSHI_MOD, 8);
+							$balance['lastChecked'] = $time;
+							$this->insert('xcp_balances', $balance);
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
 }
