@@ -11,7 +11,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 	{
 		parent::__construct();
 		$this->oauth_url = TOKENPASS_URL.'/oauth';
-		$this->scopes = array('user', 'tca');
+		$this->scopes = array('user', 'tca', 'private-address');
 		$this->tokenpass = new AccountsAPI;
 	}
 	
