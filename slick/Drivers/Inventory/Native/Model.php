@@ -1,6 +1,6 @@
 <?php
 namespace Drivers\Inventory;
-use Core, API;
+use Core, API, App\Tokenly\Address_Model;
 class Native_Model extends Core\Model
 {
 	public static $addresses = array();
