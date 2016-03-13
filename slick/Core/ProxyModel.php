@@ -3,14 +3,16 @@ namespace Core;
 
 class ProxyModel
 {
-	use \Traits\Containerized;
+
 	
 	function __construct()
 	{
 		if(method_exists($this, 'load_driver')){
 			$this->load_driver('model');
 		}
-		$this->load_container();
+		if(method_exists($this, 'load_container')){
+			$this->load_container();
+		}
 	}
 	
 	
@@ -30,6 +32,7 @@ class ProxyModel
 	public static function __callStatic($method, $arguments)
 	{
 		$use = get_called_class();
+		$orig = $use;
 		if(isset($use::$container_class)){
 			$class = $use::$container_class;
 			if(!$class){
@@ -38,10 +41,8 @@ class ProxyModel
 			$use = $use::$container_class;
 		}
 		$method = '\\'.$use.'::'.$method;
-		
 		$output = call_user_func_array($method, $arguments);
 		return $output;
 	}	
-
 	
 }
