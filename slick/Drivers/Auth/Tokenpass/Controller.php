@@ -92,7 +92,12 @@ class Tokenpass_Controller extends ModControl implements \Interfaces\AuthControl
 				$this->model->syncAddresses($user);
 			}
 		}
-		redirect(route('account.account-home'));
+		if(isset($_GET['r'])){
+			redirect(urldecode($_GET['r']));
+		}
+		else{
+			redirect(route('account.account-home'));
+		}
 		die();
 	}
 	
