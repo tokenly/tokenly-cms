@@ -345,7 +345,10 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		//check username is taken
 		$get = $this->get('users', $data['username'], array(), 'username');
 		if($get){
-			throw new \Exception('Username already taken by other user in system');
+			//throw new \Exception('Username already taken by other user in system');
+			//merge account and just let them through - tempory during migration
+			$meta->updateUserMeta($get['userId'], 'tokenly_uuid', $data['id']);
+			return $get['userId'];
 		}
 		
 		///set up user data
