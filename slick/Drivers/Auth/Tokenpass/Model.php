@@ -172,7 +172,16 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		if(isset($_COOKIE['rememberAuth'])){
 			setcookie('rememberAuth', '', time()-3600,'/');
 		}		
-		return $this->delete('user_sessions', $getSesh['sessionId']);
+		$delete = $this->delete('user_sessions', $getSesh['sessionId']);
+		if(!$delete){
+			return false;
+		}
+		$logout_url = TOKENPASS_URL.'/api/v1/oauth/logout?client_id='.TOKENPASS_CLIENT.'&token='.$auth;
+		$tokenpass_logout = json_decode(@file_get_contents($logout_url), true);
+		if(!is_array($tokenpass_logout) OR !$tokenpass_logout['result']){
+			return false;
+		}
+		return true;
 	}
 	
 	public function makeSession($userId, $token)
