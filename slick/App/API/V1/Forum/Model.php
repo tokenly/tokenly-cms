@@ -161,6 +161,9 @@ class Forum_Model extends \App\Forum\Board_Model
 					unset($thread['author']['showEmail']);
 					unset($thread['author']['email']);
 					unset($thread['author']['lastAuth']);
+					if(isset($thread['author']['avatar'])){
+						$thread['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['author']['avatar'];
+					}
 				}
 				$thread['mostRecent'] = false;
 				$getRecent = false;
@@ -180,6 +183,9 @@ class Forum_Model extends \App\Forum\Board_Model
 						unset($thread['mostRecent']['author']['showEmail']);				
 						unset($thread['mostRecent']['author']['email']);			
 						unset($thread['mostRecent']['author']['lastAuth']);			
+						if(isset($thread['mostRecent']['avatar'])){
+							$thread['mostRecent']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['mostRecent']['avatar'];
+						}						
 					}		
 				}
 			}			
