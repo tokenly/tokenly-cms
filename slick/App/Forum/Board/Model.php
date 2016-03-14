@@ -642,8 +642,10 @@ class Board_Model extends Core\Model
 													LIMIT 1', array(':id' => $row['topicId']));
 			}
 			$row['author'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			$row['user'] = $row['author'];
 			if($row['mostRecent']){
 				$row['mostRecent']['author'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+				$row['mostRecent']['user'] = $row['mostRecent']['author'];
 			}
 			$get[$k] = $row;
 		}
@@ -731,8 +733,10 @@ class Board_Model extends Core\Model
 														LIMIT 1', array(':id' => $row['topicId']));
 			}
 			$row['author'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			$row['user'] = $row['author'];
 			if($row['mostRecent']){
 				$row['mostRecent']['author'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+				$row['mostRecent']['user'] = $row['mostRecent']['author'];
 			}
 			$get[$k] = $row;
 		}
