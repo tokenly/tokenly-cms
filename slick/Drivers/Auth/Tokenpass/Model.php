@@ -344,6 +344,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 	{
 		//check username is taken
 		$get = $this->get('users', $data['username'], array(), 'username');
+		$meta = new \App\Meta_Model;
 		if($get){
 			//throw new \Exception('Username already taken by other user in system');
 			//merge account and just let them through - tempory during migration
@@ -377,7 +378,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		}
 		
 		//assign meta data
-		$meta = new \App\Meta_Model;
+		
 		$site = currentSite();
 
 		$meta->updateUserMeta($add, 'IP_ADDRESS', $_SERVER['REMOTE_ADDR']);
