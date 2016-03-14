@@ -117,14 +117,11 @@ class Forum_Model extends \App\Forum\Board_Model
 		$sql = 'SELECT t.topicId, t.userId, t.title, t.url'.$andContent.', t.boardId, b.name as boardName,
 					b.slug as boardSlug, b.categoryId, c.name as categoryName, c.slug as categorySlug,
 					 t.locked, t.postTime, t.editTime, t.lastPost, t.sticky, t.views, t.lockTime, 
-					 t.lockedBy, t.editedBy, cnt.total as count, r.postId as recent_postId,
-					 r.userId as recent_userId, r.postTime as recent_postTime, r.editTime as recent_editTime,
-					 r.content as recent_content		
+					 t.lockedBy, t.editedBy, cnt.total as count		
 				FROM forum_topics t
 				LEFT JOIN forum_boards b ON b.boardId = t.boardId
 				LEFT JOIN forum_categories c ON c.categoryId = b.categoryId
 				LEFT JOIN (SELECT count(*) as total, topicId FROM forum_posts WHERE trollPost = 0 AND buried = 0 GROUP BY topicId) cnt ON cnt.topicId = t.topicId
-				LEFT JOIN (SELECT postId, topicId, userId, postTime, editTime, content FROM forum_posts WHERE buried = 0 AND trollPost = 0 ORDER BY postId DESC LIMIT 1) r ON r.topicId = t.topicId				
 				WHERE t.trollPost = 0 AND t.buried = 0 AND b.active = 1
 				'.$andWhen.'
 				'.$andFilters.'
@@ -173,6 +170,13 @@ class Forum_Model extends \App\Forum\Board_Model
 												  'userId' => $thread['recent_userId'],
 												  'postTime' => $thread['recent_postTime'],
 												  'editTime' => $thread['recent_editTime']);
+				}
+				else{
+					$getRecent = $this->fetchSingle('SELECT *
+										FROM forum_posts
+										WHERE topicId = :id AND buried = 0
+										ORDER BY postId DESC
+										LIMIT 1', array(':id' => $thread['topicId']));
 				}
 
 				if($getRecent){
