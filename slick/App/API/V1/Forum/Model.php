@@ -159,7 +159,9 @@ class Forum_Model extends \App\Forum\Board_Model
 					unset($thread['author']['email']);
 					unset($thread['author']['lastAuth']);
 					if(isset($thread['author']['avatar'])){
-						$thread['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['author']['avatar'];
+						if(strpos($thread['author']['avatar'], '://') === false){
+							$thread['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['author']['avatar'];
+						}
 					}
 				}
 				$thread['mostRecent'] = false;
@@ -188,7 +190,9 @@ class Forum_Model extends \App\Forum\Board_Model
 						unset($thread['mostRecent']['author']['email']);			
 						unset($thread['mostRecent']['author']['lastAuth']);			
 						if(isset($thread['mostRecent']['author']['avatar'])){
-							$thread['mostRecent']['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['mostRecent']['author']['avatar'];
+							if(strpos($thread['mostRecent']['author']['avatar'], '://') === false){
+								$thread['mostRecent']['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['mostRecent']['author']['avatar'];
+							}
 						}						
 					}		
 				}
