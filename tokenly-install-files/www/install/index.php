@@ -30,7 +30,7 @@ class Tokenly_Install extends \Core\Model
 	
 	public function getUserForm()
 	{
-		$model = new \App\Account\Home_Model;
+		$model = new \App\Account\Auth_Model;
 		$form = $model->getRegisterForm();
 		return $form;
 	}
