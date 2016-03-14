@@ -145,7 +145,7 @@ class Board_Model extends Core\Model
 			foreach($getBoardSubs as $sub) {
 				// don't notify self
 				if($sub['userId'] == $useData['userId']) { continue; }
-				$notifyData['sub'] = $sub['userId'];
+				$notifyData['sub'] = $sub;
 
 				// fetch the board name
 				if (!isset($notifyData['board'])) {
