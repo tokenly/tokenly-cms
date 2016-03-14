@@ -641,9 +641,9 @@ class Board_Model extends Core\Model
 													ORDER BY postId DESC
 													LIMIT 1', array(':id' => $row['topicId']));
 			}
-			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			$row['author'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
 			if($row['mostRecent']){
-				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+				$row['mostRecent']['author'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
 			}
 			$get[$k] = $row;
 		}
@@ -730,9 +730,9 @@ class Board_Model extends Core\Model
 														ORDER BY postId DESC
 														LIMIT 1', array(':id' => $row['topicId']));
 			}
-			$row['user'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
+			$row['author'] = $profModel->getUserProfile($row['userId'], $site['siteId']);
 			if($row['mostRecent']){
-				$row['mostRecent']['user'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
+				$row['mostRecent']['author'] =  $profModel->getUserProfile($row['mostRecent']['userId'], $site['siteId']);
 			}
 			$get[$k] = $row;
 		}

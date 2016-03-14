@@ -217,7 +217,10 @@ if(!$isAll){
 							<strong><i class="fa fa-eye"></i> <?= number_format($topic['views']) ?> <?= pluralize('reader', $topic['views'], true) ?></strong>
 						</span>
 						<?php
-						if($topic['mostRecent']){
+						if($topic['mostRecent'] AND isset($topic['mostRecent']['author'])){
+							if(!isset($topic['numPages'])){
+								$topic['numPages'] = 1;
+							}
 						?>
 						<span class="thread-most-recent">
 							<a href="<?= SITE_URL ?>/forum/post/<?= $topic['url'] ?>?page=<?= $topic['numPages'] ?>#post-<?= $topic['mostRecent']['postId'] ?>" title="<?= $topic['mostRecent']['author']['username'] ?> says: <?= str_replace('"', '\'', shortenMsg($topic['mostRecent']['content'], 250)) ?>"><i class="fa fa-mail-forward"></i> View most recent</a>
