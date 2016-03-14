@@ -183,8 +183,8 @@ class Forum_Model extends \App\Forum\Board_Model
 						unset($thread['mostRecent']['author']['showEmail']);				
 						unset($thread['mostRecent']['author']['email']);			
 						unset($thread['mostRecent']['author']['lastAuth']);			
-						if(isset($thread['mostRecent']['avatar'])){
-							$thread['mostRecent']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['mostRecent']['avatar'];
+						if(isset($thread['mostRecent']['author']['avatar'])){
+							$thread['mostRecent']['author']['avatar'] = $data['site']['url'].'/files/avatars/'.$thread['mostRecent']['author']['avatar'];
 						}						
 					}		
 				}
