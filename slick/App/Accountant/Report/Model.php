@@ -189,11 +189,8 @@ class Report_Model extends Core\Model
 		$output[] = array('Date', 'Address', 'Asset', 'Debit', 'Credit', 'BTC Amount', 'TX Type', 'Block Height', 'TX ID');
 		$meta = new \App\Meta_Model;
 		$tokenlyApp = get_app('tokenly');
-		$blockCache = $meta->getAppMeta($tokenlyApp['appId'], 'block-cache');
-		$blockInfos = array();
-		if($blockCache){
-			$blockInfos = json_decode($blockCache, true);
-		}
+		$save_path = SITE_BASE.'/data/cache/block-cache.json';
+		$blockCache = json_decode(@file_get_contents($save_path), true);
 
 		foreach($txList as $tx){
 			
@@ -246,8 +243,7 @@ class Report_Model extends Core\Model
 			
 			$output[] = $item;
 		}
-		$meta->updateAppMeta($tokenlyApp['appId'], 'block-cache', json_encode($blockInfos)); //update the block time cache
-
+		file_put_contents($save_path, json_encode($blockInfos));
 		return $output;
 	}
 }

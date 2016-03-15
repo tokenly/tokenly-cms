@@ -29,8 +29,9 @@ foreach($types as $type){
 			$user_points[$user['userId']][$week['distribute']['completeDate']] = $user['score'];
 		}
 	}
-
-	$save_average = $meta->updateAppMeta($tokenly_app['appId'], $type.'_chart_averages', json_encode($average_points));
+	
+	$save_path = SITE_BASE.'/data/cache';
+	$save_average = file_put_contents($save_path.'/'.$type.'_chart_averages.json', json_encode($average_points));
 	if($save_average){
 		echo "$type chart averages updated!\n";
 	}

@@ -64,8 +64,7 @@ class LTBStats
 			$stats['marketCap'] = 'N/A';
 		}
 		
-		$ltbApp = $model->get('apps', 'tokenly', array(), 'slug');
-		$appMeta = $model->appMeta($ltbApp['appId']);
+		$appMeta = $model->appMeta($tokenly['meta']);
 
 		
 		ob_start();
@@ -959,15 +958,15 @@ class LTBStats
 		
 		$meta = new \App\Meta_Model;
 		$tokenlyApp = get_app('tokenly');
+		$save_path = SITE_BASE.'/data/cache';
+		
 		$lastReportHash = $meta->getAppMeta($tokenlyApp['appId'], 'leaderboard-hash-'.$type);
 		$thisHash = false;
 		if(isset($getPop[0])){
 			$thisHash = md5($getPop[0]['reportId']);
 		}
 		if($lastReportHash == $thisHash){
-			$leaderData = $meta->getAppMeta($tokenlyApp['appId'], 'leaderboard-data-'.$type, 0, true);
-			$uncompress = gzuncompress($leaderData);
-			$getLeaderboard = json_decode($uncompress, true);
+			$leaderData = json_decode(@file_get_contents($save_path.'/leaderboard-data-'.$type.'.json'), true);
 			self::$reportData[$type] = $getLeaderboard;
 			return $getLeaderboard;
 		}
@@ -1064,9 +1063,8 @@ class LTBStats
 				}					
 			}
 			
-			//save full report to meta in BLOB format
-			$compressed = gzcompress(json_encode($userList), 9);
-			$meta->updateAppMeta($tokenlyApp['appId'], 'leaderboard-data-'.$type, $compressed, '', 0, '', true);
+			//save full report
+			file_put_contents($save_path.'/leaderboard-data-'.$type.'.json', json_encode($userList));
 			$meta->updateAppMeta($tokenlyApp['appId'], 'leaderboard-hash-'.$type, $thisHash);
 		}
 		

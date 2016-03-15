@@ -62,14 +62,15 @@ foreach($bit_history as $k => $row){
 	}
 }
 
-$save = $meta->updateAppMeta($tokenly_app['appId'], 'ltbc_price_history', json_encode($ltbc_history));
+$save_path = SITE_BASE.'/data/cache';
+$save = file_put_contents($save_path.'/ltbc_price_history.json', json_encode($ltbc_history));
 if(!$save){
 	echo "Error saving LTBC price history \n";
 }
 else{
 	echo "LTBC price history saved \n";
 }
-$save = $meta->updateAppMeta($tokenly_app['appId'], 'btc_price_history', json_encode($bit_history));
+$save = file_put_contents($save_path.'/btc_price_history.json', json_encode($bit_history));
 if(!$save){
 	echo "Error saving BTC price history \n";
 }

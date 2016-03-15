@@ -633,10 +633,12 @@ function drawCharts(){
 	var plot_data = [];
 	<?php
 	$tokenly_app = get_app('tokenly');
-	$pop_averages = array();
 	$user_points = array();
-	if(isset($tokenly_app['meta']['pop_chart_averages'])){
-		$pop_averages = json_decode($tokenly_app['meta']['pop_chart_averages'], true);
+	$cache_path = SITE_BASE.'/data/cache';
+	
+	$pop_averages = json_decode(@file_get_contents($cache_path.'/pop_chart_averages.json'), true);
+	if(!is_array($pop_averages)){
+		$pop_averages = array();
 	}
 	if(isset($user['meta']['pop_chart_scores'])){
 		$user_points = json_decode($user['meta']['pop_chart_scores'], true);
@@ -676,10 +678,11 @@ function drawCharts(){
 	
 	var plot_data = [];
 	<?php
-	$poq_averages = array();
+
 	$user_points = array();
-	if(isset($tokenly_app['meta']['poq_chart_averages'])){
-		$poq_averages = json_decode($tokenly_app['meta']['poq_chart_averages'], true);
+	$poq_averages = json_decode(@file_get_contents($cache_path.'/poq_chart_averages.json'), true);
+	if(!is_array($poq_averages)){
+		$poq_averages = array();
 	}
 	if(isset($user['meta']['poq_chart_scores'])){
 		$user_points = json_decode($user['meta']['poq_chart_scores'], true);
@@ -719,10 +722,11 @@ function drawCharts(){
 	
 	var plot_data = [];
 	<?php
-	$pov_averages = array();
+
 	$user_points = array();
-	if(isset($tokenly_app['meta']['pov_chart_averages'])){
-		$pov_averages = json_decode($tokenly_app['meta']['pov_chart_averages'], true);
+	$pov_averages = json_decode(@file_get_contents($cache_path.'/pov_chart_averages.json'), true);
+	if(!is_array($pov_averages)){
+		$pov_averages = array();
 	}
 	if(isset($user['meta']['pov_chart_scores'])){
 		$user_points = json_decode($user['meta']['pov_chart_scores'], true);
@@ -763,9 +767,9 @@ function drawCharts(){
 
 	var plot_data = [];
 	<?php
-	$ltbc_history = array();
-	if(isset($tokenly_app['meta']['ltbc_price_history'])){
-		$ltbc_history = json_decode($tokenly_app['meta']['ltbc_price_history'], true);
+	$ltbc_history = json_decode(@file_get_contents($cache_path.'/ltbc_price_history.json'), true);
+	if(!is_array($ltbc_history)){
+		$ltbc_history = array();
 	}
 	foreach($ltbc_history as $row){
 		$ltbc_satoshis = round($row['btc_rate'] * SATOSHI_MOD);
@@ -797,9 +801,9 @@ function drawCharts(){
 		
 	var plot_data = [];
 	<?php
-	$btc_history = array();
-	if(isset($tokenly_app['meta']['btc_price_history'])){
-		$btc_history = json_decode($tokenly_app['meta']['btc_price_history'], true);
+	$btc_history = json_decode(@file_get_contents($cache_path.'/btc_price_history.json'), true);
+	if(!is_array($btc_history)){
+		$btc_history = array();
 	}
 	foreach($btc_history as $row){
 		echo 'plot_data.push([new Date('.strtotime($row['datetime']).' * 1000),'.$row['average'].']);'."\n";
