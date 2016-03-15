@@ -151,7 +151,7 @@ class Submissions_Controller extends \App\ModControl
 
 			$comDiff = $time - strtotime($row['commentCheck']);
 			$commentThread = false;
-			if($comDiff > 1800){
+			if($comDiff > 600){
 				$comment_updates[] = $row['postId'];
 			}
 			$output['totalComments'] += $row['commentCount'];

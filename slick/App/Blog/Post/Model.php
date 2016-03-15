@@ -28,6 +28,14 @@ class Post_Model extends Core\Model
 				$output[$key] = $val;
 			}
 		}
+		
+		$time = time();
+		$check_time = strtotime($get['commentCheck']);
+		$diff = $time - $check_time;
+		if($diff > 600){
+			exec('nohup php '.SITE_BASE.'/scripts/updateBlogPostCommentCounts.php '.$get['postId'].' > /dev/null &');
+		}
+		
 		return $output;
 	}
 	
