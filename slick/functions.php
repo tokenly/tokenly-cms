@@ -490,7 +490,7 @@ function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false, $r
 	if($cache_key){
 		\App\Meta_Model::$metaCache[$rowLock] = $output;
 	}	
-	if($return_single AND count($output) == 1){
+	if($return_single){
 		return $output[0];
 	}
 	return $output;
@@ -689,7 +689,7 @@ function app_enabled($slugs, $searchType = 'slug')
 	}	
 	if(isset($exp[1])){
 		$module_list = static_cache('modules_list');	
-		$getModule = extract_row($module_list, array($searchType => $exp[1]), false, false, true);
+		$getModule = extract_row($module_list, array($searchType => $exp[1], 'appId' => $getApp['appId']), false, false, true);
 		if(!$getModule){
 			return false;
 		}

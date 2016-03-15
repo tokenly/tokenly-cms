@@ -11,12 +11,14 @@ class Model extends Core\Model
 			$app = get_app('dashboard');
 			if($app){
 				$module = get_app('dashboard.dash-home');
+
 			}
 		}
 		else{
 			$app = get_app(strtolower($args[1]), 'url');
+			
 			if($app AND isset($args[2])){
-				$module = get_app(strtolower($args[1]).'.'.strtolower($args[2]), 'url');
+				$module = get_app(strtolower($args[1]).'.'.strtolower($args[2]), 'url');	
 			}
 		}
 		
