@@ -64,7 +64,7 @@ class LTBStats
 			$stats['marketCap'] = 'N/A';
 		}
 		
-		$appMeta = $model->appMeta($tokenly['meta']);
+		$appMeta = $tokenly['meta'];
 
 		
 		ob_start();
@@ -966,7 +966,7 @@ class LTBStats
 			$thisHash = md5($getPop[0]['reportId']);
 		}
 		if($lastReportHash == $thisHash){
-			$leaderData = json_decode(@file_get_contents($save_path.'/leaderboard-data-'.$type.'.json'), true);
+			$getLeaderboard = json_decode(@file_get_contents($save_path.'/leaderboard-data-'.$type.'.json'), true);
 			self::$reportData[$type] = $getLeaderboard;
 			return $getLeaderboard;
 		}

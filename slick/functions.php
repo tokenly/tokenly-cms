@@ -463,6 +463,10 @@ function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false, $r
 		}
 	}
 	
+	if(!is_array($data) AND !is_object($data)){
+		return false;
+	}
+	
 	$output = array();
 	foreach($data as $dk => $row){
 		$found = true;
