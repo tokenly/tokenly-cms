@@ -28,7 +28,7 @@ foreach($ids as $postId){
 	}
 	$commentThread = $disqus->getThread($postURL, false);
 	$update = false;
-	if($commentThread){
+	if($commentThread AND isset($commentThread['thread']['posts'])){
 		$update = $model->edit('blog_posts', $postId, array('commentCheck' => $stamp, 'commentCount' => $commentThread['thread']['posts']));
 	}
 	else{
