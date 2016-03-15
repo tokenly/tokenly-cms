@@ -168,6 +168,7 @@ class Report_Model extends Core\Model
 						$item['type'] = 'credit';
 						$item['action'] = 'receive';
 					}
+					$item['time'] = $tx['time'];
 					$item['address'] = $addr;
 					$item['asset'] = 'BTC';
 					$item['block'] = $tx['block'];
@@ -191,6 +192,10 @@ class Report_Model extends Core\Model
 		$tokenlyApp = get_app('tokenly');
 		$save_path = SITE_BASE.'/data/cache/block-cache.json';
 		$blockCache = json_decode(@file_get_contents($save_path), true);
+		$blockInfos = array();
+		if(is_array($blockCache)){
+			$blockInfos = $blockCache;
+		}
 
 		foreach($txList as $tx){
 			
@@ -203,14 +208,17 @@ class Report_Model extends Core\Model
 					catch(\Exception $e){
 						throw new \Exception('Error getting block info for index '.$tx['block']);
 					}
-					$blockInfos[$tx['block']] = $blockInfo;
+					$blockInfos[$tx['block']] = $blockInfo['time'];
+					$block_time = $blockInfo['time'];
 				}
 				else{
-					$blockInfo = $blockInfos[$tx['block']];
+					$block_time = $blockInfos[$tx['block']];
 				}
-				$block_time = $blockInfo['time'];
 			}
 			else{
+				if(!is_int($tx['time'])){
+					$tx['time'] = strtotime($tx['time']);
+				}
 				$block_time =  $tx['time'];
 			}
 			
