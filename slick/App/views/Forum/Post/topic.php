@@ -8,7 +8,7 @@ $thisURL = SITE_URL.'/'.$app['url'].'/'.$module['url'].'/'.$topic['url'];
 function checkUserTCA($userId, $profUserId)
 {
 	$tca = new \App\Tokenly\TCA_Model;
-	$module = $tca->get('modules', 'user-profile', array(), 'slug');
+	$module = get_app('profile.user-profile');
 	if(!$userId OR ($userId AND $userId != $profUserId)){
 		$checkTCA = $tca->checkItemAccess($userId, $module['moduleId'], $profUserId, 'user-profile');
 		if(!$checkTCA){

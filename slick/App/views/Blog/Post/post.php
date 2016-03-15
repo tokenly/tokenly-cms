@@ -4,8 +4,8 @@ if($post['formatType'] == 'markdown'){
 	$post['excerpt'] = markdown($post['excerpt']);
 }
 $tca = new \App\Tokenly\TCA_Model;
-$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
-$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+$profileModule = get_app('profile.user-profile');
+$catModule = get_app('blog.blog-category');
 $authorTCA = $tca->checkItemAccess($user, $profileModule['moduleId'], $post['author']['userId'], 'user-profile');
 ?>
 <div class="blog-post">

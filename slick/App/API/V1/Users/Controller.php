@@ -139,7 +139,7 @@ class Users_Controller extends \Core\Controller
 		$profile = $model->getUserProfile($getUser['userId'], $this->args['data']['site']['siteId']);
 		
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
+		$profileModule = get_app('profile.user-profile');			
 		
 		$userTCA = $tca->checkItemAccess($thisUser, $profileModule['moduleId'], $getUser['userId'], 'user-profile');
 		if(!$userTCA){
@@ -250,7 +250,7 @@ class Users_Controller extends \Core\Controller
 		}		
 		
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
+		$profileModule = get_app('profile.user-profile');	
 		
 												
 		foreach($users as $key => $user){

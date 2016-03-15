@@ -33,9 +33,9 @@ class Home_Model extends Core\Model
 	protected static function getOnlineUsers()
 	{
 		$model = new Profile\User_Model;
-
-		$getUsers = $model->fetchAll('SELECT userId FROM user_sessions
-									WHERE auth != "" AND ('.time().' - UNIX_TIMESTAMP(lastActive)) < 7200');
+		$lastActive = date('Y-m-d H:i:s', time() - 7200);
+		$getUsers = $model->fetchAll('SELECT userId FROM user_sessions WHERE lastActive > :lastActive',
+									array(':lastActive' => $lastActive));
 		
 		$site = currentSite();
 		$used = array();
@@ -45,7 +45,7 @@ class Home_Model extends Core\Model
 				continue;
 			}
 			$used[$user['userId']] = 1;
-			$user = $model->getUserProfile($user['userId'], $site['siteId']);
+			$user = $model->getUserProfile($user['userId'], $site['siteId'], array('groups' => false, 'profile_fields' => false));
 			$user['link'] = '<a href="'.$site['url'].'/profile/user/'.$user['slug'].'">'.$user['username'].'</a>';
 
 			$getUsers[$key] = $user;

@@ -283,7 +283,7 @@ class Post_Model extends Core\Model
 									  array(':siteId' => $site['siteId']));
 		$boardId = new UI\Select('boardId');
 		$boardId->setLabel('New Board');
-		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$boardModule = get_app('forum.forum-board');
 		$tca = new Tokenly\TCA_Model;
 		foreach($getBoards as $board){
 			$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['categoryId'], 'category');
@@ -309,7 +309,7 @@ class Post_Model extends Core\Model
 			throw new \Exception('Board not found');
 		}
 		
-		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$boardModule = get_app('forum.forum-board');
 		$tca = new Tokenly\TCA_Model;
 		$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['categoryId'], 'category');
 		$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['boardId'], 'board');

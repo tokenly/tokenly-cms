@@ -19,7 +19,7 @@ if(isset($board)){
 }
 $catList = '';
 $model = new \App\Forum\Board_Model;
-$boardModule = $model->get('modules', 'forum-board', array(), 'slug');
+$boardModule = get_app('forum.forum-board');
 $tca = new \App\Tokenly\TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
 $meta = new \App\Meta_Model;

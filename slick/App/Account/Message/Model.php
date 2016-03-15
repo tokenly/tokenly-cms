@@ -42,7 +42,7 @@ class Message_Model extends Core\Model
 		}
 		
 		$tca = new TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
+		$profileModule = get_app('profile.user-profile');
 		$checkTCA = $tca->checkItemAccess($useData['userId'], $profileModule['moduleId'], $getUser['userId'], 'user-profile');
 		if(!$checkTCA){
 			throw new \Exception('You cannot send a message to this user');

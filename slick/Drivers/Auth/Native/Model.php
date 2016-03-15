@@ -22,9 +22,16 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	public function checkSession($auth, $useCache = false)
 	{
+		if($useCache){
+			$cached = static_cache('sesh_'.$auth);
+			if($cached){
+				return $cached;
+			}
+		}
 		$get = $this->fetchSingle('SELECT * FROM user_sessions WHERE auth = :auth ORDER BY sessionId DESC LIMIT 1',
-									array(':auth' => $auth), 0, $useCache);
+									array(':auth' => $auth));
 		if($get){
+			static_cache('sesh_'.$auth, $get);
 			return $get;
 		}
 		return false;
@@ -382,7 +389,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		$getSite = currentSite();
 		$data['site'] = $getSite;
 		
-		$accountApp = $this->get('apps', 'account', array(), 'slug');
+		$accountApp = get_app('account');
 		
 		$activateURL = $getSite['url'].'/'.$accountApp['url'].'/verify/'.$useData['activate_code'];
 		

@@ -26,9 +26,9 @@ if(isset($category)){
 	}
 }
 $tca = new \App\Tokenly\TCA_Model;
-$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
-$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+$profileModule = get_app('profile.user-profile');
+$postModule = get_app('blog.blog-post');
+$catModule = get_app('blog.blog-category');
 ?>
 <div class="clear"></div>
 <ul class="blog-list">

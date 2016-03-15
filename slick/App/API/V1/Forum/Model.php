@@ -623,8 +623,8 @@ class Forum_Model extends \App\Forum\Board_Model
 		$appData = array();
 		$appData['user'] = $data['user'];
 		$appData['site'] = $data['site'];
-		$appData['app'] = $this->get('apps', 'forum', array(), 'slug');
-		$appData['module'] = $this->get('modules', 'forum-board', array(), 'slug');
+		$appData['app'] = get_app('forum');
+		$appData['module'] = get_app('forum.forum-board');
 		$appData['perms'] = $data['user']['perms'];
 		$useData = $data;
 		$useData['userId'] = $data['user']['userId'];
@@ -1098,7 +1098,7 @@ class Forum_Model extends \App\Forum\Board_Model
 						http_response_code(400);
 						throw new \Exception('Item already exists in this board');
 					}
-					$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+					$boardModule = get_app('forum.forum-board');
 					$tca = new \App\Tokenly\TCA_Model;
 					$checkCat = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['categoryId'], 'category');
 					$checkBoard = $tca->checkItemAccess($data['user'], $boardModule['moduleId'], $getItem2['boardId'], 'board');

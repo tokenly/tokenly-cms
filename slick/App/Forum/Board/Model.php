@@ -103,7 +103,7 @@ class Board_Model extends Core\Model
 		
 		//check their tokens for access controls
 		$tca = new Tokenly\TCA_Model;
-		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
+		$boardModule = get_app('forum.forum-board');
 		$checkTCA = $tca->checkItemAccess($useData['userId'], $boardModule['moduleId'], $useData['boardId'], 'board');
 		if(!$checkTCA){
 			throw new \Exception('You cannot post to this board');
@@ -293,8 +293,8 @@ class Board_Model extends Core\Model
 	protected function checkTopicTCA($user, $row)
 	{
 		$tca = new Tokenly\TCA_Model;
-		$boardModule = $this->get('modules', 'forum-board', array(), 'slug');
-		$postModule = $this->get('modules', 'forum-post', array(), 'slug');
+		$boardModule = get_app('forum.forum-board');
+		$postModule = get_app('forum.forum-post');
 		$getBoard = extract_row(self::$boards, array('boardId' =>  $row['boardId']));
 		$getBoard = $getBoard[0];
 		$checkCat = $tca->checkItemAccess($user, $boardModule['moduleId'], $getBoard['categoryId'], 'category');
@@ -342,16 +342,16 @@ class Board_Model extends Core\Model
 	{
 		$tca = new Tokenly\TCA_Model;
 		$profModel = new Profile\User_Model;
-		$profileModule = $this->get('modules', 'user-profile', array(), 'slug');
+		$profileModule = get_app('profile.user-profile');
 		$meta = new \App\Meta_Model;
-		$tokenApp = $this->get('apps', 'tokenly', array(), 'slug'); 
-		$tokenSettings = $meta->appMeta($tokenApp['appId']); 
+		$tokenApp = get_app('tokenly');
+		$tokenSettings = $tokenApp['meta'];
 		
 		$topics = $this->getTopicListMostRecent($topics);
 
 		foreach($topics as $key => $row){
 			
-			$author = $profModel->getUserProfile($row['userId'], $data['site']['siteId']);
+			$author = $profModel->getUserProfile($row['userId'], $data['site']['siteId'], array('groups' => false, 'profile_fields' => false));
 
 			$topics[$key]['author'] = $author;
 			$linkClass = '';
@@ -420,7 +420,6 @@ class Board_Model extends Core\Model
 			if(!isset($topics[$key]['mostRecent'])){
 				$topics[$key]['mostRecent'] = false;
 			}
-
 			
 			if($topics[$key]['numReplies'] > 0){
 				$lastPost = false;
@@ -430,7 +429,7 @@ class Board_Model extends Core\Model
 
 				if($lastPost){
 					$topics[$key]['mostRecent'] = $lastPost;
-					$lastAuthor = $profModel->getUserProfile($lastPost['userId'], $data['site']['siteId']);
+					$lastAuthor = $profModel->getUserProfile($lastPost['userId'], $data['site']['siteId'], array('groups' => false, 'profile_fields' => false));
 					$topics[$key]['mostRecent']['author'] = $lastAuthor;
 					$lastAuthorTCA = $tca->checkItemAccess($data['user'], $profileModule['moduleId'], $lastAuthor['userId'], 'user-profile');
 					$andPage = '';

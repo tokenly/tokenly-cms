@@ -25,13 +25,27 @@ class User_Model extends Core\Model
 		}
 		
 		$output = $get;
-		$output['profile'] = $this->fetchAll('SELECT f.fieldId, v.value, f.label, f.type,f.slug
-												FROM user_profileVals v
-												LEFT JOIN profile_fields f ON f.fieldId = v.fieldId
-												WHERE v.userId = :userId AND f.public = 1 AND f.active = 1
-												AND v.value != "" AND f.siteId = :siteId
-												GROUP BY v.fieldId
-												ORDER BY f.rank ASC', array(':userId' => $get['userId'], ':siteId' => $siteId));
+		
+		if(!isset($opts['profile_fields']) OR $opts['profile_fields']){
+			$output['profile'] = $this->fetchAll('SELECT f.fieldId, v.value, f.label, f.type,f.slug
+													FROM user_profileVals v
+													LEFT JOIN profile_fields f ON f.fieldId = v.fieldId
+													WHERE v.userId = :userId AND f.public = 1 AND f.active = 1
+													AND v.value != "" AND f.siteId = :siteId
+													GROUP BY v.fieldId
+													ORDER BY f.rank ASC', array(':userId' => $get['userId'], ':siteId' => $siteId));
+
+			$prof = array();
+			foreach($output['profile'] as $row){
+				if(trim($row['slug']) == ''){
+					$prof[genURL($row['label'])] = $row;
+				}
+				else{
+					$prof[$row['slug']] = $row;
+				}
+			}
+			$output['profile'] = $prof;
+		}
 
 		$meta = new \App\Meta_Model;
 		$output['pubProf'] = $meta->getUserMeta($get['userId'], 'pubProf');
@@ -44,17 +58,6 @@ class User_Model extends Core\Model
 			//$output['avatar'] = 'default.jpg';
 		}
 		
-		$prof = array();
-		foreach($output['profile'] as $row){
-			if(trim($row['slug']) == ''){
-				$prof[genURL($row['label'])] = $row;
-			}
-			else{
-				$prof[$row['slug']] = $row;
-			}
-		}
-		$output['profile'] = $prof;
-
 		if(isset($_SERVER['is_api'])){
 			if(!isExternalLink($output['avatar'])){
 				$getSite = $this->get('sites', $siteId);

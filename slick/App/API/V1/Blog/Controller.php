@@ -123,7 +123,7 @@ class Blog_Controller extends \Core\Controller
 		}		
 		
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');				
+		$profileModule = get_app('profile.user-profile');			
 		
 		/* Disqus Comments Code */
 		$disqus = new API\Disqus;
@@ -494,8 +494,8 @@ class Blog_Controller extends \Core\Controller
 		}
 
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');		
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$profileModule = get_app('profile.user-profile');	
+		$postModule = get_app('blog.blog-post');
 		
 		$postTCA = $tca->checkItemAccess($thisUser, $postModule['moduleId'], $getPost['postId'], 'blog-post');	
 		if(!$postTCA OR $getPost['published'] == 0){
@@ -662,8 +662,8 @@ class Blog_Controller extends \Core\Controller
 		}		
 		
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
+		$profileModule = get_app('profile.user-profile');
+		$postModule = get_app('blog.blog-post');
 		
 		$postTCA = $tca->checkItemAccess($thisUser, $postModule['moduleId'], $getPost['postId'], 'blog-post');	
 		if(!$postTCA OR $getPost['published'] == 0){

@@ -24,9 +24,17 @@ class Model
 				self::$db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
 				self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 				$this->db = self::$db;
-				$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
-												FROM   information_schema.STATISTICS
-												WHERE  TABLE_SCHEMA = DATABASE()');
+				$index_file = SITE_BASE.'/data/cache/db-index-map.json';
+				$get_file = json_decode(@file_get_contents($index_file), true);
+				if(is_array($get_file)){
+					$getIndexList = $get_file;
+				}
+				else{
+					$getIndexList = $this->fetchAll('SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME
+													FROM   information_schema.STATISTICS
+													WHERE  TABLE_SCHEMA = DATABASE()');
+					file_put_contents($index_file, json_encode($getIndexList));
+				}
 				foreach($getIndexList as $index){
 					if($index['INDEX_NAME'] == 'PRIMARY'){
 						self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];

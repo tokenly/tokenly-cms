@@ -112,7 +112,9 @@ class Controller extends Core\Controller
 										   FROM site_apps s
 										   LEFT JOIN apps a ON a.appId = s.appId
 										   WHERE s.siteId = :id', array(':id' => $siteId));
-
+		$getModules = $this->model->getAll('modules');
+		static_cache('apps_list', $getApps);
+		static_cache('modules_list', $getModules);
         $pageIndex = $this->model->getAll('page_index', array('siteId' => $siteId));
         self::$pageIndex = $pageIndex;
         $thisApp = false;
@@ -121,19 +123,16 @@ class Controller extends Core\Controller
         foreach($pageIndex as $index){
 			$join_args = join('/', $this->args);
             if($index['url'] == $join_args OR $index['url'] == $join_args.'/'){
-                $getModule = $this->model->get('modules', $index['moduleId']);
+				$getModule = extract_row($getModules, array('moduleId' => $index['moduleId']), false, false, true);
                 if($getModule AND $getModule['active'] == 1){
-					
-                    $getApp = $this->model->get('apps', $getModule['appId']);
+					$getApp = extract_row($getApps, array('appId' => $getModule['appId']), false, false, true);
                     if($getApp AND $getApp['active'] == 1){
-						
 						$appInSite = 0;
 						foreach($getApps as $siteApp){
 							if($siteApp['appId'] == $getApp['appId']){
 								$appInSite = 1;
 							}
 						}
-
 						if($appInSite == 1){
 							$thisApp = $getApp;
 							$thisModule = $getModule;
@@ -149,8 +148,7 @@ class Controller extends Core\Controller
                 if($app['url'] == $this->args[0] AND $app['active'] == 1){
                     $thisApp = $app;
                     if(isset($this->args[1])){
-                        $getModule = $this->model->fetchSingle('SELECT * FROM modules WHERE appId = :appId AND url = :url AND active = 1',
-																array(':appId' => $app['appId'], ':url' => $this->args[1]));
+						$getModule = extract_row($getModules, array('appId' => $app['appId'], 'url' => $this->args[1]), false, false, true); 
 						if($getModule){
 							$thisModule = $getModule;
 						}

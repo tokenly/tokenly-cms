@@ -3,9 +3,25 @@ namespace App;
 use Core, Util;
 class Meta_Model extends Core\Model
 {
-	public static $appMeta = array();
+	public static $appMeta = false;
 	public static $userMeta = array();
 	public static $metaCache = array();
+	
+	function __construct()
+	{
+		parent::__construct();
+		if(!self::$appMeta){
+			$get = $this->getAll('app_meta', array(), array('appId', 'metaKey', 'metaValue'));
+			$appMeta = array();
+			foreach($get as $row){
+				if(!isset($appMeta[$row['appId']])){
+					$appMeta[$row['appId']] = array();
+				}
+				$appMeta[$row['appId']][$row['metaKey']] = $row['metaValue'];
+			}
+			self::$appMeta = $appMeta;
+		}
+	}
 	
 	protected function updateUserMeta($userId, $key, $value)
 	{
@@ -108,14 +124,6 @@ class Meta_Model extends Core\Model
 	
 	protected function appMeta($appId)
 	{
-		$getApp = $this->get('apps', $appId);
-		if(!$getApp){
-			$getApp = $this->get('apps', $appId, array(), 'slug');
-			if(!$getApp){
-				return false;
-			}
-		}
-		$appId = $getApp['appId'];
 		if(isset(self::$appMeta[$appId])){
 			return self::$appMeta[$appId];
 		}

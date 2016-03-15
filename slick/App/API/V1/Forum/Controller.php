@@ -19,10 +19,9 @@ class Forum_Controller extends \Core\Controller
 		$this->model = new Forum_Model;
 		$this->tca = new \App\Tokenly\TCA_Model; //load token controlled access functions
 		$this->meta = new \App\Meta_Model;
-		$this->forumApp = $this->model->get('apps', 'forum', array(), 'slug');
-		$this->forumApp['meta'] = $this->meta->appMeta($this->forumApp['appId']);
-		$this->boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
-		$this->postModule = $this->model->get('modules', 'forum-post', array(), 'slug');
+		$this->forumApp = get_app('forum');
+		$this->boardModule = get_app('forum.forum-board');
+		$this->postModule = get_app('forum.forum-post');
 	}
 
 	/**

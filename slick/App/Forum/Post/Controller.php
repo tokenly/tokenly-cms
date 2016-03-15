@@ -25,7 +25,7 @@ class Post_Controller extends \App\ModControl
 			return $output;
 		}
 		
-		$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
+		$boardModule = get_app('forum.forum-board');
 		
 		if($this->data['user']){
 			$output['perms'] = $this->container->checkModPerms($getTopic['boardId'], $this->data);
@@ -499,7 +499,7 @@ class Post_Controller extends \App\ModControl
 				$move = false;
 			}
 			
-			$boardModule = $this->model->get('modules', 'forum-board', array(), 'slug');
+			$boardModule = get_app('forum.forum-board');
 			if($move){
 				redirect($this->data['site']['url'].'/'.$this->data['app']['url'].'/'.$boardModule['url'].'/'.$move['slug']);
 			}

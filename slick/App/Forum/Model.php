@@ -7,9 +7,9 @@ class Model extends Core\Model
 	{
 		parent::__construct();
 		$this->tca = new Tokenly\TCA_Model;
-		$this->boardModule = $this->get('modules', 'forum-board', array(), 'slug');
-		$this->postModule = $this->get('modules', 'forum-post', array(), 'slug');
-		$this->profileModule = $this->get('modules', 'user-profile', array(), 'slug');
+		$this->boardModule = get_app('forum.forum-board');
+		$this->postModule = get_app('forum.forum-post');
+		$this->profileModule = get_app('profile.user-profile');
 	}
 	
 	protected function getForumCategories($site, $app, $user = false)

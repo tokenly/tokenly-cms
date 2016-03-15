@@ -169,7 +169,7 @@ class Profile_Controller extends \Core\Controller
 		}		
 		
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');			
+		$profileModule = get_app('profile.user-profile');		
 										
 		foreach($users as $key => $user){
 			$profile = $profModel->getUserProfile($user['userId'], $this->args['data']['site']['siteId']);

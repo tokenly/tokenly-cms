@@ -264,9 +264,9 @@ class Blog_Model extends \App\Blog\Submissions_Model
 		$postModel = new \App\Blog\Post_Model;
 		$submitModel = new \App\Blog\Submissions_Model;
 		$tca = new \App\Tokenly\TCA_Model;
-		$profileModule = $tca->get('modules', 'user-profile', array(), 'slug');
-		$postModule = $tca->get('modules', 'blog-post', array(), 'slug');
-		$catModule = $tca->get('modules', 'blog-category', array(), 'slug');
+		$profileModule = get_app('profile.user-profile');
+		$postModule = get_app('blog.blog-post');
+		$catModule = get_app('blog.blog-category');
 		$isRSS = false;
 		if(!isset($data['isRSS'])){
 			$disqus = new API\Disqus;

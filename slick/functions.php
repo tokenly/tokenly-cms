@@ -258,9 +258,9 @@ function mention($str, $message, $userId, $itemId = 0, $type = '', $notifyData =
 	$model = new \Core\Model;
 	$tca = new \App\Tokenly\TCA_Model;
 
-	$profileModule = $model->get('modules', 'user-profile', array(), 'slug');
-	$getSite = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
-	$thisUser = $model->get('users', $userId, array('userId', 'username', 'slug'));
+	$profileModule = get_app('profile.user-profile');
+	$getSite = currentSite();
+	$thisUser = user();
 	
 	$success = false;
 	foreach($matches[1] as $user){
@@ -453,7 +453,7 @@ function isExternalLink($link)
 	return false;
 }
 
-function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false)
+function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false, $return_single = false)
 {
 	
 	if($cache_key){
@@ -490,7 +490,9 @@ function extract_row(&$data, $vals, $returnEmpty = false, $cache_key = false)
 	if($cache_key){
 		\App\Meta_Model::$metaCache[$rowLock] = $output;
 	}	
-	
+	if($return_single AND count($output) == 1){
+		return $output[0];
+	}
 	return $output;
 }
 
@@ -605,11 +607,16 @@ function getRatio($num1, $num2)
 	
 function currentSite()
 {
+	$cached = static_cache('currentSite');
+	if($cached){
+		return $cached;
+	}
 	$model = new \Core\Model;
 	$get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 	if($get){
 		$get['apps'] = $model->fetchAll('SELECT a.* FROM site_apps s LEFT JOIN apps a ON a.appId = s.appId WHERE s.siteId = :siteId', array(':siteId' => $get['siteId']));
 	}
+	static_cache('currentSite', $get);
 	return $get;
 }
 
@@ -621,8 +628,8 @@ function linkify_username($username)
 	if(!$get){
 		return $username;
 	}
-	$profApp = $model->get('apps', 'profile', array(), 'slug');
-	$userModule = $model->get('modules', 'user-profile', array(), 'slug');
+	$profApp = get_app('profile');
+	$userModule = get_app('profile.user-profile');
 	$site = currentSite();
 	$url = $site['url'].'/'.$profApp['url'].'/'.$userModule['url'].'/'.$get['slug'];
 	return '<a href="'.$url.'" target="_blank">'.$get['username'].'</a>';
@@ -646,13 +653,13 @@ function route($route, $path = '')
 	$site = currentSite();
 	$model = new \Core\Model;
 	$expRoute = explode('.', $route);
-	$getApp = $model->get('apps', $expRoute[0], array(), 'slug');
+	$getApp = get_app($expRoute[0]);
 	if(!$getApp){
 		return false;
 	}
 	$full_path = $getApp['url'];
 	if(isset($expRoute[1])){
-		$getModule = $model->get('modules', $expRoute[1], array(), 'slug');
+		$getModule = get_app($expRoute[0].'.'.$expRoute[1]);
 		if($getModule){
 			$full_path .= '/'.$getModule['url'];
 		}
@@ -661,48 +668,66 @@ function route($route, $path = '')
 	return $site['url'].'/'.$full_path;
 }
 
-function app_enabled($slugs, $searchType = 'slug', $fields = false)
+function app_enabled($slugs, $searchType = 'slug')
 {
-	if(!is_array($fields)){
-		$fields = array('moduleId');
+	$cache_key = 'app_enabled_'.$slugs;
+	$cached = static_cache($cache_key);
+	if($cached){
+		return $cached;
 	}
 	$exp = explode('.', $slugs);
 	$model = new \App\Meta_Model;
-	$getApp = $model->get('apps', $exp[0], array(), $searchType);
+	$app_list = static_cache('apps_list');
+	if(!$app_list){
+		$getApp = $model->get('apps', $exp[0], array(), $searchType);
+	}
+	else{
+		$getApp = extract_row($app_list, array($searchType => $exp[0]), false, false, true);
+	}
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
-	}
+	}	
 	if(isset($exp[1])){
-		$getModule = $model->getAll('modules', array('appId' => $getApp['appId'], $searchType => $exp[1], 'active' => 1), $fields);
-		if(count($getModule) == 0){
+		$module_list = static_cache('modules_list');	
+		$getModule = extract_row($module_list, array($searchType => $exp[1]), false, false, true);
+		if(!$getModule){
 			return false;
 		}
-		return $getModule[0];
+		static_cache($cache_key, $getModule);
+		return $getModule;
 	}
 	$getApp['meta'] = $model->appMeta($getApp['appId']);
+	static_cache($cache_key, $getApp);
 	return $getApp;
 }
 
 function get_app($slugs, $searchType = 'slug')
 {
-	return app_enabled($slugs, $searchType, array());
+	return app_enabled($slugs, $searchType);
 }
 
 function app_class($slugs, $type = 'controller', $construct = true)
 {
+	$cache_key = 'app_class_'.$slugs.'_'.$type;
+	if(!$construct){
+		$cached = static_cache($cache_key);
+		if($cached){
+			return $cached;
+		}
+	}
 	$exp = explode('.', $slugs);
 	$model = new \Core\Model;
-	$getApp = $model->get('apps', $exp[0], array(), 'slug');
+	$getApp = get_app($exp[0]);
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
 	}
 	$class_name = '\\App\\'.$getApp['location'];
 	if(isset($exp[1])){
-		$getModule = $model->getAll('modules', array('appId' => $getApp['appId'], 'slug' => $exp[1], 'active' => 1), array('moduleId','slug','location'));
-		if(count($getModule) == 0){
+		$getModule = get_app($exp[0].'.'.$exp[1]);
+		if(!$getModule){
 			return false;
 		}
-		$class_name .= '\\'.$getModule[0]['location'];
+		$class_name .= '\\'.$getModule['location'];
 		$class_name .= '_'.ucfirst($type);
 	}
 	else{
@@ -710,6 +735,7 @@ function app_class($slugs, $type = 'controller', $construct = true)
 	}
 	
 	if(!$construct){
+		static_cache($cache_key, $class_name);
 		return $class_name;
 	}
 	return new $class_name();
@@ -718,7 +744,7 @@ function app_class($slugs, $type = 'controller', $construct = true)
 function app_setting($slug, $setting)
 {
 	$model = new \App\Meta_Model;
-	$getApp = $model->get('apps', $slug, array(), 'slug');
+	$getApp = get_app($slug);
 	if(!$getApp OR $getApp['active'] == 0){
 		return false;
 	}
@@ -727,6 +753,11 @@ function app_setting($slug, $setting)
 
 function app_path($slugs, $class = '')
 {
+	$cache_key = 'app_path_'.$slugs.'_'.$class;
+	$cached = static_cache($cache_key);
+	if($cached){
+		return $cached;
+	}
 	$model = new \Core\Model;
 	$exp = explode('.', $slugs);
 	$field = 'appId';
@@ -743,7 +774,13 @@ function app_path($slugs, $class = '')
 		if(!is_numeric($exp[1])){
 			$field = 'slug';
 		}
-		$getModule = $model->get('modules', $exp[1], array(), $field);
+		$module_list = static_cache('modules_list');
+		if($module_list){
+			$getModule = extract_row($module_list, array($field => $exp[1]), false, false, true);
+		}
+		else{
+			$getModule = $model->get('modules', $exp[1], array(), $field);
+		}
 		if(!$getModule OR $getModule['active'] == 0){
 			return false;
 		}
@@ -755,6 +792,7 @@ function app_path($slugs, $class = '')
 		return $path;
 	}
 	$path .= '/'.ucfirst($class).'.php';
+	static_cache($cache_key, $path);
 	return $path;
 }
 

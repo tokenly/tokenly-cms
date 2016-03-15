@@ -111,7 +111,7 @@ class View extends Core\View
 		
 		$tca = new Tokenly\TCA_Model;
 		$accountModel = new Account\Auth_Model;
-		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
+		$pageModule = get_app('pages.page-view');
 		$userId = 0;
 		$sesh_auth = Util\Session::get('accountAuth');
 		if($sesh_auth){
@@ -330,7 +330,7 @@ class View extends Core\View
 		}
 		
 		$tca = new Tokenly\TCA_Model;
-		$pageModule = $tca->get('modules', 'page-view', array(), 'slug');
+		$pageModule = get_app('pages.page-view');
 		$userId = 0;
 		$accountModel = new Account\Auth_Model;
 		$sesh_auth = Util\Session::get('accountAuth');
