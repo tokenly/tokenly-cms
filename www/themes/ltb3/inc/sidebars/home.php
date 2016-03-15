@@ -1,6 +1,8 @@
 <?php
 $model = new \App\Forum\Post_Model;
 $meta = new \App\Meta_Model;
+$tca = new \App\Tokenly\TCA_Model;
+
 $forum_app = get_app('forum');
 $forum_meta = $meta->appMeta($forum_app['appId']);
 
@@ -59,8 +61,36 @@ if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 
 if(is_array($disqusPosts)){
 	date_default_timezone_set('UTC');
+	$postModule = get_app('blog.blog-post');
+	$catModule = get_app('blog.blog-category');
 	foreach($disqusPosts as $d_thread){
 		$item = array();
+		
+		$raw_url = explode('/', explode('#', $d_thread['url'])[0]);
+		$raw_url = $raw_url[count($raw_url) - 1];
+		$get_post = $model->get('blog_posts', $raw_url, array('postId'), 'url');
+		if($get_post){
+			$checkTCA = $tca->checkItemAccess($this->data['user'], $postModule['moduleId'], $get_post['postId'], 'blog-post');	
+			if(!$checkTCA){
+				continue;
+			}			
+			
+			$getCats = $model->getAll('blog_postCategories', array('postId' => $get_post['postId']));
+			$cats = array();
+			foreach($getCats as $cat){
+				$getCat = $model->get('blog_categories', $cat['categoryId']);
+				$cats[] = $getCat;
+			}
+			
+			foreach($cats as $cat){
+				$catTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['categoryId'], 'blog-category');
+				$blogTCA = $tca->checkItemAccess($this->data['user'], $catModule['moduleId'], $cat['blogId'], 'multiblog');
+				if(!$catTCA OR !$blogTCA){
+					continue 2;
+				}
+			}			
+		}
+		
 		$item['title'] = $d_thread['thread']['clean_title'];
 		$item['link'] = $d_thread['url'];
 		$item['author'] = array();
