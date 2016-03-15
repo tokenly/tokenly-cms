@@ -157,6 +157,9 @@ class Controller extends Core\Controller
                 }
             }
         }
+        
+        //always include user variable
+        $data['user'] = $getUser;
 
         if($thisApp){
 			$meta = new Meta_Model;
@@ -175,10 +178,7 @@ class Controller extends Core\Controller
             $data = array_merge($data, $class->init());
         }
         else{
-			if($getUser){
-				$data['user'] = $getUser;
-			}
-			
+	
 			if(join('/', $this->args) == '403'){
 				$data['view'] = '403';
 			}
