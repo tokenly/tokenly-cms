@@ -51,13 +51,9 @@ class Tokenpass_Model extends Native_Model
 					$isCurrent = $current['balanceId'];
 				}
 			}
-			$getAsset = $this->container->getAssetData($asset);
-			if(!$getAsset){
-				continue;
-			}
-			if($getAsset['divisible'] == 1 AND $balance > 0){
-				$balance = round($balance / SATOSHI_MOD, 8);
-			}
+
+			$balance = round($balance / SATOSHI_MOD, 8);
+			
 			if($balance <= 0){
 				if($isCurrent){
 					$this->delete('xcp_balances', $isCurrent);
