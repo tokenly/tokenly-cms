@@ -79,7 +79,7 @@ class Archive_Model extends Core\Model
 				$cats[] = $getCat;
 			}
 			$getPosts[$key]['categories'] = $cats;			
-			$getPosts[$key]['commentCount'] = $this->count('blog_comments', 'postId', $post['postId']);
+			//$getPosts[$key]['commentCount'] = $this->count('blog_comments', 'postId', $post['postId']);
 			$getMeta = $postModel->getPostMeta($post['postId']);
 			foreach($getMeta as $mkey => $val){
 				if(!isset($getPosts[$key][$mkey])){

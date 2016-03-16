@@ -335,27 +335,6 @@ class Blog_Model extends \App\Blog\Submissions_Model
 				$postURL = $data['site']['url'].'/'.$getIndex[count($getIndex) - 1]['url'];
 			}
 			
-			
-			if(!$minimizeData){
-				$commentThread = true;
-				if(isset($data['isRSS']) OR (isset($data['noComments']) AND $data['noComments'] == true)){
-					$commentThread = false;
-				}
-				else{
-					$comDiff = time() - strtotime($post['commentCheck']);
-					if($comDiff > 300){
-						$commentThread = $disqus->getThread($postURL, false);
-					}
-					
-				}
-				unset($getPosts[$key]['commentCheck']);
-				//$getPosts[$key]['commentCount'] = 0;
-				if($commentThread){
-					$getPosts[$key]['commentCount'] = $commentThread['thread']['posts'];
-					$this->edit('blog_posts', $post['postId'], array('commentCheck' => timestamp(), 'commentCount' => $commentThread['thread']['posts']));
-				}				
-			}
-			
 			if(isset($post['image']) AND trim($post['image']) != ''){
 				$getPosts[$key]['image'] = $data['site']['url'].'/files/blogs/'.$post['image'];
 			}
