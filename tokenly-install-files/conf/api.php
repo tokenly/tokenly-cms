@@ -40,3 +40,9 @@ define('STOPFORUMSPAM_API', 'http://api.stopforumspam.org/api');
 
 define('DEFAULT_MAIL_DRIVER', 'local'); //options: local, mandrill
 define('MANDRILL_API_KEY', '');
+
+define('TOKENPASS_CLIENT', '');
+define('TOKENPASS_SECRET', '');
+define('TOKENPASS_URL', 'https://accounts.tokenly.com');
+define('TOKENLY_ACCOUNTS_CLIENT_ID', TOKENPASS_CLIENT);
+define('TOKENLY_ACCOUNTS_PROVIDER_HOST', TOKENPASS_URL);
