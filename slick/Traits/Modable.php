@@ -16,7 +16,7 @@ trait Modable
 		}
 		if(!method_exists($use, $method)){
 			dd(get_class($use).'\\'.$method.' cannot be found');
-		}
+		}	
 		$output = self::applyFilters($use, $method, $arguments);
 		self::triggerHooks($use, $method, $output);
 		return $output;
@@ -29,4 +29,17 @@ trait Modable
 		self::triggerHooks($class, $method, $output);
 		return $output;
 	}		
+	
+	public function apply_post_mods($method, $output, $args)
+	{
+		$output = self::applyPostFilters($this, $method, $output, $args);
+		self::triggerHooks($this, $method, $output);
+		return $output;
+	}
+	
+	public function apply_pre_mods($method, $args)
+	{
+		$args = self::applyPreFilters($this, $method, $args);
+		return $args;
+	}
 }

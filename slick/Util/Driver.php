@@ -55,5 +55,15 @@ class Driver
 		return $get;
 	}
 	
+	public static function driverName($key)
+	{
+		$util = new \Util\Driver($key);
+		$drivers = $util->loadDrivers();
+		if(!isset($drivers[$key])){
+			return false;
+		}
+		return $drivers[$key];
+	}
+	
 	
 }

@@ -10,6 +10,23 @@ class Controller extends \Core\Controller
 	
 	protected function init()
 	{
+		//load modifications
+		$scan_mods = scandir(FRAMEWORK_PATH.'/Mods');
+		foreach($scan_mods as $mod){
+			if($mod == '.' OR $mod == '..'){
+				continue;
+			}
+			if(is_dir(FRAMEWORK_PATH.'/Mods/'.$mod)){
+				foreach (glob(FRAMEWORK_PATH.'/Mods/'.$mod.'/*.php') as $filename)
+				{
+					require_once($filename);
+				}
+			}
+			elseif(substr($mod, -1, 4) == '.php'){
+				require_once(FRAMEWORK_PATH.'/Mods/'.$mod);
+			}
+		}		
+		
 		$output = array();
 		if(!isset($_REQUEST['v'])){
 			http_response_code(400);

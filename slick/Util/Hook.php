@@ -30,4 +30,9 @@ class Hook
 		return self::$func_hooks[$key];
 	}
 	
+	public static function getAllHooks()
+	{
+		return self::$func_hooks;
+	}
+	
 }

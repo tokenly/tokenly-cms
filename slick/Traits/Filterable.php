@@ -11,9 +11,7 @@ trait Filterable
 		else{
 			$class = $obj;
 		}
-		
 		$filters = Filter::getMethodFilters($class, $method);
-		
 		$prepends = array();
 		if($filters){
 			foreach($filters as $k => $filter){
@@ -23,9 +21,7 @@ trait Filterable
 					continue;
 				}
 				if($filter['replace'] === true){
-					if(is_callable($filter['function'])){
-						return call_user_func_array($filter['function'], $arguments);
-					}
+					return call_user_func_array($filter['function'], $arguments);
 				}
 			}
 		}
@@ -33,9 +29,7 @@ trait Filterable
 			$filters = array();
 		}
 		foreach($prepends as $prefilter){
-			if(is_callable($prefilter['function'])){
-				$arguments = call_user_func_array($prefilter['function'], $arguments);
-			}
+			$arguments = call_user_func_array($prefilter['function'], $arguments);
 		}
 		if(!is_array($arguments)){
 			$arguments = array($arguments);
@@ -47,11 +41,51 @@ trait Filterable
 			$output = call_user_func_array(array($obj, $method), $arguments);
 		}
 		foreach($filters as $filter){
-			if(is_callable($filter['function'])){
-				$output = $filter['function']($output, $arguments);
-			}
+			$output = $filter['function']($output, $arguments);
 		}
 		return $output;
+	}
+	
+	static function applyPreFilters($class, $method, $arguments)
+	{
+		if(is_object($class)){
+			$class = get_class($class);
+		}		
+		$filters = Filter::getMethodFilters($class, $method);	
+		$prepends = array();
+		if($filters){
+			foreach($filters as $k => $filter){
+				if($filter['prepend'] === true){
+					$prepends[] = $filter;
+					unset($filters[$k]);
+					continue;
+				}
+			}
+			foreach($prepends as $prefilter){
+				$arguments = call_user_func_array($prefilter['function'], $arguments);
+			}				
+		}		
+		return $arguments;
+	}
+	
+	static function applyPostFilters($class, $method, $output, $arguments)
+	{
+		if(is_object($class)){
+			$class = get_class($class);
+		}
+		$filters = Filter::getMethodFilters($class, $method);	
+		if($filters){
+			foreach($filters as $filter){
+				if($filter['prepend'] === true OR $filter['replace'] === true){
+					unset($filters[$k]);
+					continue;
+				}
+			}
+			foreach($filters as $filter){
+				$output = $filter['function']($output, $arguments);
+			}			
+		}
+		return $output;		
 	}
 	
 }

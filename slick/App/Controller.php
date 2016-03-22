@@ -8,6 +8,7 @@ class Controller extends Core\Controller
 	function __construct()
 	{
 		parent::__construct();
+
 		if(!isset($_REQUEST['params'])){
 			$this->args = array(0 => '');
 		}
@@ -22,6 +23,23 @@ class Controller extends Core\Controller
 		$this->args = array_values($this->args);
         $this->model = new Core\Model;
         $this->view = new View;
+        
+		//load modifications
+		$scan_mods = scandir(FRAMEWORK_PATH.'/Mods');
+		foreach($scan_mods as $mod){
+			if($mod == '.' OR $mod == '..'){
+				continue;
+			}
+			if(is_dir(FRAMEWORK_PATH.'/Mods/'.$mod)){
+				foreach (glob(FRAMEWORK_PATH.'/Mods/'.$mod.'/*.php') as $filename)
+				{
+					require_once($filename);
+				}
+			}
+			elseif(substr($mod, -1, 4) == '.php'){
+				require_once(FRAMEWORK_PATH.'/Mods/'.$mod);
+			}
+		}	        
 
 	}
 	
@@ -38,24 +56,6 @@ class Controller extends Core\Controller
 			die();
 		}
 		
-		//load modifications
-		$scan_mods = scandir(FRAMEWORK_PATH.'/Mods');
-		foreach($scan_mods as $mod){
-			if($mod == '.' OR $mod == '..'){
-				continue;
-			}
-			if(is_dir(FRAMEWORK_PATH.'/Mods/'.$mod)){
-				foreach (glob(FRAMEWORK_PATH.'/Mods/'.$mod.'/*.php') as $filename)
-				{
-					require_once($filename);
-				}
-			}
-			elseif(substr($mod, -1, 4) == '.php'){
-				require_once(FRAMEWORK_PATH.'/Mods/'.$mod);
-			}
-		}
-
-
         //check what site we are on
         $getSite = currentSite();
         if(!$getSite){
