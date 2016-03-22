@@ -51,9 +51,7 @@ class Tokenpass_Model extends Native_Model
 					$isCurrent = $current['balanceId'];
 				}
 			}
-
 			$balance = round($balance / SATOSHI_MOD, 8);
-			
 			if($balance <= 0){
 				if($isCurrent){
 					$this->delete('xcp_balances', $isCurrent);

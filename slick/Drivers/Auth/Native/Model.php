@@ -324,6 +324,8 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	public function registerAccount($data, $noAuth = false)
 	{		
+		$data = $this->apply_pre_mods('registerAccount', array($data));
+		$data = $data[0];			
 		$req = array('username' => true, 'password' => true, 'email' => true);
 		foreach($req as $key => $required){
 			if($required AND !isset($data[$key])){
@@ -419,7 +421,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		$meta->updateUserMeta($add, 'site_registered', $data['site']);
 		$meta->updateUserMeta($add, 'pubProf', 1);
 		$meta->updateUserMeta($add, 'emailNotify', 1);
-		
+		$add = $this->apply_post_mods('registerAccount', $add, array($data));
 		return $add;
 
 	}
