@@ -582,7 +582,9 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			return false;
 		}
 		
+		$self_info = false;
 		if(!$userId){
+			$self_info = true;
 			$get = $model->checkSession($sesh_auth);
 		}
 		else{
@@ -629,7 +631,9 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			}
 		}
 		
-		Native_Model::updateLastActive($get['userId']);
+		if($self_info){
+			Native_Model::updateLastActive($get['userId']);
+		}
 		
 		return $user;
 		

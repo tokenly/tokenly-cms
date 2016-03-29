@@ -5,7 +5,7 @@ use Tokenly\AccountsClient\AccountsAPI;
 
 class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 {
-	public static $activity_updated = false;
+	public static $activity_updated = array();
 	
 	function __construct()
 	{
@@ -23,7 +23,9 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 			return false;
 		}
 		
+		$self_info = false;
 		if(!$userId){
+			$self_info = true;
 			$get = $model->checkSession($sesh_auth);
 		}
 		else{
@@ -70,7 +72,9 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 			}
 		}
 		
-		Tokenpass_Model::updateLastActive($get['userId']);
+		if($self_info){
+			Tokenpass_Model::updateLastActive($get['userId']);
+		}
 		
 		return $user;
 	}
@@ -203,7 +207,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		if(!$insert){
 			return false;
 		}
-		$this->edit('users', $userId, array('auth' => $token));
+		$this->edit('users', $userId, array('auth' => $token, 'lastAuth' => $time, 'lastActive' => $time));
 		Util\Session::set('accountAuth', $token);
 		return true;
 	}
@@ -305,7 +309,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 	
 	protected static function updateLastActive($userId)
 	{
-		if(!self::$activity_updated){
+		if(!isset(self::$activity_updated[$userId])){
 			$model = new Tokenpass_Model;
 			$auth = false;
 			$sesh_auth = Util\Session::get('accountAuth');
@@ -326,7 +330,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 					$update = $model->edit('user_sessions', $getSesh['sessionId'], array('lastActive' => $time));
 					if($update){
 						$editUser = $model->edit('users', $getSesh['userId'], array('lastActive' => $time));
-						self::$activity_updated = true;
+						self::$activity_updated[$userId] = true;
 						return true;
 					}
 				}

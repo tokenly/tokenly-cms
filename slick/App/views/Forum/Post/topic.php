@@ -379,9 +379,14 @@ if(count($replies) == 0){
 			}
 			else{
 				$online_icon .= ' text-error';
-			}			
+			}		
 			
-			$use_status = '<span title="Last active: '.formatDate($reply['postTime']).'"><i class="fa fa-circle '.$online_icon.'"></i> <strong>'.$online_title.'</strong></span>';
+			$use_active = $reply['author']['lastActive'];
+			if($online_title == 'Offline'){
+				$use_active = $reply['author']['lastAuth'];
+			}
+			
+			$use_status = '<span title="Last active: '.formatDate($use_active).'"><i class="fa fa-circle '.$online_icon.'"></i> <strong>'.$online_title.'</strong></span>';
 			?>
 			<?= $use_status ?><br>			
 				<strong>Posts:</strong> <?= \App\Account\Home_Model::getUserPostCount($reply['userId']) ?>
