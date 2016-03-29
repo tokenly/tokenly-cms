@@ -286,7 +286,12 @@ if($method == 'sendmany'){
 					$pages = ceil($tx_count / $tx_list['per_page']);
 				}
 			}
+			$used = array();
 			foreach($tx_list['data'] as $tx){
+				if(in_array($tx['hash'], $used)){
+					continue;
+				}
+				$used[] = $tx['hash'];
 				$item = array();
 				$item['txId'] = $tx['hash'];
 				$item['time'] = strtotime($tx['time']);
