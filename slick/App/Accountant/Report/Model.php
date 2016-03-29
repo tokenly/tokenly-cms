@@ -180,6 +180,7 @@ class Report_Model extends Core\Model
 					$item['divisible'] = true;
 					$item['btc_amount'] = convertFloat(round($tx['amount'] / SATOSHI_MOD, 8));				
 					$txList[] = $item;
+					$usedTxs[] = $item['txId'];
 				}
 			}
 			
