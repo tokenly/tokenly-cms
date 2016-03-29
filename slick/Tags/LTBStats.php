@@ -774,7 +774,17 @@ class LTBStats
 					<td><?= number_format($row['score'], 2) ?></td>
 					<td> <?= number_format($row['score'] * $perPoint, 2) ?></td>
 					<td><?= number_format($row['post']['views']) ?></td>
-					<td><?= number_format($row['post']['comments']) ?></td>
+					<td>
+						<?php
+						if(isset($row['post']['comments'])){
+							echo number_format($row['post']['comments']);
+						}
+						else{
+							echo 0;
+						}
+						?>
+						<?= number_format($row['post']['comments']) ?>
+					</td>
 					<td><?= number_format($row['post']['wordSubmits']) ?></td>
 					<td><?= join(', ', $row['contributors']) ?></td>
 				</tr>
