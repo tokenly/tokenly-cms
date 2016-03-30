@@ -36,7 +36,7 @@ class Settings_Model extends Core\Model
 		$getSite = $this->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
 		
 		$getTokenField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
-		if($getTokenField){
+		if($getTokenField AND $getTokenField['active'] == 1){
 			$getVal = $this->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
 										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
 			
@@ -86,11 +86,6 @@ class Settings_Model extends Core\Model
 		$emailNotify->setValue(1);
 		$form->add($emailNotify);
 		
-		$dropList = new UI\Checkbox('dropList');
-		$dropList->setLabel('Receive <a href="/forum/post/counterwallet-asset-drop-list-signup" target="_blank">occasional free tokens</a> to my Counterparty compatible address?');
-		$dropList->setBool(1);
-		$dropList->setValue(1);
-		$form->add($dropList);		
 		
 		$btcAccess = new UI\Checkbox('btc_access');
 		$btcAccess->setLabel('Enable API account access via verified bitcoin address?');
@@ -239,32 +234,7 @@ class Settings_Model extends Core\Model
 				
 			}
 		}
-		
-		//turn this into a mod later
-		if(isset($data['dropList'])){
-			$dropGroup = $this->get('groups', 'drop-list', array(), 'slug');
-			if($dropGroup){
-				$inGroup = $this->getAll('group_users', array('userId' => $user['userId'], 'groupId' => $dropGroup['groupId']));
-				if($inGroup AND count($inGroup) > 0){
-					$inGroup = $inGroup[0];
-				}
-				else{
-					$inGroup = false;
-				}
-				
-				if(intval($data['dropList']) == 1){
-					if(!$inGroup){
-						$this->insert('group_users', array('userId' => $user['userId'], 'groupId' => $dropGroup['groupId']));
-					}
-				}
-				else{
-					if($inGroup){
-						$this->sendQuery('DELETE FROM group_users WHERE userId = :userId AND groupId = :groupId',
-										array(':userId' => $user['userId'], ':groupId' => $dropGroup['groupId']));
-					}
-				}
-			}
-		}
+
 		return true;
 	}
 	
