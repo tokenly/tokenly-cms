@@ -382,7 +382,7 @@ class View extends Core\View
 		return $class->display();
 	}
 	
-	public static function includeView($view, $data = array(), $echo = true)
+	public function includeView($view, $data = array(), $echo = true)
 	{
 		foreach($data as $k => $v){
 			$$k = $v;
