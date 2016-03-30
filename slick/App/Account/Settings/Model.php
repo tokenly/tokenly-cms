@@ -33,7 +33,7 @@ class Settings_Model extends Core\Model
 			$form->add($pass2);
 		}
 		
-		$getSite = $this->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+		$getSite = currentSite();
 		
 		$getTokenField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
 		if($getTokenField AND $getTokenField['active'] == 1){
@@ -60,13 +60,7 @@ class Settings_Model extends Core\Model
 		}
 		
 		
-		$ref = new UI\Textbox('refUser');
-		$ref->setLabel('Referred By (enter referral username)');
-		if(isset($user['affiliate']) AND $user['affiliate']){
-			$ref->addAttribute('disabled');
-			$ref->setValue($user['affiliate']['username']);
-		}
-		$form->add($ref);				
+		
 		
 		$showEmail = new UI\Checkbox('showEmail');
 		$showEmail->setLabel('Show email address in profile?');
@@ -118,25 +112,6 @@ class Settings_Model extends Core\Model
 		$data['admin_mode'] = $adminView;
 		$data['is_api'] = $isAPI;
 		$auth_model->updateAccount($user['userId'], $data);
-		
-		//turn this into a mod later	
-		if(isset($user['affiliate']) AND !$user['affiliate'] AND isset($data['refUser']) AND trim($data['refUser']) != ''){
-			$getRef = $this->fetchSingle('SELECT userId FROM users WHERE LOWER(username) = :username', array(':username' => trim(strtolower($data['refUser']))));
-			if($getRef){
-				//check if its on of their own referrals
-				$getRef2 = $this->fetchSingle('SELECT referralId FROM user_referrals WHERE userId = :refId AND affiliateId = :userId',
-											array(':refId' => $getRef['userId'], ':userId' => $user['userId']));
-				if($getRef2){
-					throw new \Exception('You cannot be a referral of someone you already referred!');
-				}
-				$refVals = array('userId' => $user['userId'], 'affiliateId' => $getRef['userId'], 'refTime' => timestamp());
-				$this->insert('user_referrals', $refVals);
-			
-			}
-			else{
-				throw new \Exception('Invalid referral username');
-			}
-		}
 		
 		//turn this into a mod later
 		if(isset($data['field-'.PRIMARY_TOKEN_FIELD]) AND trim($data['field-'.PRIMARY_TOKEN_FIELD]) != ''){
