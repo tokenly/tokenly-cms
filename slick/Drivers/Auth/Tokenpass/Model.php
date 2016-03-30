@@ -518,7 +518,12 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		}		
 		
 		if(count($useData) > 0){
-			$update = $this->tokenpass->updateAccount($tokenly_uuid, $token, $data['curPassword'], $useData);
+			try{
+				$update = $this->tokenpass->updateAccount($tokenly_uuid, $token, $data['curPassword'], $useData);
+			}
+			catch(\Exception $e){
+				$update = false;
+			}
 		}
 		
 		return true;
