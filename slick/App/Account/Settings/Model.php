@@ -6,6 +6,7 @@ class Settings_Model extends Core\Model
 	protected function getSettingsForm($user, $adminView = false)
 	{
 		$app = get_app('account');
+		$getSite = currentSite();
 		$form = new UI\Form;
 		$form->setFileEnc();
 		
@@ -32,35 +33,6 @@ class Settings_Model extends Core\Model
 			$pass2->addAttribute('autocomplete', 'off');
 			$form->add($pass2);
 		}
-		
-		$getSite = currentSite();
-		
-		$getTokenField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
-		if($getTokenField AND $getTokenField['active'] == 1){
-			$getVal = $this->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
-										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
-			
-			$addressModule = $this->get('modules', 'address-manager', array(), 'slug');
-			if($getVal AND $addressModule){
-				$addressApp = $this->get('apps', $addressModule['appId']);
-				
-				$getAddress = $this->getAll('coin_addresses', array('userId' => $user['userId'], 'address' => $getVal['value']));
-				if(count($getAddress) > 0){
-					$getAddress = $getAddress[0];
-					if($getAddress['verified'] == 0){
-						
-						$getTokenField['label'] .= ' <em><a href="'.$getSite['url'].'/'.$addressApp['url'].'/'.$addressModule['url'].'/verify/'.$getAddress['address'].'" target="_blank">(unverified)</a></em>';
-					}
-				}
-			}	
-			
-			$token = new UI\Textbox('field-'.PRIMARY_TOKEN_FIELD);
-			$token->setLabel($getTokenField['label']);
-			$form->add($token);
-		}
-		
-		
-		
 		
 		$showEmail = new UI\Checkbox('showEmail');
 		$showEmail->setLabel('Show email address in profile?');
@@ -112,52 +84,7 @@ class Settings_Model extends Core\Model
 		$data['admin_mode'] = $adminView;
 		$data['is_api'] = $isAPI;
 		$auth_model->updateAccount($user['userId'], $data);
-		
-		//turn this into a mod later
-		if(isset($data['field-'.PRIMARY_TOKEN_FIELD]) AND trim($data['field-'.PRIMARY_TOKEN_FIELD]) != ''){
-			$val = $data['field-'.PRIMARY_TOKEN_FIELD];
-			$validate = new API\BTCValidate;
-			if(!$validate->checkAddress($val)){
-				throw new \Exception('Invalid bitcoin address!');
-			}
-			$getVal = $this->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
-										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
-										
-			$getField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
-			if($getField){
-				$insertData = array('value' => $val, 'lastUpdate' => timestamp());
-				if($getVal){
-					$update = $this->edit('user_profileVals', $getVal['profileValId'], $insertData);
-				}
-				else{
-					//insert new one
-					$insertData['userId'] = $user['userId'];
-					$insertData['fieldId'] = PRIMARY_TOKEN_FIELD;
-					$update = $this->insert('user_profileVals', $insertData);
-				}
-				
-				if($update){
-					$addressModel = new Tokenly\Address_Model;
-					//change or insert new primary coin address
-					$getAddress = $this->getAll('coin_addresses', array('userId' => $user['userId'], 'address' => $val));
-				
-					if(count($getAddress) > 0){
-						$getAddress = $getAddress[0];
-						$addressModel->editAddress($getAddress['addressId'], array('isPrimary' => 1, 'isXCP' => 1, 'label' => 'LTBcoin Compatible Address'));
-					}
-					else{
-						//insert new address
-						$addrData = array('userId' => $user['userId'], 'type' => 'btc', 'address' => $val, 'isXCP' => 1, 'isPrimary' => 1,
-										  'label' => $getField['label']);
-						$addressModel->addAddress($addrData);
-						
-					}
-
-				}
-			}
-		}
-		
-
+	
 		$meta = new \App\Meta_Model;
 		if(isset($data['pubProf']) AND intval($data['pubProf']) === 1){
 			$meta->updateUserMeta($user['userId'], 'pubProf', 1);

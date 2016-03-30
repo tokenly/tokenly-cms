@@ -17,7 +17,6 @@ define('OPTIN_GROUP_OPT_LABEL', 'Receive <a href="/forum/post/counterwallet-asse
 	});
 
 
-//edit page process code
 \Util\Filter::addFilter('App\Account\Settings_Model', 'updateSettings', 
 	function($result, $args){
 		if(!$result){

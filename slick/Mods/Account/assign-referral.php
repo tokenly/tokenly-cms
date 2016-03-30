@@ -19,7 +19,7 @@
 	});
 
 
-//edit page process code
+
 \Util\Filter::addFilter('App\Account\Settings_Model', 'updateSettings', 
 	function($result, $args){
 		if(!$result){
