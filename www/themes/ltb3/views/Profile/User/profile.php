@@ -60,8 +60,27 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 						</h3>
 						<div class="user-info-col user-info-left">
 							<?php
-							$this->includeView('inc/group-title', array('profile' => $profile));													
+							$this->includeView('inc/group-title', array('profile' => $profile));
+							if(isset($profile['meta']['pop_score_cache'])){
+								echo '<span class="user-rating" title="Total Proof of Participation Earned"><i class="fa fa-comment"></i> '.number_format(round($profile['meta']['pop_score_cache'])).' PoP</span>';
+							}
+							else{
+								echo '<span class="user-rating" title="Total Proof of Participation Earned"><i class="fa fa-comment"></i> 0 PoP</span>';
+							}
+							if(isset($profile['meta']['poq_score_cache'])){
+								echo '<span class="user-rating" title="Total Proof of Quality/Publication Earned"><i class="fa fa-thumbs-o-up"></i> '.number_format(round($profile['meta']['poq_score_cache'])).' PoQ</span>';
+							}
+							else{
+								echo '<span class="user-rating" title="Total Proof of Quality/Publication Earned"><i class="fa fa-thumbs-o-up"></i> 0 PoQ</span>';
+							}
+							if(isset($profile['meta']['pov_score_cache'])){
+								echo '<span class="user-rating" title="Total Proof of Value Earned"><i class="fa fa-star"></i> '.number_format(round($profile['meta']['pov_score_cache'])).' PoV</span>';
+							}	
+							else{
+								echo '<span class="user-rating" title="Total Proof of Value Earned"><i class="fa fa-star"></i> 0 PoV</span>';
+							}															
 							?>
+							
 						</div><!-- user-info-left -->
 						<div class="user-info-col user-info-right">
 							<?php
@@ -114,6 +133,16 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 	</div><!-- profile-hud -->
 	<div class="profile-stats">
 		<?php
+		//get LTBC rank
+		$ltb_rank = 0;
+		if(isset($profile['meta']['pop_rank_cache'])){
+			$ltb_rank = $profile['meta']['pop_rank_cache'];
+		}
+		
+		$ltb_content_rank = 0;
+		if(isset($profile['meta']['content_rank_cache'])){
+			$ltb_content_rank = $profile['meta']['content_rank_cache'];
+		}		
 
 		//count published articles
 		$num_published = $activity['blog']['count'];
@@ -123,7 +152,37 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 
 		?>
 		<div class="dash-home-stats">
-			<ul class="stats-list">				
+			<ul class="stats-list">
+				<li>
+					<?php
+					if($ltb_rank <= 0){
+					?>
+						<span class="stat-total null-stat">N/A</span>
+					<?php
+					}
+					else{
+					?>
+						<span class="stat-total">#<?= number_format($ltb_rank) ?></span>
+					<?php
+					}//endif
+					?>
+					<span class="stat-name">LTBcoin Rank <span class="stat-extra">(Participation)</span></span>
+				</li>
+				<li>
+					<?php
+					if($ltb_rank <= 0){
+					?>
+						<span class="stat-total null-stat">N/A</span>
+					<?php
+					}
+					else{
+					?>
+						<span class="stat-total">#<?= number_format($ltb_content_rank) ?></span>
+					<?php
+					}//endif
+					?>
+					<span class="stat-name">LTBcoin Rank <span class="stat-extra">(Content)</span></span>
+				</li>				
 				<li>
 					<span class="stat-total" ><?= number_format($profile_views) ?></span>
 					<span class="stat-name">Profile views</span>
@@ -131,13 +190,13 @@ if(!isset($profile['meta']['avatar']) OR trim($profile['meta']['avatar']) == '')
 				<li>
 					<a href="#activity">
 						<span class="stat-total <?php if($num_published == 0){ echo 'null-stat'; } ?>"><?= number_format($num_published) ?></span>
-						<span class="stat-name"><?= pluralize('Article', $num_published, true) ?> Published</span>
+						<span class="stat-name"><?= pluralize('Article', $num_published) ?> Published</span>
 					</a>
 				</li>
 				<li>
 					<a href="#activity">
 						<span class="stat-total <?php if($num_posts == 0){ echo 'null-stat'; } ?>"><?= number_format($num_posts) ?></span>
-						<span class="stat-name">Forum <?= pluralize('Post', $num_posts, true) ?></span>
+						<span class="stat-name">Forum <?= pluralize('Post', $num_posts) ?></span>
 					</a>
 				</li>									
 			</ul><!-- stats-list -->
