@@ -12,12 +12,55 @@ $meta = new \App\Meta_Model;
 
 //get current user PoP score
 $time = time();
+$pop_update_time = $meta->getUserMeta($user['userId'], 'recent_pop_update_time');
+$update_pop = true;
+if(intval($pop_update_time) > 0){
+	$diff = $time - $pop_update_time;
+	if($diff < 600){
+		$update_pop = false;
+	}
+}
+if($update_pop){
+	exec('nohup php '.SITE_BASE.'/scripts/updateUserCurrentPop.php '.$user['userId'].' > /dev/null &');
+}
+$getScore = json_decode($meta->getUserMeta($user['userId'], 'recent_pop_score'), true);
+if(!is_array($getScore)){
+	$getScore = array('score' => 0);
+}
+
+//get LTBC rank
+$ltb_rank = 0;
+if(isset($user['meta']['pop_rank_cache'])){
+	$ltb_rank = $user['meta']['pop_rank_cache'];
+}
+$ltb_content_rank = 0;
+if(isset($user['meta']['content_rank_cache'])){
+	$ltb_content_rank = $user['meta']['content_rank_cache'];
+}
 
 
 //get unread messages
 $count_unread = $pm->getNumUnreadMessages($user['userId']);
 
-													
+//count published articles
+$getPosts = $blog_model->getAll('blog_posts', array('siteId' => $site['siteId'],
+													 'userId' => $user['userId'],
+													 'trash' => 0), array(), 'postId');
+													 
+$getContribPosts = $blog_model->getUserContributedPosts($this->data);
+$getPosts = array_merge($getPosts, $getContribPosts);
+$num_published = 0;
+if(is_array($getPosts)){
+	foreach($getPosts as $post){
+		if($post['status'] == 'published'){
+			$check_approved = $blog_model->checkPostApproved($post['postId']);
+			if($check_approved){
+				$num_published++;
+			}
+		}
+	}
+}
+
 //get forum postcount
 $num_posts = $home_model->getUserPostCount($user['userId']);
 
@@ -30,10 +73,57 @@ if(isset($token_inventory['LTBCOIN'])){
 
 $asset_descs = array();
 
+$ltbc_price = $stats->getExchangeRate('BTC_LTBC');
 $btc_price = $stats->getBTCPrice();
+$ltbc_usd_value = 0;
+if($num_ltbc > 0 AND $ltbc_price AND $btc_price){
+	$ltbc_usd_value = round(round($btc_price * $ltbc_price, 6) * $num_ltbc, 3);
+}
 ?>
 <div class="dash-home-stats">
-	<ul class="stats-list">		
+	<ul class="stats-list">
+		<li>
+			<span class="stat-total  <?php if($getScore['score'] == 0){ echo 'null-stat'; } ?>"><?= number_format($getScore['score']) ?></span>
+			<span class="stat-name">PoP this Week</span>
+		</li>
+		<li>
+			<?php
+			if($ltb_rank <= 0){
+			?>
+				<span class="stat-total null-stat">N/A</span>
+			<?php
+			}
+			else{
+			?>
+				<span class="stat-total">
+					#<?= number_format($ltb_rank) ?>			
+				</span>
+			<?php
+			}//endif
+			?>
+			<span class="stat-name">LTBcoin Rank</span>
+			<span class="stat-extra">(Participation)</span>			
+		</li>
+		<li>
+			<?php
+			if($ltb_content_rank <= 0){
+			?>
+				<span class="stat-total null-stat">N/A</span>
+			<?php
+			}
+			else{
+			?>
+				<span class="stat-total">
+					#<?= number_format($ltb_content_rank) ?>
+				</span>
+			<?php
+			}//endif
+			?>
+			<span class="stat-name">
+				LTBcoin Rank
+			</span>
+			<span class="stat-extra">(Content)</span>
+		</li>		
 		<li>
 			<a href="<?= SITE_URL ?>/account/messages">
 				<span class="stat-total <?php if($count_unread == 0){ echo 'null-stat'; } ?>" ><?= number_format($count_unread) ?></span>
@@ -41,16 +131,80 @@ $btc_price = $stats->getBTCPrice();
 			</a>
 		</li>
 		<li>
+			<a href="<?= SITE_URL ?>/blog/submissions">
+				<span class="stat-total <?php if($num_published == 0){ echo 'null-stat'; } ?>"><?= number_format($num_published) ?></span>
+				<span class="stat-name"><?= pluralize('Article', $num_published) ?> Published</span>
+			</a>
+		</li>
+		<li>
 			<a href="<?= SITE_URL ?>/forum">
 				<span class="stat-total <?php if($num_posts == 0){ echo 'null-stat'; } ?>"><?= number_format($num_posts) ?></span>
 				<span class="stat-name">Forum <?= pluralize('Post', $num_posts) ?></span>
 			</a>
-		</li>									
+		</li>
+		<li>
+			<a href="<?= SITE_URL ?>/tokenly/inventory" title="<?= number_format($num_ltbc, 8) ?> LTBcoin">
+				<span class="stat-total <?php if($num_ltbc == 0){ echo 'null-stat'; } ?>"><?= number_format($num_ltbc) ?> <span class="ltbc-small"></span></span>
+				<span class="stat-name">LTBcoin Balance</span>
+			</a>
+			<?php
+			if($ltbc_usd_value > 0.01){
+				echo '<span class="stat-extra">($'.number_format($ltbc_usd_value, 2).' USD)</span>';
+			}
+			?>			
+		</li>										
 	</ul><!-- stats-list -->
 	<div class="clear"></div>
 </div><!-- dash-home-stats -->
 <div class="dash-home-cols">
-	<div class="dash-col" style="width: 100%;">
+	<div class="dash-col one-third">
+		<div class="dash-col-content">
+			<p class="pull-right">
+				<a href="<?= SITE_URL ?>/dashboard/blog/magic-words" title="View all submitted magic words">View all</a>
+			</p>
+			<h3><i class="fa fa-magic"></i> Magic Words Entry</h3>
+			<div class="dash-magic-words-cont">
+			<?php
+			$get_words = $magic_words->getUserWordSubmissions($user['userId']);
+			if(count($get_words) == 0){
+				echo '<p><strong>No words submitted.</strong></p>';
+			}
+			else{
+			?>
+			<p>
+				<strong>Recent entries:</strong>
+			</p>
+			<?php
+
+			$limit = 5;
+			$num = 0;
+			echo '<ul class="recent-magic-words">';
+			foreach($get_words as $word){
+				$num++;
+				if($num > $limit){
+					break;
+				}
+				echo '<li>';
+				echo  '<span class="word-title">'.$word['word'].'</span>';
+				echo '<span class="word-link"><a href="'.SITE_URL.'/'.$word['itemUrl'].'" target="_blank" title="'.$word['itemName'].'">'.shortenMsg($word['itemName'], 25).'</a></span>';
+				echo '</li>';
+			}
+			echo '</ul>';
+			}//endif
+			?>
+			<p>
+				Enter in the "magic word" as heard on any participating podcast for bonus rewards!
+			</p>
+			<div class="quick-word-form">
+				<form action="<?= SITE_URL ?>/dashboard/blog/magic-words" method="post">
+					<input type="text" name="word" required placeholder="Enter magic word" />
+					<input type="submit" value="Submit" />
+				</form>
+			</div><!-- quick-word-form -->
+			</div><!-- dash-magic-words-cont -->
+		</div>
+	</div>
+	<div class="dash-col two-thirds">
 		<ul class="dash-col-tabs">
 			<li class="active" data-tab="forums">
 				<a href="#" ><span class="pull-right"><i class="fa fa-comments"></i></span> Forum Activity</a>
@@ -207,9 +361,27 @@ $btc_price = $stats->getBTCPrice();
 	<div class="clear"></div>
 </div><!-- dash-home-cols -->
 <div class="dash-home-charts">
+	<?php
+
+	$display_ltbc_price = 'N/A';
+	if($ltbc_price){
+		$display_ltbc_price = convertFloat($ltbc_price).' BTC';
+		if($btc_price){
+			$ltbc_usd = round($btc_price * $ltbc_price, 6);
+			$display_ltbc_price .= ' ($'.convertFloat($ltbc_usd).' USD)';
+		}
+	}
+	?>	
 	<div class="dash-chart-cont price-chart-cont">
-		<h3>Bitcoin Price History</h3>
-		<div id="btc-price-chart-cont" style="width: 100%;">
+		<h3><i class="fa fa-usd"></i> <strong class="chart-price-type">LTBcoin</strong> Price History <span>(<a href="#" class="chart-view-switch ltbc-view">switch to BTC</a>)</span></h3>
+		<div id="ltbc-price-chart-cont">
+			<div id="ltbc-price-chart"></div>
+			<span class="chart-current-price">
+				Current LTBCOIN Price: <?= $display_ltbc_price ?>
+			</span>
+			<small class="pull-right">Data provided by <a href="https://poloniex.com" target="_blank" rel="nofollow">Poloniex</a></small>
+		</div>
+		<div id="btc-price-chart-cont" style="display: none; width: 100%;">
 			<div id="btc-price-chart"></div>
 			<?php
 			if($btc_price){
@@ -224,48 +396,73 @@ $btc_price = $stats->getBTCPrice();
 		</div>
 		<div class="clear"></div>
 	</div>	
+	<div class="dash-chart-cont">
+		<h3><i class="fa fa-group"></i> <strong class="chart-point-name">Participation</strong> Points Earned
+		<div class="pop-chart-opts">
+				<a href="#" class="active" data-chart="pop" data-chart-name="Participation" >Proof of Participation</a> |
+				<a href="#" data-chart="poq" data-chart-name="Quality" >Proof of Quality</a> |
+				<a href="#" data-chart="pov" data-chart-name="Value" >Proof of Value</a>
+		</div>				
+		</h3>
+		<div id="chart-master-cont">
+			<div id="pop-chart-cont">
+				<div id="participation-chart"></div>
+			</div>
+			<div id="poq-chart-cont" style="display: none; margin-top: 20px;">
+				<div id="quality-chart"></div>
+			</div>
+			<div id="pov-chart-cont" style="display: none; margin-top: 20px;">
+				<div id="value-chart"></div>
+			</div>				
+		</div>
+	</div>
 	<div class="clear"></div>	
 </div><!-- dash-home-charts -->
 <div class="dash-home-cols bottom-cols">
 	<div class="dash-col one-third">
 		<div class="dash-col-content">
-			<span class="pull-right"><a href="<?= SITE_URL ?>/dashboard/tokenly/inventory">View all</a></span>
-			<h3><i class="fa fa-btc"></i> Token Inventory</h3>
+			<span class="pull-right"><a href="<?= SITE_URL ?>/dashboard/blog/submissions">View all</a></span>
+			<h3><i class="fa fa-file-o"></i> Drafts in Progress</h3>
 			<?php
-				if(!$token_inventory OR count($token_inventory) == 0){
-					echo '<p>No tokens found in your inventory. <br>
-							Have you <strong><a href="'.SITE_URL.'/dashboard/tokenly/address-manager">registered and verified</a></strong> any <strong><a href="https://counterparty.io" target="_blank">Counterparty</a></strong> compatible bitcoin addresses yet?
-						</p>';
-				}		
-				else{
-					echo '<ul class="dash-inventory-list">';
-					foreach($token_inventory as $token => $amnt){
-						if(!in_array($token, $asset_descs)){
-							$asset_descs[] = $token;
-						}						
-					 ?>
-					 <li>
-						<span class="pull-right dash-inv-balance">
-							<?= rtrim(rtrim(number_format($amnt, 8), "0"),".") ?>
-						</span>
-						<span class="dash-inv-asset">
-							<a href="#asset-desc-<?= $token ?>" class="fancy"><?= $token ?></a>
-						</span>
-						<div class="clear"></div>
-					 </li>
-					 <?php					 
+			$posts = $blog_model->getUserPostsWithContributed(array('user' => $user, 'site' => $site));
+			$drafts = array();
+			foreach($posts as $post){
+				if($post['status'] != 'published'){
+					$drafts[] = $post;
+				}
+			}
+			if(count($drafts) == 0){
+				echo '<p>No drafts in progress.<br> Visit the <strong><a href="'.SITE_URL.'/dashboard/blog/submissions">submissions page</a></strong> to start your first blog post!</p>';
+			}
+			else{
+				echo '<ul class="dash-draft-list">';
+				$draft_limit = 5;
+				$num = 0;
+				foreach($drafts as $draft){
+					$num++;
+					if($num > $draft_limit){
+						break;
 					}
-					echo '</ul>';
-				}	
+					?>
+					<li>
+						<span class="draft-options pull-right">
+							<a href="<?= SITE_URL ?>/dashboard/blog/submissions/preview/<?= $draft['postId'] ?>" target="_blank">Preview</a>
+							<a href="<?= SITE_URL ?>/dashboard/blog/submissions/edit/<?= $draft['postId'] ?>" target="_blank">Edit</a>
+						</span>
+						<span class="draft-title" title="<?= $draft['title'] ?>"><?= shortenMsg($draft['title'], 30) ?></span>
+					</li>				
+					<?php
+				}
+				
+				echo '</ul>';
+			}
 			?>
-			<div class="inventory-update-btn">
-				<form action="<?= SITE_URL ?>/tokenly/inventory" method="post">
-					<input type="submit" name="forceRefresh" id="forceRefresh" value="Refresh Inventory" />
-				</form>
-			</div>
+			<p class="pull-right">
+				<a href="<?= SITE_URL ?>/dashboard/blog/submissions/add" class="dash-new-article"><i class="fa fa-plus-circle"></i> New Submission</a>
+			</p>
 		</div>
-	</div>	
-	<div class="dash-col two-thirds last">
+	</div>
+	<div class="dash-col one-third">
 		<div class="dash-col-content">
 			<span class="pull-right"><a href="<?= SITE_URL ?>/tokenly/inventory/transactions">View all</a></span>
 			<h3><i class="fa fa-exchange"></i> Recent Transactions</h3>
@@ -352,6 +549,44 @@ $btc_price = $stats->getBTCPrice();
 			?>
 		</div>
 	</div>
+	<div class="dash-col one-third last">
+		<div class="dash-col-content">
+			<span class="pull-right"><a href="<?= SITE_URL ?>/dashboard/tokenly/inventory">View all</a></span>
+			<h3><i class="fa fa-btc"></i> Token Inventory</h3>
+			<?php
+				if(!$token_inventory OR count($token_inventory) == 0){
+					echo '<p>No tokens found in your inventory. <br>
+							Have you <strong><a href="'.SITE_URL.'/dashboard/tokenly/address-manager">registered and verified</a></strong> any <strong><a href="https://counterparty.io" target="_blank">Counterparty</a></strong> compatible bitcoin addresses yet?
+						</p>';
+				}		
+				else{
+					echo '<ul class="dash-inventory-list">';
+					foreach($token_inventory as $token => $amnt){
+						if(!in_array($token, $asset_descs)){
+							$asset_descs[] = $token;
+						}						
+					 ?>
+					 <li>
+						<span class="pull-right dash-inv-balance">
+							<?= rtrim(rtrim(number_format($amnt, 8), "0"),".") ?>
+						</span>
+						<span class="dash-inv-asset">
+							<a href="#asset-desc-<?= $token ?>" class="fancy"><?= $token ?></a>
+						</span>
+						<div class="clear"></div>
+					 </li>
+					 <?php					 
+					}
+					echo '</ul>';
+				}	
+			?>
+			<div class="inventory-update-btn">
+				<form action="<?= SITE_URL ?>/tokenly/inventory" method="post">
+					<input type="submit" name="forceRefresh" id="forceRefresh" value="Refresh Inventory" />
+				</form>
+			</div>
+		</div>
+	</div>
 	<div class="clear"></div>
 </div><!-- dash-home-cols bottom-cols -->
 <?php
@@ -389,6 +624,176 @@ google.setOnLoadCallback(drawCharts);
 
 function drawCharts(){
 	
+	//Proof of participation chart
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn('number', 'Average PoP earned by LTBN users');
+	data.addColumn('number', 'PoP earned by <?= $user['username'] ?>');
+	
+	var plot_data = [];
+	<?php
+	$tokenly_app = get_app('tokenly');
+	$user_points = array();
+	$cache_path = SITE_BASE.'/data/cache';
+	
+	$pop_averages = json_decode(@file_get_contents($cache_path.'/pop_chart_averages.json'), true);
+	if(!is_array($pop_averages)){
+		$pop_averages = array();
+	}
+	if(isset($user['meta']['pop_chart_scores'])){
+		$user_points = json_decode($user['meta']['pop_chart_scores'], true);
+	}
+	foreach($pop_averages as $chart_date => $average_score){
+		$user_score = 0;
+		if(isset($user_points[$chart_date])){
+			$user_score = $user_points[$chart_date];
+		}
+		echo 'plot_data.push([new Date('.strtotime($chart_date).' * 1000),'.round($average_score).','.round($user_score).']);'."\n";
+	}
+	?>
+	data.addRows(
+		plot_data
+	);
+
+	var options = {
+		backgroundColor: {fill:'transparent'},
+		  legend: { position: 'bottom' },		
+		hAxis: {
+			title: 'LTBcoin Distribution Date'
+		},
+		vAxis: {
+			title: 'Points earned'
+		}
+	};
+
+	var chart = new google.visualization.LineChart(document.getElementById('participation-chart'));
+
+	chart.draw(data, options);
+	
+	//Proof of Quality chart
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn('number', 'Average PoQ earned by LTBN contributors');
+	data.addColumn('number', 'PoQ earned by <?= $user['username'] ?>');
+	
+	var plot_data = [];
+	<?php
+
+	$user_points = array();
+	$poq_averages = json_decode(@file_get_contents($cache_path.'/poq_chart_averages.json'), true);
+	if(!is_array($poq_averages)){
+		$poq_averages = array();
+	}
+	if(isset($user['meta']['poq_chart_scores'])){
+		$user_points = json_decode($user['meta']['poq_chart_scores'], true);
+	}
+	foreach($poq_averages as $chart_date => $average_score){
+		$user_score = 0;
+		if(isset($user_points[$chart_date])){
+			$user_score = $user_points[$chart_date];
+		}
+		echo 'plot_data.push([new Date('.strtotime($chart_date).' * 1000),'.round($average_score).','.round($user_score).']);'."\n";
+	}
+	?>
+	data.addRows(
+		plot_data
+	);
+
+	var options = {
+		backgroundColor: {fill:'transparent'},
+		  legend: { position: 'bottom' },		
+		hAxis: {
+			title: 'LTBcoin Distribution Date'
+		},
+		vAxis: {
+			title: 'Points earned'
+		}
+	};
+
+	var chart = new google.visualization.LineChart(document.getElementById('quality-chart'));
+
+	chart.draw(data, options);
+	
+	//Proof of Value chart
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn('number', 'Average PoV earned by LTBN contributors');
+	data.addColumn('number', 'PoV earned by <?= $user['username'] ?>');
+	
+	var plot_data = [];
+	<?php
+
+	$user_points = array();
+	$pov_averages = json_decode(@file_get_contents($cache_path.'/pov_chart_averages.json'), true);
+	if(!is_array($pov_averages)){
+		$pov_averages = array();
+	}
+	if(isset($user['meta']['pov_chart_scores'])){
+		$user_points = json_decode($user['meta']['pov_chart_scores'], true);
+	}
+	foreach($pov_averages as $chart_date => $average_score){
+		$user_score = 0;
+		if(isset($user_points[$chart_date])){
+			$user_score = $user_points[$chart_date];
+		}
+		echo 'plot_data.push([new Date('.strtotime($chart_date).' * 1000),'.round($average_score).','.round($user_score).']);'."\n";
+	}
+	?>
+	data.addRows(
+		plot_data
+	);
+
+	var options = {
+		backgroundColor: {fill:'transparent'},
+		  legend: { position: 'bottom' },		
+		hAxis: {
+			title: 'LTBcoin Distribution Date'
+		},
+		vAxis: {
+			title: 'Points earned'
+		}
+	};
+
+	var chart = new google.visualization.LineChart(document.getElementById('value-chart'));
+
+	chart.draw(data, options);	
+	
+	
+	//LTBcoin price chart
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
+	data.addColumn('number', 'Price (satoshis)');
+
+	var plot_data = [];
+	<?php
+	$ltbc_history = json_decode(@file_get_contents($cache_path.'/ltbc_price_history.json'), true);
+	if(!is_array($ltbc_history)){
+		$ltbc_history = array();
+	}
+	foreach($ltbc_history as $row){
+		$ltbc_satoshis = round($row['btc_rate'] * SATOSHI_MOD);
+		echo 'plot_data.push([new Date('.strtotime($row['date']).' * 1000),\'<p style="padding: 10px;"><strong>'.date('j M Y', strtotime($row['date'])).'</strong><br>Price (satoshis): <strong>'.$ltbc_satoshis.'</strong><br>Price (USD): $'.convertFloat($row['usd_rate']).'</p>\','.$ltbc_satoshis.']);'."\n";
+	}
+	?>
+	data.addRows(
+		plot_data
+	);
+
+	var options = {
+		backgroundColor: {fill:'transparent'},
+		legend: { position: 'none' },
+		focusTarget: 'category',
+		tooltip: { isHtml: true },
+		vAxis: {
+			title: 'Price (satoshis)'
+		}		
+	};
+
+	var chart = new google.visualization.LineChart(document.getElementById('ltbc-price-chart'));
+
+	chart.draw(data, options);	
+	
 	//BTC price chart
 	var data = new google.visualization.DataTable();
 	data.addColumn('date', 'Date');
@@ -396,7 +801,6 @@ function drawCharts(){
 		
 	var plot_data = [];
 	<?php
-	$cache_path = SITE_BASE.'/data/cache';
 	$btc_history = json_decode(@file_get_contents($cache_path.'/btc_price_history.json'), true);
 	if(!is_array($btc_history)){
 		$btc_history = array();
