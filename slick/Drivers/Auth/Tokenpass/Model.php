@@ -510,14 +510,16 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		$token = $getUser['auth'];
 		
 		$useData = array();
-		if(isset($data['email'])){
+		if(isset($data['email']) AND trim($data['email']) != ''){
 			$useData['email'] = $data['email'];
 		}
-		if(isset($data['password'])){
+		if(isset($data['password']) AND trim($data['password']) != ''){
 			$useData['password'] = $data['password'];
 		}		
 		
-		$update = $this->tokenpass->updateAccount($tokenly_uuid, $token, $data['curPassword'], $useData);
+		if(count($useData) > 0){
+			$update = $this->tokenpass->updateAccount($tokenly_uuid, $token, $data['curPassword'], $useData);
+		}
 		
 		return true;
 	}	
