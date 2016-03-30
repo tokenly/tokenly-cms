@@ -50,6 +50,12 @@ else{
 	<hr>
 	<h3>Sign a Message</h3>
 	<p>Sign the text below with your address using Base 64 encoding (Bitcoin-QT compatible) and enter in the results to verify your address</p>
+	<p>
+		<em>
+			Note: there is currently an issue with counterwallet which is causing it to produce invalid signatures.
+			Try using the <a href="<?= SITE_URL ?>/wallet" target="_blank">LTB Companion Wallet</a>.
+		</em>
+	</p>
 	<div class="secret-message">
 		<input type="text" readonly onclick="this.select()" value="<?= $secretMessage ?>" />
 	</div>

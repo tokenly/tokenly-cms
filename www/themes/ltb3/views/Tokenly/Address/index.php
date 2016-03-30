@@ -7,7 +7,7 @@
 	<strong>Why should I verify my bitcoin addresses?</strong>
 </p>
 <p>
-	By verfiying your bitcoin address, we are able to track your balances, including any Counterparty tokens you might have.
+	By verfiying your bitcoin address, we are able to track your balances, including any Counterparty tokens you might have (such as LTBCOIN).
 	This gives you access to additional features on the platform such as "Token Controlled Access" and the ability to quickly check your balances without having to open up your wallet.
 </p>
 <p>
@@ -15,8 +15,11 @@
 	levels of permissions based on the amount of a specific token that you hold in your verified bitcoin addresses.
 	For example, if you happen to own at least 1 PODCAST token, you can gain permissions to post and publish your own podcasts!
 	Different access tokens can be obtained in a variety of ways, most often through fellow community members or from giveaways and crowdsales. 
+	For more information, see <a href="http://letstalkbitcoin.com/blog/post/tcv">here</a>.
 </p>
-
+<p>
+	<strong>Note:</strong> You do not need a verified address to receive weekly LTBcoin rewards.
+</p>
 <h3>Add New Address</h3>
 <?php
 if(isset($message) AND trim($message) != ''){
