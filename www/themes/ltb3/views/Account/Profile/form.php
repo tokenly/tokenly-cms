@@ -16,3 +16,7 @@ if(isset($message) AND $message != null){
 }
 ?>
 <?= $form->display() ?>
+
+<p>
+	<strong>Looking for your <em>LTBcoin Compatible Address</em>? Go to your <a href="<?= SITE_URL ?>/dashboard/tokenly/address-manager">address manager</a> or <a href="<?= SITE_URL ?>/dashboard/account/settings">account settings</a>.</strong>
+</p>
