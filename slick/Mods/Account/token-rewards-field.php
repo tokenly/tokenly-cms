@@ -10,17 +10,18 @@
 		
 		$user = $args[0];
 		$getSite = currentSite();
+		$model = new \Core\Model;
 		
-		$getTokenField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
+		$getTokenField = $model->get('profile_fields', PRIMARY_TOKEN_FIELD);
 		if($getTokenField AND $getTokenField['active'] == 1){
-			$getVal = $this->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
+			$getVal = $model->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
 										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
 			
-			$addressModule = $this->get('modules', 'address-manager', array(), 'slug');
+			$addressModule = $model->get('modules', 'address-manager', array(), 'slug');
 			if($getVal AND $addressModule){
-				$addressApp = $this->get('apps', $addressModule['appId']);
+				$addressApp = $model->get('apps', $addressModule['appId']);
 				
-				$getAddress = $this->getAll('coin_addresses', array('userId' => $user['userId'], 'address' => $getVal['value']));
+				$getAddress = $model->getAll('coin_addresses', array('userId' => $user['userId'], 'address' => $getVal['value']));
 				if(count($getAddress) > 0){
 					$getAddress = $getAddress[0];
 					if($getAddress['verified'] == 0){
@@ -58,7 +59,7 @@
 			$getVal = $model->fetchSingle('SELECT * FROM user_profileVals WHERE userId = :userId AND fieldId = :fieldId',
 										array(':userId' => $user['userId'], ':fieldId' => PRIMARY_TOKEN_FIELD));
 										
-			$getField = $this->get('profile_fields', PRIMARY_TOKEN_FIELD);
+			$getField = $model->get('profile_fields', PRIMARY_TOKEN_FIELD);
 			if($getField){
 				$insertData = array('value' => $val, 'lastUpdate' => timestamp());
 				if($getVal){
