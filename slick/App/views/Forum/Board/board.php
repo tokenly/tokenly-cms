@@ -140,7 +140,7 @@ if(!$isAll){
 	<a href="#" class="sticky-trigger <?= $stickyClass ?>"><?= $stickyText ?> Sticky Posts</a>
 	<?php
 	}
-	if(count($topics) == 0){
+	if(count($topics) == 0 AND count($stickies) == 0){
 		echo '<p>No discussions found</p>';
 	}
 	else{
