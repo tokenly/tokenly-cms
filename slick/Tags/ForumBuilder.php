@@ -202,7 +202,7 @@ class ForumBuilder
 		
 		$payType = new UI\Select('payment_type');
 		$payType->setLabel('Payment Type');
-		$payType->addOption('LTBCOIN', number_format($this->settings['tca-forum-token-fee']).' LTBCOIN');
+		$payType->addOption($this->settings['tca-forum-token'], number_format($this->settings['tca-forum-token-fee']).' '.$this->settings['tca-forum-token']);
 		$payType->addOption('BTC', $this->settings['tca-forum-btc-fee'].' BTC');
 		$form->add($payType);
 		
@@ -233,9 +233,9 @@ class ForumBuilder
 		$getAsset = $getAsset[0];
 		
 		switch($data['payment_type']){
-			case 'LTBCOIN':
+			case $this->settings['tca-forum-token']:
 				$tokenCost = floatval($this->settings['tca-forum-token-fee']);
-				$tokenType = 'LTBCOIN';
+				$tokenType = $this->settings['tca-forum-token'];
 				break;
 			case 'BTC':
 				$tokenCost = floatval($this->settings['tca-forum-btc-fee']);
