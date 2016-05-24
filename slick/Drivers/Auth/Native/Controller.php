@@ -110,7 +110,6 @@ class Native_Controller extends ModControl implements \Interfaces\AuthController
 			$output['form'] = $this->model->getRegisterForm();
 			$output['view'] = 'register';
 			$output['title'] = 'Register';
-			
 			if(posted()){
 				$data = $output['form']->grabData();
 				try{

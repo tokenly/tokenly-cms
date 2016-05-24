@@ -29,7 +29,7 @@ class DashHome_Controller extends \App\ModControl
 		else{
 			redirect($this->site);
 		}
-		
+        
 		$output = parent::init();
 		$output['view'] = 'index';
 		$output['template'] = 'admin';

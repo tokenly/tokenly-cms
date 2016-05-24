@@ -1,3 +1,27 @@
+function createCookie(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function eraseCookie(name) {
+    createCookie(name,"",-1);
+}
+
 $(document).ready(function(){
 	var pageTitle = document.title;
 	$('.mobile-table').mobilizeTables();
@@ -205,4 +229,86 @@ $(document).ready(function(){
 		$('.list-switch').removeClass('active');
 		$(this).addClass('active');
 	});
+    
+	jQuery('body').delegate(".numeric-only", "keydown", function(e) {
+		// Allow: backspace, delete, tab, escape, enter and .
+		if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+			 // Allow: Ctrl+A
+			(e.keyCode == 65 && e.ctrlKey === true) || 
+			 // Allow: home, end, left, right, down, up
+			(e.keyCode >= 35 && e.keyCode <= 40)) {
+				 // let it happen, don't do anything
+				 return;
+		}
+		// Ensure that it is a number and stop the keypress
+		if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+			e.preventDefault();
+		}
+	});	    
+    
+    function updateCreditPurchaseTotal(){
+        var amount = $('#purchase-amount').val();
+        var token = $('#payment-method').val();
+        var price = $('#payment-method option[value="' + token + '"]').data('price');
+        var total = (amount * price).toFixed(8).replace(/0+$/, '').replace(/\.+$/, '');
+        $('#purchase-credit-total').html(total + ' ' + token);
+        
+    };
+    
+    $('#purchase-credit-form #purchase-amount,#purchase-credit-form #payment-method').change(function(e){
+       updateCreditPurchaseTotal(); 
+    });
+
+    $('#purchase-credit-form #purchase-amount').keyup(function(e){
+        updateCreditPurchaseTotal(); 
+    });
+    
+	window.setTimeout(function(){
+		
+		var pocketsurl = $('.pockets-url').text(); //Pockets extension url
+		var pocketsimage = $('.pockets-image-blue').text(); //Pockets icon
+		if(pocketsurl != ''){
+			createCookie('pockets-url-value', pocketsurl, 30);
+			createCookie('pockets-icon-value', pocketsimage, 30);
+		}
+		
+		$('.dynamic-payment-button').each(function(){
+			var amount = $(this).data('amount');
+			var address = $(this).data('address');
+			var label = $(this).data('label');
+			var tokens = $(this).data('tokens');
+			
+			if(pocketsurl == ''){
+				pocketsurl = readCookie('pockets-url-value');
+				pocketsimage = readCookie('pockets-icon-value');
+			}
+			if(!pocketsurl || pocketsurl == null || pocketsurl == ''){
+				return false;
+			}
+
+			var label_encoded = encodeURIComponent(label).replace(/[!'()*]/g, escape); //URI encode label and remove special characters
+			var urlattributes = "?address="+address+"&label="+label_encoded+"&tokens="+tokens+"&amount="+amount;
+			$(this).html("<a href='"+pocketsurl+urlattributes+"' target='_blank'><img src='"+pocketsimage+"' width='100px'></a>");
+		});
+	}, 300);
+    
+    if($('#system-credits-payment').length > 0){
+        window.setInterval(function(){
+            var url = $('#check-payment-url').data('url');
+            if(url){
+                $.get(url, function(data){
+                    if(data.complete){
+                        $('#payment-status').attr('class', 'text-success').html('Payment complete! System credits have been added to your account.');
+                    }
+                    else{
+                        if(data.receiving){
+                            $('#payment-status').attr('class', 'text-info').html('Receiving transaction, waiting for confirmations');
+                        }
+                    }
+                });
+            }
+            
+        }, 5000);
+        
+    }
 });

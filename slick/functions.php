@@ -50,6 +50,11 @@ function convertFloat($float)
 	return $str;
 }
 
+function formatFloat($float, $decimals = 8)
+{
+    return rtrim(rtrim(number_format($float, $decimals), "0"),".");
+}
+
 
 /**
  *  takes a string, and a count of items (usually an array)
@@ -885,6 +890,10 @@ function extract_signature($text, $start = '-----BEGIN BITCOIN SIGNATURE-----', 
 
 function redirect($url)
 {
+    if(strpos($url, '/') === 0){
+        $site = currentSite();
+        $url = $site['url'].$url;
+    }
 	header('Location: '.$url);
 	die();
 }
