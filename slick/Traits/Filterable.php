@@ -75,7 +75,7 @@ trait Filterable
 		}
 		$filters = Filter::getMethodFilters($class, $method);	
 		if($filters){
-			foreach($filters as $filter){
+			foreach($filters as $k => $filter){
 				if($filter['prepend'] === true OR $filter['replace'] === true){
 					unset($filters[$k]);
 					continue;
