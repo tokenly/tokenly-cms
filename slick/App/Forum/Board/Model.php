@@ -74,7 +74,6 @@ class Board_Model extends Core\Model
 				$useData[$key] = $data[$key];
 			}
 		}
-		
 		if(isset($data['check_captcha']) AND $data['check_captcha']){
 			require_once(SITE_PATH.'/resources/recaptchalib2.php');
 			$recaptcha = new \ReCaptcha(CAPTCHA_PRIV);
