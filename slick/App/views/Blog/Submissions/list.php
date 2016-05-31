@@ -16,7 +16,7 @@ if($perms['canWritePost']){
 	else{
 	?>
 	<a href="<?= SITE_URL ?>/<?= $app['url'] ?>/<?= $module['url'] ?>/add" class="btn btn-large <?= $creditDisable ?> new-article-btn">New Submission (<?= $num_credits ?>)</a>
-	<a href="#" class="btn btn-large purchase-credits">Purchase Credits</a>
+	<a href="<?= SITE_URL ?>/dashboard/account/credits" class="btn btn-large">Purchase Credits</a>
 	<?php
 	}//endif
 	?>
@@ -25,28 +25,9 @@ if($perms['canWritePost']){
 }//endif
 ?>
 <h2>My Article Submissions</h2>
+<?=  $this->displayFlash('blog-message') ?>
+<?=  $this->displayFlash('message') ?>
 <div class="clear"></div>
-<div class="purchase-credits-cont" style="display: none;">
-	<h3>Purchase Submission Credits</h3>
-	<p>
-		In order to submit a new article, you must purchase article submission credits using your <?= $fee_asset ?>.<br>
-		<strong>The price is <?= number_format($submission_fee) ?> <?= $fee_asset ?> per credit and each new article submission requires 1 credit.</strong> You may purchase multiple credits at once 
-		(e.g send <?= number_format($submission_fee * 10) ?> <?= $fee_asset ?> to get 10 credits). If you are a podcaster or a frequent writer on our platform,
-		you may be eligble to receive an access token enabling you to bypass the fee structure (contact us for this). 
-	</p>
-	<p class="text-center">
-		<strong>Send at least <?= number_format($submission_fee) ?> <?= $fee_asset ?> to the following address:</strong> 
-		<?php
-		if(!$credit_address){
-			echo '<span class="error">Error retrieving deposit address</span>';
-		}
-		else{
-			echo '<span class="credit-btc-address">'.$credit_address.'</span>';
-		}
-		?>
-	</p>
-	<p><strong class="payment-status">Waiting for payment...</strong></p>
-</div>
 <?= $this->displayBlock('dashboard-blog-submissions') ?>
 <hr>
 <div class="clear"></div>
@@ -64,7 +45,6 @@ if($trashMode == 0){
 <div class="clear"></div>
 </div>
 <br>
-<?=  $this->displayFlash('blog-message') ?>
 <?php
 	echo '<p class="blog-trash-link"><a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/trash">View Trash ('.$trashCount.')</a></p>';
 }else{

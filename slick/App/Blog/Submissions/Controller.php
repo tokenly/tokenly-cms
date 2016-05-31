@@ -24,6 +24,7 @@ class Submissions_Controller extends \App\ModControl
 		$this->blogSettings = $this->meta->appMeta($this->blogApp['appId']);
         $this->postModel = new Post_Model;
         $this->invite = new Account\Invite_Model;
+        $this->credits = new Account\Credits_Model;
     }
     
     function __install($moduleId)
@@ -67,9 +68,6 @@ class Submissions_Controller extends \App\ModControl
 					break;
 				case 'preview':
 					$output = $this->container->previewPost($output);
-					break;
-				case 'check-credits':
-					$output = $this->container->checkCreditPayment();
 					break;
 				case 'trash':
 					if(isset($this->args[3])){
@@ -189,30 +187,7 @@ class Submissions_Controller extends \App\ModControl
 		}
 		
 		$output['submission_fee'] = $this->blogSettings['submission-fee'];
-		$getDeposit = $this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-address');
-		if(!$getDeposit){
-			$btc = new API\Bitcoin(BTC_CONNECT);
-			$accountName = XCP_PREFIX.'BLOG_CREDITS_'.$this->user['userId'];
-			try{
-				$getAddress = $btc->getaccountaddress($accountName);
-			}
-			catch(\Exception $e){
-				$getAddress = false;
-			}
-			$this->meta->updateUserMeta($this->user['userId'], 'article-credit-deposit-address', $getAddress);
-			$output['credit_address'] = $getAddress;
-		}
-		else{
-			$output['credit_address'] = $getDeposit;
-		}
-		$output['num_credits'] = $this->meta->getUserMeta($this->user['userId'], 'article-credits');
-		if($output['num_credits'] === false){
-			//lets give them a free credit!
-			$this->meta->updateUserMeta($this->user['userId'], 'article-credits', 1);
-			$output['num_credits'] = 1;
-		}
-		$output['num_credits'] = intval($output['num_credits']);
-		$output['fee_asset'] = strtoupper($this->blogSettings['submission-fee-token']);
+		$output['num_credits'] = floor($this->credits->getCreditBalance() / $output['submission_fee']);
 		
 		$output['trashCount'] = $this->model->countTrashItems($this->user['userId']);
 		$output['trashMode'] = $trash;
@@ -230,9 +205,9 @@ class Submissions_Controller extends \App\ModControl
 			return $output;
 		}
 		
-		$output['num_credits'] = intval($this->meta->getUserMeta($this->user['userId'], 'article-credits'));
-		if(!$this->data['perms']['canBypassSubmitFee'] AND $output['num_credits'] <= 0){
-			Util\Session::flash('blog-message', 'You do not have enough submission credits to create a new post', 'error');
+		$output['num_credits'] = $this->credits->getCreditBalance();
+		if(!$this->data['perms']['canBypassSubmitFee'] AND $output['num_credits'] < floatval($this->blogSettings['submission-fee'])){
+			Util\Session::flash('blog-message', 'You do not have enough system credits to create a new post', 'error');
 			redirect($this->site.$this->moduleUrl);
 		}
 		$this->data['user']['perms'] = $this->data['perms'];
@@ -293,16 +268,13 @@ class Submissions_Controller extends \App\ModControl
 			if($add){
 				if(!$this->data['perms']['canBypassSubmitFee']){
 					//deduct from their current credits
-					$newCredits = $output['num_credits'] - 1;
-					$this->meta->updateUserMeta($this->user['userId'], 'article-credits', $newCredits);
+                    $this->credits->debit($this->blogSettings['submission-fee'], 'blog-post:'.$add, 'Submitted blog article');
 				}
-				
 				redirect($this->site.$this->moduleUrl);
 			}
 			else{
 				redirect($this->site.$this->moduleUrl.'/add');
 			}
-			
 			return;
 		}
 		
@@ -909,142 +881,6 @@ class Submissions_Controller extends \App\ModControl
 		return $output;
 	}
 	
-	
-	protected function checkCreditPayment()
-	{
-		ob_end_clean();
-		header('Content-Type: application/json');		
-		$output = array('result' => null, 'error' => null);
-		if(Util\Session::get('blog-credit-check-progress')){
-			Util\Session::clear('blog-credit-check-progress');
-			echo json_encode($output);
-			die();
-		}
-		Util\Session::set('blog-credit-check-progress', 1);
-		
-		//get latest deposit address
-		$getAddress = $this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-address');
-		if(!$getAddress){
-			http_response_code(400);
-			$output['error'] = 'No deposit address found';
-		}
-		else{
-			//check balances including the mempool
-			$assetInfo = $this->inventory->getAssetData($this->blogSettings['submission-fee-token']);
-			$xcp = new API\Bitcoin(XCP_CONNECT);
-			$btc = new API\Bitcoin(BTC_CONNECT);
-			try{
-				$getPool = $xcp->get_mempool();
-				$getBalances = $xcp->get_balances(array('filters' => array('field' => 'address', 'op' => '=', 'value' => $getAddress)));
-				
-				$received = 0;
-				$confirmCoin = 0;
-				$newCoin = 0;
-				foreach($getBalances as $balance){
-					if($balance['asset'] == $assetInfo['asset']){
-						$confirmCoin = $balance['quantity'];
-						if($assetInfo['divisible'] == 1 AND $confirmCoin > 0){
-							$confirmCoin = $confirmCoin / SATOSHI_MOD;
-						}
-						$received+= $confirmCoin;
-					}
-				}
-				foreach($getPool as $pool){
-					if($pool['category'] == 'sends'){
-						$parse = json_decode($pool['bindings'], true);
-						if($parse['destination'] == $getAddress AND $parse['asset'] == $assetInfo['asset']){
-							//check TX to make sure its an actual unconfirmed transaction
-							$getTx = $btc->gettransaction($pool['tx_hash']);
-							if($getTx AND $getTx['confirmations'] == 0){
-								$newCoin = $parse['quantity'];
-								if($assetInfo['divisible'] == 1 AND $newCoin > 0){
-									$newCoin = $newCoin / SATOSHI_MOD;
-								}
-								$received+= $newCoin;
-							}
-						}
-					}
-				}
-			}
-			catch(\Exception $e){
-				http_response_code(400);
-				$output['error'] = 'Error retrieving data from xcp server';
-			}
-			
-			//check for previous payment orders on this address, deduct from total seen
-			$prevOrders = $this->model->getAll('payment_order', array('address' => $getAddress, 'orderType' => 'blog-submission-credits'));
-			$pastOrdered = 0;
-			foreach($prevOrders as $prevOrder){
-				$prevData = json_decode($prevOrder['orderData'], true);
-				$pastOrdered += $prevData['new-received'];
-			}
-			
-			$received -= $pastOrdered;
-
-			//calculate change, number of credits etc.
-			$getChange = floatval($this->meta->getUserMeta($this->user['userId'], 'article-credit-deposit-change'));
-			$getCredits = intval($this->meta->getUserMeta($this->user['userId'], 'article-credits'));
-			$submitFee = intval($this->blogSettings['submission-fee']);
-			$origReceived = $received;
-			$received += $getChange;
-			$leftover = $received % $submitFee;
-			$numCredits = floor($received / $submitFee);
-			
-			//check if enough for at least 1 credit
-			if($numCredits > 0){
-				
-				//save as store order
-				$orderData = array();
-				$orderData['userId'] = $this->user['userId'];
-				$orderData['credits'] = $numCredits;
-				$orderData['credit-price'] = $submitFee;
-				$orderData['new-received'] = $origReceived;
-				$orderData['previous-change'] = $getChange;
-				$orderData['leftover-change'] = $leftover;
-				
-				$order = array();
-				$order['address'] = $getAddress;
-				$order['account'] = XCP_PREFIX.'BLOG_CREDITS_'.$this->user['userId'];
-				$order['amount'] = $numCredits * $submitFee;
-				$order['asset'] = $assetInfo['asset'];
-				$order['received'] = $origReceived;
-				$order['complete'] = 1;
-				$order['orderTime'] = timestamp();
-				$order['orderType'] = 'blog-submission-credits';
-				$order['completeTime'] = $order['orderTime'];
-				$order['orderData'] = json_encode($orderData);
-				
-				$saveOrder = $this->model->insert('payment_order', $order);
-				if(!$saveOrder){
-					http_response_code(400);
-					$output['error'] = 'Error saving payment order';
-					echo json_encode($output);
-					die();					
-				}
-				
-				//save credits and leftover change
-				$newCredits = $getCredits + $numCredits;
-				$updateCredits = $this->meta->updateUserMeta($this->user['userId'], 'article-credits', $newCredits);
-				$updateChange = $this->meta->updateUserMeta($this->user['userId'], 'article-credit-deposit-change', $leftover);
-			
-				//setup response data
-				$output['result'] = 'success';
-				$output['credits'] = $newCredits;
-				$output['new_credits'] = $numCredits;
-				$output['received'] = $origReceived;
-				$output['old_change'] = $getChange;
-				$output['new_change'] = $leftover;
-			}
-			else{
-				$output['result'] = 'none';	
-			}
-		}
-		
-		ob_end_clean();
-		Util\Session::clear('blog-credit-check-progress');
-		echo json_encode($output);
-		die();
-	}
 	
 	protected function trashPost($restore = false)
 	{
