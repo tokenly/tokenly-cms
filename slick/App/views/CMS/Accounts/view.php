@@ -11,6 +11,7 @@
 	<li><strong>Registration Date:</strong> <?= $thisUser['regDate'] ?></li>
 	<li><strong>Last Logged In:</strong> <?= $thisUser['lastAuth'] ?></li>
 	<li><strong>Last Active:</strong> <?= $thisUser['lastActive'] ?></li>
+    <li><strong>System Credit Balance:</strong> <?= $user_credits ?></li>
 </ul>
 <?php
 if(isset($message) AND trim($message) != ''){
