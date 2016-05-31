@@ -132,12 +132,17 @@ class Boards_Model extends Core\Model
 		if(isset($data['ownerId'])){
 			$useData['ownerId'] = $data['ownerId'];
 		}
+        
+        $useData['active'] = 0;
+        if(trim($data['active']) != '' AND intval($data['active']) == 1){
+            $useData['active'] = 1;
+        }
 		
 		$edit = $this->edit('forum_boards', $id, $useData);
 		if(!$edit){
 			throw new \Exception('Error editing board');
 		}
-			
+            
 		return true;
 		
 	}
@@ -203,4 +208,6 @@ class Boards_Model extends Core\Model
 		}
 		return $slug.'-'.($get['total']+1);
 	}
+    
+   
 }

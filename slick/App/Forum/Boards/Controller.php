@@ -14,6 +14,7 @@ class Boards_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Boards_Model;
+        $this->board_model = new Board_Model;
     }
     
     protected function init()
@@ -144,6 +145,7 @@ class Boards_Controller extends \App\ModControl
 		$output['boardMods'] = $this->model->getBoardMods($getBoard['boardId']);
 		$output['modForm'] = $this->model->getModForm();
 		$output['getBoard'] = $getBoard;
+        $output['boardMeta'] = $this->board_model->boardMeta($getBoard['boardId']);
 		
 		if(posted()){
 			if(isset($_POST['userId'])){
