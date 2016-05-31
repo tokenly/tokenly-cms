@@ -1,13 +1,13 @@
 <?php
 namespace Drivers\Inventory;
-use Tokenly\AccountsClient\AccountsAPI;
+use Tokenly\TokenpassClient\TokenpassAPI;
 class Tokenpass_Model extends Native_Model
 {
 	
 	function __construct()
 	{
 		parent::__construct();
-		$this->tokenpass = new AccountsAPI;
+		$this->tokenpass = new TokenpassAPI;
 		
 	}
 	
