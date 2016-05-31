@@ -52,7 +52,7 @@ function convertFloat($float)
 
 function formatFloat($float, $decimals = 8)
 {
-    return rtrim(rtrim(number_format($float, $decimals), "0"),".");
+    return rtrim(rtrim(number_format(floatval($float), $decimals), "0"),".");
 }
 
 
@@ -225,6 +225,11 @@ function boolToText($num, $yes = 'yes', $no = 'no')
 	else{
 		return $no;
 	}
+}
+
+function boolToColorText($num)
+{
+    return boolToText($num, '<span class="text-success">yes</span>', '<span class="text-danger">no</span>');
 }
 
 function shorten($text, $length = 200, $url = '', $more = '', $moreClass = ''){
