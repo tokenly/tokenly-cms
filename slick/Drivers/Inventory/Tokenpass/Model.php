@@ -1,6 +1,7 @@
 <?php
 namespace Drivers\Inventory;
 use Tokenly\TokenpassClient\TokenpassAPI;
+use Exception;
 class Tokenpass_Model extends Native_Model
 {
 	
@@ -23,7 +24,12 @@ class Tokenpass_Model extends Native_Model
 		$cache_key = 'user_tokenpass_addresses_'.$getUser['userId'];
 		$get_cached = static_cache($cache_key);
 		if(!is_array($get_cached)){
-			$get_cached = $this->tokenpass->getAddresses($getUser['username']);
+            try{
+                $get_cached = $this->tokenpass->getAddresses($getUser['username']);
+            }
+            catch(Exception $e){
+                return false;
+            }
 			if(!is_array($get_cached)){
 				return false;
 			}
