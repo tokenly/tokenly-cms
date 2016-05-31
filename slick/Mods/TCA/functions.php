@@ -51,7 +51,12 @@ function remove_tca_locks($moduleId, $itemId, $itemType)
 
 function add_tca_locks($user, $moduleId, $itemId, $itemType, $tokens = array(), $amounts = array())
 {
-	
+    if(!$user){
+        return false;
+    }
+    if(!is_array($user)){
+        $user = array('userId' => $user);
+    }
 	$model = new \Core\Model;
 	$stack = array();
 	foreach($tokens['stack'] as $andGroup){

@@ -4,10 +4,13 @@ use Core, UI, Util, App\Tokenly;
 class Boards_Model extends Core\Model
 {
 
-	protected function getBoardForm($siteId)
+	protected function getBoardForm($boardId = false)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
+        
+        $site = currentSite();
+        $siteId = $site['siteId'];
 		
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
 		$categoryId = new UI\Select('categoryId');

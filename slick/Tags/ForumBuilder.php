@@ -1,6 +1,9 @@
 <?php
 namespace Tags;
 use Core, App, App\Tokenly, App\Account, UI, Util, API, Exception, App\Forum;
+
+require_once(FRAMEWORK_PATH.'/Mods/TCA/functions.php');
+
 class ForumBuilder
 {
 	function __construct()
@@ -108,12 +111,16 @@ class ForumBuilder
 		$form->add($boardDesc);
         
 		$tokenName = new UI\Textbox('token_name');
-		$tokenName->setLabel('Token Name *');
+		$tokenName->setLabel('Access Token *');
 		$tokenName->addAttribute('required');
 		$form->add($tokenName);
+        
+        $token_req = new \UI\Textbox('token_req');
+        $token_req->setLabel('Minimum amount of token required for access *');
+        $form->add($token_req);        
 		
         $password = new UI\Password('password');
-        $password->setLabel('Enter Password to Confirm Submission');
+        $password->setLabel('Enter Password to Confirm Submission *');
         $password->addAttribute('required');
         $form->add($password);
 
@@ -154,6 +161,7 @@ class ForumBuilder
         //set up order data
 		$orderInfo = array();
 		$orderInfo['token'] = strtoupper(trim($data['token_name']));	
+        $orderInfo['token_req'] = trim($data['token_req']);
 		
 		$orderInfo['board'] = trim(strip_tags($data['board_name']));
 		$orderInfo['board_desc'] = strip_tags($data['board_description']);
@@ -203,19 +211,23 @@ class ForumBuilder
 		}
 		
 		//create token_access entry
-		$accessData = array('userId' => $data['userId'], 'moduleId' => $this->boardModule['moduleId'], 
-							'itemId' => $addBoard, 'itemType' => 'board', 'permId' => 0, 'asset' => $data['token'],
-							'amount' => 0, 'op' => '>', 'stackOp' => 'AND', 'stackOrder' => 0);
-		$addLock = $this->model->insert('token_access', $accessData);
-		if(!$addLock){
-			throw new Exception('Error creating token access lock');
-		}
-		
+        $board_module = get_app('forum.forum-board');
+        $parse_input = parse_tca_token($data['token']);
+        $parse_amount = parse_tca_amount($data['token_req']);
+        $add_locks = add_tca_locks($data['userId'], $board_module['moduleId'], $addBoard, 'board', $parse_input, $parse_amount);        
+        
         $timestamp = timestamp();
         
 		//link token to board via boardMeta
         //mark this as a board that requires credits to stay active
-        $this->board_model->updateBoardMeta($addBoard, 'access_token', $data['token']);
+        $exp_tokens = explode(',', $data['token']);
+        $first_token = false;
+        if(isset($exp_tokens[0])){
+            $first_token = trim($exp_tokens[0]);
+        }
+        $this->board_model->updateBoardMeta($addBoard, 'access_token', $first_token);
+        $this->board_model->updateBoardMeta($addBoard, 'access-token', $data['token']);
+        $this->board_model->updateBoardMeta($addBoard, 'token-req', $data['token_req']);
         $this->board_model->updateBoardMeta($addBoard, 'billed_user_board', 1);
         $this->board_model->updateBoardMeta($addBoard, 'last_billing_time', strtotime($timestamp));
         $this->board_model->updateBoardMeta($addBoard, 'total_billed', $data['credit_cost']);

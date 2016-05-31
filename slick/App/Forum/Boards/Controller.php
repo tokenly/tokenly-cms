@@ -81,7 +81,7 @@ class Boards_Controller extends \App\ModControl
 			$output['view'] = '403';
 			return $output;
 		}
-		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		$output['form'] = $this->model->getBoardForm();
 		if(!$this->data['perms']['canChangeBoardCategory']){
 			$output['form']->remove('categoryId');
 		}
@@ -131,7 +131,7 @@ class Boards_Controller extends \App\ModControl
 			$output['view'] = '403';
 			return $output;
 		}
-		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		$output['form'] = $this->model->getBoardForm($getBoard['boardId']);
 		if(!$this->data['perms']['canChangeBoardOwner']){
 			$output['form']->remove('ownerId');
 		}
