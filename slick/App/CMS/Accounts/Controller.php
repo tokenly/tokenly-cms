@@ -15,6 +15,7 @@ class Accounts_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Accounts_Model;
+        $this->credits = new Account\Credits_Model;
     }
     
     protected function init()
@@ -147,6 +148,7 @@ class Accounts_Controller extends \App\ModControl
 		
 		$output['thisUser'] = $get;
 		$output['view'] = 'view';
+        $output['user_credits'] = $this->credits->getCreditBalance($get['userId']);
 
 		$output['form']->setValues(array('groups' => $groupIds));
 		return $output;
