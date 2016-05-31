@@ -36,7 +36,7 @@ class Model
 					file_put_contents($index_file, json_encode($getIndexList));
 				}
 				foreach($getIndexList as $index){
-					if($index['INDEX_NAME'] == 'PRIMARY'){
+					if($index['INDEX_NAME'] == 'PRIMARY' AND !isset(self::$indexes[$index['TABLE_NAME']])){
 						self::$indexes[$index['TABLE_NAME']] = $index['COLUMN_NAME'];
 					}
 				}
