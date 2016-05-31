@@ -621,7 +621,13 @@ function currentSite()
 		return $cached;
 	}
 	$model = new \Core\Model;
-	$get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+    $get = false;
+    if(isset($_SERVER['HTTP_HOST'])){
+        $get = $model->get('sites', $_SERVER['HTTP_HOST'], array(), 'domain');
+    }
+    if(!$get){
+        $get = $model->get('sites', SITE_DOMAIN, array(), 'domain');
+    }
 	if($get){
 		$get['apps'] = $model->fetchAll('SELECT a.* FROM site_apps s LEFT JOIN apps a ON a.appId = s.appId WHERE s.siteId = :siteId', array(':siteId' => $get['siteId']));
 	}
@@ -697,8 +703,13 @@ function app_enabled($slugs, $searchType = 'slug')
 		return false;
 	}	
 	if(isset($exp[1])){
-		$module_list = static_cache('modules_list');	
-		$getModule = extract_row($module_list, array($searchType => $exp[1], 'appId' => $getApp['appId']), false, false, true);
+		$module_list = static_cache('modules_list');
+		if($module_list){
+            $getModule = extract_row($module_list, array($searchType => $exp[1], 'appId' => $getApp['appId']), false, false, true);
+		}
+		else{
+			$getModule = $model->get('modules', $exp[1], array(), $searchType);
+		}        	
 		if(!$getModule){
 			return false;
 		}
