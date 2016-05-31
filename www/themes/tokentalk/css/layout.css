@@ -2725,6 +2725,49 @@ body.dash-home .admin-content{
 	color: #fff;
 }
 
+.account-links .login-pull span{
+	font-size: 13px;
+}
+
+#transfer-credits-form{
+    position: relative;
+    width: 300px;
+    float: right;
+}
+
+#purchase-credit-form{
+    position: relative;
+    width: 300px;
+}
+
+#system-credits-payment{
+    font-size: 24px;
+}
+
+.text-info{
+    color: #007BA3;
+}
+
+.paginator .current{
+    font-weight: 700;
+    color: #000;
+}
+
+#user-credits-search{
+    width: 300px;
+    position: relative;
+}
+
+#user-credits-search .form-group.inline input{
+    display: inline-block;
+    margin: 0px;
+}
+
+#user-credits-search .form-group.inline input[type="text"]{
+    width: 200px;
+}
+
+
 /*** Media Queries ***/
 
 @media screen and (min-width: 767px){
