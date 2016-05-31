@@ -1,7 +1,7 @@
 <?php
 namespace Drivers\Auth;
 use Core, UI, Util, App\Profile, App\Account\Settings_Model, App\Meta_Model;
-use Tokenly\AccountsClient\AccountsAPI;
+use Tokenly\TokenpassClient\TokenpassAPI;
 
 class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 {
@@ -12,7 +12,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		parent::__construct();
 		$this->oauth_url = TOKENPASS_URL.'/oauth';
 		$this->scopes = array('user', 'tca', 'private-address');
-		$this->tokenpass = new AccountsAPI;
+		$this->tokenpass = new TokenpassAPI;
 	}
 	
 	public static function userInfo($userId = false)
