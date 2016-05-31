@@ -106,12 +106,16 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		curl_close($ch);		
 
 		if(!is_array($response)){
-			throw new \Exception('Error logging in');
+			throw new \Exception('Error authenticating');
 		}
 		
 		if(isset($response['error'])){
 			throw new \Exception($response['error']);
 		}
+        
+        if(isset($data['no_token']) AND $data['no_token']){
+            return true;
+        }
 		
 		$token = $this->container->getAuthToken($response['code']);
 		if(!$token){
