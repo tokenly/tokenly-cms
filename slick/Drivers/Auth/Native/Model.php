@@ -129,31 +129,37 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			}
 		}
 		
-		$token = $this->container->generateAuthToken($get['userId']);
-		if(!$token){
-			http_response_code(400);
-			$getAttempts++;
-			$meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
-			throw new \Exception('Error authenticating');
-		}
+        $profModel = new Profile\User_Model;
+        $getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
+        
+        if(!isset($data['no_token']) OR !$data['no_token']){
+            $token = $this->container->generateAuthToken($get['userId']);
+            if(!$token){
+                http_response_code(400);
+                $getAttempts++;
+                $meta->updateUserMeta($get['userId'], 'login_attempts', $getAttempts);
+                throw new \Exception('Error authenticating');
+            }
+            
+            if(isset($data['rememberMe']) AND intval($data['rememberMe']) === 1){
+                $hashAgain = hash('sha256', $get['password'].$get['username']);
+                $baseId = base64_encode($get['userId']);
+                setcookie('rememberAuth', $hashAgain.':'.$baseId.':'.md5($hashAgain.':'.$baseId), time()+(60*60*24*30), '/');
+            }
+            
+            $meta->updateUserMeta($get['userId'], 'login_attempts', 0);
+            $getNumLogins = $meta->getUserMeta($get['userId'], 'num_logins');
+            if(!$getNumLogins){
+                $getNumLogins = 0;
+            }
+            
+            $meta->updateUserMeta($get['userId'], 'num_logins', ($getNumLogins + 1));
+            if(!isset($data['site'])){
+                $data['site'] = currentSite();
+            }
+            $getProf['auth'] = $token;
+        }
 		
-		if(isset($data['rememberMe']) AND intval($data['rememberMe']) === 1){
-			$hashAgain = hash('sha256', $get['password'].$get['username']);
-			$baseId = base64_encode($get['userId']);
-			setcookie('rememberAuth', $hashAgain.':'.$baseId.':'.md5($hashAgain.':'.$baseId), time()+(60*60*24*30), '/');
-		}
-		
-		$meta->updateUserMeta($get['userId'], 'login_attempts', 0);
-		$getNumLogins = $meta->getUserMeta($get['userId'], 'num_logins');
-		if(!$getNumLogins){
-			$getNumLogins = 0;
-		}
-		
-		$meta->updateUserMeta($get['userId'], 'num_logins', ($getNumLogins + 1));
-		$profModel = new Profile\User_Model;
-		$getProf = $profModel->getUserProfile($get['userId'], $data['site']['siteId']);
-
-		$getProf['auth'] = $token;
 		$getProf['lastActive'] = timestamp();
 		
 		return $getProf;
@@ -590,7 +596,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		else{
 			$get = $model->get('users', $userId);
 		}
-												
+						
 		if(!$get){
 			return false;
 		}
@@ -634,7 +640,8 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		if($self_info){
 			Native_Model::updateLastActive($get['userId']);
 		}
-		
+        
+        
 		return $user;
 		
 	}	
