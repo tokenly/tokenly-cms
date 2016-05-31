@@ -168,6 +168,9 @@ class TokenSlotClient
 	 * */	
 	public function createSlot($asset, $webhook = false, $forward_address = false, $min_conf = 0, $label = '', $nickname = '')
 	{
+        if(is_array($asset)){
+            $asset = json_encode($asset);
+        }
 		$data = array('tokens' => $asset, 'webhook' => $webhook, 'forward_address' => $forward_address,
 					  'min_conf' => $min_conf, 'label' => $label, 'nickname' => $nickname);
 		return $this->call('slots', $data, 'POST');

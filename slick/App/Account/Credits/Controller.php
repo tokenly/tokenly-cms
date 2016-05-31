@@ -176,13 +176,13 @@ class Credits_Controller extends \App\ModControl
         $site = currentSite();
         if(!$getSlot){
             $site = currentSite();
-            $createSlot = $this->tokenslot->createSlot(join(',',$tokens), $site['url'].$this->moduleUrl.'/_receive', $forward_address, 1, $slot_name, $slot_name);
+            $createSlot = $this->tokenslot->createSlot($tokens, $site['url'].$this->moduleUrl.'/_receive', $forward_address, 1, $slot_name, $slot_name);
             if(!$createSlot){
                 Session::flash('message', 'Error setting up payment', 'text-danger');
                 redirect($this->moduleUrl); 
             }
         }
-
+        
         $new_payment = $this->tokenslot->newPayment($slot_name, $payment_method, $order_satoshis);  
 
         if(!$new_payment){
