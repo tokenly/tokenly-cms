@@ -31,6 +31,9 @@ function($id, $data){
         $boards_module = get_app('forum.forum-boards');
         if(isset($tokenly_app['meta']['tca-forum-credit-price'])){
             $forum_price = floatval($tokenly_app['meta']['tca-forum-credit-price']);
+            if($get['parentId'] > 0){
+                $forum_price = floatval($tokenly_app['meta']['tca-sub-forum-credit-price']);
+            }
             $credits_model = new \App\Account\Credits_Model;
             if($data['active'] == 0 AND $get['active'] == 1){
                 //keep track of time set inactive

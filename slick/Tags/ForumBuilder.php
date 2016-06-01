@@ -21,6 +21,7 @@ class ForumBuilder
 		$this->boardModule = $this->model->get('modules', 'forum-board', array(), 'slug'); //get board module data
 		$this->forumApp = get_app('forum');
         $this->board_model = new Forum\Board_Model;
+        $this->boards_model = new Forum\Boards_Model;
 	}
 	
 	public function display()
@@ -42,7 +43,7 @@ class ForumBuilder
             ?>
             <h4>
                 Creating this forum will cost a total of 
-                <strong class="text-success"><?= $this->settings['tca-forum-credit-price'] ?> System Credits</strong>,
+                <strong class="text-success"><span id="selected-price"><?= $this->settings['tca-forum-credit-price'] ?></span> System Credits</strong>,
                 billed now, and again every <strong class="text-success"><?= $this->settings['tca-forum-billing-interval'] ?> <?= pluralize('day', $this->settings['tca-forum-billing-interval'], true) ?></strong>.
                 You may de-activate your forum at any time to stop billing or receive a prorated price on the next interval.
             </h4>
@@ -53,12 +54,29 @@ class ForumBuilder
                 $credit_class = 'text-danger';
             }
             ?>
+            <span id="forum-price" data-value="<?= $this->settings['tca-forum-credit-price'] ?>"></span>
+            <span id="sub-forum-price" data-value="<?= $this->settings['tca-sub-forum-credit-price'] ?>"></span>
             <h4>
                 You have <strong class="<?= $credit_class ?>"><?= $credit_balance ?></strong> System Credits
             </h4>
             <p>
                 <strong><a href="<?= $this->site['url'] ?>/dashboard/account/credits">Click here</a> to get more credits.</strong>
             </p>
+            <script type="text/javascript">
+                $(document).ready(function(){
+                    $('select[name="parentId"]').change(function(e){
+                       var val  = $(this).val();
+                       var main_price = $('#forum-price').data('value');
+                       var sub_price = $('#sub-forum-price').data('value');
+                       if(val != '0'){
+                           $('#selected-price').html(sub_price);
+                       } 
+                       else{
+                           $('#selected-price').html(main_price);
+                       }
+                    });
+                });
+            </script>
             <?php
 		}//endif
 		
@@ -110,6 +128,30 @@ class ForumBuilder
 		$boardDesc->setLabel('Forum Description');
 		$form->add($boardDesc);
         
+        $parent_boards = array();
+        $parent_boards = $this->boards_model->getBoardFormParentList(0);
+        $user = $this->user;
+        $forum_app = get_app('forum');
+        $perms = \App\Meta_Model::getUserAppPerms($user['userId'], $forum_app['appId']);
+        if(!isset($perms['canChangeAnyParentBoard']) OR !$perms['canChangeAnyParentBoard']){
+            foreach($parent_boards as $k => $board){
+                if($board['ownerId'] != $user['userId']){
+                    unset($parent_boards[$k]);
+                    continue;
+                }
+            }
+        }
+        
+        $parentId = new UI\Select('parentId');
+        $parentId->setLabel('Parent Board');
+        $parentId->addOption(0, '[none]');
+        if($parent_boards AND count($parent_boards) > 0){
+            foreach($parent_boards as $p_board){
+                $parentId->addOption($p_board['boardId'], $p_board['name']);
+            }
+        }
+        $form->add($parentId);
+        
 		$tokenName = new UI\Textbox('token_name');
 		$tokenName->setLabel('Access Token *');
 		$tokenName->addAttribute('required');
@@ -153,6 +195,9 @@ class ForumBuilder
 		
         //check users credit balance
         $price = floatval($this->settings['tca-forum-credit-price']);
+        if(isset($data['parentId']) AND intval($data['parentId']) > 0){
+            $price = floatval($this->settings['tca-sub-forum-credit-price']);
+        }
         $balance = $this->credits->getCreditBalance();
         if($balance < $price){
             throw new Exception('Insufficient system credits');
@@ -168,6 +213,16 @@ class ForumBuilder
 		$orderInfo['time'] = timestamp();
 		$orderInfo['credit_cost'] = $price;
 		$orderInfo['userId'] = $this->user['userId'];
+        
+        $orderInfo['parentId'] = 0;
+        if(isset($data['parentId']) AND intval($data['parentId']) > 0){
+            $parentId = intval($data['parentId']);
+            $get = $this->model->get('forum_boards', $parentId);
+            if(!$get OR $get['ownerId'] != $this->user['userId']){
+                throw new Exception('Invalid parent board, can only select parent boards you own.');
+            }
+            $orderInfo['parentId'] = $parentId;
+        }
         
         $submit =  $this->completeOrder($orderInfo); 
         if(!$submit){
@@ -188,7 +243,7 @@ class ForumBuilder
 		}
 		$boardData = array('categoryId' => $this->tokenCategory, 'name' => $data['board'], 'slug' => genURL($data['board']),
 							'rank' => $rank, 'description' => $data['board_desc'], 'siteId' => $this->site['siteId'],
-							'ownerId' => $data['userId']);
+							'ownerId' => $data['userId'], 'parentId' => $data['parentId']);
 		
 		$boardData['slug'] = $this->checkDupeSlug($boardData['slug']);
 							

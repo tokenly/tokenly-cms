@@ -14,6 +14,7 @@ $credits = new App\Account\Credits_Model;
 $billing_interval = intval(intval($tokenly_app['meta']['tca-forum-billing-interval']) * 86400);
 //$billing_interval = 30;
 $forum_price = floatval($tokenly_app['meta']['tca-forum-credit-price']);
+$sub_price = floatval($tokenly_app['meta']['tca-sub-forum-credit-price']);
 $stamp = timestamp();
 $time = strtotime($stamp);
 
@@ -53,8 +54,11 @@ foreach($get_boards as $k => $board){
 
         //figure out total to debit them, prorate for time spent inactive
         $user_credits = $credits->getCreditBalance($board['userId']);
-        $price_per_second = $forum_price / $billing_interval;
         $bill_total = $forum_price;
+        if($board['parentId'] > 0){
+            $bill_total = $sub_price;
+        }
+        $price_per_second = $bill_total / $billing_interval;
         if(isset($get_meta['billing_seconds_inactive']) AND intval($get_meta['billing_seconds_inactive']) > 0){
             $seconds_inactive = intval($get_meta['billing_seconds_inactive']);
             $bill_total -= $seconds_inactive * $price_per_second;

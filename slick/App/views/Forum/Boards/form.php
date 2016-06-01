@@ -6,9 +6,17 @@
 if(isset($boardMeta['billed_user_board']) AND intval($boardMeta['billed_user_board']) == 1){
     $tokenly_app = get_app('tokenly');
     $forum_price = 0;
-    if(isset($tokenly_app['meta']['tca-forum-credit-price'])){
-        $forum_price = floatval($tokenly_app['meta']['tca-forum-credit-price']);
+    if($getBoard['parentId'] > 0){
+        if(isset($tokenly_app['meta']['tca-sub-forum-credit-price'])){
+            $forum_price = floatval($tokenly_app['meta']['tca-sub-forum-credit-price']);
+        }  
     }
+    else{
+        if(isset($tokenly_app['meta']['tca-forum-credit-price'])){
+            $forum_price = floatval($tokenly_app['meta']['tca-forum-credit-price']);
+        }  
+    }
+
     $bill_interval = 0;
     if(isset($tokenly_app['meta']['tca-forum-billing-interval'])){
         $bill_interval = intval($tokenly_app['meta']['tca-forum-billing-interval']);
