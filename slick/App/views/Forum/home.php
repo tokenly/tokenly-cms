@@ -34,7 +34,18 @@
 						  <li><strong>'.$board['numReplies'].' '.pluralize('comment', $board['numReplies'], true).'</strong></li>
 						  <li>'.$mostRecent.'</li>';
 				echo '</ul>
+                
 				<div class="clear"></div>';
+                
+                if(isset($board['children']) AND count($board['children']) > 0){
+                    echo '<br><strong>Sub-boards:</strong>';
+                    echo '<ul class="board-info sub-board-list">';
+                    foreach($board['children'] as $child){
+                        echo '<li><strong><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$child['slug'].'">'.$child['name'].'</a></strong></li>';
+                    }
+                    echo '</ul>
+                    <div class="clear"></div>';
+                }
 				
 				echo '</li>';
 			}

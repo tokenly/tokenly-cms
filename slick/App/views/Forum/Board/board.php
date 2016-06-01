@@ -107,8 +107,11 @@ if($isAll AND $board['slug'] == 'all'){
 <?php
 }//endif
 ?>
-<h2><?= $board['name'] ?></h2>
+<h1><?= $board['name'] ?></h1>
 <?php
+if(isset($parent_board) AND $parent_board){
+    echo '<h3><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$parent_board['slug'].'"><i class="fa fa-mail-reply"></i> '.$parent_board['name'].'</a></h3>';
+}
 if(trim($board['description']) != ''){
 	echo '<div class="board-description">'.\App\Page\View_Model::parsePageTags(markdown($board['description'])).'</div>';
 }
@@ -122,6 +125,52 @@ if(!$isAll){
 		echo join(', ', $modList);
 		echo '</p>';
 	}
+}
+if(isset($board_children) AND $board_children AND count($board_children) > 0){
+?>
+    <div class="forum-categories">
+        <div class="forum-category">
+            <h2>Sub-boards</h2>
+            <ul class="category-boards">
+                <?php
+                foreach($board_children as $child_board){
+                    echo '<li>
+                            <h3><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$child_board['slug'].'">'.$child_board['name'].'</a></h3>
+                            ';
+                    if(trim($board['description']) != ''){
+                        echo '<div class="board-description">'.markdown($child_board['description']).'</div>';
+                    }
+                    
+                    $mostRecent = '';
+                    if(isset($child_board['mostRecent']) AND $child_board['mostRecent'] != ''){
+                        $mostRecent = '<strong>Most recent:</strong> '.$child_board['mostRecent'];
+                    }
+                    
+                    if(isset($child_board['numTopics'])){
+                        echo '<ul class="board-info">';
+                            echo '<li><strong>'.$child_board['numTopics'].' '.pluralize('discussion', $child_board['numTopics'], true).'</strong/li>
+                                  <li><strong>'.$child_board['numReplies'].' '.pluralize('comment', $child_board['numReplies'], true).'</strong></li>
+                                  <li>'.$mostRecent.'</li>';
+                        echo '</ul>
+                        <div class="clear"></div>';
+                    }
+                    
+                    if(isset($child_board['children']) AND count($child_board['children']) > 0){
+                        echo '<br><strong>Sub-boards:</strong>';
+                        echo '<ul class="board-info sub-board-list">';
+                        foreach($child_board['children'] as $child){
+                            echo '<li><strong><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$child['slug'].'">'.$child['name'].'</a></strong></li>';
+                        }
+                        echo '</ul><div class="clear"></div>';
+                    }
+                    
+                    echo '</li>';
+                }
+                ?>
+            </ul>
+        </div>
+    </div>
+<?php
 }
 ?>
 <div class="board-topics">

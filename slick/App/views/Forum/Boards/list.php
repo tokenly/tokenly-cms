@@ -1,18 +1,4 @@
-<?php
-$table = $this->generateTable($boardList, array('fields' => array('boardId' => 'ID', 'name' =>'Name',
-																'slug' => 'URL', 'category' => 'Category',
-																'active' => 'Active'),
-												'class' => 'admin-table mobile-table',
-												'actions' => array( array('text' => 'Edit',
-																		 'data' => 'boardId', 'heading' => '',
-																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'),																		 
-																		array('text' => 'Delete', 'class' => 'delete delete-board',
-																		 'data' => 'boardId', 'heading' => '',
-																		 'url' => SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/')
-																	),
-												'options' => array(array('field' => 'active', 'params' => array('functionWrap' => 'boolToColorText')))));
 
-?>
 <h2>Forum Board Management</h2>
 <?= $this->displayFlash('message') ?>
 <?php
@@ -29,7 +15,39 @@ if(count($boardList) == 0){
 }
 else{
      echo '<p><strong># Boards:</strong> '.count($boardList).'</p>';
-	 echo $table->display();
+	 ?>
+     <table class="admin-table mobile-table table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Active</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        foreach($boardList as $board){
+            ?>
+            <tr>
+                <td><strong><?= $board['name'] ?></strong></td>
+                <td><?= $board['category'] ?></td>
+                <td><?= boolToColorText($board['active']) ?></td>
+                <td class="table-actions">
+                    <?php
+                    echo '<a href="'.SITE_URL.'/forum/board/'.$board['slug'].'" class="btn btn-sm btn-small" target="_blank">View</a>';
+                    echo '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/edit/'.$board['boardId'].'" class="btn btn-sm btn-small">Edit</a>';
+                    echo '<a href="'.SITE_URL.'/'.$app['url'].'/'.$module['url'].'/delete/'.$board['boardId'].'" class="btn btn-sm btn-small delete delete-board">Delete</a>';
+                    ?>
+                </td>
+            </tr>
+            <?php
+        }
+        ?>
+        </tbody>
+     </table>
+     
+     <?php
 	 
 }
 ?>

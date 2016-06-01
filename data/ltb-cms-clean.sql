@@ -724,6 +724,7 @@ CREATE TABLE `forum_boards` (
   `siteId` int(11) unsigned NOT NULL,
   `active` int(2) DEFAULT '0',
   `ownerId` int(11) unsigned DEFAULT '0',
+  `parentId` int(11) unsigned DEFAULT '0',
   PRIMARY KEY (`boardId`),
   KEY `categoryId` (`categoryId`),
   KEY `slug` (`slug`),

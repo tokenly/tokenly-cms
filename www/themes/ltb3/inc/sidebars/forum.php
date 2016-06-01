@@ -19,6 +19,7 @@ if(isset($board)){
 }
 $catList = '';
 $model = new \App\Forum\Board_Model;
+$boards_model = new \App\Forum\Boards_Model;
 $boardModule = get_app('forum.forum-board');
 $tca = new \App\Tokenly\TCA_Model;
 $getCats = $model->getAll('forum_categories', array('siteId' => $site['siteId']), array(), 'rank', 'asc');
@@ -31,14 +32,7 @@ foreach($getCats as $cat){
 		continue;
 	}	
 	
-	$getBoards = $model->getAll('forum_boards', array('categoryId' => $cat['categoryId'], 'active' => 1), array(), 'rank', 'asc');
-	foreach($getBoards as $bk => $board){
-		$checkTCA = $tca->checkItemAccess($user, $boardModule['moduleId'], $board['boardId'], 'board');
-		if(!$checkTCA){
-			unset($getBoards[$bk]);
-			continue;
-		}
-	}
+    $getBoards = $boards_model->getBoardParentTree(0, 1, true, $cat['categoryId']);
 	if(count($getBoards) > 0){
 		$catClass = '';
 		if($cat['categoryId'] == $tokenSettings['tca-forum-category']){
@@ -68,8 +62,19 @@ foreach($getCats as $cat){
 						$boardImage = '<span class="mini-board-img"><img  src="'.$data['site']['url'].'/files/tokens/'.$getAsset['image'].'" alt="" /></span>';
 					}
 				}
-			}			
-			$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$boardImage.$board['name'].'</a></li>';
+			}	
+            if(isset($board['children']) AND count($board['children']) > 0){
+                $itemClass .= ' children';
+            }		
+			$catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$board['slug'].'">'.$boardImage.$board['name'].'</a>';
+            if(isset($board['children']) AND count($board['children']) > 0){
+                $catList .= '<ul class="sub">';
+                foreach($board['children'] as $child){
+                    $catList .= '<li class="'.$itemClass.'"><a href="'.SITE_URL.'/'.$app['url'].'/board/'.$child['slug'].'">'.$child['name'].'</a></li>';
+                }
+                $catList .= '</ul>';
+            }
+            $catList .= '</li>';
 		}
 		$catList .= '</ul></li>';
 	}

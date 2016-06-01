@@ -862,4 +862,16 @@ class Board_Model extends Core\Model
 		self::$boardMeta[$boardId] = $output;
 		return $output;
 	} 
+    
+    protected function checkBoardTCA($board, $userId)
+    {
+        $tca = new Tokenly\TCA_Model;
+        $board_module = get_app('forum.forum-board');
+        $check = $tca->checkItemAccess($userId, $board_module['moduleId'], $board['boardId'], 'board');
+        if($check AND $board['parentId'] > 0){
+            $parent = $this->get('forum_boards', $board['parentId']);
+            return $this->container->checkBoardTCA($parent, $userId);
+        }        
+        return $check;
+    }
 }
