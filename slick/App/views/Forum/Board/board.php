@@ -128,6 +128,7 @@ if(!$isAll){
 }
 if(isset($board_children) AND $board_children AND count($board_children) > 0){
 ?>
+    <div class="clear"></div>
     <div class="forum-categories">
         <div class="forum-category">
             <h2>Sub-boards</h2>
