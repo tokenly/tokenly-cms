@@ -1066,3 +1066,17 @@ function get_contents($str, $startDelimiter, $endDelimiter) {
   return $contents;
 }
 
+function get_system_from_email()
+{
+    if(defined('FROM_EMAIL')){
+        if(trim(FROM_EMAIL) != ''){
+            return FROM_EMAIL;
+        }
+    }
+    $site = currentSite();
+    if(substr($site['domain'], 0, 4) == 'www.'){
+        $site['domain'] = substr($site['domain'], 4);
+    }
+    return 'noreply@'.$site['domain'];
+}
+

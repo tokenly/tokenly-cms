@@ -403,7 +403,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		
 		//generate activation email
 		$mail = new Util\Mail;
-		$mail->setFrom('noreply@'.SITE_DOMAIN);
+		$mail->setFrom(get_system_from_email());
 		$mail->addTo($useData['email']);
 		$mail->setSubject(SITE_NAME.' - Account Activiation');
 		$mail->setHTML('<p>Thank you for registering at '.SITE_NAME.'</p>
@@ -510,7 +510,7 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 		
 		$mail = new Util\Mail;
 		$mail->addTo($get['email']);
-		$mail->setFrom('noreply@'.$site['domain']);
+		$mail->setFrom(get_system_from_email());
 		$mail->setSubject($site['name'].' Password Reset');
 		$body = '<p>
 		Hello '.$get['username'].',

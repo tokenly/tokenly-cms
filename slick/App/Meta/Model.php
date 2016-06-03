@@ -314,7 +314,7 @@ class Meta_Model extends Core\Model
 				$body = str_replace('[MESSAGE]', $messageOutput, $template);
 				$mail = new Util\Mail;
 				$mail->addTo($getUser['email']);
-				$mail->setFrom('noreply@'.$getSite['domain']);
+				$mail->setFrom(get_system_from_email());
 				$mail->setSubject('['.$getSite['name'].'] New notification received');
 				$mail->setHTML($body);
 				$send = $mail->send();
