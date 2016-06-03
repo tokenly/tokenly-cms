@@ -300,7 +300,7 @@ class Board_Model extends Core\Model
 		if(!$checkCat){
 			return false;
 		}
-		$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $row['boardId'], 'board');
+        $checkBoard = $tca->checkBoardTCA($getBoard, $user);
 		if(!$checkBoard){
 			return false;
 		}
