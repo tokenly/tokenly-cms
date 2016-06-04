@@ -55,8 +55,12 @@ else{
 	$(document).ready(function(){
 		$('.delete-board').click(function(e){
 			var check = prompt('Are you sure? Type in the name of the board to permanently delete. Please contact an admin first if you want posts in this board to be moved/archived');
-			var board = $(this).parent().parent().find('td').eq(1).html();
+			var board = $(this).parent().parent().find('td').eq(0).html();
 			
+            if(check){
+                check = '<strong>' + check + '</strong>';
+            }
+            
 			if(check == false || check == null || check != board){
 				e.preventDefault();
 				return false;
