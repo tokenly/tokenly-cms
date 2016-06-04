@@ -32,7 +32,7 @@ $sidebar_threads = array();
 
 if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 	foreach($forum_threads['threads'] as $f_thread){
-        $checkTCA = $board_module->checkTopicTCA($user, $f_thread);
+        $checkTCA = $board_model->checkTopicTCA($user, $f_thread);
         if(!$checkTCA){
             continue;
         }        
