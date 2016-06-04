@@ -20,6 +20,7 @@ class TCA_Model extends Core\Model
 	{
 		parent::__construct();
 		$this->inventory = new Inventory_Model;
+        $this->tokenly_app = get_app('tokenly');
 		if(!self::$rows){
 			//load all token_access entries
 			self::$rows = $this->getAll('token_access', array(), array(), 'stackOrder', 'ASC');
@@ -81,6 +82,19 @@ class TCA_Model extends Core\Model
 	*/
 	protected function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0, $override = false)
 	{
+        static $user_perms = array();
+		if(is_array($userId)){
+			$userId = $userId['userId'];
+		}
+		if(!$userId OR $userId == 0){
+			return false;
+		}        
+        if(!isset($user_perms[$userId])){
+            $user_perms[$userId] = \App\Meta_Model::getUserAppPerms($userId, $this->tokenly_app['appId']);
+        }
+        if(isset($user_perms[$userId]['bypassTCA']) AND $user_perms[$userId]['bypassTCA']){
+            return true;
+        }
 		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
 		if(!isset(self::$locks[$lockHash])){
 			self::$locks[$lockHash] = extract_row(self::$rows, array('moduleId' => $moduleId, 'itemId' => $itemId, 'itemType' => $itemType, 'permId' => $permId), true);
@@ -88,12 +102,6 @@ class TCA_Model extends Core\Model
 		$getLocks = self::$locks[$lockHash];
 		if(count($getLocks) == 0){
 			return $defaultReturn;
-		}
-		if(is_array($userId)){
-			$userId = $userId['userId'];
-		}
-		if(!$userId OR $userId == 0){
-			return false;
 		}
 		if(!isset(self::$balances[$userId])){
 			self::$balances[$userId] = $this->inventory->getUserBalances($userId, true);
