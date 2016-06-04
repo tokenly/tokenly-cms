@@ -42,14 +42,6 @@ class Post_Model extends Core\Model
 			}		
 		}
 		
-		$regDate = strtotime($appData['user']['regDate']);
-		$regThreshold = 60*60*1;
-		$time = time();
-		if(($time - $regDate) < $regThreshold){
-			$numHours = round($regThreshold / 3600);
-			throw new \Exception('Your account must be active for at least <strong>'.$numHours.' '.pluralize('hour', $numHours, true).'</strong> before you may post in the forums.');
-		}
-		
 		if(trim($useData['content']) == ''){
 			throw new \Exception('Message required');
 		}
