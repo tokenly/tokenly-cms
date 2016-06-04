@@ -300,7 +300,7 @@ class Board_Model extends Core\Model
 		if(!$checkCat){
 			return false;
 		}
-        $checkBoard = $tca->checkBoardTCA($getBoard, $user);
+        $checkBoard = $this->container->checkBoardTCA($getBoard, $user);
 		if(!$checkBoard){
 			return false;
 		}
