@@ -1,6 +1,6 @@
 <?php
-//a collection of general functions to be used with anything
 
+//a collection of general functions to be used with anything
 
 /**
 *
@@ -35,19 +35,15 @@ function formatDate($date)
             $client_zone = false;
         }
     }
-    $dt = new DateTime('@'.$date);
     $default_zone = date_default_timezone_get();
-    $dt->setTimeZone(new DateTimeZone($default_zone));
-    if($client_zone){
-        if($default_zone != $client_zone){
-            $cz = new DateTimeZone($client_zone);
-            $time_offset = timezone_offset_get($cz, $dt);
-            if($time_offset !== false){
-                $date += $time_offset;
-                $dt = new DateTime('@'.$date);
-                $dt->setTimeZone($cz);
-            }
-        }
+    $dz = new DateTimeZone($default_zone);
+    $dt = new DateTime('@'.$date, $dz);
+    if($client_zone AND $default_zone != $client_zone){
+        $cz = new DateTimeZone($client_zone);
+        $dt->setTimezone($cz);
+    }
+    else{
+        $dt->setTimezone($dz);
     }
     $format = $dt->format(DATE_FORMAT);
     return $format;
