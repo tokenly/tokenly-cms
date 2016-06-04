@@ -3,6 +3,9 @@ $startTime = microtime(true);
 ini_set('display_errors', 1);
 require_once('../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
+if(defined('DATE_DEFAULT_TIMEZONE')){
+    date_default_timezone_set(DATE_DEFAULT_TIMEZONE);
+}
 //setup session cookie to work accross subdomains
 $expDomain = explode('.', $_SERVER['HTTP_HOST']);
 if(count($expDomain) > 2){
