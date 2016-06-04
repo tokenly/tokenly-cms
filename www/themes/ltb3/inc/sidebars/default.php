@@ -4,6 +4,8 @@ $meta = new \App\Meta_Model;
 $forum_app = get_app('forum');
 $forum_meta = $meta->appMeta($forum_app['appId']);
 $tca = new \App\Tokenly\TCA_Model;
+$board_model = new \App\Forum\Board_Model;
+
 
 $forum_recent_file = SITE_BASE.'/data/forum-recent.json';
 $forum_threads = false;
@@ -19,7 +21,7 @@ if(file_exists($forum_recent_file)){
 }
 if(!$forum_threads){
 	$forum_api = new \App\API\V1\Forum_Model;
-	$forum_threads = $forum_api->getThreadList(array('user' => $user, 'site' => currentSite()));
+	$forum_threads = $forum_api->getThreadList(array('user' => $user, 'site' => currentSite()), true);
 	@file_put_contents($forum_recent_file, json_encode(array('last_update' => $time, 'threads' => $forum_threads)));
 }
 
@@ -30,6 +32,10 @@ $sidebar_threads = array();
 
 if(is_array($forum_threads) AND isset($forum_threads['threads'])){
 	foreach($forum_threads['threads'] as $f_thread){
+        $checkTCA = $board_module->checkTopicTCA($user, $f_thread);
+        if(!$checkTCA){
+            continue;
+        }                
 		$item = array();
 		$item['title'] = $f_thread['title'];
 		$post_page = 0;
