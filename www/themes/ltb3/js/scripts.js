@@ -23,6 +23,13 @@ function eraseCookie(name) {
 }
 
 $(document).ready(function(){
+    
+    var client_timezone = readCookie('client_timezone');
+    if(!client_timezone || client_timezone == null){
+        var tz = jstz.determine();
+        createCookie('client_timezone', tz.name(), 30);
+    }
+    
 	var pageTitle = document.title;
 	$('.mobile-table').mobilizeTables();
 	

@@ -26,6 +26,12 @@ $(document).ready(function(){
 	var pageTitle = document.title;
 	$('.mobile-table').mobilizeTables();
 	
+    var client_timezone = readCookie('client_timezone');
+    if(!client_timezone || client_timezone == null){
+        var tz = jstz.determine();
+        createCookie('client_timezone', tz.name(), 30);
+    }    
+    
 	
 	$('body').delegate('.delete', 'click', function(e){
 		var check = confirm('Are you sure you want to delete?');

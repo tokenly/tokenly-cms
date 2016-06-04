@@ -33,6 +33,7 @@
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/mobile-tables.js"></script>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/menu.js"></script>
+        <script type="text/javascript" src="<?= THEME_URL ?>/js/jstz.js"></script>
 		<?= $scripts ?>
 		<script type="text/javascript" src="<?= THEME_URL ?>/js/scripts.js"></script>
 </head>
