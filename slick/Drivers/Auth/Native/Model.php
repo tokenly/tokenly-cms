@@ -81,6 +81,10 @@ class Native_Model extends Core\Model implements \Interfaces\AuthModel
 			http_response_code(400);
 			throw new \Exception('Already logged in!');
 		}
+        
+        if(!isset($data['site'])){
+            $data['site'] = currentSite();
+        }
 		
 		$checkPassword = true;
 		$meta = new \App\Meta_Model;
