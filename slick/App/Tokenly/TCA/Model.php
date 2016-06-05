@@ -83,6 +83,14 @@ class TCA_Model extends Core\Model
 	protected function checkItemAccess($userId, $moduleId, $itemId = 0, $itemType = '', $defaultReturn = true, $permId = 0, $override = false)
 	{
         static $user_perms = array();
+		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
+		if(!isset(self::$locks[$lockHash])){
+			self::$locks[$lockHash] = extract_row(self::$rows, array('moduleId' => $moduleId, 'itemId' => $itemId, 'itemType' => $itemType, 'permId' => $permId), true);
+		}
+		$getLocks = self::$locks[$lockHash];
+		if(count($getLocks) == 0){
+			return $defaultReturn;
+		}
 		if(is_array($userId)){
 			$userId = $userId['userId'];
 		}
@@ -94,15 +102,7 @@ class TCA_Model extends Core\Model
         }
         if(isset($user_perms[$userId]['bypassTCA']) AND $user_perms[$userId]['bypassTCA']){
             return true;
-        }
-		$lockHash = md5($moduleId.':'.$itemId.':'.$itemType.':'.$permId);
-		if(!isset(self::$locks[$lockHash])){
-			self::$locks[$lockHash] = extract_row(self::$rows, array('moduleId' => $moduleId, 'itemId' => $itemId, 'itemType' => $itemType, 'permId' => $permId), true);
-		}
-		$getLocks = self::$locks[$lockHash];
-		if(count($getLocks) == 0){
-			return $defaultReturn;
-		}
+        }        
 		if(!isset(self::$balances[$userId])){
 			self::$balances[$userId] = $this->inventory->getUserBalances($userId, true);
 		}
