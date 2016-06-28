@@ -47,6 +47,7 @@ class Controller extends \App\AppControl
 					}
                     if(isset($getBlog['settings']['domain'])){
                         define('SITE_URL', $getBlog['settings']['domain']);
+                        static_cache('ALT_DOMAIN', true);
                     }
 					$output['template'] = 'blog';
 					

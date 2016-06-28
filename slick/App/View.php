@@ -85,6 +85,13 @@ class View extends Core\View
 		if(!defined('THEME_URL')){
 			define('THEME_URL', SITE_URL.'/themes/'.$data['theme']);
 		}
+        
+        $alt_domain = static_cache('ALT_DOMAIN');
+        if(!$alt_domain){
+            if($_SERVER['HTTP_HOST'] != $data['site']['domain']){
+                redirect($data['site']['url'].$_SERVER['REQUEST_URI']);
+            }
+        }
 		
 		if(!isset($pageRequest['params'])){
 			$pageRequest['params'] = '';	

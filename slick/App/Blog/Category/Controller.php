@@ -45,11 +45,14 @@ class Category_Controller extends \App\ModControl
 				if($getTheme){
 					$output['theme'] = $getTheme['location'];
 				}
-			}
+			}         
+            $getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
+            if(isset($getBlog['settings']['domain'])){
+                define('SITE_URL', $getBlog['settings']['domain']);
+                static_cache('ALT_DOMAIN', true);
+            }               
 		}
-		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
 		$output['blog'] = $getBlog;		
-		
 		$output['view'] = '../list';
 		$output['title'] = $getBlog['name'].' - '.$output['category']['name'];
 		$postLimit = intval($getBlog['settings']['postsPerPage']);
