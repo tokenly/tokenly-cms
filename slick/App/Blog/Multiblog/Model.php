@@ -44,6 +44,8 @@ class Multiblog_Model extends Core\Model
 			$theme->addOption($item['themeId'], $item['name']);
 		}
 		$form->add($theme);
+        
+
 		
 		return $form;
 	}
@@ -414,6 +416,10 @@ class Multiblog_Model extends Core\Model
 				}
 			}
 		}
+        
+        if(isset($data['domain'])){
+            $newSettings['domain'] = trim($data['domain']);
+        }
 		$encode = json_encode($newSettings);
 		$update = $this->edit('blogs', $blogId, array('settings' => $encode));
 		if(!$update){
