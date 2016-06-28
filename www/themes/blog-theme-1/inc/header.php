@@ -3,7 +3,7 @@ if(!isset($blog) OR !$blog){
 	die('This theme is currently only functional as a multi-blog custom theme');
 }
 $model = new \Core\Model;
-$blogCats = $model->getAll('blog_categories', array('blogId' => $blog['blogId']));
+$blogCats = $model->getAll('blog_categories', array('blogId' => $blog['blogId']), array(), 'rank', 'asc');
 if(!isset($metaDescription)){
 	$metaDescription = '';
 }
