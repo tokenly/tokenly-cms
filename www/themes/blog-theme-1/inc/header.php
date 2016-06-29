@@ -48,7 +48,7 @@ if(!isset($metaDescription)){
 		<div class="menu-cont">
 			<ul class="menu">
 				<li><a href="<?= SITE_URL ?>/blog/<?= $blog['slug'] ?>">Home</a></li>
-				<li><a href="<?= SITE_URL ?>">Back to LTB Network</a></li>
+				<li><a href="<?= currentSite()['url'] ?>">Back to LTB Network</a></li>
 				<?php
 				$loginText = 'Login/Register';
 				$loginExtra = '?r=/blog/'.$blog['slug'];
