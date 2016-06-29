@@ -45,9 +45,15 @@ class Controller extends \App\AppControl
 							$output['theme'] = $getTheme['location'];
 						}
 					}
-                    if(isset($getBlog['settings']['domain'])){
+                    if(isset($getBlog['settings']['domain']) AND trim($getBlog['settings']['domain']) != ''){
                         define('SITE_URL', $getBlog['settings']['domain']);
                         static_cache('ALT_DOMAIN', true);
+                        $parse_blog_url = parse_url($getBlog['settings']['domain']);
+                        if(isset($parse_blog_url['host'])){
+                            if($_SERVER['HTTP_HOST'] != $parse_blog_url['host']){
+                                redirect($getBlog['settings']['domain']);
+                            }
+                        }
                     }
 					$output['template'] = 'blog';
 					
