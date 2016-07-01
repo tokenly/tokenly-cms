@@ -12,8 +12,8 @@
 	"require": {
 		"bitwasp/bitcoin-lib": "@dev",
 		"mdanter/ecc": "~0.2.0",
-		"blocktrail/blocktrail-sdk": "1.2.*",
+		"blocktrail/blocktrail-sdk": "1.3.*",
 		"tokenly/counterparty-transaction-parser": "@dev",
-		"tokenly/accounts-client": "@dev"
+		"tokenly/tokenpass-client": "@dev",
 	}
 }
