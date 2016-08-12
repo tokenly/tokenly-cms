@@ -3,6 +3,8 @@ namespace App\Forum;
 use App\Account, App\Tokenly;
 class Controller extends \App\AppControl
 {
+	public static $noModulePages = array('');
+	
 	function __construct()
 	{
 		parent::__construct();
@@ -13,30 +15,7 @@ class Controller extends \App\AppControl
 		$output = parent::init();
 		
 		if(!$this->module){
-			if(isset($this->args[1]) AND $this->args[1] != ''){
-				$output['view'] = '404';
-				return $output;
-			}
-			$output['categories'] = $this->model->getForumCategories($this->site, $this->app, $output['user']);
-			$output['view'] = 'home'; //load forum home
-			$output['title'] = $this->app['meta']['forum-title'];
-			$numTopics = $this->model->fetchSingle('SELECT count(*) as total
-													FROM forum_topics t
-													LEFT JOIN forum_boards b ON b.boardId = t.boardId
-													WHERE b.siteId = :siteId', array(':siteId' => $this->site['siteId']));
-			$output['numTopics'] = $numTopics['total'];
-
-			$numReplies = $this->model->fetchSingle('SELECT count(*) as total
-													FROM forum_posts p
-													LEFT JOIN forum_topics t ON t.topicId = p.topicId
-													LEFT JOIN forum_boards b ON b.boardId = t.boardId
-													WHERE b.siteId = :siteId', array(':siteId' => $this->site['siteId']));
-			$output['numReplies'] = $numReplies['total'];
-			$output['numUsers'] = $this->model->count('users');
-			$output['numOnline'] = Account\Home_Model::getUsersOnline();
-			$output['mostOnline'] = Account\Home_Model::getMostOnline();
-			$output['onlineUsers'] = Account\Home_Model::getOnlineUsers();
-			$output['forum_home'] = true;
+			$output = $this->container->noModule($output);
 		}
 		
 		if(!isset($output['template'])){
@@ -45,6 +24,41 @@ class Controller extends \App\AppControl
 
 		return $output;
     }
+    
+    protected function noModule($output)
+    {
+		if(isset($this->args[1]) AND !in_array($this->args[1], self::$noModulePages)){
+			$output['view'] = '404';
+			return $output;
+		}
+		return $this->container->forumHome($output);
+	}
+	
+	protected function forumHome($output)
+	{
+		$output['categories'] = $this->model->getForumCategories($this->site, $this->app, $output['user']);
+		$output['view'] = 'home'; //load forum home
+		$output['title'] = $this->app['meta']['forum-title'];
+		$numTopics = $this->model->fetchSingle('SELECT count(*) as total
+												FROM forum_topics t
+												LEFT JOIN forum_boards b ON b.boardId = t.boardId
+												WHERE b.siteId = :siteId', array(':siteId' => $this->site['siteId']));
+		$output['numTopics'] = $numTopics['total'];
+
+		$numReplies = $this->model->fetchSingle('SELECT count(*) as total
+												FROM forum_posts p
+												LEFT JOIN forum_topics t ON t.topicId = p.topicId
+												LEFT JOIN forum_boards b ON b.boardId = t.boardId
+												WHERE b.siteId = :siteId', array(':siteId' => $this->site['siteId']));
+		$output['numReplies'] = $numReplies['total'];
+		$output['numUsers'] = $this->model->count('users');
+		$output['numOnline'] = Account\Home_Model::getUsersOnline();
+		$output['mostOnline'] = Account\Home_Model::getMostOnline();
+		$output['onlineUsers'] = Account\Home_Model::getOnlineUsers();
+		$output['forum_home'] = true;
+			
+		return $output;
+	}
     
 	protected function __install($appId)
 	{

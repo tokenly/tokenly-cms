@@ -241,7 +241,7 @@ class Post_Controller extends \App\ModControl
 		$checkCaptcha = false;
 		if(isset($this->data['app']['meta']['min-posts-captcha'])){
 			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
-			if($postCount < $minPosts){
+			if($postCount <= $minPosts){
 				$captcha = new UI\Captcha();
 				$form->add($captcha);
 				$checkCaptcha = true;

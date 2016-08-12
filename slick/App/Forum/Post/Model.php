@@ -42,6 +42,14 @@ class Post_Model extends Core\Model
 			}		
 		}
 		
+		/*$regDate = strtotime($appData['user']['regDate']);
+		$regThreshold = 60*60*1;
+		$time = time();
+		if(($time - $regDate) < $regThreshold){
+			$numHours = round($regThreshold / 3600);
+			throw new \Exception('Your account must be active for at least <strong>'.$numHours.' '.pluralize('hour', $numHours, true).'</strong> before you may post in the forums.');
+		}*/
+		
 		if(trim($useData['content']) == ''){
 			throw new \Exception('Message required');
 		}
@@ -106,8 +114,37 @@ class Post_Model extends Core\Model
 				// notify the user
 				\App\Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
 			}
-			
 		}
+		else{
+			$getPerms = $this->getAll('app_perms', array('appId' => $appData['app']['appId']));
+			$getPerm = extract_row($getPerms, array('permKey' => 'canReceiveTrollPostNotifications'));
+			if($getPerm){
+				$getPerm = $getPerm[0];
+				$notifyList = array();
+				$permGroups = $this->getAll('group_perms', array('permId' => $getPerm['permId']));
+				foreach($permGroups as $permGroup){
+					$groupUsers = $this->getAll('group_users', array('groupId' => $permGroup['groupId']));
+					foreach($groupUsers as $gUser){
+						if(!in_array($gUser['userId'], $notifyList)){
+							$notifyList[] = $gUser['userId'];
+						}
+					}
+				}
+				foreach($notifyList as $notifyUser){
+					if($notifyUser == $appData['user']['userId']){
+						continue;
+					}
+					$notifyData = $appData;
+					$notifyData['url'] = $useData['url'];
+					$notifyData['postContent'] = $useData['content'];
+					$notifyData['page'] = '';
+					$notifyData['postId'] = $post;					
+					$notifyData['notifyUser'] = $notifyUser;
+					$notify = \App\Meta_Model::notifyUser($notifyUser, 'emails.forumTrollPostNotice', $post, 'forum-troll-post', true, $notifyData);
+					
+				}
+			}				
+		}		
 
 		$returnData = array();
 		$returnData['postId'] = $useData['postId'];
@@ -191,7 +228,7 @@ class Post_Model extends Core\Model
 			$andTroll = '';
 		}
 		else{
-			if($data['user'] AND $data['perms']['isTroll']){
+			if($data['user']){
 				$andTroll = ' AND (trollPost = 0 OR (trollPost = 1 AND userId = '.$data['user']['userId'].')) ';
 			}
 		}
