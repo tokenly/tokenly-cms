@@ -13,11 +13,6 @@ $notification = '[Mod] '.$culprit.' posted in the board '.
 	' and the post may need moderator approval.  The topic was '.
 	'<a href="'.$data['site']['url'].'/'.$data['app']['url'].'/post/'.$data['topic']['url'].$data['page'].($data['postId'] ? '#post-'.$data['postId'] : '').'">'.$data['topic']['title'].'</a>';
 
-if (strlen($data['postContent'])) {
-	$notification .= "\n";
-	$notification .= "<p></p>\n";
-	$notification .= markdown($data['postContent'])."\n";
-}
 
 echo $notification;
 

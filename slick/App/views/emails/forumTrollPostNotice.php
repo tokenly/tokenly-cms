@@ -11,10 +11,5 @@ if($checkTCA){
 	$notification = '[Mod] '.$culprit.' posted a new 
 					reply in a forum topic and it may need moderator approval: <a href="'.$data['site']['url'].'/'.$data['app']['url'].'/'.$data['module']['url'].'/'.$data['topic']['url'].$data['page'].'?trollVision=1#post-'.$data['postId'].'">'.$data['topic']['title'].'</a>';
 
-    if (strlen($data['postContent'])) {
-        $notification .= "\n";
-        $notification .= "<p></p>\n";
-        $notification .= markdown($data['postContent'])."\n";
-    }
 
 	echo $notification;
