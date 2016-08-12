@@ -37,7 +37,7 @@ class Forum_Model extends \App\Forum\Board_Model
 	* @return Array
 	*
 	*/
-	protected function getThreadList($data, $skip_tca = false)
+	protected function getThreadList($data)
 	{
 		//limits
 		$start = 0;
@@ -143,13 +143,11 @@ class Forum_Model extends \App\Forum\Board_Model
 		}
 		foreach($getThreads as $key => &$thread){
 			//do TCA checking
-            if(!$skip_tca){
-                $checkTCA = $this->container->checkTopicTCA($data['user'], $thread);
-                if(!$checkTCA){
-                    unset($getThreads[$key]);
-                    continue;
-                }
-            }
+			$checkTCA = $this->container->checkTopicTCA($data['user'], $thread);
+			if(!$checkTCA){
+				unset($getThreads[$key]);
+				continue;
+			}
 			//reply count
 			$thread['replies'] = $thread['count'];
 			//get profile and recent post info
