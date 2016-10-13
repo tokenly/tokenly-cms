@@ -75,6 +75,9 @@ class Native_Model extends Core\Model
 		if(!$groupAmounts){
 			return $balances;
 		}
+		if(!$balances){
+			return array();
+		}
 		$group = array();
 		foreach($balances as $address => $bal){
 			foreach($bal as $asset => $amnt){
