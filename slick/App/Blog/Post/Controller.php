@@ -61,6 +61,16 @@ class Post_Controller extends \App\ModControl
 		$getBlog = $this->model->getPostFirstBlog($getPost['postId']);
 
 		$getBlog['settings'] = $this->blogModel->getSingleBlogSettings($getBlog);
+        if(isset($getBlog['settings']['domain']) AND trim($getBlog['settings']['domain']) != ''){
+            define('SITE_URL', $getBlog['settings']['domain']);
+            static_cache('ALT_DOMAIN', true);
+            $parse_blog_url = parse_url($getBlog['settings']['domain']);
+            if(isset($parse_blog_url['host'])){
+                if($_SERVER['HTTP_HOST'] != $parse_blog_url['host']){
+                    redirect($getBlog['settings']['domain'].$_SERVER['REQUEST_URI']);
+                }
+            }
+        }                 
 		
 		$getCats = $this->model->getAll('blog_postCategories', array('postId' => $getPost['postId']));
 		$cats = array();

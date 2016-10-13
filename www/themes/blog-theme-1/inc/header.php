@@ -3,7 +3,7 @@ if(!isset($blog) OR !$blog){
 	die('This theme is currently only functional as a multi-blog custom theme');
 }
 $model = new \Core\Model;
-$blogCats = $model->getAll('blog_categories', array('blogId' => $blog['blogId']));
+$blogCats = $model->getAll('blog_categories', array('blogId' => $blog['blogId']), array(), 'rank', 'asc');
 if(!isset($metaDescription)){
 	$metaDescription = '';
 }
@@ -48,7 +48,7 @@ if(!isset($metaDescription)){
 		<div class="menu-cont">
 			<ul class="menu">
 				<li><a href="<?= SITE_URL ?>/blog/<?= $blog['slug'] ?>">Home</a></li>
-				<li><a href="<?= SITE_URL ?>">Back to LTB Network</a></li>
+				<li><a href="<?= currentSite()['url'] ?>">Back to LTB Network</a></li>
 				<?php
 				$loginText = 'Login/Register';
 				$loginExtra = '?r=/blog/'.$blog['slug'];

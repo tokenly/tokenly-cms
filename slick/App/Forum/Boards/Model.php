@@ -4,13 +4,10 @@ use Core, UI, Util, App\Tokenly;
 class Boards_Model extends Core\Model
 {
 
-	protected function getBoardForm($boardId = false)
+	protected function getBoardForm($siteId)
 	{
 		$form = new UI\Form;
 		$form->setFileEnc();
-        
-        $site = currentSite();
-        $siteId = $site['siteId'];
 		
 		$getCats = $this->getAll('forum_categories', array('siteId' => $siteId), array(), 'rank', 'asc');
 		$categoryId = new UI\Select('categoryId');
@@ -20,33 +17,6 @@ class Boards_Model extends Core\Model
 			$categoryId->addOption($cat['categoryId'], $cat['name']);
 		}
 		$form->add($categoryId);
-        
-        $parent_boards = array();
-        $parent_boards = $this->getBoardFormParentList($boardId);
-        $user = user();
-        $forum_app = get_app('forum');
-        $perms = \App\Meta_Model::getUserAppPerms($user['userId'], $forum_app['appId']);
-        if(!isset($perms['canChangeAnyParentBoard']) OR !$perms['canChangeAnyParentBoard']){
-            foreach($parent_boards as $k => $board){
-                if($board['ownerId'] != $user['userId']){
-                    unset($parent_boards[$k]);
-                    continue;
-                }
-            }
-        }
-        
-        $parentId = new UI\Select('parentId');
-        $parentId->setLabel('Parent Board');
-        $parentId->addOption(0, '[none]');
-        if($parent_boards AND count($parent_boards) > 0){
-            foreach($parent_boards as $p_board){
-                if($p_board['boardId'] == $boardId){
-                    continue;
-                }
-                $parentId->addOption($p_board['boardId'], $p_board['name']);
-            }
-        }
-        $form->add($parentId);
 		
 		$name = new UI\Textbox('name');
 		$name->addAttribute('required');
@@ -82,89 +52,6 @@ class Boards_Model extends Core\Model
 		
 		return $form;
 	}
-    
-	protected function getBoardFormParentList($boardId = 0, $boards = false, $output = array(), $indent = 0)
-	{
-        if($boards === false){
-            $boards = $this->getBoardParentTree(0, 0, false);
-        }
-		foreach($boards as $board){
-			if($board['boardId'] == $boardId){
-				continue;
-			}
-			$indenter = '';
-			if($indent !== false){
-				for($i = 0; $i < $indent; $i++){
-					$indenter .= '---- ';
-				}
-				
-			}
-            $row = $board;
-            $row['name'] = $indenter.$board['name'];
-			$output[] = $row;
-			if(isset($board['children']) AND count($board['children']) > 0){
-				$newIndent = $indent;
-				if($indent !== false){
-					$newIndent = $indent+1;
-				}
-				$output = $this->container->getBoardFormParentList($boardId, $board['children'], $output, $newIndent);
-			}
-		}
-		
-		return $output;
-	}    
-    
-    protected function getBoardParentTree($parentId = 0, $menuMode = 0, $use_tca = true, $categoryId = false)
-    {
-		$thisUser = user();
-		$tca = new Tokenly\TCA_Model;
-		$boardModule = get_app('forum.forum-board');
-		$getSite = currentSite();
-		
-        $values = array(':siteId' => $getSite['siteId'], ':parentId' => $parentId);
-        
-        $andCategory = '';
-        if($categoryId){
-            $andCategory = ' AND b.categoryId = :categoryId';
-            $values[':categoryId'] = $categoryId;
-        }
-        
-        $andActive = '';
-        if($use_tca){
-            $andActive = ' AND b.active = :active';
-            $values[':active'] = 1;
-        }
-        
-        $get = $this->fetchAll('SELECT b.*, c.name as category
-                                 FROM forum_boards b
-                                 LEFT JOIN forum_categories c ON c.categoryId = b.categoryId
-                                 WHERE b.siteId = :siteId AND b.parentId = :parentId '.$andCategory.' '.$andActive.'
-                                 ORDER BY c.rank ASC, b.categoryId ASC, b.rank ASC', $values);
-		foreach($get as $key => $row){
-
-			if($use_tca){
-				$boardTCA = $tca->checkItemAccess($thisUser, $boardModule['moduleId'], $row['boardId'], 'board');
-				$catTCA = $tca->checkItemAccess($thisUser, $boardModule['moduleId'], $row['categoryId'], 'category');
-				if(!$boardTCA OR !$catTCA){
-					unset($get[$key]);
-					continue;
-				}	
-			}
-			
-			$getChildren = $this->container->getBoardParentTree($row['boardId'], $menuMode, $use_tca, $categoryId);
-			if(count($getChildren) > 0){
-				$get[$key]['children'] = $getChildren;
-			}
-			if($menuMode == 1){
-				$get[$key]['target'] = '';
-				$get[$key]['url'] = $getSite['url'].'/blog/category/'.$row['slug'];
-				$get[$key]['label'] = $row['name'];
-				$get[$key]['value'] = $row['boardId'];
-			}
-        
-		}
-		return $get;
-    }
 	
 
 
@@ -197,28 +84,6 @@ class Boards_Model extends Core\Model
 		if(isset($data['ownerId'])){
 			$useData['ownerId'] = $data['ownerId'];
 		}
-        
-        if(isset($data['parentId'])){
-            $data['parentId'] = intval($data['parentId']);
-            if($data['parentId'] > 0){
-                $get_parent = $this->get('forum_boards', $data['parentId']);
-                if(!$get_parent){
-                    throw new \Exception('Parent board not found');
-                }
-                $user = user();
-                $forum_app = get_app('forum');
-                $perms = \App\Meta_Model::getUserAppPerms($user['userId'], $forum_app['appId']);                
-                if($user['userId'] != $get_parent['ownerId']   
-                    AND (!isset($perms['canChangeAnyParentBoard']) OR !$perms['canChangeAnyParentBoard'])){
-                        throw new \Exception('Cannot choose parent board you do not own');
-                }
-                if(!isset($perms['canChangeParentBoard']) OR !$perms['canChangeParentBoard']){
-                    throw new \Exception('You do not have permission to create child boards');
-                }
-                $useData['categoryId'] = $get_parent['categoryId']; //force set to parent boards category
-                $useData['parentId'] = $get_parent['boardId'];
-            }
-        }
 		
 		$add = $this->insert('forum_boards', $useData);
 		if(!$add){
@@ -267,59 +132,15 @@ class Boards_Model extends Core\Model
 		if(isset($data['ownerId'])){
 			$useData['ownerId'] = $data['ownerId'];
 		}
-        
-        $useData['active'] = 0;
-        if(trim($data['active']) != '' AND intval($data['active']) == 1){
-            $useData['active'] = 1;
-        }
-        
-        $useData['parentId'] = 0;
-        if(isset($data['parentId'])){
-            $data['parentId'] = intval($data['parentId']);
-            if($data['parentId'] > 0){
-                $get_parent = $this->get('forum_boards', $data['parentId']);
-                if(!$get_parent){
-                    throw new \Exception('Parent board not found');
-                }
-                $user = user();
-                $forum_app = get_app('forum');
-                $perms = \App\Meta_Model::getUserAppPerms($user['userId'], $forum_app['appId']);                
-                if($user['userId'] != $get_parent['ownerId']   
-                    AND (!isset($perms['canChangeAnyParentBoard']) OR !$perms['canChangeAnyParentBoard'])){
-                        throw new \Exception('Cannot choose parent board you do not own');
-                }
-                if(!isset($perms['canChangeParentBoard']) OR !$perms['canChangeParentBoard']){
-                    throw new \Exception('You do not have permission to create child boards');
-                }
-                $useData['categoryId'] = $get_parent['categoryId']; //force set to parent boards category
-                $useData['parentId'] = $get_parent['boardId'];
-            }
-        }        
 		
 		$edit = $this->edit('forum_boards', $id, $useData);
 		if(!$edit){
 			throw new \Exception('Error editing board');
 		}
-        
-        if(isset($useData['categoryId'])){
-            $this->updateChildCategories(intval($id), $useData['categoryId']);
-        }
-            
+			
 		return true;
 		
 	}
-    
-    protected function updateChildCategories($parentId, $categoryId)
-    {
-        $get = $this->getAll('forum_boards', array('parentId' => $parentId));
-        $update = $this->sendQuery('UPDATE forum_boards SET categoryId = :categoryId WHERE parentId = :parentId',
-                        array(':categoryId' => $categoryId, ':parentId' => $parentId));
-        if($update AND $get AND count($get) > 0){
-            foreach($get as $row){
-                $this->container->updateChildCategories($row['boardId'], $categoryId);
-            }
-        }
-    }
 
 
 	protected function getBoardMods($boardId)
@@ -382,6 +203,4 @@ class Boards_Model extends Core\Model
 		}
 		return $slug.'-'.($get['total']+1);
 	}
-    
-   
 }

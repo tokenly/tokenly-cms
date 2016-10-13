@@ -54,6 +54,7 @@
 					}
 					
 					$model = new \Core\Model;
+                    \Core\Model::$cacheMode = false;
 					$meta = new \App\Meta_Model;
 					$id = $args[0];
 					$data = $args[1];
@@ -84,7 +85,7 @@
 					
 					$encode = json_encode($getBlog['settings']);
 					$update = $model->edit('blogs', $id, array('settings' => $encode));
-					
+					\Core\Model::$cacheMode = true;
 					return true;				
 					
 				});

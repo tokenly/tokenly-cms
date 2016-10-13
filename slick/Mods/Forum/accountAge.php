@@ -29,7 +29,7 @@ function($data, $appData){
 
 \Util\Filter::addFilter('App\Forum\Board_Model', 'postTopic', 
 
-function($id, $data){
+function($data, $appData){
         
     check_account_age();
     

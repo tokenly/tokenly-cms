@@ -153,6 +153,14 @@ class Multiblog_Controller extends \App\ModControl
 		$getBlog['settings'] = $this->model->getSingleBlogSettings($getBlog);
 		$settingFormData = $this->model->getBlogSettingFormDataFromKeys($getBlog['settings']);
 		$output['settingForm'] = $this->settingModel->getSettingsForm($settingFormData);
+    
+        $domain = new \UI\Textbox('domain');
+        $domain->setLabel('Domain name');
+        if(isset($getBlog['settings']['domain'])){
+            $domain->setValue($getBlog['settings']['domain']);
+        }
+        $output['settingForm']->add($domain);    
+    
 		$settingTrigger = new \UI\Hidden('settingUpdate');
 		$settingTrigger->setValue(1);
 		$output['settingForm']->add($settingTrigger);
@@ -175,6 +183,9 @@ class Multiblog_Controller extends \App\ModControl
 			}
 			elseif(isset($_POST['settingUpdate'])){
 				$data = $output['settingForm']->grabData();
+                if(isset($_POST['domain'])){
+                    $data['domain'] = $_POST['domain'];
+                }
 				try{
 					$update = $this->model->updateBlogSettings($getBlog['blogId'], $data);
 				}
@@ -182,10 +193,12 @@ class Multiblog_Controller extends \App\ModControl
 					$output['error'] = $e->getMessage();
 					$update = false;
 				}
+                
 				if($update){
 					Util\Session::flash('blog-message', 'Blog settings updated!', 'success');	
 					redirect($this->data['site']['url'].$this->moduleUrl.'/edit/'.$getBlog['blogId']);
 				}
+                
 			}
 			else{			
 				$data = $output['form']->grabData();
