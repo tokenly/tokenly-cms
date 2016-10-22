@@ -23,7 +23,6 @@ class Model
 			try{
 				self::$db = new PDO('mysql:host='.MYSQL_HOST.';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
 				self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-				$this->db = self::$db;
 				$index_file = SITE_BASE.'/data/cache/db-index-map.json';
 				$get_file = json_decode(@file_get_contents($index_file), true);
 				if(is_array($get_file)){
@@ -42,11 +41,8 @@ class Model
 				}
 			}
 			catch(\Exception $e){
-				$this->db = false;
+				self:$db = false;
 			}
-		}
-		else{
-			$this->db = self::$db;
 		}
 		
 		$this->load_container();
@@ -71,7 +67,7 @@ class Model
 			self::$queryLog[$logKey]['count']++;
 			$micro = microtime(true);
 		}
-		$query = $this->db->prepare($sql);
+		$query = self::$db->prepare($sql);
 		if(!$query){
 			self::$failedQueries++;
 			return false;
@@ -195,7 +191,7 @@ class Model
 		if(!$insert){
 			return false;
 		}
-		return $this->db->lastInsertId($table);
+		return self::$db->lastInsertId($table);
 	}
 	
 	public function edit($table, $id, $data, $indexName = '')
