@@ -80,6 +80,9 @@ class Native_Model extends Core\Model
 		}
 		$group = array();
 		foreach($balances as $address => $bal){
+            if(!is_array($bal)){
+                continue;
+            }
 			foreach($bal as $asset => $amnt){
 				if(isset($group[$asset])){
 					$group[$asset] += $amnt;
