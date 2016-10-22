@@ -1,6 +1,5 @@
 <?php
 $startTime = microtime(true);
-ini_set('display_errors', 1);
 require_once('../conf/config.php');
 include(FRAMEWORK_PATH.'/autoload.php');
 if(defined('DATE_DEFAULT_TIMEZONE')){
