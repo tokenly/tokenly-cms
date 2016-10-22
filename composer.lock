@@ -939,12 +939,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokenly/counterparty-transaction-parser.git",
-                "reference": "9bf42442e9ba00d6e6c0211276371d3ac7a574c3"
+                "reference": "bf07c9c675c5cf869051331b1969306a696a6282"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokenly/counterparty-transaction-parser/zipball/9bf42442e9ba00d6e6c0211276371d3ac7a574c3",
-                "reference": "9bf42442e9ba00d6e6c0211276371d3ac7a574c3",
+                "url": "https://api.github.com/repos/tokenly/counterparty-transaction-parser/zipball/bf07c9c675c5cf869051331b1969306a696a6282",
+                "reference": "bf07c9c675c5cf869051331b1969306a696a6282",
                 "shasum": ""
             },
             "require": {
@@ -973,7 +973,7 @@
                 }
             ],
             "description": "A counterparty transaction parser",
-            "time": "2016-10-12 12:12:07"
+            "time": "2016-10-19 12:23:42"
         },
         {
             "name": "tokenly/tokenpass-client",
