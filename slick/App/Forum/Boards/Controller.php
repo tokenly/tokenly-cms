@@ -14,6 +14,7 @@ class Boards_Controller extends \App\ModControl
     {
         parent::__construct();
         $this->model = new Boards_Model;
+        $this->board_model = new Board_Model;
     }
     
     protected function init()
@@ -55,12 +56,7 @@ class Boards_Controller extends \App\ModControl
     protected function showBoards()
     {
 		$output = array('view' => 'list');
-		$output['boardList'] = $this->model->fetchAll('SELECT b.*, c.name as category
-													 FROM forum_boards b
-													 LEFT JOIN forum_categories c ON c.categoryId = b.categoryId
-													 WHERE b.siteId = :siteId
-													 ORDER BY c.rank ASC, b.categoryId ASC, b.rank ASC',
-													array(':siteId' => $this->data['site']['siteId']));
+		$output['boardList'] = $this->model->getBoardFormParentList();
 
 		if(!$this->data['perms']['canManageAllBoards']){
 			foreach($output['boardList'] as $key => $board){
@@ -80,7 +76,7 @@ class Boards_Controller extends \App\ModControl
 			$output['view'] = '403';
 			return $output;
 		}
-		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		$output['form'] = $this->model->getBoardForm();
 		if(!$this->data['perms']['canChangeBoardCategory']){
 			$output['form']->remove('categoryId');
 		}
@@ -98,6 +94,9 @@ class Boards_Controller extends \App\ModControl
 			if(!$this->data['perms']['canChangeBoardCategory']){
 				$data['categoryId'] = 0;
 			}
+            if(!$this->data['perms']['canChangeParentBoard']){
+                $output['form']->remove('parentId');
+            }                 
 			try{
 				$add = $this->model->addBoard($data);
 			}
@@ -130,7 +129,7 @@ class Boards_Controller extends \App\ModControl
 			$output['view'] = '403';
 			return $output;
 		}
-		$output['form'] = $this->model->getBoardForm($this->data['site']['siteId']);
+		$output['form'] = $this->model->getBoardForm($getBoard['boardId']);
 		if(!$this->data['perms']['canChangeBoardOwner']){
 			$output['form']->remove('ownerId');
 		}
@@ -140,10 +139,14 @@ class Boards_Controller extends \App\ModControl
 		if(!$this->data['perms']['canChangeBoardRank']){
 			$output['form']->remove('rank');
 		}		
+        if(!$this->data['perms']['canChangeParentBoard']){
+            $output['form']->remove('parentId');
+        }        
 		$output['formType'] = 'Edit';
 		$output['boardMods'] = $this->model->getBoardMods($getBoard['boardId']);
 		$output['modForm'] = $this->model->getModForm();
 		$output['getBoard'] = $getBoard;
+        $output['boardMeta'] = $this->board_model->boardMeta($getBoard['boardId']);
 		
 		if(posted()){
 			if(isset($_POST['userId'])){
@@ -184,6 +187,7 @@ class Boards_Controller extends \App\ModControl
 			if($getBoard){
 				if($this->data['perms']['canManageAllBoards'] OR $getBoard['ownerId'] == $this->data['user']['userId']){
 					$delete = $this->model->delete('forum_boards', $this->args[3]);
+                    $this->model->sendQuery('UPDATE forum_boards SET parentId = 0 WHERE parentId = :id', array(':id' => $this->args[3]));
 				}						
 			}			
 		}

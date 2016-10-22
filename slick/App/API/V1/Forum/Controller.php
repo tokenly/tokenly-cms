@@ -22,6 +22,7 @@ class Forum_Controller extends \Core\Controller
 		$this->forumApp = get_app('forum');
 		$this->boardModule = get_app('forum.forum-board');
 		$this->postModule = get_app('forum.forum-post');
+        $this->board_model = new \App\Forum\Board_Model;
 	}
 
 	/**
@@ -227,15 +228,14 @@ class Forum_Controller extends \Core\Controller
 		if(isset($this->args[2])){
 			return $this->container->getBoard();
 		}		
-		$getBoards = $this->model->fetchAll('SELECT b.boardId, b.categoryId, b.name, b.slug, b.rank, b.description
+		$getBoards = $this->model->fetchAll('SELECT b.boardId, b.categoryId, b.name, b.slug, b.rank, b.description, b.parentId
 											 FROM forum_boards b
 											 LEFT JOIN forum_categories c ON c.categoryId = b.categoryId
 											 WHERE b.siteId = :siteId AND b.active = 1
 											 ORDER BY c.rank ASC, b.rank ASC', array(':siteId' => $this->args['data']['site']['siteId']));
 		foreach($getBoards as $key => &$board){
-			$checkCatTCA = $this->tca->checkItemAccess($this->user, $this->boardModule['moduleId'], $board['categoryId'], 'category');
-			$checkBoardTCA = $this->tca->checkItemAccess($this->user, $this->boardModule['moduleId'], $board['boardId'], 'board');
-			if(!$checkCatTCA OR !$checkBoardTCA){
+            $checkBoardTCA = $this->board_model->checkBoardTCA($board, $this->user);
+			if(!$checkBoardTCA){
 				unset($getBoards[$key]);
 				continue;
 			}
@@ -262,9 +262,9 @@ class Forum_Controller extends \Core\Controller
 	protected function getBoard()
 	{
 		$output = array();
-		$getBoard = $this->model->get('forum_boards', $this->args[2], array('boardId', 'categoryId', 'name', 'rank', 'description', 'slug', 'active'), 'slug');
+		$getBoard = $this->model->get('forum_boards', $this->args[2], array('boardId', 'categoryId', 'name', 'rank', 'description', 'slug', 'active', 'parentId'), 'slug');
 		if(!$getBoard){
-			$getBoard = $this->model->get('forum_boards', $this->args[2], array('boardId', 'categoryId', 'name', 'rank', 'description', 'slug', 'active'));
+			$getBoard = $this->model->get('forum_boards', $this->args[2], array('boardId', 'categoryId', 'name', 'rank', 'description', 'slug', 'active', 'parentId'));
 			if(!$getBoard){
 				http_response_code(404);
 				$output['error'] = 'Board not found';
@@ -277,9 +277,8 @@ class Forum_Controller extends \Core\Controller
 			return $output;
 		}
 		unset($getBoard['active']);
-		$checkCatTCA = $this->tca->checkItemAccess($this->user, $this->boardModule['moduleId'], $getBoard['categoryId'], 'category');
-		$checkBoardTCA = $this->tca->checkItemAccess($this->user, $this->boardModule['moduleId'], $getBoard['boardId'], 'board');
-		if(!$checkCatTCA OR !$checkBoardTCA){
+		$checkBoardTCA = $this->board_model->checkBoardTCA($getBoard, $this->user);
+		if(!$checkBoardTCA){
 			http_response_code(403);
 			$output['error'] = 'You do not have permission to view this';
 			return $output;

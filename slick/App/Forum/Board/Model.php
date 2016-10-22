@@ -15,7 +15,7 @@ class Board_Model extends Core\Model
 			self::$boards[$board['boardId']] = $board;
 		}
 		foreach($getBoardMeta as $boardMeta){
-			self::$boardMeta[$boardMeta['boardId']] = $boardMeta;
+			self::$boardMeta[$boardMeta['boardId']][] = $boardMeta;
 		}
 	}
 	
@@ -84,13 +84,6 @@ class Board_Model extends Core\Model
 			}			
 		}
 		
-		/*$regDate = strtotime($appData['user']['regDate']);
-		$regThreshold = 60*60*1;
-		$time = time();
-		if(($time - $regDate) < $regThreshold){
-			$numHours = round($regThreshold / 3600);
-			throw new \Exception('Your account must be active for at least <strong>'.$numHours.' '.pluralize('hour', $numHours, true).'</strong> before you may post in the forums.');
-		}*/		
 		
 		if(trim($useData['content']) == ''){
 			throw new \Exception('Post body required');
@@ -156,38 +149,7 @@ class Board_Model extends Core\Model
 				\App\Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $post, 'topic-subscription', false, $notifyData);
 			}
 		}
-		else{
-			$getPerms = $this->getAll('app_perms', array('appId' => $appData['app']['appId']));
-			$getPerm = extract_row($getPerms, array('permKey' => 'canReceiveTrollPostNotifications'));
-			if($getPerm){
-				$getPerm = $getPerm[0];
-				$notifyList = array();
-				$permGroups = $this->getAll('group_perms', array('permId' => $getPerm['permId']));
-				foreach($permGroups as $permGroup){
-					$groupUsers = $this->getAll('group_users', array('groupId' => $permGroup['groupId']));
-					foreach($groupUsers as $gUser){
-						if(!in_array($gUser['userId'], $notifyList)){
-							$notifyList[] = $gUser['userId'];
-						}
-					}
-				}
-				foreach($notifyList as $notifyUser){
-					if($notifyUser == $appData['user']['userId']){
-						continue;
-					}
-					$notifyData = $appData;
-					$notifyData['url'] = $useData['url'];
-					$notifyData['postContent'] = $useData['content'];
-					$notifyData['topic'] = $useData;
-					$notifyData['page'] = '';
-					$notifyData['postId'] = $post;					
-					$notifyData['notifyUser'] = $notifyUser;
-					$notify = \App\Meta_Model::notifyUser($notifyUser, 'emails.forumTrollThreadNotice', $post, 'forum-troll-post', true, $notifyData);
-					
-				}
-			}				
-		}
-		
+
 		//auto subscribe to thread
 		$subscribe = $this->insert('forum_subscriptions', array('userId' => $useData['userId'], 'topicId' => $post));
 
@@ -331,7 +293,7 @@ class Board_Model extends Core\Model
 		if(!$checkCat){
 			return false;
 		}
-		$checkBoard = $tca->checkItemAccess($user, $boardModule['moduleId'], $row['boardId'], 'board');
+		$checkBoard = $this->container->checkBoardTCA($getBoard, $user);
 		if(!$checkBoard){
 			return false;
 		}
@@ -826,5 +788,84 @@ class Board_Model extends Core\Model
 		
 		return $topics;
 	}
+    
+    protected function updateBoardMeta($boardId, $key, $value)
+ 	{
+ 		$get = $this->container->getBoardMeta($boardId, $key, true);
+         $time = timestamp();
+ 		if(!$get){
+ 			//create new row
+ 			$update = $this->insert('forum_boardMeta', array('boardId' => $boardId, 'metaKey' => $key, 'value' => $value, 'lastUpdate' => $time));
+ 		}
+ 		else{
+ 			$update = $this->edit('forum_boardMeta', $get['metaId'], array('value' => $value, 'lastUpdate' => $time));
+ 		}
+ 		if(!$update){
+ 			return false;
+ 		}
+ 		return true;
+ 		
+ 	}    
+     
+ 	protected function getBoardMeta($boardId, $key, $fullData = false)
+ 	{
+ 		if($fullData == 0 AND isset(self::$boardMeta[$boardId][$key])){
+ 			return self::$boardMeta[$boardId][$key];
+ 		}
+ 		elseif($fullData == 0){
+ 			if(!isset(self::$boardMeta[$boardId])){
+ 				$this->container->boardMeta($boardId);
+ 				if(!isset(self::$boardMeta[$boardId][$key])){
+ 					return false;
+ 				}				
+ 				return self::$boardMeta[$boardId][$key];
+ 			}			
+ 		}        
+ 		$get = $this->fetchSingle('SELECT * FROM forum_boardMeta WHERE boardId = :id AND metaKey = :key',
+ 									array(':id' => $boardId, ':key' => $key));
+ 		if(!$get){
+ 			return false;
+ 		}
+ 		if($fullData != 0){
+ 			return $get;
+ 		}		
+ 		return $get['value'];
+ 	}    
+     
+ 	protected function boardMeta($boardId)
+ 	{
+ 		if(isset(self::$boardMeta[$boardId])){
+             if(isset(self::$boardMeta[$boardId][0]['metaId'])){
+                 $output = array();
+                 $get = self::$boardMeta[$boardId];
+                 foreach($get as $row){
+                     $output[$row['metaKey']] = $row['value'];
+                 }
+                 return $output;
+             }
+ 			return self::$boardMeta[$boardId];
+ 		}
+ 		
+ 		$getAll = $this->getAll('forum_boardMeta', array('boardId' => $boardId), array('metaKey', 'value'));
+ 		$output = array();
+ 		foreach($getAll as $key => $row){
+ 			$output[$row['metaKey']] = $row['value'];
+ 		}
+ 		
+ 		self::$boardMeta[$boardId] = $output;
+ 		return $output;
+ 	} 
+     
+     protected function checkBoardTCA($board, $userId)
+     {
+         $tca = new Tokenly\TCA_Model;
+         $board_module = get_app('forum.forum-board');
+         $check = $tca->checkItemAccess($userId, $board_module['moduleId'], $board['boardId'], 'board');
+         if($check AND $board['parentId'] > 0){
+             $parent = $this->get('forum_boards', $board['parentId']);
+             return $this->container->checkBoardTCA($parent, $userId);
+         }        
+         return $check;
+     }    
 
 }

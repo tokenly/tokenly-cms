@@ -1,6 +1,6 @@
 <?php
 namespace App\Forum;
-use App\Tokenly, App\Account, UI;
+use App\Tokenly, App\Account, UI, App\Profile;
 class Board_Controller extends \App\ModControl
 {
 	function __construct()
@@ -8,6 +8,9 @@ class Board_Controller extends \App\ModControl
 		parent::__construct();
 		$this->model = new Board_Model;
 		$this->tca = new Tokenly\TCA_Model;
+        $this->boardModule = get_app('forum.forum-board');
+        $this->postModule = get_app('forum.forum-post');
+        $this->profileModule = get_app('profile.user-profile');
 	}
 	
 	protected function init()
@@ -35,7 +38,7 @@ class Board_Controller extends \App\ModControl
 			return $output;
 		}			
 		
-		$checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $getBoard['boardId'], 'board');
+		$checkTCA = $this->model->checkBoardTCA($getBoard, $this->data['user']['userId']);
 		if(!$checkTCA){
 			$output['view'] = '403';
 			return $output;
@@ -88,9 +91,89 @@ class Board_Controller extends \App\ModControl
 				$output['page'] = $page;
 			}
 		}
-		$output['topics'] = $this->model->getBoardTopics($getBoard['boardId'], $this->data, $output['page']);
+        $userId = false;
+         if($this->data['user']){
+             $userId = $this->data['user']['userId'];
+         }
+         $profModel = new Profile\User_Model;
+         $forumModel = new \App\Forum\Model;
+         $children = $dashModel->getBoardParentTree($getBoard['boardId']);
+         $site = $this->data['site'];
+         foreach($children as $k => $child){
+             $sub_children = $this->model->getAll('forum_boards', array('parentId' => $child['boardId'], 'active' => 1), array(), 'rank', 'asc');
+             if($sub_children){
+                 foreach($sub_children as $ck => $sub_child){
+                     $checkTCA = $this->tca->checkItemAccess($this->data['user'], $this->data['module']['moduleId'], $sub_child['boardId'], 'board');
+                     if(!$checkTCA){
+                         unset($children[$ck]);
+                         continue;
+                     }
+                 }
+             }
+             $children[$k]['children'] = $sub_children;
+             
+             
+             $children[$k]['numTopics'] = $this->model->count('forum_topics', 'boardId', $child['boardId']);
+             $countReplies = $this->model->fetchSingle('SELECT COUNT(*) as total 
+                                                 FROM forum_posts p
+                                                 LEFT JOIN forum_topics t ON t.topicId = p.topicId
+                                                 WHERE t.boardId = :boardId', array(':boardId' => $child['boardId']));
+             $children[$k]['numReplies'] = $countReplies['total'];
+             
+             $lastTopic = $forumModel->getLastBoardTopic($child, $userId);
+             $lastPost = $forumModel->getLastBoardPost($child, $userId);
+ 
+             $topicTime = 0;
+             if($lastTopic){
+                 $topicTime = strtotime($lastTopic['postTime']);
+             }
+             $postTime = 0;
+             if($lastPost){
+                 $postTime = strtotime($lastPost['postTime']);
+             }
+             
+             if($topicTime === 0 AND $postTime === 0){
+                 $children[$k]['mostRecent'] = '';
+             }
+             elseif($topicTime > $postTime){
+                 //recent topic
+                 $lastAuthor = $profModel->getUserProfile($lastTopic['userId'], $site['siteId']);
+                 $authorTCA = $this->tca->checkItemAccess($this->data['user'], $this->profileModule['moduleId'], $lastAuthor['userId'], 'user-profile');
+                 $authorLink = $lastAuthor['username'];
+                 if($authorTCA){
+                     $authorLink = '<a href="'.$site['url'].'/profile/user/'.$lastAuthor['slug'].'">'.$authorLink.'</a>';
+                 }
+                 
+                 $children[$k]['mostRecent'] = '<a href="'.$site['url'].'/'.$this->data['app']['url'].'/post/'.$lastTopic['url'].'"  title="'.str_replace('"', '', shorten(strip_tags($lastTopic['content']), 150)).'">'.$lastTopic['title'].'</a> by
+                                                 '.$authorLink;
+             }
+             else{
+                 //recent post
+                 $lastAuthor = $profModel->getUserProfile($lastPost['userId'], $site['siteId']);
+                 $authorTCA = $this->tca->checkItemAccess($this->data['user'], $this->profileModule['moduleId'], $lastAuthor['userId'], 'user-profile');
+                 $authorLink = $lastAuthor['username'];
+                 if($authorTCA){
+                     $authorLink = '<a href="'.$site['url'].'/profile/user/'.$lastAuthor['slug'].'">'.$authorLink.'</a>';
+                 }
+                                     
+                 $lastTopic = $this->model->get('forum_topics', $lastPost['topicId']);
+                 $numReplies = $this->model->count('forum_posts', 'topicId', $lastPost['topicId']);
+                 $numPages = ceil($numReplies / $this->data['app']['meta']['postsPerPage']);
+                 $andPage = '';
+                 if($numPages > 1){
+                     $andPage = '?page='.$numPages;
+                 }
+                 $children[$k]['mostRecent'] = 'Reply to <a href="'.$site['url'].'/'.$app['url'].'/post/'.$lastTopic['url'].$andPage.'#post-'.$lastPost['postId'].'" title="'.str_replace('"', '', shorten(strip_tags($lastPost['content']), 150)).'">'.$lastTopic['title'].'</a> by
+                                                 '.$authorLink;
+             }
+         }
+        $output['board_children'] = $children;        
+        $output['topics'] = $this->model->getBoardTopics($getBoard['boardId'], $this->data, $output['page']);
         $output['stickies'] = $this->model->getBoardStickyPosts($this->data, $getBoard['boardId']);
-
+        $output['parent_board'] = false;
+        if($getBoard['parentId'] > 0){
+             $output['parent_board'] = $this->model->get('forum_boards', $getBoard['parentId']);
+        }
 
 		if($this->data['user']){
 			Tokenly\POP_Model::recordFirstView($this->data['user']['userId'], $this->data['module']['moduleId'], $getBoard['boardId']);
@@ -118,7 +201,7 @@ class Board_Controller extends \App\ModControl
 		$checkCaptcha = false;
 		if(isset($this->data['app']['meta']['min-posts-captcha'])){
 			$minPosts = intval($this->data['app']['meta']['min-posts-captcha']);
-			if($postCount <= $minPosts){
+			if($postCount < $minPosts){
 				$captcha = new UI\Captcha();
 				$output['form']->add($captcha);
 				$checkCaptcha = true;

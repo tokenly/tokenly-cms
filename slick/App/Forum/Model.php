@@ -25,7 +25,7 @@ class Model extends Core\Model
 		}
 		foreach($getCats as $k => $cat){
 			$getBoards = $this->getAll('forum_boards', array('categoryId' => $cat['categoryId'], 'siteId' => $siteId,
-														'active' => 1), array(), 'rank', 'asc');
+														'active' => 1, 'parentId' => 0), array(), 'rank', 'asc');
 			
 			$checkTCA = $tca->checkItemAccess($userId, $boardModule['moduleId'], $cat['categoryId'], 'category');
 			if(!$checkTCA){
@@ -45,6 +45,17 @@ class Model extends Core\Model
 													LEFT JOIN forum_topics t ON t.topicId = p.topicId
 													WHERE t.boardId = :boardId', array(':boardId' => $board['boardId']));
 				$getBoards[$bk]['numReplies'] = $countReplies['total'];
+                $children = $this->getAll('forum_boards', array('parentId' => $board['boardId'], 'active' => 1), array(), 'rank', 'asc');
+                if($children){
+                    foreach($children as $ck => $child){
+                        $checkTCA = $tca->checkItemAccess($userId, $boardModule['moduleId'], $child['boardId'], 'board');
+                        if(!$checkTCA){
+                            unset($children[$ck]);
+                            continue;
+                        }
+                    }
+                }
+                $getBoards[$bk]['children'] = $children;                
 				
 				$lastTopic = $this->container->getLastBoardTopic($board, $userId);
 				$lastPost = $this->container->getLastBoardPost($board, $userId);
