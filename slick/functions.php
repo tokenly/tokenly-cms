@@ -846,7 +846,7 @@ function app_path($slugs, $class = '')
 
 function botdetect()
 {
-  if(isset($_SERVER['HTTP_USER_AGENT']) AND preg_match('/bot|crawl|slurp|spider/i', $_SERVER['HTTP_USER_AGENT'])){
+  if(isset($_SERVER['HTTP_USER_AGENT']) AND preg_match('~(bot|crawl|slurp|spider)~i', $_SERVER['HTTP_USER_AGENT'])){
     return true;
   }
   return false;
