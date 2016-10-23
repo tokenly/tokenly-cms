@@ -4,12 +4,12 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "24213c7bbbac64dbeec071e1e712de02",
-    "content-hash": "1f54011d1c579b5f04bbca34d1acded0",
+    "hash": "e63e8571f994613a846f0cd6c7385fb9",
+    "content-hash": "a6fa3f380ee65ac6b95e2657ba37178a",
     "packages": [
         {
             "name": "99designs/http-signatures",
-            "version": "2.0.4",
+            "version": "2.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/99designs/http-signatures-php.git",
@@ -446,16 +446,16 @@
         },
         {
             "name": "guzzlehttp/ringphp",
-            "version": "1.1.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/RingPHP.git",
-                "reference": "dbbb91d7f6c191e5e405e900e3102ac7f261bc0b"
+                "reference": "9465032ac5d6beaa55f10923403e6e1c36018d9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/RingPHP/zipball/dbbb91d7f6c191e5e405e900e3102ac7f261bc0b",
-                "reference": "dbbb91d7f6c191e5e405e900e3102ac7f261bc0b",
+                "url": "https://api.github.com/repos/guzzle/RingPHP/zipball/9465032ac5d6beaa55f10923403e6e1c36018d9c",
+                "reference": "9465032ac5d6beaa55f10923403e6e1c36018d9c",
                 "shasum": ""
             },
             "require": {
@@ -493,20 +493,20 @@
                 }
             ],
             "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function.",
-            "time": "2015-05-20 03:37:09"
+            "time": "2015-05-21 17:23:02"
         },
         {
             "name": "guzzlehttp/streams",
-            "version": "3.0.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/streams.git",
-                "reference": "47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5"
+                "reference": "d99a261c616210618ab94fd319cb17eda458cc3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/streams/zipball/47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5",
-                "reference": "47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5",
+                "url": "https://api.github.com/repos/guzzle/streams/zipball/d99a261c616210618ab94fd319cb17eda458cc3e",
+                "reference": "d99a261c616210618ab94fd319cb17eda458cc3e",
                 "shasum": ""
             },
             "require": {
@@ -543,7 +543,7 @@
                 "Guzzle",
                 "stream"
             ],
-            "time": "2014-10-12 19:18:40"
+            "time": "2016-04-13 16:32:01"
         },
         {
             "name": "mdanter/ecc",
@@ -685,16 +685,16 @@
         },
         {
             "name": "react/promise",
-            "version": "v2.4.1",
+            "version": "2.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "8025426794f1944de806618671d4fa476dc7626f"
+                "reference": "d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/8025426794f1944de806618671d4fa476dc7626f",
-                "reference": "8025426794f1944de806618671d4fa476dc7626f",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90",
+                "reference": "d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90",
                 "shasum": ""
             },
             "require": {
@@ -725,11 +725,11 @@
                 }
             ],
             "description": "A lightweight implementation of CommonJS Promises/A for PHP",
-            "time": "2016-05-03 17:50:52"
+            "time": "2016-05-09 07:16:19"
         },
         {
             "name": "rmccue/requests",
-            "version": "v1.7.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rmccue/Requests.git",
@@ -823,16 +823,16 @@
         },
         {
             "name": "symfony/http-foundation",
-            "version": "v3.1.5",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-foundation.git",
-                "reference": "5114f1becca9f29e3af94374f1689c83c1aa3d97"
+                "reference": "71abaf8f87e17813ad7b45c12f6f700d5774da4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/5114f1becca9f29e3af94374f1689c83c1aa3d97",
-                "reference": "5114f1becca9f29e3af94374f1689c83c1aa3d97",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/71abaf8f87e17813ad7b45c12f6f700d5774da4d",
+                "reference": "71abaf8f87e17813ad7b45c12f6f700d5774da4d",
                 "shasum": ""
             },
             "require": {
@@ -845,7 +845,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.1-dev"
+                    "dev-master": "3.2-dev"
                 }
             },
             "autoload": {
@@ -872,20 +872,20 @@
             ],
             "description": "Symfony HttpFoundation Component",
             "homepage": "https://symfony.com",
-            "time": "2016-09-21 20:55:10"
+            "time": "2016-10-21 20:33:10"
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.2.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "dff51f72b0706335131b00a7f49606168c582594"
+                "reference": "53ad9faffe141fbe8f98cd6a7fd9a5e84513f56c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/dff51f72b0706335131b00a7f49606168c582594",
-                "reference": "dff51f72b0706335131b00a7f49606168c582594",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/53ad9faffe141fbe8f98cd6a7fd9a5e84513f56c",
+                "reference": "53ad9faffe141fbe8f98cd6a7fd9a5e84513f56c",
                 "shasum": ""
             },
             "require": {
@@ -931,7 +931,55 @@
                 "portable",
                 "shim"
             ],
-            "time": "2016-05-18 14:26:46"
+            "time": "2016-08-30 17:06:17"
+        },
+        {
+            "name": "tokenly/api-client",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tokenly/api-client.git",
+                "reference": "6738a503447f81950816258ab207aec83811e76e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tokenly/api-client/zipball/6738a503447f81950816258ab207aec83811e76e",
+                "reference": "6738a503447f81950816258ab207aec83811e76e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0",
+                "rmccue/requests": "dev-master",
+                "tokenly/hmac-auth": "^1.0@dev"
+            },
+            "require-dev": {
+                "phake/phake": "^2.3",
+                "phpunit/phpunit": "~4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Tokenly\\APIClient\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Devon Weller",
+                    "email": "devon@tokenly.com",
+                    "homepage": "http://tokenly.com"
+                }
+            ],
+            "description": "A client to call Tokenly APIs",
+            "keywords": [
+                "api",
+                "client",
+                "tokenly"
+            ],
+            "time": "2016-09-28 15:51:12"
         },
         {
             "name": "tokenly/counterparty-transaction-parser",
@@ -976,22 +1024,74 @@
             "time": "2016-10-19 12:23:42"
         },
         {
-            "name": "tokenly/tokenpass-client",
-            "version": "v1.0.2",
+            "name": "tokenly/hmac-auth",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/tokenly/tokenpass-client.git",
-                "reference": "774b70f1e7fcc75b1fb0e2e892b39b89519325fd"
+                "url": "https://github.com/tokenly/hmac-auth.git",
+                "reference": "4221c2ca98f40e16c0153641549784d67aee21ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokenly/tokenpass-client/zipball/774b70f1e7fcc75b1fb0e2e892b39b89519325fd",
-                "reference": "774b70f1e7fcc75b1fb0e2e892b39b89519325fd",
+                "url": "https://api.github.com/repos/tokenly/hmac-auth/zipball/4221c2ca98f40e16c0153641549784d67aee21ba",
+                "reference": "4221c2ca98f40e16c0153641549784d67aee21ba",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "guzzlehttp/guzzle": "~6",
+                "phpunit/phpunit": "~4",
+                "symfony/http-foundation": "~2|~3"
+            },
+            "suggest": {
+                "guzzlehttp/guzzle": "Use with Guzzle >= 6",
+                "rmccue/requests": "Use with Requests >= 1.6",
+                "symfony/http-foundation": "Used for signing HTTP requests"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Tokenly\\HmacAuth\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Devon Weller",
+                    "email": "devon@tokenly.com",
+                    "homepage": "http://tokenly.com"
+                }
+            ],
+            "description": "HMAC authentication for Tokenly APIs",
+            "time": "2016-05-18 11:51:14"
+        },
+        {
+            "name": "tokenly/tokenpass-client",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tokenly/tokenpass-client.git",
+                "reference": "e049503bdccfa201089382a1537bb60e33f4d558"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tokenly/tokenpass-client/zipball/e049503bdccfa201089382a1537bb60e33f4d558",
+                "reference": "e049503bdccfa201089382a1537bb60e33f4d558",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.5.0",
-                "rmccue/requests": "^1.6"
+                "tokenly/api-client": "^1.0.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "~4"
@@ -1021,12 +1121,12 @@
                 "tokenly",
                 "tokenpass"
             ],
-            "time": "2016-04-07 17:07:49"
+            "time": "2016-10-13 16:54:06"
         }
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "bitwasp/bitcoin-lib": 20,
         "tokenly/counterparty-transaction-parser": 20,

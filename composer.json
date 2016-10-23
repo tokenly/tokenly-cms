@@ -14,6 +14,8 @@
 		"mdanter/ecc": "~0.2.0",
 		"blocktrail/blocktrail-sdk": "1.3.*",
 		"tokenly/counterparty-transaction-parser": "@dev",
-		"tokenly/tokenpass-client": "@dev"
-	}
+		"tokenly/tokenpass-client": "dev-master@dev"
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": false
 }
