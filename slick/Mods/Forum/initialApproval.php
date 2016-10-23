@@ -1,5 +1,5 @@
 <?php
-
+/*
 \App\Forum\Controller::$noModulePages[] = 'approve-user';
 
 \Util\Filter::addFilter('App\Forum\Board_Model', 'postTopic', 
