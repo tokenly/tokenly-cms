@@ -45,7 +45,7 @@ class Controller extends Core\Controller
 	
 	protected function init()
 	{
-		if(!$this->model::$db){
+		if(!\Core\Model::$db){
 			$backup_view = SITE_PATH.'/themes/db-dead.php';
 			if(file_exists($backup_view)){
 				include($backup_view);
