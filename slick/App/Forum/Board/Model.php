@@ -144,6 +144,12 @@ class Board_Model extends Core\Model
 				if (!isset($notifyData['board'])) {
 					$notifyData['board'] = $this->get('forum_boards', $boardId);
 				}
+                
+                //check board TCA
+                $checkBoardTCA = $this->checkBoardTCA($notifyData['board'], $sub['userId']);
+                if(!$checkBoardTCA){
+                    continue;
+                }
 
 				// notify the user
 				\App\Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $post, 'topic-subscription', false, $notifyData);

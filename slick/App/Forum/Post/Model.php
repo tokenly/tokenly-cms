@@ -81,11 +81,23 @@ class Post_Model extends Core\Model
 
 			mention($useData['content'], 'emails.forumPostMention',
 					$useData['userId'], $useData['postId'], 'forum-reply', $notifyData);
-					
+            $boardModel = new Board_Model;
+            $topic = $this->get('forum_topics', $data['topicId']);
 			$getSubs = $this->getAll('forum_subscriptions', array('topicId' => $data['topicId']));
+            $already_notified = array();
 			foreach($getSubs as $sub){
 				$notifyData['sub'] = $sub;
 				if($sub['userId'] != $useData['userId']){
+                    //check TCA
+                    $checkTopicTCA = $boardModel->checkTopicTCA($sub['userId'], $topic);
+                    if(!$checkTopicTCA){
+                        continue;
+                    }                           
+                    //send notification
+                    if(in_array($sub['userId'], $already_notified)){
+                        continue;
+                    }
+                    $already_notified[] = $sub['userId'];                    
 					\App\Meta_Model::notifyUser($sub['userId'], 'emails.forumSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
 				}
 			}
@@ -102,8 +114,18 @@ class Post_Model extends Core\Model
 				if (!isset($notifyData['board'])) {
 					$notifyData['board'] = $this->get('forum_boards', $boardId);
 				}
+                
+                //check topic TCA
+                $checkTopicTCA = $boardModel->checkTopicTCA($sub['userId'], $topic);
+                if(!$checkTopicTCA){
+                    continue;
+                }                   
 
 				// notify the user
+                if(in_array($sub['userId'], $already_notified)){
+                    continue;
+                }
+                $already_notified[] = $sub['userId'];                
 				\App\Meta_Model::notifyUser($sub['userId'], 'emails.boardSubscribeNotice', $useData['postId'], 'topic-subscription', false, $notifyData);
 			}
 		}	
