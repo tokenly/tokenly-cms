@@ -689,12 +689,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90"
+                "reference": "5131098293d66d58e5750c244988d5a465ffd9df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90",
-                "reference": "d3d5fdeadbb8489f73d74b8ec6bca1d3eb521d90",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/5131098293d66d58e5750c244988d5a465ffd9df",
+                "reference": "5131098293d66d58e5750c244988d5a465ffd9df",
                 "shasum": ""
             },
             "require": {
@@ -725,7 +725,7 @@
                 }
             ],
             "description": "A lightweight implementation of CommonJS Promises/A for PHP",
-            "time": "2016-05-09 07:16:19"
+            "time": "2016-10-24 08:39:42"
         },
         {
             "name": "rmccue/requests",
@@ -827,12 +827,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-foundation.git",
-                "reference": "71abaf8f87e17813ad7b45c12f6f700d5774da4d"
+                "reference": "1457a889ff1ba1531853cddb3244539c81921efe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/71abaf8f87e17813ad7b45c12f6f700d5774da4d",
-                "reference": "71abaf8f87e17813ad7b45c12f6f700d5774da4d",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/1457a889ff1ba1531853cddb3244539c81921efe",
+                "reference": "1457a889ff1ba1531853cddb3244539c81921efe",
                 "shasum": ""
             },
             "require": {
@@ -872,7 +872,7 @@
             ],
             "description": "Symfony HttpFoundation Component",
             "homepage": "https://symfony.com",
-            "time": "2016-10-21 20:33:10"
+            "time": "2016-10-24 15:52:51"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1081,12 +1081,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokenly/tokenpass-client.git",
-                "reference": "e049503bdccfa201089382a1537bb60e33f4d558"
+                "reference": "6b5e552ee9b7ba4de148416ffc259bcce6f7bafb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokenly/tokenpass-client/zipball/e049503bdccfa201089382a1537bb60e33f4d558",
-                "reference": "e049503bdccfa201089382a1537bb60e33f4d558",
+                "url": "https://api.github.com/repos/tokenly/tokenpass-client/zipball/6b5e552ee9b7ba4de148416ffc259bcce6f7bafb",
+                "reference": "6b5e552ee9b7ba4de148416ffc259bcce6f7bafb",
                 "shasum": ""
             },
             "require": {
@@ -1121,7 +1121,7 @@
                 "tokenly",
                 "tokenpass"
             ],
-            "time": "2016-10-13 16:54:06"
+            "time": "2016-10-24 22:51:14"
         }
     ],
     "packages-dev": [],
