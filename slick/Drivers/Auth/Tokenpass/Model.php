@@ -536,7 +536,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 	protected function syncAddresses($user)
 	{
 		try{
-			$get = $this->tokenpass->getAddresses($user['slug']);
+			$get = $this->tokenpass->getAddressesForAuthenticatedUser($user['auth']);
 		}
 		catch(\Exception $e){
 			return false;
