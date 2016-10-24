@@ -541,7 +541,7 @@ class Tokenpass_Model extends Core\Model implements \Interfaces\AuthModel
 		catch(\Exception $e){
 			return false;
 		}
-		if(!is_array($get) OR count($get) == 0){
+		if(!is_array($get)){
 			return false;
 		}
 		$current = $this->getAll('coin_addresses', array('userId' => $user['userId']));
