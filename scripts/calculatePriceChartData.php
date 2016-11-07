@@ -29,11 +29,11 @@ foreach($ltbc_data as $row){
 		$item['usd_rate'] = $prev_btc_price * $item['btc_rate'];
 	}
 	foreach($bit_history as $btc_row){
-		$btc_date = date('Y/m/d', strtotime($btc_row['datetime']));
+		$btc_date = date('Y/m/d', strtotime($btc_row['DateTime']));
 		if($btc_date == $item['date']){
-			$item['btc_price'] = $btc_row['average'];
-			$item['usd_rate'] = $btc_row['average'] * $item['btc_rate'];
-			$prev_btc_price = $btc_row['average'];
+			$item['btc_price'] = $btc_row['Average'];
+			$item['usd_rate'] = $btc_row['Average'] * $item['btc_rate'];
+			$prev_btc_price = $btc_row['Average'];
 			break;
 		}
 	}

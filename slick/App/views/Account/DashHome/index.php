@@ -402,7 +402,7 @@ function drawCharts(){
 		$btc_history = array();
 	}
 	foreach($btc_history as $row){
-		echo 'plot_data.push([new Date('.strtotime($row['datetime']).' * 1000),'.$row['average'].']);'."\n";
+		echo 'plot_data.push([new Date('.strtotime($row['DateTime']).' * 1000),'.$row['Average'].']);'."\n";
 	}
 	?>
 	data.addRows(
