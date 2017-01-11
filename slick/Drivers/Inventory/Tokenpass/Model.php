@@ -25,7 +25,7 @@ class Tokenpass_Model extends Native_Model
 		$get_cached = static_cache($cache_key);
 		if(!is_array($get_cached)){
             try{
-                $get_cached = $this->tokenpass->getAddresses($getUser['username']);
+                $get_cached = $this->tokenpass->getAddresses($getUser['username'], $getUser['auth']);
             }
             catch(Exception $e){
                 return false;
